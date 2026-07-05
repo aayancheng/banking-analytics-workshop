@@ -1,0 +1,11 @@
+{
+  "name": "banking-analytics-workshop",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "postCreateCommand": "make setup && make verify",
+  "forwardPorts": [8100, 5180],
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  }
+}

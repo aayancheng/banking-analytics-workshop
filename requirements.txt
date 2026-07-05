@@ -1,0 +1,19 @@
+numpy==2.4.6
+pandas==3.0.3
+pyarrow==24.0.0
+# scikit-learn must stay <1.8: optbinning 0.20.0 uses the removed force_all_finite kwarg
+scikit-learn==1.7.2
+# ortools is optbinning's solver; 9.15.x CP-SAT hangs on macOS arm64 — 9.14 verified good
+ortools==9.14.6206
+optbinning==0.20.0
+scipy==1.18.0
+matplotlib==3.11.0
+joblib==1.5.3
+pytest==9.1.1
+lightgbm==4.6.0
+shap==0.52.0
+fastapi==0.139.0
+httpx2==2.5.0
+uvicorn==0.50.0
+pydantic==2.13.4
+tabulate==0.10.0
