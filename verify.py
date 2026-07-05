@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-MAX_STAGE_BUILT = 4  # bumped as each session's tag lands
+MAX_STAGE_BUILT = 5  # bumped as each session's tag lands
 
 PYTHON_MIN = (3, 11)
 
@@ -315,6 +315,26 @@ def check_line_increase():
                   f"higher util, incremental ROE >= hurdle"), None
 
 
+def check_doc_pack():
+    pack = ROOT / "docs" / "model_doc_pack"
+    main_doc = pack / "MODEL_DOCUMENTATION.md"
+    if not main_doc.exists():
+        return (False, "docs/model_doc_pack/MODEL_DOCUMENTATION.md missing",
+                "Build it (Session 5 lab): make docpack — or restore: "
+                "git checkout stage-5 -- docs/model_doc_pack")
+    text = main_doc.read_text()
+    required = ["## Business Credit Score", "## Loan Adjudication",
+                "## Pricing & Profitability", "## Early Warning",
+                "## Proactive Line Increase", "## Governance record",
+                "## Data & leakage controls"]
+    absent = [h for h in required if h not in text]
+    if absent:
+        return (False, f"doc pack incomplete — missing sections: {', '.join(absent)}",
+                "Rebuild: make docpack — every module must be documented, including "
+                "the gates it passed and the ones that had to be renegotiated.")
+    return True, f"doc pack complete ({len(text.splitlines())} lines, 7 sections)", None
+
+
 def check_apps(stage: int = 3):
     """Smoke the decision apps in-process (TestClient — no server needed),
     then compare pricing totals to the committed summary. From stage 4 the
@@ -378,6 +398,8 @@ def checks_for(stage: int) -> list[Check]:
     if stage >= 4:
         checks.append(Check("Model: early warning (honest gate)", check_ews))
         checks.append(Check("Model: line increase + cohort gates", check_line_increase))
+    if stage >= 5:
+        checks.append(Check("Docs: model documentation pack", check_doc_pack))
     if stage >= 3:
         checks.append(Check("Apps: decision platform smoke",
                             lambda: check_apps(stage)))
