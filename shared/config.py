@@ -51,6 +51,30 @@ ADJ_POLICY = {
     "score_floor": 600,     # approve-zone pd but business_score < floor -> Refer
 }
 
+# Early-Warning trigger thresholds — named behavioral rules.
+EWS_TRIGGERS = {
+    "high_utilization": 0.90,    # util_recent > this
+    "rising_utilization": 0.15,  # util_drift > this
+    "dpd_severe": 30,            # dpd_max >= this (or dpd_recent > 0)
+    "deposit_decline": 0.30,     # deposit_decline_pct > this
+    "overdraft_recent": 3,       # overdraft_recent >= this
+}
+
+# Early-Warning risk-tier cutoffs on predicted deterioration probability.
+# Seed values; re-calibrated from the score distribution at train time.
+EWS_TIERS = {"t_high": 0.40, "t_med": 0.20}
+
+# Proactive Line Increase — amount rules + incremental-ROE gate.
+LINE_INCREASE = {
+    "target_util": 0.65,
+    "pct_cap": 0.50,
+    "revenue_mult_cap": 0.30,
+    "round_to": 1000,
+    "offer_quantile": 0.75,
+    "max_pd_quantile": 0.50,  # risk appetite: only offer to the lower-risk half of the book
+    "roe_hurdle": 0.15,
+}
+
 # Columns that must never enter any model's feature matrix (target / post-decision /
 # downstream-module leakage). Single source of truth for all stages.
 LEAKAGE_COLUMNS = [

@@ -1,0 +1,49 @@
+{
+  "EWS_FEATURE_COLUMNS": [
+    "util_recent",
+    "balance_recent",
+    "deposit_recent",
+    "util_drift",
+    "deposit_decline_pct",
+    "balance_trend",
+    "util_volatility",
+    "dpd_months",
+    "dpd_max",
+    "dpd_recent",
+    "overdraft_total",
+    "overdraft_recent",
+    "utilization_onbook",
+    "current_balance",
+    "credit_limit",
+    "tenure_months",
+    "dscr",
+    "leverage",
+    "current_ratio",
+    "prior_delinquencies",
+    "business_score",
+    "pd_score",
+    "industry",
+    "entity_type"
+  ],
+  "categorical": [
+    "industry",
+    "entity_type"
+  ],
+  "metrics": {
+    "auc": 0.6622,
+    "pr_auc": 0.308,
+    "top_decile_capture": 0.2159,
+    "top_decile_lift": 2.1595
+  },
+  "gate": {
+    "capture_min": 0.2,
+    "pr_auc_min": "base_rate",
+    "auc_report_floor": 0.6
+  },
+  "tiers": {
+    "t_high": 0.5073,
+    "t_med": 0.1649
+  },
+  "base_rate": 0.1802,
+  "timestamp": "2026-07-05T01:30:49.766620+00:00"
+}

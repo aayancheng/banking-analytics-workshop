@@ -3,7 +3,7 @@
 
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
-.PHONY: setup verify data train-score train-adjudication price test run stop
+.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase test run stop
 
 setup:
 	python3 -m venv .venv
@@ -25,6 +25,12 @@ train-adjudication:
 
 price:
 	$(PY) -m pricing.src.portfolio
+
+train-ews:
+	$(PY) -m ews.src.train
+
+train-line-increase:
+	$(PY) -m line_increase.src.train
 
 test:
 	$(PY) -m pytest -q tests

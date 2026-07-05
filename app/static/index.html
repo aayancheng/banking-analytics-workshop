@@ -39,10 +39,15 @@
 </head>
 <body>
 <header>
-  <h1>Banking Analytics Workshop — Decision Apps (stage-3)</h1>
-  <p>Adjudication &amp; Risk-Based Pricing, both running on YOUR stage-2 scorecard.</p>
+  <h1>Banking Analytics Workshop — Decision Platform</h1>
+  <p>Five modules, one score spine — all running on YOUR stage-2 scorecard.</p>
 </header>
 <main>
+  <section>
+    <h2>Portfolio dashboard — one number per module</h2>
+    <div id="dash" class="tiles muted">Loading…</div>
+  </section>
+
   <section>
     <h2>Loan Adjudication — score → decision, with reasons</h2>
     <div class="row">
@@ -56,6 +61,25 @@
   <section>
     <h2>Pricing &amp; Profitability — the book vs the 15% ROE hurdle</h2>
     <div id="pricing" class="muted">Loading…</div>
+  </section>
+
+  <section>
+    <h2>Early Warning — who to watch, and why (named triggers, not vibes)</h2>
+    <div id="ews" class="muted">Loading…</div>
+  </section>
+
+  <section>
+    <h2>Proactive Line Increase — growth inside risk appetite</h2>
+    <div id="li" class="muted">Loading…</div>
+  </section>
+
+  <section>
+    <h2>Customer 360 — everything the platform knows about one business</h2>
+    <div class="row">
+      <input id="c360id" placeholder="business_id e.g. BIZ100007">
+      <button onclick="c360()">Look up</button>
+    </div>
+    <div id="c360_out" class="muted">Non-booked applicants show Score + Adjudication only — that's correct, not a bug.</div>
   </section>
 </main>
 <script>
@@ -100,7 +124,59 @@ async function loadPricing() {
     <p class="muted">The interesting question is never the tiles — it's <i>who</i> is underpriced. (Session 3, Lab 3b.)</p>`;
 }
 
-loadExamples(); loadPricing();
+async function loadDash() {
+  const d = await (await fetch("/api/dashboard/summary")).json();
+  $("dash").innerHTML = `
+    <div class="tile"><div class="big">${d.score.applicants.toLocaleString()}</div><div class="lbl">applicants scored · mean ${d.score.mean_score}</div></div>
+    <div class="tile"><div class="big">${pct(d.adjudication.mix.Approve || 0)}</div><div class="lbl">approve rate (refer ${pct(d.adjudication.mix.Refer || 0)})</div></div>
+    <div class="tile"><div class="big">${fmt$(d.pricing.mispriced_ead)}</div><div class="lbl">mispriced EAD (${pct(d.pricing.share_clears)} clear hurdle)</div></div>
+    <div class="tile"><div class="big">${d.ews.high_risk.toLocaleString()}</div><div class="lbl">high-risk on watch of ${d.ews.monitored.toLocaleString()}</div></div>
+    <div class="tile"><div class="big">${d.line_increase.offered}</div><div class="lbl">line increases offered · incr. ROE ${pct(d.line_increase.agg_incremental_roe)}</div></div>`;
+}
+
+async function loadEws() {
+  const s = await (await fetch("/api/ews/summary")).json();
+  const wl = await (await fetch("/api/ews/watchlist?n=10")).json();
+  const rows = wl.map(w =>
+    `<tr><td>${w.business_id}</td><td>${w.risk_tier}</td><td>${pct(w.prob)}</td><td style="text-align:left">${w.triggers.join(", ") || "—"}</td></tr>`).join("");
+  $("ews").innerHTML = `
+    <p class="muted">Tiers: High ${s.tiers.High || 0} · Medium ${s.tiers.Medium || 0} · Low ${s.tiers.Low || 0}
+      — capture ${pct(s.metrics.top_decile_capture)} = ${s.metrics.top_decile_lift.toFixed(2)}× lift
+      (honest gate: AUC ${s.metrics.auc} is <i>reported, not gated</i> — ask why in Session 4)</p>
+    <table><tr><th>account</th><th>tier</th><th>p(deterioration)</th><th>named triggers</th></tr>${rows}</table>`;
+}
+
+async function loadLi() {
+  const s = await (await fetch("/api/line-increase/summary")).json();
+  const c = await (await fetch("/api/line-increase/candidates?n=10")).json();
+  const rows = c.map(r =>
+    `<tr><td>${r.business_id}</td><td>${r.score_band}</td><td>${pct(r.prob)}</td><td>${fmt$(r.recommended_amount)}</td><td>${pct(r.incremental_roe)}</td></tr>`).join("");
+  const co = s.cohort;
+  $("li").innerHTML = `
+    <p class="muted">${co.n_offered} offers · cohort PD ${co.cohort_pd} ≪ book ${co.book_pd} ·
+      cohort util ${co.cohort_util} &gt; book ${co.book_util} · aggregate incremental ROE ${pct(co.agg_incremental_roe)} ≥ hurdle ${pct(co.roe_hurdle)}</p>
+    <table><tr><th>account</th><th>band</th><th>p(good)</th><th>recommended</th><th>incr. ROE</th></tr>${rows}</table>`;
+}
+
+async function c360() {
+  const id = $("c360id").value.trim();
+  if (!id) return;
+  const r = await fetch("/api/customer/" + encodeURIComponent(id));
+  if (!r.ok) { $("c360_out").innerHTML = `<span class="Decline">Unknown business_id "${id}".</span>`; return; }
+  const d = await r.json();
+  const sec = (name, body) => `<div><b>${name}</b> ${body}</div>`;
+  let html = `<div class="kv" style="margin-top:10px">`;
+  html += sec("Profile", `${d.profile.industry} · ${d.profile.region} · ${d.profile.entity_type} · rev ${fmt$(d.profile.annual_revenue)}`);
+  html += sec("Score", `${d.score.business_score} (band ${d.score.score_band}, PD ${pct(d.score.pd)})`);
+  html += sec("Adjudication", `<span class="${d.adjudication.decision}">${d.adjudication.decision}</span> ${d.adjudication.rule_hits.join("; ")}`);
+  html += sec("Pricing", d.pricing ? `ROE at quoted ${pct(d.pricing.roe_at_quoted)} — ${d.pricing.clears_hurdle ? "clears" : "misses"} the hurdle` : "n/a (not booked)");
+  html += sec("Early warning", d.ews ? `${d.ews.risk_tier} (p ${pct(d.ews.prob)}) ${d.ews.triggers.join(", ")}` : "n/a (not booked)");
+  html += sec("Line increase", d.line_increase ? (d.line_increase.eligible ? `eligible — ${fmt$(d.line_increase.recommended_amount)} at incr. ROE ${pct(d.line_increase.incremental_roe)}` : "not eligible") : "n/a (not booked)");
+  html += `</div>`;
+  $("c360_out").innerHTML = html;
+}
+
+loadExamples(); loadPricing(); loadDash(); loadEws(); loadLi();
 </script>
 </body>
 </html>

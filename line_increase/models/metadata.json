@@ -1,0 +1,52 @@
+{
+  "LI_FEATURE_COLUMNS": [
+    "utilization_onbook",
+    "util_headroom",
+    "credit_limit",
+    "current_balance",
+    "tenure_months",
+    "years_in_business",
+    "employees",
+    "annual_revenue",
+    "log_revenue",
+    "dscr",
+    "leverage",
+    "current_ratio",
+    "credit_history_months",
+    "prior_delinquencies",
+    "trade_lines",
+    "public_records",
+    "pd_score",
+    "industry",
+    "entity_type",
+    "loan_purpose"
+  ],
+  "categorical": [
+    "industry",
+    "entity_type",
+    "loan_purpose"
+  ],
+  "train_rows": 6668,
+  "test_rows": 1668,
+  "metrics": {
+    "auc": 0.8128,
+    "top20_lift": 2.659
+  },
+  "gate": {
+    "auc_min": 0.78,
+    "lift_min": 2.0
+  },
+  "offer_threshold": 0.3121,
+  "offer_max_pd": 0.0741,
+  "base_rate": 0.2219,
+  "cohort": {
+    "n_offered": 95,
+    "book_pd": 0.1171,
+    "cohort_pd": 0.0363,
+    "book_util": 0.4714,
+    "cohort_util": 0.8371,
+    "agg_incremental_roe": 0.2153,
+    "roe_hurdle": 0.15
+  },
+  "timestamp": "2026-07-05T01:31:08.047928+00:00"
+}
