@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-MAX_STAGE_BUILT = 2  # bumped as each session's tag lands
+MAX_STAGE_BUILT = 3  # bumped as each session's tag lands
 
 PYTHON_MIN = (3, 11)
 
@@ -34,6 +34,9 @@ PYTHON_MIN = (3, 11)
 # the held-out metric against the values below. (Set beneath the measured
 # synthetic ceilings; see Session 2.)
 SCORE_AUC_GATE = 0.78
+ADJ_AUC_GATE = 0.78
+ADJ_LIFT_GATE = 2.0
+PRICING_TOLERANCE = 0.02  # relative drift allowed vs the committed pricing summary
 
 # Expected shape of the committed stage-1 data. Deterministic seed + pinned
 # numpy means these are exact, not approximate — if they drift, something
@@ -149,6 +152,84 @@ def check_scorecard():
     return True, f"scorecard loads, held-out AUC {auc:.4f} >= gate {SCORE_AUC_GATE}", None
 
 
+def check_adjudication():
+    models = ROOT / "adjudication" / "models"
+    needed = ["adjudication_model.pkl", "policy_config.json", "metadata.json"]
+    missing = [f for f in needed if not (models / f).exists()]
+    if missing:
+        return (False, f"Missing artifacts: {', '.join(missing)}",
+                "Train it (Session 3 lab): make train-adjudication — or restore: "
+                "git checkout stage-3 -- adjudication/models")
+    try:
+        import joblib
+        import pandas as pd
+        from sklearn.metrics import roc_auc_score
+        from sklearn.model_selection import train_test_split
+        sys.path.insert(0, str(ROOT))
+        from shared.config import RAW, SEED
+        from adjudication.src.feature_engineering import (
+            ADJ_FEATURE_COLUMNS, compute_adjudication_features)
+
+        model = joblib.load(models / "adjudication_model.pkl")
+        biz = pd.read_parquet(RAW / "businesses.parquet")
+        X = compute_adjudication_features(biz)[ADJ_FEATURE_COLUMNS]
+        y = biz["default"].to_numpy()
+        _, X_te, _, y_te = train_test_split(
+            X, y, test_size=0.2, random_state=SEED, stratify=y)
+        import numpy as np
+        p = model.predict_proba(X_te)[:, 1]
+        auc = float(roc_auc_score(y_te, p))
+        cut = np.quantile(p, 0.80)
+        lift = float(y_te[p >= cut].mean() / y_te.mean())
+    except Exception as e:
+        return (False, f"adjudication model failed to load/score: {e}",
+                "Retrain: make train-adjudication — or restore: "
+                "git checkout stage-3 -- adjudication/models")
+    if auc < ADJ_AUC_GATE or lift < ADJ_LIFT_GATE:
+        return (False, f"held-out AUC {auc:.4f} (gate {ADJ_AUC_GATE}) / "
+                       f"top-20% lift {lift:.2f}x (gate {ADJ_LIFT_GATE})",
+                "The gate does not move — the model does (Session 3 lab), or restore: "
+                "git checkout stage-3 -- adjudication/models")
+    return True, f"AUC {auc:.4f} >= {ADJ_AUC_GATE}, lift {lift:.2f}x >= {ADJ_LIFT_GATE}", None
+
+
+def check_apps():
+    """Smoke both decision apps in-process (TestClient — no server needed),
+    then compare pricing totals to the committed summary."""
+    summary_file = ROOT / "pricing" / "docs" / "summary.json"
+    if not summary_file.exists():
+        return (False, "pricing/docs/summary.json missing",
+                "Rebuild the priced book: make price — or restore: "
+                "git checkout stage-3 -- pricing/docs")
+    try:
+        sys.path.insert(0, str(ROOT))
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            h = client.get("/health")
+            assert h.status_code == 200, f"/health -> {h.status_code}"
+            ex = client.get("/api/examples").json()
+            assert ex, "no examples returned"
+            some_id = ex[0]["business_id"]
+            adj = client.get(f"/api/adjudicate/{some_id}")
+            assert adj.status_code == 200 and adj.json()["decision"] in (
+                "Approve", "Refer", "Decline"), "adjudication endpoint broken"
+            live = client.get("/api/pricing/summary").json()
+        committed = json.loads(summary_file.read_text())
+        for k in ("n", "share_clears", "mispriced_ead"):
+            want, got = committed[k], live[k]
+            if abs(got - want) > PRICING_TOLERANCE * max(abs(want), 1e-9):
+                return (False,
+                        f"pricing {k} drifted: {got} vs committed {want}",
+                        "Your book no longer matches the checkpoint. Rebuild: make price "
+                        "— or restore: git checkout stage-3 -- pricing/docs score/models")
+    except Exception as e:
+        return (False, f"app smoke test failed: {e}",
+                "Check artifacts exist (make train-score train-adjudication price), "
+                "or restore the checkpoint: git checkout stage-3 && python verify.py")
+    return True, f"apps up in-process; pricing matches committed summary (n={committed['n']:,})", None
+
+
 def checks_for(stage: int) -> list[Check]:
     checks = [
         Check("Python 3.11+", check_python),
@@ -158,6 +239,9 @@ def checks_for(stage: int) -> list[Check]:
         checks.append(Check("Data: synthetic SME portfolio", check_data))
     if stage >= 2:
         checks.append(Check("Model: scorecard + AUC gate", check_scorecard))
+    if stage >= 3:
+        checks.append(Check("Model: adjudication + gates", check_adjudication))
+        checks.append(Check("Apps: adjudication + pricing smoke", check_apps))
     return checks
 
 

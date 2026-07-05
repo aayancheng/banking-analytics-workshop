@@ -1,0 +1,86 @@
+{
+  "n": 8336,
+  "n_clears": 2534,
+  "share_clears": 0.304,
+  "median_roe": 0.1087,
+  "mispriced_ead": 1276148000.0,
+  "by_band": [
+    {
+      "key": "A",
+      "mispriced_rate": 0.7314,
+      "count": 845
+    },
+    {
+      "key": "AAA",
+      "mispriced_rate": 0.8041,
+      "count": 822
+    },
+    {
+      "key": "B",
+      "mispriced_rate": 0.7094,
+      "count": 1497
+    },
+    {
+      "key": "C",
+      "mispriced_rate": 0.6591,
+      "count": 1851
+    },
+    {
+      "key": "D",
+      "mispriced_rate": 0.6748,
+      "count": 3321
+    }
+  ],
+  "by_industry": [
+    {
+      "key": "Agriculture",
+      "mispriced_rate": 0.7229,
+      "count": 794
+    },
+    {
+      "key": "Construction",
+      "mispriced_rate": 0.7667,
+      "count": 840
+    },
+    {
+      "key": "Healthcare",
+      "mispriced_rate": 0.6724,
+      "count": 867
+    },
+    {
+      "key": "Hospitality",
+      "mispriced_rate": 0.7264,
+      "count": 859
+    },
+    {
+      "key": "Manufacturing",
+      "mispriced_rate": 0.7108,
+      "count": 816
+    },
+    {
+      "key": "Professional Services",
+      "mispriced_rate": 0.6524,
+      "count": 863
+    },
+    {
+      "key": "Retail",
+      "mispriced_rate": 0.6569,
+      "count": 822
+    },
+    {
+      "key": "Technology",
+      "mispriced_rate": 0.7063,
+      "count": 800
+    },
+    {
+      "key": "Transport",
+      "mispriced_rate": 0.7136,
+      "count": 817
+    },
+    {
+      "key": "Wholesale",
+      "mispriced_rate": 0.6364,
+      "count": 858
+    }
+  ]
+}

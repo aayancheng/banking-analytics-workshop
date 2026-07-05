@@ -36,6 +36,21 @@ PORTS = {"fastapi": 8100, "vite": 5180}
 RAW.mkdir(parents=True, exist_ok=True)
 PROCESSED.mkdir(parents=True, exist_ok=True)
 
+# Adjudication policy-layer defaults (PD zones, hard knockouts, refer overrides).
+# t_low / t_high are re-calibrated from the model PD distribution at train time and
+# written to adjudication/models/policy_config.json; these are the seed values.
+ADJ_POLICY = {
+    "t_low": 0.10,          # pd <= t_low  -> Approve zone
+    "t_high": 0.35,         # pd >= t_high -> Decline zone
+    "dscr_floor": 1.0,      # dscr < floor -> hard Decline
+    "dscr_refer_hi": 1.2,   # approve-zone pd but dscr in [floor, refer_hi) -> Refer
+    "public_records_cap": 0,   # public_records > cap -> hard Decline
+    "prior_delinq_cap": 3,     # prior_delinquencies >= cap -> hard Decline
+    "leverage_cap": 6.0,    # leverage > cap -> hard Decline
+    "req_to_rev_cap": 0.75, # requested_amount / annual_revenue > cap -> Refer
+    "score_floor": 600,     # approve-zone pd but business_score < floor -> Refer
+}
+
 # Columns that must never enter any model's feature matrix (target / post-decision /
 # downstream-module leakage). Single source of truth for all stages.
 LEAKAGE_COLUMNS = [

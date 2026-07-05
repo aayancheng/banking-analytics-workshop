@@ -1,0 +1,46 @@
+{
+  "ADJ_FEATURE_COLUMNS": [
+    "years_in_business",
+    "employees",
+    "annual_revenue",
+    "requested_amount",
+    "term_months",
+    "collateral_flag",
+    "dscr",
+    "leverage",
+    "current_ratio",
+    "debt_to_income",
+    "utilization",
+    "profit_margin",
+    "credit_history_months",
+    "prior_delinquencies",
+    "trade_lines",
+    "public_records",
+    "business_score",
+    "pd_score",
+    "industry",
+    "entity_type",
+    "loan_purpose"
+  ],
+  "categorical": [
+    "industry",
+    "entity_type",
+    "loan_purpose"
+  ],
+  "train_rows": 9600,
+  "test_rows": 2400,
+  "metrics": {
+    "auc": 0.8096,
+    "top20_lift": 2.8554
+  },
+  "gate": {
+    "auc_min": 0.78,
+    "lift_min": 2.0
+  },
+  "decision_mix_test": {
+    "Refer": 0.368,
+    "Decline": 0.324,
+    "Approve": 0.308
+  },
+  "timestamp": "2026-07-05T01:04:55.107517+00:00"
+}

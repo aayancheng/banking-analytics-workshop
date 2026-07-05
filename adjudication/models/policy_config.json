@@ -1,0 +1,11 @@
+{
+  "t_low": 0.0955,
+  "t_high": 0.4943,
+  "dscr_floor": 1.0,
+  "dscr_refer_hi": 1.2,
+  "public_records_cap": 0,
+  "prior_delinq_cap": 3,
+  "leverage_cap": 6.0,
+  "req_to_rev_cap": 0.75,
+  "score_floor": 600
+}

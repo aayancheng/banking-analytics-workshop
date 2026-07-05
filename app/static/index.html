@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banking Analytics Workshop — Decision Apps</title>
+<style>
+  :root { --ink:#1a2332; --line:#d8dee9; --ok:#1a7f4b; --warn:#b7791f; --bad:#b3372e; --accent:#245bb2; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink);
+         margin: 0; background: #f6f8fb; }
+  header { background: var(--ink); color: #fff; padding: 14px 24px; }
+  header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  header p { margin: 2px 0 0; font-size: 13px; opacity: .75; }
+  main { max-width: 980px; margin: 24px auto; padding: 0 16px; display: grid; gap: 20px; }
+  section { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; }
+  h2 { font-size: 15px; margin: 0 0 12px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input { padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; width: 180px; }
+  button { padding: 8px 14px; border: 0; border-radius: 6px; background: var(--accent);
+           color: #fff; font-size: 14px; cursor: pointer; }
+  button:hover { filter: brightness(1.1); }
+  .chips { margin-top: 8px; font-size: 12px; }
+  .chips a { display:inline-block; margin: 2px 4px 2px 0; padding: 2px 8px; border:1px solid var(--line);
+             border-radius: 10px; color: var(--accent); cursor: pointer; text-decoration: none; }
+  .decision { font-size: 22px; font-weight: 700; margin: 10px 0 4px; }
+  .Approve { color: var(--ok); } .Refer { color: var(--warn); } .Decline { color: var(--bad); }
+  .kv { font-size: 13px; line-height: 1.7; }
+  .kv b { display: inline-block; min-width: 150px; font-weight: 600; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .tile .big { font-size: 22px; font-weight: 700; }
+  .tile .lbl { font-size: 12px; color: #5b6572; margin-top: 2px; }
+  .muted { color: #5b6572; font-size: 13px; }
+  table { border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  td, th { border: 1px solid var(--line); padding: 4px 10px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Banking Analytics Workshop — Decision Apps (stage-3)</h1>
+  <p>Adjudication &amp; Risk-Based Pricing, both running on YOUR stage-2 scorecard.</p>
+</header>
+<main>
+  <section>
+    <h2>Loan Adjudication — score → decision, with reasons</h2>
+    <div class="row">
+      <input id="bizid" placeholder="business_id e.g. BIZ100007">
+      <button onclick="adjudicate()">Decide</button>
+    </div>
+    <div class="chips" id="examples"></div>
+    <div id="adj_out" class="muted">Look up an applicant to see the decision path.</div>
+  </section>
+
+  <section>
+    <h2>Pricing &amp; Profitability — the book vs the 15% ROE hurdle</h2>
+    <div id="pricing" class="muted">Loading…</div>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const fmt$ = v => "$" + Math.round(v).toLocaleString();
+const pct = v => (100 * v).toFixed(1) + "%";
+
+async function loadExamples() {
+  const ex = await (await fetch("/api/examples")).json();
+  $("examples").innerHTML = "try: " + ex.map(e =>
+    `<a onclick="$('bizid').value='${e.business_id}';adjudicate()">${e.business_id} (${e.hint})</a>`).join("");
+}
+
+async function adjudicate() {
+  const id = $("bizid").value.trim();
+  if (!id) return;
+  const r = await fetch("/api/adjudicate/" + encodeURIComponent(id));
+  if (!r.ok) { $("adj_out").innerHTML = `<span class="Decline">Unknown business_id "${id}".</span>`; return; }
+  const d = await r.json();
+  $("adj_out").innerHTML = `
+    <div class="decision ${d.decision}">${d.decision}</div>
+    <div class="kv">
+      <div><b>Business score</b> ${d.business_score} (band ${d.score_band})</div>
+      <div><b>Model PD</b> ${pct(d.pd_model)}</div>
+      <div><b>Requested</b> ${fmt$(d.requested_amount)} · ${d.industry}</div>
+      <div><b>Policy rule hits</b> ${d.rule_hits.length ? d.rule_hits.join("; ") : "none — decision came from the PD zones"}</div>
+    </div>`;
+}
+
+async function loadPricing() {
+  const s = await (await fetch("/api/pricing/summary")).json();
+  const bands = s.by_band.map(b =>
+    `<tr><td>${b.key}</td><td>${pct(b.mispriced_rate)}</td><td>${b.count.toLocaleString()}</td></tr>`).join("");
+  $("pricing").innerHTML = `
+    <div class="tiles">
+      <div class="tile"><div class="big">${s.n.toLocaleString()}</div><div class="lbl">booked loans priced</div></div>
+      <div class="tile"><div class="big">${pct(s.share_clears)}</div><div class="lbl">clear the 15% ROE hurdle at quoted rate</div></div>
+      <div class="tile"><div class="big">${pct(s.median_roe)}</div><div class="lbl">median ROE at quoted</div></div>
+      <div class="tile"><div class="big">${fmt$(s.mispriced_ead)}</div><div class="lbl">mispriced EAD</div></div>
+    </div>
+    <table><tr><th>score band</th><th>mispriced rate</th><th>n</th></tr>${bands}</table>
+    <p class="muted">The interesting question is never the tiles — it's <i>who</i> is underpriced. (Session 3, Lab 3b.)</p>`;
+}
+
+loadExamples(); loadPricing();
+</script>
+</body>
+</html>

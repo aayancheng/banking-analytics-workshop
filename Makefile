@@ -3,7 +3,7 @@
 
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
-.PHONY: setup verify data train-score run stop
+.PHONY: setup verify data train-score train-adjudication price test run stop
 
 setup:
 	python3 -m venv .venv
@@ -20,8 +20,17 @@ data:
 train-score:
 	$(PY) -m score.src.train
 
+train-adjudication:
+	$(PY) -m adjudication.src.train
+
+price:
+	$(PY) -m pricing.src.portfolio
+
+test:
+	$(PY) -m pytest -q tests
+
 run:
-	@echo "The apps arrive with stage-3. Until then: make verify."
+	$(PY) -m uvicorn app.main:app --port 8100
 
 stop:
 	-@lsof -ti :8100 | xargs kill 2>/dev/null || true
