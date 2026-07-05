@@ -1,0 +1,37 @@
+{
+  "FEATURE_COLUMNS": [
+    "years_in_business",
+    "annual_revenue",
+    "dscr",
+    "current_ratio",
+    "leverage",
+    "utilization",
+    "credit_history_months",
+    "prior_delinquencies",
+    "trade_lines",
+    "public_records",
+    "debt_to_income",
+    "revenue_per_employee",
+    "profit_margin",
+    "industry",
+    "entity_type"
+  ],
+  "categorical": [
+    "industry",
+    "entity_type"
+  ],
+  "train_rows": 9600,
+  "test_rows": 2400,
+  "metrics": {
+    "auc": 0.8176,
+    "ks": 0.4946
+  },
+  "gate": {
+    "auc_min": 0.78
+  },
+  "score_range": [
+    300,
+    850
+  ],
+  "timestamp": "2026-07-05T01:03:13.177491+00:00"
+}

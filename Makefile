@@ -3,7 +3,7 @@
 
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
-.PHONY: setup verify data run stop
+.PHONY: setup verify data train-score run stop
 
 setup:
 	python3 -m venv .venv
@@ -16,6 +16,9 @@ verify:
 data:
 	$(PY) -m shared.data_generator
 	$(PY) -m shared.data_quality
+
+train-score:
+	$(PY) -m score.src.train
 
 run:
 	@echo "The apps arrive with stage-3. Until then: make verify."

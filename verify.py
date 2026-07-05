@@ -25,9 +25,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-MAX_STAGE_BUILT = 1  # bumped as each session's tag lands
+MAX_STAGE_BUILT = 2  # bumped as each session's tag lands
 
 PYTHON_MIN = (3, 11)
+
+# Committed metric gates. These live HERE, in the tag, on purpose: relaxing the
+# gate in your own train.py does not move the checkpoint — verify.py recomputes
+# the held-out metric against the values below. (Set beneath the measured
+# synthetic ceilings; see Session 2.)
+SCORE_AUC_GATE = 0.78
 
 # Expected shape of the committed stage-1 data. Deterministic seed + pinned
 # numpy means these are exact, not approximate — if they drift, something
@@ -60,10 +66,12 @@ def check_dependencies():
         return False, "requirements.txt missing", \
             "You may be in the wrong folder. cd to the repo root and rerun."
     missing, wrong = [], []
+    n_pins = 0
     for line in req_file.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
+        n_pins += 1
         pkg, want = line.split("==")
         try:
             have = metadata.version(pkg)
@@ -79,7 +87,7 @@ def check_dependencies():
     if wrong:
         return (False, f"Version mismatch: {'; '.join(wrong)}",
                 "Run: make setup   — pinned versions keep everyone's numbers identical.")
-    return True, "15 pinned packages present", None
+    return True, f"{n_pins} pinned packages present", None
 
 
 def check_data():
@@ -106,6 +114,41 @@ def check_data():
     return True, f"3 parquet files ({counts} rows)", None
 
 
+def check_scorecard():
+    models = ROOT / "score" / "models"
+    needed = ["scorecard.pkl", "score_scaling.json", "metadata.json"]
+    missing = [f for f in needed if not (models / f).exists()]
+    if missing:
+        return (False, f"Missing artifacts: {', '.join(missing)}",
+                "Train it (Session 2 lab): make train-score — or restore the checkpoint "
+                "version: git checkout stage-2 -- score/models")
+    try:
+        import joblib
+        import pandas as pd
+        from sklearn.metrics import roc_auc_score
+        from sklearn.model_selection import train_test_split
+        sys.path.insert(0, str(ROOT))
+        from shared.config import RAW, SEED
+        from score.src.feature_engineering import FEATURE_COLUMNS, compute_features
+
+        scorecard = joblib.load(models / "scorecard.pkl")
+        biz = pd.read_parquet(RAW / "businesses.parquet")
+        X = compute_features(biz)[FEATURE_COLUMNS]
+        y = biz["default"].to_numpy()
+        _, X_te, _, y_te = train_test_split(
+            X, y, test_size=0.2, random_state=SEED, stratify=y)
+        auc = float(roc_auc_score(y_te, scorecard.predict_proba(X_te)[:, 1]))
+    except Exception as e:
+        return (False, f"scorecard.pkl failed to load/score: {e}",
+                "Retrain it: make train-score — or restore the checkpoint version: "
+                "git checkout stage-2 -- score/models")
+    if auc < SCORE_AUC_GATE:
+        return (False, f"held-out AUC {auc:.4f} is below the committed gate {SCORE_AUC_GATE}",
+                "The gate does not move — the model does. Revisit binning/feature choices "
+                "(Session 2 lab), or restore the checkpoint: git checkout stage-2 -- score/models")
+    return True, f"scorecard loads, held-out AUC {auc:.4f} >= gate {SCORE_AUC_GATE}", None
+
+
 def checks_for(stage: int) -> list[Check]:
     checks = [
         Check("Python 3.11+", check_python),
@@ -113,6 +156,8 @@ def checks_for(stage: int) -> list[Check]:
     ]
     if stage >= 1:
         checks.append(Check("Data: synthetic SME portfolio", check_data))
+    if stage >= 2:
+        checks.append(Check("Model: scorecard + AUC gate", check_scorecard))
     return checks
 
 
