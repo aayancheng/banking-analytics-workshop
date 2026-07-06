@@ -1,0 +1,10 @@
+.venv/bin/python -m shared.data_generator
+businesses: 12,000 rows, default rate 0.167, booked 0.695
+portfolio:  8,336 accounts, deterioration 0.180, line_increase_good 0.222
+panel:      200,064 rows (24 months)
+.venv/bin/python -m shared.data_quality
+wrote reports/data_quality.md (0 nulls, 12,000/8,336/200,064 rows)
+[1/3] Python 3.11+ ........................... OK
+[2/3] Dependencies (pinned) .................. OK
+[3/3] Data: synthetic SME portfolio .......... OK
+✅ Stage 1 verified — you are here, and it works.

@@ -1,0 +1,12 @@
+.venv/bin/python -m tools.build_doc_pack
+wrote docs/model_doc_pack/MODEL_DOCUMENTATION.md (147 lines)
+[1/9] Python 3.11+ ........................... OK
+[2/9] Dependencies (pinned) .................. OK
+[3/9] Data: synthetic SME portfolio .......... OK
+[4/9] Model: scorecard + AUC gate ............ OK
+[5/9] Model: adjudication + gates ............ OK
+[6/9] Model: early warning (honest gate) ..... OK
+[7/9] Model: line increase + cohort gates .... OK
+[8/9] Docs: model documentation pack ......... OK
+[9/9] Apps: decision platform smoke .......... OK
+✅ Stage 5 verified — you are here, and it works.
