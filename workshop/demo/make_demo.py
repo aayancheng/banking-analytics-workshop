@@ -44,6 +44,23 @@ WHITE = (255, 255, 255)
 
 MONO = "/System/Library/Fonts/Menlo.ttc"
 SANS = "/System/Library/Fonts/Helvetica.ttc"
+EMOJI = "/System/Library/Fonts/Apple Color Emoji.ttc"
+_EMOJI_FONT = ImageFont.truetype(EMOJI, 160)  # Apple Color Emoji has a strike at 160
+
+
+def _emoji_glyph(char: str, target_h: int) -> Image.Image:
+    """Render a color emoji to a cropped RGBA image scaled to target height."""
+    tmp = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
+    ImageDraw.Draw(tmp).text((16, 12), char, font=_EMOJI_FONT, embedded_color=True)
+    box = tmp.getbbox()
+    g = tmp.crop(box)
+    scale = target_h / g.height
+    return g.resize((max(1, int(g.width * scale)), target_h), Image.LANCZOS)
+
+
+def paste_emoji(img: Image.Image, char: str, cx: int, cy: int, target_h: int):
+    g = _emoji_glyph(char, target_h)
+    img.paste(g, (int(cx - g.width / 2), int(cy - g.height / 2)), g)
 
 
 def font(path, size):
@@ -57,6 +74,9 @@ F_STEP = font(SANS, 30)
 F_MONO = font(MONO, 26)
 F_MONO_S = font(MONO, 22)
 F_FOOT = font(SANS, 28)
+F_CARD_T = font(SANS, 42)
+F_DESC = font(SANS, 29)
+F_STRIP = font(SANS, 34)
 
 
 def _wrap(draw, text, fnt, max_w):
@@ -201,6 +221,48 @@ def codespaces_card(caption: str, step: str) -> Image.Image:
     return img
 
 
+def overview_card() -> Image.Image:
+    """Slide 2 — what you'll learn, for anyone, no code. Four moves + the
+    transferability message."""
+    img = base("BUSINESS ANALYTICS  ·  THE BIG PICTURE",
+               "What you'll learn — the four moves behind every analytics decision.")
+    d = ImageDraw.Draw(img)
+    items = [
+        ("\U0001F3E2", "Build the portfolio",
+         "Create a realistic set of small-business borrowers to practice on — safe, made-up data."),
+        ("\U0001F4CA", "Score the risk",
+         "Develop a credit scorecard that tells safe borrowers from risky ones — with reasons."),
+        ("⚖️", "Decide & price",
+         "Turn each score into an approve or decline — and the right price for the risk taken."),
+        ("\U0001F6A8", "Monitor & step in",
+         "Watch the portfolio to catch loans going bad early — while there is still time to act."),
+    ]
+    cw, ch = 850, 318
+    coords = [(90, 200), (980, 200), (90, 540), (980, 540)]
+    for (x, y), (emo, title, desc), n in zip(coords, items, [1, 2, 3, 4]):
+        d.rounded_rectangle([x, y, x + cw, y + ch], radius=18, fill=WHITE,
+                            outline=(214, 222, 234), width=2)
+        paste_emoji(img, emo, x + 118, y + ch // 2, 130)
+        d.ellipse([x + 40, y + 34, x + 82, y + 76], outline=ACCENT, width=3)
+        d.text((x + 61, y + 55), str(n), font=F_STEP, fill=ACCENT, anchor="mm")
+        tx = y  # noqa: unused, keep flake quiet
+        d.text((x + 218, y + 56), title, font=F_CARD_T, fill=INK)
+        for i, line in enumerate(_wrap(d, desc, F_DESC, cw - 250)):
+            d.text((x + 218, y + 128 + i * 42), line, font=F_DESC, fill=(70, 84, 104))
+
+    # transferability strip
+    sy = 892
+    d.rounded_rectangle([90, sy, 1830, sy + 116], radius=16, fill=INK)
+    d.text((124, sy + 20), "Learn it here on small-business lending —",
+           font=F_STRIP, fill=WHITE)
+    d.text((124, sy + 64),
+           "then reuse the very same four moves for investing, marketing, fraud, and beyond.",
+           font=F_STRIP, fill=(150, 200, 255))
+    for i, emo in enumerate(("\U0001F4C8", "\U0001F6D2", "\U0001F6E1️")):
+        paste_emoji(img, emo, 1560 + i * 90, sy + 58, 60)
+    return img
+
+
 def end_card() -> Image.Image:
     img = Image.new("RGB", (W, H), NAVY)
     d = ImageDraw.Draw(img)
@@ -231,6 +293,8 @@ def build_frames() -> list[tuple[Path, float]]:
     seq: list[tuple[Image.Image, float]] = []
 
     seq.append((title_card(), 3.5))
+
+    seq.append((overview_card(), 7.0))
 
     seq.append((codespaces_card(
         "Setup — open the repo in GitHub Codespaces. Nothing to install locally.",
