@@ -33,13 +33,18 @@ the *outputs* of the stage before it, so missing a session costs you nothing at 
 |---|---|---|
 | `stage-0` | pre-work | environment only: pinned deps, devcontainer, `verify.py` |
 | `stage-1` | Session 1 | synthetic SME portfolio data, the generator, a data-quality report |
-| `stage-2` | Session 2 | scorecard trained + evaluated *(arrives with Session 2)* |
-| `stage-3` | Session 3 | adjudication + pricing apps *(arrives with Session 3)* |
-| `stage-4` | Session 4 | early-warning + line management + portal *(arrives with Session 4)* |
-| `stage-5` | Session 5 | model documentation pack, demo-ready platform *(arrives with Session 5)* |
+| `stage-2` | Session 2 | scorecard trained + evaluated, hard metric gate |
+| `stage-3` | Session 3 | adjudication + pricing apps running on the score |
+| `stage-4` | Session 4 | early warning + line management + portal |
+| `stage-5` | Session 5 | model documentation pack, demo-ready platform |
 
 **Lost?** `git stash && git checkout stage-N && python verify.py` — or open the tag in
 Codespaces. You are back at a verified checkpoint.
+
+## Workshop materials
+
+Decks, dual-track lab sheets, and agent-track prompt cards live in [workshop/](workshop/) —
+one clone carries everything a student needs.
 
 ## Two tracks, one checkpoint
 

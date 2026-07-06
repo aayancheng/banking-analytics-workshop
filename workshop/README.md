@@ -4,9 +4,9 @@ Student-facing materials for the live sessions. Everything here assumes the repo
 
 | Folder | Contents |
 |---|---|
-| `slides/` | Session decks S1–S3, Markdown source ([Marp](https://marp.app) format) |
-| `labs/` | Dual-track lab sheets — agent track and manual track, one shared checkpoint |
-| `prompt-cards/` | Agent-track briefs AC-1, AC-2, AC-3a, AC-3b (S4–S5 cards arrive with those sessions' materials) |
+| `slides/` | Session decks S1–S5, Markdown source ([Marp](https://marp.app) format) |
+| `labs/` | Dual-track lab sheets S1–S5, the oracle-ceiling calculator, the doc-pack template, and the S5 challenge-question bank |
+| `prompt-cards/` | Agent-track briefs AC-1, AC-2, AC-3a, AC-3b, AC-4a, AC-4b, AC-5 |
 
 ## Reading the slides
 
