@@ -11,6 +11,19 @@ lending analytics platform — synthetic data, a credit scorecard, and decision 
 same way a real one was built with AI agents in four days. Every session ends at a tagged,
 verified checkpoint. If you get lost, you are never more than one command from a working state.
 
+## What you'll build
+
+Every analytics decision is the same four moves — **build the portfolio, score the risk,
+decide & price, monitor & step in.** You'll learn them on small-business lending, then reuse
+the very same moves for investing, marketing, fraud, and beyond.
+
+![The four moves behind every analytics decision: build the portfolio, score the risk, decide and price, monitor and step in](workshop/demo/frames/frame_01.png)
+
+By Session 4 the shared score-spine and its decision apps run behind one portal — early
+warning and proactive line increases over the same borrowers, each decision explained:
+
+![The decision platform in action: an early-warning watchlist with named triggers and a proactive line-increase table, behind one portal](workshop/demo/frames/frame_06.png)
+
 ## Quick start
 
 **Guaranteed path (browser, nothing to install):** open this repo in GitHub Codespaces.
@@ -19,7 +32,7 @@ When the container finishes building, `verify.py` has already run. Green means g
 **Fast path (your laptop):** Python 3.11+ required.
 
 ```bash
-git clone <this-repo> && cd banking-analytics-workshop
+git clone https://github.com/aayancheng/banking-analytics-workshop.git && cd banking-analytics-workshop
 make setup     # creates .venv and installs pinned dependencies
 make verify    # tells you where you are, and that it works
 ```
