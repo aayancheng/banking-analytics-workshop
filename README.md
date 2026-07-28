@@ -26,8 +26,11 @@ warning and proactive line increases over the same borrowers, each decision expl
 
 ## Quick start
 
-**Guaranteed path (browser, nothing to install):** open this repo in GitHub Codespaces.
-When the container finishes building, `verify.py` has already run. Green means go.
+**Guaranteed path (browser, nothing to install):** launch this repo in GitHub Codespaces —
+one click, no local setup. When the container finishes building, `verify.py` has already run.
+Green means go.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/aayancheng/banking-analytics-workshop?quickstart=1)
 
 **Fast path (your laptop):** Python 3.11+ required.
 
