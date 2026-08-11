@@ -109,9 +109,24 @@ def base(step_label: str, caption: str, cmd: str | None = None) -> Image.Image:
     if cmd:
         d.text((70, 168), cmd, font=F_STEP, fill=(96, 118, 150))
     # footer
-    d.text((70, H - 52), "Banking Analytics with AI Agents  ·  github.com/aayancheng/banking-analytics-workshop",
+    d.text((70, H - 52), "Credit Analytics with AI Agents  ·  github.com/aayancheng/banking-analytics-workshop",
            font=F_FOOT, fill=MUTED)
     return img
+
+
+def figure_card(img: Image.Image, fig_path: Path):
+    """Embed a generated figure (table/chart from capture_assets.py) on a clean
+    panel — no browser chrome, because these are rendered outputs, not screenshots."""
+    d = ImageDraw.Draw(img)
+    x0, y0, x1, y1 = 90, 212, W - 90, H - 96
+    d.rounded_rectangle([x0, y0, x1, y1], radius=16, fill=WHITE,
+                        outline=(214, 222, 234), width=2)
+    fig = Image.open(fig_path).convert("RGB")
+    avail_w, avail_h = (x1 - x0 - 28), (y1 - y0 - 28)
+    scale = min(avail_w / fig.width, avail_h / fig.height)
+    nw, nh = int(fig.width * scale), int(fig.height * scale)
+    fig = fig.resize((nw, nh), Image.LANCZOS)
+    img.paste(fig, (x0 + 14 + (avail_w - nw) // 2, y0 + 14 + (avail_h - nh) // 2))
 
 
 def terminal_card(img: Image.Image, lines: list[str], prompt_cmds: list[str] | None = None):
@@ -154,9 +169,21 @@ def terminal_card(img: Image.Image, lines: list[str], prompt_cmds: list[str] | N
 
 
 def browser_card(img: Image.Image, shot_path: Path):
-    """Embed a portal screenshot inside a browser-chrome frame."""
+    """Embed a portal screenshot inside a browser-chrome frame.
+
+    The window is sized to the screenshot so the chrome always hugs its content —
+    otherwise a wide crop leaves an empty slab of chrome below the image."""
+    shot = Image.open(shot_path).convert("RGB")
+    max_w, max_h = W - 180, (H - 90) - (214 + 52)
+    scale = min(max_w / shot.width, max_h / shot.height)
+    nw, nh = int(shot.width * scale), int(shot.height * scale)
+    shot = shot.resize((nw, nh), Image.LANCZOS)
+
+    x0 = (W - (nw + 4)) // 2
+    y0 = 214
+    x1, y1 = x0 + nw + 4, y0 + 52 + nh + 2
+
     d = ImageDraw.Draw(img)
-    x0, y0, x1, y1 = 90, 214, W - 90, H - 90
     d.rounded_rectangle([x0, y0, x1, y1], radius=16, fill=(30, 40, 56))
     # chrome bar
     d.rounded_rectangle([x0, y0, x1, y0 + 52], radius=16, fill=(46, 58, 78))
@@ -167,21 +194,14 @@ def browser_card(img: Image.Image, shot_path: Path):
     d.text((x0 + 170, y0 + 16), "localhost:8100  ·  forwarded from your Codespace",
            font=F_MONO_S, fill=MUTED)
 
-    shot = Image.open(shot_path).convert("RGB")
-    avail_w, avail_h = (x1 - x0 - 4), (y1 - (y0 + 52) - 4)
-    scale = min(avail_w / shot.width, avail_h / shot.height)
-    nw, nh = int(shot.width * scale), int(shot.height * scale)
-    shot = shot.resize((nw, nh), Image.LANCZOS)
-    px = x0 + 2 + (avail_w - nw) // 2
-    py = y0 + 54
-    img.paste(shot, (px, py))
+    img.paste(shot, (x0 + 2, y0 + 52))
 
 
 def title_card() -> Image.Image:
     img = Image.new("RGB", (W, H), NAVY)
     d = ImageDraw.Draw(img)
     d.rectangle([0, H // 2 + 130, W, H // 2 + 138], fill=ACCENT)
-    d.text((W // 2, H // 2 - 120), "Banking Analytics with AI Agents",
+    d.text((W // 2, H // 2 - 120), "Credit Analytics with AI Agents",
            font=F_TITLE, fill=WHITE, anchor="mm")
     d.text((W // 2, H // 2 - 20), "A 5-session workshop you run in your browser",
            font=F_SUB, fill=(150, 180, 230), anchor="mm")
@@ -298,15 +318,19 @@ def build_frames() -> list[tuple[Path, float]]:
 
     seq.append((codespaces_card(
         "Setup — open the repo in GitHub Codespaces. Nothing to install locally.",
-        "GETTING STARTED"), 5.0))
+        "GETTING STARTED"), 4.5))
 
-    img = base("SESSION 1  ·  DATA", "Generate & audit a synthetic SME loan portfolio — seeded, leakage-safe.")
-    terminal_card(img, read_lines("s1_data.txt", 16), ["make data", "python verify.py"])
-    seq.append((img, 5.0))
+    img = base("SESSION 1  ·  YOUR PORTFOLIO",
+               "Build 12,000 SME borrowers — realistic enough to model, safe to publish.",
+               "make data  ·  python verify.py  ->  Stage 1 verified")
+    figure_card(img, ASSETS / "s1_portfolio.png")
+    seq.append((img, 8.5))
 
-    img = base("SESSION 2  ·  THE SCORE", "Train a WoE scorecard — it passes a hard AUC gate, or it doesn't ship.")
-    terminal_card(img, read_lines("s2_train.txt", 16), ["make train-score", "python verify.py"])
-    seq.append((img, 5.0))
+    img = base("SESSION 2  ·  YOUR CREDIT SCORE",
+               "Score every borrower 300–850 — and prove the score sorts good from bad.",
+               "make train-score  ·  held-out AUC 0.8176  ·  gate >= 0.78  PASS")
+    figure_card(img, ASSETS / "s2_score_distribution.png")
+    seq.append((img, 8.5))
 
     img = base("SESSION 3  ·  DECISIONS",
                "Adjudication + pricing on your score — the engine finds $1.28B mispriced.",
@@ -314,11 +338,11 @@ def build_frames() -> list[tuple[Path, float]]:
     browser_card(img, ASSETS / "s3_portal.png")
     seq.append((img, 5.5))
 
-    img = base("SESSION 4  ·  THE PORTFOLIO",
-               "Early warning + proactive line increases, behind one portal.",
-               "make train-ews · make train-line-increase  ->  watchlist + growth offers")
-    browser_card(img, ASSETS / "s4_portal.png")
-    seq.append((img, 5.5))
+    img = base("SESSION 4  ·  YOUR WATCHLIST",
+               "Catch trouble early — a ranked watchlist that names why, borrower by borrower.",
+               "make train-ews  ·  python verify.py  ->  Stage 4 verified")
+    browser_card(img, ASSETS / "s4_watchlist.png")
+    seq.append((img, 9.0))
 
     img = base("SESSION 5  ·  GOVERNANCE", "Assemble the model documentation pack — nine checks green, demo-ready.")
     terminal_card(img, read_lines("s5_docpack.txt", 16), ["make docpack", "python verify.py"])

@@ -6,3 +6,10 @@ __pycache__/
 
 # Data AND model artifacts are COMMITTED at every stage on purpose:
 # every checkpoint is self-sufficient (labs regenerate them, tags guarantee them).
+
+# Demo assets DERIVED from that committed data + the trained scorecard.
+# Regenerate with: python workshop/demo/capture_assets.py
+workshop/demo/assets/s1_portfolio.png
+workshop/demo/assets/s2_score_distribution.png
+workshop/demo/assets/s4_watchlist.png
+workshop/demo/frames/concat.txt

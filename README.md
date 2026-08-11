@@ -19,10 +19,10 @@ the very same moves for investing, marketing, fraud, and beyond.
 
 ![The four moves behind every analytics decision: build the portfolio, score the risk, decide and price, monitor and step in](workshop/demo/frames/frame_01.png)
 
-By Session 4 the shared score-spine and its decision apps run behind one portal — early
-warning and proactive line increases over the same borrowers, each decision explained:
+By Session 4 the shared score-spine feeds a portfolio you can act on — a ranked early-warning
+watchlist that names *why* each borrower is deteriorating, not just that it is:
 
-![The decision platform in action: an early-warning watchlist with named triggers and a proactive line-increase table, behind one portal](workshop/demo/frames/frame_06.png)
+![The decision platform in action: an early-warning watchlist ranking borrowers by probability of deterioration, each row listing its named triggers](workshop/demo/frames/frame_06.png)
 
 ## Quick start
 
