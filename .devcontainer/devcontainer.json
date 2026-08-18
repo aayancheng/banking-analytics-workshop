@@ -3,9 +3,18 @@
   "image": "mcr.microsoft.com/devcontainers/python:3.13",
   "postCreateCommand": "make setup && make verify",
   "forwardPorts": [8100, 5180],
+  // `make setup` installs into .venv, so put it first on PATH: bare `python`
+  // is then the venv's python and `python verify.py` works exactly as the
+  // README, the slides and the demo video all promise.
+  "remoteEnv": {
+    "PATH": "${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}"
+  },
   "customizations": {
     "vscode": {
-      "extensions": ["ms-python.python"]
+      "extensions": ["ms-python.python"],
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
+      }
     }
   }
 }

@@ -13,3 +13,7 @@ workshop/demo/assets/s1_portfolio.png
 workshop/demo/assets/s2_score_distribution.png
 workshop/demo/assets/s4_watchlist.png
 workshop/demo/frames/concat.txt
+
+# Rendered slides (instructor-only; regenerate with marp-cli)
+workshop/slides/*.html
+workshop/slides/*.pdf
