@@ -56,6 +56,8 @@ the *outputs* of the stage before it, so missing a session costs you nothing at 
 
 **Lost?** `git stash && git checkout stage-N && python verify.py` — or open the tag in
 Codespaces. You are back at a verified checkpoint.
+See [workshop/CHECKPOINTS.md](workshop/CHECKPOINTS.md) for how to move between stages, keep
+your own work on a branch, and combine your work with a stage.
 
 ## Workshop materials
 
@@ -64,9 +66,52 @@ one clone carries everything a student needs.
 
 ## Two tracks, one checkpoint
 
-Each lab can be done by **directing an AI agent** (prompt cards provided) or by **running
-the provided scripts by hand**. `verify.py` does not know or care which track you took —
-the checkpoint is the same. No paid AI subscription is ever required to complete this workshop.
+Every lab can be done two ways. **Pick per session** — you can switch any week, and
+`verify.py` cannot tell which one you chose.
+
+| | 🤖 **Agent track** | ⌨️ **Manual track** |
+|---|---|---|
+| What you do | Brief an AI coding agent, then **review its work** | Run the provided commands yourself |
+| What you need | An AI agent that can run shell + Python **inside this repo** | Nothing beyond this repo |
+| Skill being trained | Directing and **grading** an agent under quality gates | The mechanics of the pipeline itself |
+| Cost | Whatever your agent costs (free tiers are fine) | **Free** |
+
+> **No paid AI subscription is ever required.** The manual track reaches the identical
+> checkpoint every single week, and it is not a lesser path — some sessions are worth doing
+> by hand precisely because you feel every step.
+
+### What each track looks like — Session 1 as the example
+
+**🤖 Agent track**
+
+1. Open the prompt card [`workshop/prompt-cards/AC-1.md`](workshop/prompt-cards/AC-1.md)
+2. Fill in its two blanks — your name, and **one extra audit question of your own**
+3. Give the brief to your agent and let it generate and audit the portfolio
+4. **Review its output against the checklist.** Find at least one thing it did not check, and
+   send it back to check that
+5. Run `python verify.py` **yourself** — the checkpoint is never delegated
+
+**⌨️ Manual track**
+
+1. `make data` — regenerate the portfolio yourself
+2. Confirm your console numbers match the lab sheet exactly (seed 42, so they will)
+3. Work through the same audit checklist against `reports/data_quality.md`
+4. Run `python verify.py`
+
+Same checkpoint, same tag, same credit.
+
+> **On the agent track, the reviewing *is* the lesson — not the typing.** Every prompt card
+> ends with a review checklist, and that checklist is the real skill: knowing what a lazy agent
+> would quietly skip, and sending it back.
+
+### Which AI tools work for the agent track?
+
+Anything that can **read this repo and run shell commands and Python in it** — for example
+Claude Code, GitHub Copilot (agent mode or CLI), Codex CLI, or Cursor.
+
+⚠️ A **chat-only** tool — a browser tab with no access to your files — is not enough. You would
+be copying code back and forth by hand, which is the slowest of both worlds. If that is all you
+have available, take the manual track; it is the better experience.
 
 ## Data
 

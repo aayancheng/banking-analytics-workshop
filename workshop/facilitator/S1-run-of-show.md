@@ -165,15 +165,28 @@ so it survives the checkout and the environment stays green.)
 **4 — See how empty it is**
 
 ```bash
-ls
+git ls-files
 ```
 
 ```
-LICENSE  Makefile  README.md  requirements.txt  stage.txt  verify.py
+.devcontainer/devcontainer.json
+.gitignore
+LICENSE
+Makefile
+README.md
+requirements.txt
+stage.txt
+verify.py
 ```
 
-> "Six files. That is the entire repository tonight. The data, the scorecard, the decision apps,
-> the portal, the documentation — you are going to build all of it."
+> "Eight files. That is the entire repository tonight. The data, the scorecard, the decision
+> apps, the portal, the documentation — you are going to build all of it."
+
+⚠️ **Use `git ls-files`, not `ls`.** By this point the container has already run `verify.py` on
+`main`, which leaves `__pycache__` folders behind. Those are gitignored, so `git checkout
+stage-0` does not remove them, and a plain `ls` shows **thirteen** entries including `score/`
+and `app/` — which flatly contradicts the point you are making. `git ls-files` shows what git
+actually tracks at this commit. (Verified: `ls` → 13 entries, `git ls-files` → 8.)
 
 That contrast is the emotional beat of the block: they have just watched the finished platform
 prove itself, and now they are standing at zero holding six files.

@@ -4,6 +4,7 @@ Student-facing materials for the live sessions. Everything here assumes the repo
 
 | Folder | Contents |
 |---|---|
+| **[CHECKPOINTS.md](CHECKPOINTS.md)** | **Start here** — how the stage tags work, and how to jump between them |
 | `slides/` | Session decks S1–S5, Markdown source ([Marp](https://marp.app) format) |
 | `labs/` | Dual-track lab sheets S1–S5, the oracle-ceiling calculator, the doc-pack template, and the S5 challenge-question bank |
 | `prompt-cards/` | Agent-track briefs AC-1, AC-2, AC-3a, AC-3b, AC-4a, AC-4b, AC-5 |
