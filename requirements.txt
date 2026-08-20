@@ -17,3 +17,5 @@ httpx2==2.5.0
 uvicorn==0.50.0
 pydantic==2.13.4
 tabulate==0.10.0
+# notebooks: the kernel VS Code / Jupyter needs to run notebooks/*.ipynb
+ipykernel==7.3.0
