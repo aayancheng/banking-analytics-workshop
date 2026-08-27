@@ -9,6 +9,8 @@ A step-by-step tour of the repo in GitHub Codespaces, setup → Session 1 → Se
 | `assets/` | The **real** captured material the frames are built from — command output (`*.txt`) and portal screenshots (`*.png`) |
 | `capture_assets.py` | Renders the three *derived* assets from the committed data + trained scorecard (gitignored — regenerate them) |
 | `make_demo.py` | The generator: composes captioned frames from the assets and stitches the MP4 |
+| `NARRATION.md` | The voiceover script + recording notes — read this before recording |
+| `audio/vo_*.m4a` | The narration recordings, one per frame. **Source, not derived** — committed, because they cannot be regenerated |
 
 ## The steps
 
@@ -44,3 +46,21 @@ on other platforms.
 
 Timing lives in `build_frames()` — one `(frame, seconds)` pair per step. The S1/S2/S4 outcome
 frames deliberately hold ~8.5–9s so a viewer can actually read them; the total is ~60s.
+
+## Narration
+
+Drop clips into `audio/` as `vo_00`..`vo_08` (`.m4a`, `.wav`, `.mp3`, `.aiff`) and
+`make_demo.py` picks them up automatically — see [NARRATION.md](NARRATION.md) for the script.
+
+**With audio present the recordings drive the timings.** Each frame is held for its clip's
+measured length plus a beat either side, *or* its storyboard seconds — whichever is longer.
+So a retake never means re-tuning a storyboard number, the voice can't be cut off
+mid-sentence, and a brisk take can't whip the S1 table or the S4 watchlist off screen before
+it can be read: the numbers in `build_frames()` become read-time floors rather than targets.
+Frames with no clip play silent at their floor, so the voiceover can be recorded a few
+frames at a time. Every clip is high-passed at 80 Hz and normalised to −16 LUFS
+individually, so takes recorded on different days match.
+
+Durations are *measured off the rendered audio segments*, not computed — the same
+recompute-don't-trust rule the rest of the repo follows. Intermediates land in
+`frames/narration/` and are gitignored; the recordings themselves are committed.

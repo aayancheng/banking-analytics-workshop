@@ -13,6 +13,11 @@ workshop/demo/assets/s1_portfolio.png
 workshop/demo/assets/s2_score_distribution.png
 workshop/demo/assets/s4_watchlist.png
 workshop/demo/frames/concat.txt
+# Narration build intermediates. The RECORDINGS in workshop/demo/audio/ are source
+# and ARE committed — they cannot be regenerated.
+workshop/demo/frames/narration.wav
+workshop/demo/frames/silent.mp4
+workshop/demo/frames/narration/
 
 # Rendered slides (instructor-only; regenerate with marp-cli)
 workshop/slides/*.html

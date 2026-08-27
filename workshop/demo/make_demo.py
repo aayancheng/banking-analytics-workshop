@@ -10,6 +10,12 @@ assets from workshop/demo/assets/ and composes clean 1920x1080 frames:
 
 Then stitches the frames into demo.mp4 with ffmpeg (one frame held N seconds).
 
+If narration clips are present in audio/ (vo_00..vo_08, see NARRATION.md), the frame
+timings come from the *recordings*: each frame is held for as long as its clip runs plus
+a beat either side, or its storyboard seconds — whichever is longer. So a retake never
+needs the timings re-tuned, the voice is never cut off mid-sentence, and a frame is never
+whipped away before it can be read.
+
     python workshop/demo/make_demo.py         # writes frames/ + demo.mp4
 
 Frames are also emitted as numbered PNGs so they double as a standalone
@@ -27,6 +33,14 @@ HERE = Path(__file__).resolve().parent
 ASSETS = HERE / "assets"
 FRAMES = HERE / "frames"
 OUT = HERE / "demo.mp4"
+AUDIO = HERE / "audio"
+
+# Narration padding, in seconds. LEAD/TAIL are the beats of silence around each clip so a
+# frame never flips on the speaker's last syllable; END_HOLD keeps the closing card (and
+# its URL) on screen after the final line lands.
+LEAD_PAD = 0.35
+TAIL_PAD = 0.75
+END_HOLD = 1.5
 
 W, H = 1920, 1080
 # palette (matches the portal)
@@ -358,7 +372,95 @@ def build_frames() -> list[tuple[Path, float]]:
     return out
 
 
-def build_video(frames: list[tuple[Path, float]]):
+# ---- narration ---------------------------------------------------------------
+def _ffmpeg(args: list[str], cwd: Path | None = None):
+    """Run ffmpeg quietly, but surface its stderr when it fails — a silent
+    CalledProcessError from a filtergraph typo costs an afternoon."""
+    r = subprocess.run(["ffmpeg", "-y", "-nostdin", *args], cwd=cwd and str(cwd),
+                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+    if r.returncode != 0:
+        tail = "\n".join(r.stderr.strip().splitlines()[-12:])
+        raise RuntimeError(f"ffmpeg failed:\n{tail}")
+
+
+def _duration(path: Path) -> float:
+    """Measured, never assumed — loudnorm and container padding both move the number."""
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+         "-of", "default=nw=1:nk=1", str(path)],
+        check=True, capture_output=True, text=True).stdout
+    return float(out.strip())
+
+
+def narration_clips(n_frames: int) -> list[Path | None]:
+    """audio/vo_00.* .. audio/vo_NN.*, index-aligned to the frames. Missing clips are
+    None so a half-recorded voiceover still builds (those frames stay silent)."""
+    clips: list[Path | None] = []
+    for i in range(n_frames):
+        found = None
+        for ext in (".m4a", ".wav", ".mp3", ".aac", ".aiff"):
+            cand = AUDIO / f"vo_{i:02d}{ext}"
+            if cand.exists():
+                found = cand
+                break
+        clips.append(found)
+    return clips
+
+
+def build_narration(clips: list[Path | None],
+                    storyboard: list[float]) -> tuple[Path, list[float]]:
+    """Compose one narration track and return it with the frame durations it implies.
+
+    Each frame becomes  [lead silence][clip, cleaned][tail silence]  so the audio and the
+    frame boundaries line up by construction rather than by hand-syncing. The storyboard
+    seconds act as a floor on each frame, so a brisk take never robs a viewer of the time
+    to read what is on screen. Every clip is normalised individually, so takes recorded on
+    different days sit at the same level.
+    Returns (narration.wav, per-frame seconds) — the seconds are *measured* off the
+    rendered segments, so the track and the video cannot drift apart.
+    """
+    fmt = "aformat=sample_fmts=s16:sample_rates=48000:channel_layouts=mono"
+    segs: list[Path] = []
+    secs: list[float] = []
+    work = FRAMES / "narration"
+    work.mkdir(exist_ok=True)
+    for i, (clip, story) in enumerate(zip(clips, storyboard)):
+        seg = work / f"seg_{i:02d}.wav"
+        if clip is None:
+            _ffmpeg(["-f", "lavfi", "-t", f"{story}",
+                     "-i", "anullsrc=r=48000:cl=mono", str(seg)])
+        else:
+            spoken = _duration(clip)
+            # The storyboard second is a *read-time floor*, not a target: a frame showing
+            # the S1 table or the S4 watchlist has to stay up long enough to be read, even
+            # if the narrator covered it in four words. Voice can extend a frame, never
+            # cut it short.
+            tail = max(TAIL_PAD, story - LEAD_PAD - spoken)
+            if i == len(clips) - 1:
+                tail += END_HOLD
+            # highpass kills desk/room rumble; loudnorm lands every clip on the same
+            # perceived level. loudnorm resamples internally — hence the second aformat.
+            _ffmpeg([
+                "-f", "lavfi", "-t", f"{LEAD_PAD}", "-i", "anullsrc=r=48000:cl=mono",
+                "-i", str(clip),
+                "-f", "lavfi", "-t", f"{tail}", "-i", "anullsrc=r=48000:cl=mono",
+                "-filter_complex",
+                f"[1:a]{fmt},highpass=f=80,loudnorm=I=-16:TP=-1.5:LRA=11,{fmt}[v];"
+                f"[0:a][v][2:a]concat=n=3:v=0:a=1[out]",
+                "-map", "[out]", str(seg),
+            ])
+        segs.append(seg)
+        secs.append(_duration(seg))
+
+    listing = work / "segs.txt"
+    listing.write_text("\n".join(f"file '{s.name}'" for s in segs))
+    narration = FRAMES / "narration.wav"
+    _ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy",
+             str(narration)], cwd=work)
+    return narration, secs
+
+
+def build_video(frames: list[tuple[Path, float]], narration: Path | None = None):
     concat = FRAMES / "concat.txt"
     lines = []
     for p, secs in frames:
@@ -366,17 +468,35 @@ def build_video(frames: list[tuple[Path, float]]):
         lines.append(f"duration {secs}")
     lines.append(f"file '{frames[-1][0].name}'")  # last frame needs a final entry
     concat.write_text("\n".join(lines))
-    cmd = [
-        "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat),
-        "-vf", "fps=30,format=yuv420p", "-c:v", "libx264", "-preset", "medium",
-        "-movflags", "+faststart", str(OUT),
-    ]
-    subprocess.run(cmd, check=True, cwd=str(FRAMES),
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # -t pins the runtime to the storyboard: the repeated final entry above exists only so
+    # the concat demuxer honours the last frame's duration, and would otherwise show the
+    # end card twice.
+    total = sum(secs for _, secs in frames)
+    video = FRAMES / "silent.mp4" if narration else OUT
+    _ffmpeg(["-f", "concat", "-safe", "0", "-i", str(concat), "-t", f"{total}",
+             "-vf", "fps=30,format=yuv420p", "-c:v", "libx264", "-preset", "medium",
+             "-movflags", "+faststart", str(video)], cwd=FRAMES)
+    if narration:
+        _ffmpeg(["-i", str(video), "-i", str(narration), "-c:v", "copy",
+                 "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart",
+                 "-shortest", str(OUT)])
 
 
 if __name__ == "__main__":
     frames = build_frames()
     print(f"wrote {len(frames)} frames to {FRAMES.relative_to(HERE.parent.parent)}")
-    build_video(frames)
-    print(f"wrote {OUT.relative_to(HERE.parent.parent)}")
+
+    narration = None
+    clips = narration_clips(len(frames))
+    if any(c is not None for c in clips):
+        narration, secs = build_narration(clips, [s for _, s in frames])
+        frames = [(p, s) for (p, _), s in zip(frames, secs)]
+        have = [f"{i:02d}" for i, c in enumerate(clips) if c is not None]
+        print(f"narration: {len(have)}/{len(clips)} clips ({', '.join(have)})")
+    else:
+        print(f"narration: none found in {AUDIO.name}/ — building silent "
+              f"(see {(HERE / 'NARRATION.md').name})")
+
+    build_video(frames, narration)
+    print(f"wrote {OUT.relative_to(HERE.parent.parent)} "
+          f"({sum(s for _, s in frames):.1f}s)")
