@@ -145,6 +145,9 @@ Assume anything said about a named employer is unpublishable unless cleared.
 
 ## Dry run A — technical rehearsal (~20 min, do this first)
 
+> A ready-made 8-minute script that also rehearses S1's four signature ideas:
+> [dry-run-S1-walkthrough.md](dry-run-S1-walkthrough.md).
+
 Solo. The goal is not to practise teaching; it's to find out whether your screen is legible
 and your voice is audible. Nothing else here matters if those fail.
 
