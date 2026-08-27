@@ -52,15 +52,53 @@ the one variable you can neither test in advance nor fix on the night. Small ter
 over a degraded free bridge is exactly the failure you can't recover from mid-demo. Meet is
 the boring, known quantity — and boring is what session 1 needs.
 
-### When to spend the $34
-**Zoom Pro, billed monthly (~$16.99), two cycles for Sep 10 → Oct 8 = ~$34.** What that buys
-isn't features, it's the removal of a whole class of failure on a night you can't re-run —
-no rejoin, no local-recording rig, and per-participant audio tracks that make highlight
-editing hours faster.
+### Reassessed 2026-08-26: pay for it
 
-**Let the dry run decide, because the dry run is free either way.** If the free stack records
-cleanly and you can read the terminal on your phone, go free and keep the money. If the
-recording rig is shaky at T–7 days, $34 is the cheapest insurance in this entire project.
+The cohort grew from 4 to **14 sign-ups (~9 live, realistically 6–8)**, and one number in the
+Tally export flips this decision: **5 of 14 signed up for the recording rather than the room.**
+
+For those five, the recording *is* the product. And the free tier's forced rejoin **splits
+every session's recording into two files with a seam in the middle** — every week, five weeks
+running, before you can send anything out or cut a highlight. That editing tax is now paid
+against a third of the cohort's entire experience, not just against your own convenience.
+
+Herding 6–8 people through a second link mid-session is also materially worse than herding
+four. Some fraction simply doesn't come back after a break.
+
+**Zoom Pro, billed monthly (~$16.99), two cycles for Sep 10 → Oct 8 ≈ $34.** One unbroken
+90-minute recording per session, no rejoin, and per-participant audio tracks that make
+highlight editing hours faster.
+
+**Zoom Business is not a candidate**: it carries a **10-licence minimum** (~$183–220/month).
+The "10" is hosts, not attendees — you need one. Participant caps never bound here either;
+Meet free and Zoom free both allow 100, and you have 14.
+
+| | Meet free | Zoom free | **Zoom Pro** | Zoom Business |
+|---|---|---|---|---|
+| 90 min | ✗ 60-min cap | ✗ 40-min cap | ✓ | ✓ |
+| Rejoins per session | 1 | 2 | **0** | 0 |
+| Recording seams | 2 files | 3 files | **1 file** | 1 file |
+| Cost for the pilot | $0 | $0 | **~$34** | ~$400 (10-seat min) |
+
+Free was the right call at four people who were all coming live. At fourteen, with a third of
+them there for the recording, $34 buys back five weeks of editing and removes the one moment
+in each session where you can lose the room.
+
+### If you still want free anyway
+
+It remains workable, and everything below still applies: **Google Meet free**, one planned
+break at **0:42**, local capture on the Mac. Two things to accept going in:
+
+1. **Budget the stitch.** Each session lands as two recording files with a gap between them.
+   Concatenating is easy enough — but it's a weekly job with a deadline, five times, feeding
+   the third of your cohort who only ever sees the recording.
+2. **Rehearse the rejoin** (dry run B) and put both links everywhere: the invite, the email,
+   and pasted into the chat before the break. At 6–8 people, whoever doesn't find link two
+   is simply gone for the second half.
+
+**The dry run costs nothing either way, so let it decide.** If the free stack records cleanly
+and you can read the terminal on your phone, the only remaining cost is the weekly stitch —
+which is a real cost, but a known one.
 
 ---
 

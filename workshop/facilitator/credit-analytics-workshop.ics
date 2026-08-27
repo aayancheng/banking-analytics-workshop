@@ -11,14 +11,13 @@ DTSTART:20260911T000000Z
 DTEND:20260911T013000Z
 SUMMARY:S1 — How a Bank Decides · Credit Analytics with AI Agents
 DESCRIPTION:Build 12,000 synthetic SME borrowers you can trust — and me
- et the six forbidden columns.\n\nToronto: Thu 10 Sep 8:00pm-9:30PM EDT\n
- Hong Kong: Fri 11 Sep 8:00am-9:30am HKT (the NEXT calendar day)\n\nJOIN 
- (first half): [[MEETING_LINK_1]]\nJOIN (after the break\, ~45 min in): [
- [MEETING_LINK_2]]\n\nCheckpoint: stage-1. Repo: https://github.com/aayan
+ et the six forbidden columns.\n\nToronto: Thu 10 Sep 8:00pm-9:30pm EDT\n
+ Hong Kong: Fri 11 Sep 8:00am-9:30am HKT (the NEXT calendar day)\n\nJOIN:
+  [[MEETING_LINK]]\n\nCheckpoint: stage-1. Repo: https://github.com/aayan
  cheng/banking-analytics-workshop\nRecorded — the link goes out to the 
  cohort afterwards.\nBefore session 1: open the repo in Codespaces and ru
  n  python verify.py
-LOCATION:Online — see the join links in the description
+LOCATION:Online — see the join link in the description
 STATUS:CONFIRMED
 TRANSP:OPAQUE
 BEGIN:VALARM
@@ -30,126 +29,6 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT30M
 DESCRIPTION:Starting in 30 minutes: S1 — How a Bank Decides
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
-UID:s2-credit-analytics-agents-2026@teamyan.dev
-DTSTAMP:20260820T120000Z
-DTSTART:20260918T000000Z
-DTEND:20260918T013000Z
-SUMMARY:S2 — The Score Spine · Credit Analytics with AI Agents
-DESCRIPTION:A WoE scorecard that passes a hard gate, or doesn't ship. Hel
- d-out AUC, committed in code.\n\nToronto: Thu 17 Sep 8:00pm-9:30PM EDT\n
- Hong Kong: Fri 18 Sep 8:00am-9:30am HKT (the NEXT calendar day)\n\nJOIN 
- (first half): [[MEETING_LINK_1]]\nJOIN (after the break\, ~45 min in): [
- [MEETING_LINK_2]]\n\nCheckpoint: stage-2. Repo: https://github.com/aayan
- cheng/banking-analytics-workshop\nRecorded — the link goes out to the 
- cohort afterwards.\nBefore session 1: open the repo in Codespaces and ru
- n  python verify.py
-LOCATION:Online — see the join links in the description
-STATUS:CONFIRMED
-TRANSP:OPAQUE
-BEGIN:VALARM
-ACTION:DISPLAY
-TRIGGER:-PT12H
-DESCRIPTION:Tomorrow morning (HK): S2 — The Score Spine
-END:VALARM
-BEGIN:VALARM
-ACTION:DISPLAY
-TRIGGER:-PT30M
-DESCRIPTION:Starting in 30 minutes: S2 — The Score Spine
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
-UID:s3-credit-analytics-agents-2026@teamyan.dev
-DTSTAMP:20260820T120000Z
-DTSTART:20260925T000000Z
-DTEND:20260925T013000Z
-SUMMARY:S3 — Decisions I — Adjudication & Pricing · Credit Analytics
-  with AI Agents
-DESCRIPTION:Your score starts making money decisions: approve / refer / d
- ecline, and the right price.\n\nToronto: Thu 24 Sep 8:00pm-9:30PM EDT\nH
- ong Kong: Fri 25 Sep 8:00am-9:30am HKT (the NEXT calendar day)\n\nJOIN (
- first half): [[MEETING_LINK_1]]\nJOIN (after the break\, ~45 min in): [[
- MEETING_LINK_2]]\n\nCheckpoint: stage-3. Repo: https://github.com/aayanc
- heng/banking-analytics-workshop\nRecorded — the link goes out to the c
- ohort afterwards.\nBefore session 1: open the repo in Codespaces and run
-   python verify.py
-LOCATION:Online — see the join links in the description
-STATUS:CONFIRMED
-TRANSP:OPAQUE
-BEGIN:VALARM
-ACTION:DISPLAY
-TRIGGER:-PT12H
-DESCRIPTION:Tomorrow morning (HK): S3 — Decisions I — Adjudication & 
- Pricing
-END:VALARM
-BEGIN:VALARM
-ACTION:DISPLAY
-TRIGGER:-PT30M
-DESCRIPTION:Starting in 30 minutes: S3 — Decisions I — Adjudication &
-  Pricing
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
-UID:s4-credit-analytics-agents-2026@teamyan.dev
-DTSTAMP:20260820T120000Z
-DTSTART:20261002T000000Z
-DTEND:20261002T013000Z
-SUMMARY:S4 — Decisions II — The Portfolio Wakes Up · Credit Analytic
- s with AI Agents
-DESCRIPTION:Behavioural early warning: a ranked watchlist that names the 
- trigger. Plus honest gates.\n\nToronto: Thu 1 Oct 8:00pm-9:30PM EDT\nHon
- g Kong: Fri 2 Oct 8:00am-9:30am HKT (the NEXT calendar day)\n\nJOIN (fir
- st half): [[MEETING_LINK_1]]\nJOIN (after the break\, ~45 min in): [[MEE
- TING_LINK_2]]\n\nCheckpoint: stage-4. Repo: https://github.com/aayanchen
- g/banking-analytics-workshop\nRecorded — the link goes out to the coho
- rt afterwards.\nBefore session 1: open the repo in Codespaces and run  p
- ython verify.py
-LOCATION:Online — see the join links in the description
-STATUS:CONFIRMED
-TRANSP:OPAQUE
-BEGIN:VALARM
-ACTION:DISPLAY
-TRIGGER:-PT12H
-DESCRIPTION:Tomorrow morning (HK): S4 — Decisions II — The Portfolio 
- Wakes Up
-END:VALARM
-BEGIN:VALARM
-ACTION:DISPLAY
-TRIGGER:-PT30M
-DESCRIPTION:Starting in 30 minutes: S4 — Decisions II — The Portfolio
-  Wakes Up
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
-UID:s5-credit-analytics-agents-2026@teamyan.dev
-DTSTAMP:20260820T120000Z
-DTSTART:20261009T000000Z
-DTEND:20261009T013000Z
-SUMMARY:S5 — Governance & the Human-Agent Team · Credit Analytics with
-  AI Agents
-DESCRIPTION:You don't demo today. You defend. Assemble the model document
- ation pack.\n\nToronto: Thu 8 Oct 8:00pm-9:30PM EDT\nHong Kong: Fri 9 Oc
- t 8:00am-9:30am HKT (the NEXT calendar day)\n\nJOIN (first half): [[MEET
- ING_LINK_1]]\nJOIN (after the break\, ~45 min in): [[MEETING_LINK_2]]\n\
- nCheckpoint: stage-5. Repo: https://github.com/aayancheng/banking-analyt
- ics-workshop\nRecorded — the link goes out to the cohort afterwards.\n
- Before session 1: open the repo in Codespaces and run  python verify.py
-LOCATION:Online — see the join links in the description
-STATUS:CONFIRMED
-TRANSP:OPAQUE
-BEGIN:VALARM
-ACTION:DISPLAY
-TRIGGER:-PT12H
-DESCRIPTION:Tomorrow morning (HK): S5 — Governance & the Human-Agent Te
- am
-END:VALARM
-BEGIN:VALARM
-ACTION:DISPLAY
-TRIGGER:-PT30M
-DESCRIPTION:Starting in 30 minutes: S5 — Governance & the Human-Agent T
- eam
 END:VALARM
 END:VEVENT
 END:VCALENDAR

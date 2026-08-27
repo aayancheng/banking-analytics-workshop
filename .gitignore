@@ -22,3 +22,8 @@ workshop/demo/frames/narration/
 # Rendered slides (instructor-only; regenerate with marp-cli)
 workshop/slides/*.html
 workshop/slides/*.pdf
+
+# Attendee lists and form exports — PII, and this repo is PUBLIC.
+# Keep the real list outside the repo; the email/.ics templates use placeholders.
+workshop/facilitator/*.csv
+workshop/facilitator/attendees*
