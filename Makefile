@@ -38,7 +38,10 @@ docpack:
 test:
 	$(PY) -m pytest -q tests
 
-run:
+# Depends on stop: a leftover uvicorn on 8100 makes `make run` die with
+# "address already in use" — which is exactly what happens when you re-run it during
+# a demo. Freeing the port first is always what you meant.
+run: stop
 	$(PY) -m uvicorn app.main:app --port 8100
 
 stop:
