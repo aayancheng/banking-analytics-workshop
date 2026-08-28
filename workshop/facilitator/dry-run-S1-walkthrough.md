@@ -19,12 +19,19 @@ tell you anything about a continuous 90-minute recording, which is what you're b
 - [ ] VS Code editor **≥16pt**, integrated terminal **≥16pt**
 - [ ] `make run` already warmed — portal answering at **localhost:8100**
 - [ ] Notifications off (Focus), Slack / Mail / Messages quit
-- [ ] Zoom → Recording: **local**, *Optimize for 3rd party video editor*, *Record separate
-      audio file for each participant*
+- [ ] Zoom **desktop app** → Settings → Recording → tick **"Record a separate audio file for
+      each participant"** and *Optimize for 3rd party video editor*. Free plan includes this.
+      Two things silently defeat it: it only works when you **Record on this Computer** (never
+      cloud), and it must be on **before** you hit record — enabling it afterwards does nothing.
+      Without it you get one mixed track, and mixed voices can never be separated again. That
+      matters because the course is to be built from your screen and your voice only: in a
+      mixed track any moment a participant spoke carries their voice permanently and needs
+      their written permission, whereas split tracks let you render a your-voice-only version
 - [ ] Open and arranged: terminal · portal tab · `shared/config.py` · slides
 - [ ] **Optional but worth it:** join from your phone as a second participant and say one
-      sentence during the run — it's the only way to prove the per-speaker audio split works
-      before you rely on it for editing
+      sentence during the run — solo you get one file, which proves the setting is on but not
+      that the split works. Two files appearing is the actual proof. **Turn the phone's volume
+      fully down first**, or the two devices in one room will howl; unmute its mic, speak, mute
 
 ---
 
