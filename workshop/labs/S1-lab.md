@@ -8,7 +8,7 @@
 ## Before you start (both tracks)
 
 ```bash
-make stop && python verify.py     # stage-0 or stage-1 green
+make stop && python verify.py     # stage-1 green (this lab needs shared/, which stage-0 doesn't have)
 ```
 
 The first `verify.py` after a fresh install is slow (cold imports). Run it twice; the second run is the real speed. That's normal.

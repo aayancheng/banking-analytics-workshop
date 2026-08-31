@@ -23,9 +23,15 @@ Format: online · **free pilot** · checkpoint: `stage-1`
 - [ ] Screen-share tested; terminal font scaled up for the smallest screen in the room
 
 **Pre-work email (send ~3 days ahead).** At 90 minutes the room sweep cannot absorb a broken
-laptop. Ask everyone to open the repo in Codespaces and run `verify.py` *before* the session —
-`stage-0` is exactly this pre-work checkpoint. Say plainly: **red at the start = join from
-Codespaces, we do not debug your laptop live.**
+laptop. Ask everyone to open the repo in Codespaces *before* the session and confirm it goes
+green. Say plainly: **red at the start = join from Codespaces, we do not debug your laptop live.**
+
+⚠️ **They will land on `main`, which is `stage-5`, and see "✅ Stage 5 verified" with nine
+checks — not stage-0.** That is correct and it is the stronger check: nine passing checks prove
+the whole dependency set, every model and the doc pack, where `stage-0` proves two. Tell them
+the expected string in the email, or you will spend the first ten minutes answering "mine says
+Stage 5, is that wrong?" It also seeds the 0:32 demo: they have already seen the finished
+platform on their own machine.
 
 ---
 
@@ -40,8 +46,8 @@ Codespaces, we do not debug your laptop live.**
 | **0:32–0:42** | The destination — live demo · **10 min hard cap** | stage-5 dashboard: 12,000 scored, approval mix, **$1.28B** mispriced exposure. Walk one Approve and one Decline through Customer 360. Resist rabbit holes — every module reappears in a later session. |
 | **0:42–0:55** | Why synthetic data | Privacy · control · teachability. Seed 42 → their numbers match your slides exactly. **Discussion, 3 min:** *why would identical numbers alarm you in production?* (stale data, broken pipeline, copied artifacts). Don't answer it for them — count to ten in silence. |
 | **0:55–1:05** | Anatomy of a DGP | attributes → latent logit → **+ noise** → Bernoulli draw → label. The three rules they'll defend: noise is deliberate · the label is a **draw, not a formula** · truth columns are written down and denied. |
-| **1:05–1:12** | Leakage: the six forbidden columns | `shared/config.py::LEAKAGE_COLUMNS`, named and reviewable. The line to land: *a deny-list in someone's head is not a control; a deny-list in `config.py` is.* |
-| **1:12–1:25** | Guided lab — do it together | `make data` live (it's fast). Confirm **12,000 / 8,336 / 200,064**, default 16.7%, booked 69.5%. Ask: *why is 8,336 not a round number?* Then the **leakage probe together** — train on a denied column, watch AUC ≈ 1.0, feel the poison, delete the file. This is the emotional peak of the night; protect the time. |
+| **1:05–1:12** | Leakage: the six forbidden columns | **First: `git checkout stage-1` — the room is still on `stage-0` and cannot see this file.** See *Stage-1 handoff* below. Then `shared/config.py::LEAKAGE_COLUMNS`, named and reviewable. The line to land: *a deny-list in someone's head is not a control; a deny-list in `config.py` is.* |
+| **1:12–1:25** | Guided lab — do it together | *(Requires `stage-1` — done at 1:05.)* `make data` live (it's fast). Confirm **12,000 / 8,336 / 200,064**, default 16.7%, booked 69.5%. Ask: *why is 8,336 not a round number?* Then the **leakage probe together** — train on a denied column, watch AUC ≈ 1.0, feel the poison, delete the file. This is the emotional peak of the night; protect the time. |
 | **1:25–1:30** | Checkpoint + homework | `python verify.py` → ✅ *Stage 1 verified*. **Nobody leaves un-green.** Homework below. |
 
 **Homework to assign (30–45 min):**
@@ -205,7 +211,7 @@ Machine-readable, so an assistant can sweep the room fast.
 
 ---
 
-### ⚠️ Fix this in the repo before Sept 10
+### ✅ FIXED in v1.2 — kept for the explanation (was: bare `python` missed `.venv`)
 
 `make setup` installs into `.venv`, but the Codespace terminal's bare `python` is the **system**
 3.13. So a student who types the workshop's own signature line —
@@ -228,7 +234,10 @@ Two ways out:
   ```
   Bare `python` then *is* the venv's python, and every instruction in the repo works verbatim.
 
-**Recommend the second** — one line, and it protects the phrase the whole workshop is built on.
+**The second was taken** (commit `d0c5769`, shipped in v1.2): `remoteEnv` is in
+`.devcontainer/devcontainer.json` on `main` today, so bare `python verify.py` works verbatim
+in a Codespace. Nothing to do before Sept 10 — the block above is retained because the
+*explanation* is still worth giving if a student asks why a venv lives inside a container.
 
 ---
 
@@ -255,6 +264,50 @@ Two ways out:
 | `Missing: pandas, ...` | `make setup` — or ship the `remoteEnv` fix above |
 | Port 8100 won't open in S3 | Ports panel → set 8100 to Public |
 | Locked-down corporate laptop | Codespaces *is* the escape hatch. Do not debug it live |
+
+---
+
+## Stage-1 handoff (1:05) — do not skip this
+
+At 0:13 the room checked out `stage-0` and counted eight files. **They are still there.**
+Everything from 1:05 onward needs code that does not exist at `stage-0`:
+
+| Needs | Exists at stage-0? |
+|---|---|
+| `shared/config.py::LEAKAGE_COLUMNS` (1:05 block) | ✗ |
+| `make data` → `python -m shared.data_generator` (lab) | ✗ — `ModuleNotFoundError` |
+| `from shared.config import RAW` (leakage probe) | ✗ |
+
+`stage-0` has **0** files under `shared/`; `stage-1` has **7**. Run the lab from `stage-0` and it
+fails on the first command, in front of everyone, at the emotional peak of the night.
+
+**Open the 1:05 block with this:**
+
+```bash
+git checkout stage-1
+python verify.py
+```
+
+```
+[3/3] Data: synthetic SME portfolio .......... OK
+✅ Stage 1 verified — you are here, and it works.
+```
+
+> "You've just watched where we finish and stood at zero. Now here's tonight: one command, and
+> you're holding the code we're about to run. This is the contract — every week you can jump
+> straight to where the group is, so missing a session costs you nothing."
+
+**Why `stage-1` and not building from empty:** `stage-1` ships the generator *and* its output.
+That is deliberate — the lab's job is to regenerate and prove determinism (seed 42, identical
+numbers to the slide), not to type a data generator from scratch in thirteen minutes. The lab
+sheet already says so: *"the repo ships it pre-baked; regeneration proves determinism."*
+
+**Detached HEAD is fine and expected.** `CHECKPOINTS.md` already teaches `git checkout stage-N`
+as the normal way to move. If anyone worries, the answer is: nothing is lost, and
+`git checkout main` returns them to the finished platform.
+
+⚠️ **Watch for:** anyone who ran `verify.py` on `main` has `__pycache__` left behind, so plain
+`ls` still shows later-stage folders after the checkout. Use `git ls-files` if you show the tree.
 
 ---
 
