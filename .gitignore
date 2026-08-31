@@ -27,6 +27,9 @@ workshop/slides/*.pdf
 # Keep the real list outside the repo; the email/.ics templates use placeholders.
 workshop/facilitator/*.csv
 workshop/facilitator/attendees*
+# Form exports land wherever they're downloaded — catch them anywhere in the tree.
+*Submissions*.csv
+**/attendees*.csv
 # Session and dry-run recordings — large, and they contain people. Keep them out.
 workshop/facilitator/*.mp4
 workshop/facilitator/*.m4a
