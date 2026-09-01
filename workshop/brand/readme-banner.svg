@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img"
+     aria-label="Credit Analytics with AI Agents — five sessions, every one ends at a checkpoint that proves itself">
+  <!-- TeamYan "honest ledger" brand kit: paper ground, ink, vermilion accent <5%, teal for data only -->
+  <rect x="0.5" y="0.5" width="1279" height="319" fill="#FBF6EF" stroke="#E5DCD1" stroke-width="1"/>
+
+  <!-- monogram bug -->
+  <rect x="64" y="110" width="100" height="100" rx="14" fill="#0C1522"/>
+  <text x="114" y="177" text-anchor="middle" fill="#FBF6EF"
+        font-family="Newsreader, Georgia, 'Times New Roman', serif" font-size="42" letter-spacing="1.5">TY</text>
+
+  <!-- wordmark -->
+  <text x="200" y="150" fill="#0C1522"
+        font-family="Newsreader, Georgia, 'Times New Roman', serif" font-size="52">Credit Analytics with AI Agents</text>
+
+  <!-- promise -->
+  <text x="202" y="190" fill="#5C6878"
+        font-family="'IBM Plex Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="21">Five sessions · every one ends at a checkpoint that proves itself</text>
+
+  <!-- the receipt: mono, tabular, one number -->
+  <text x="202" y="243" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="19">
+    <tspan fill="#3D4A5C">python verify.py</tspan>
+    <tspan fill="#C9530C" dx="14">→</tspan>
+    <tspan fill="#3D4A5C" dx="14">stage-5 ·</tspan>
+    <tspan fill="#17879B" dx="8">9 checks green</tspan>
+  </text>
+
+  <!-- the four markers -->
+  <text x="1216" y="284" text-anchor="end" fill="#A9B2BD"
+        font-family="'IBM Plex Mono', Menlo, monospace" font-size="16" letter-spacing="6">◆ ◇ $ ◈</text>
+</svg>

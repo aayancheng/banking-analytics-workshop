@@ -1,4 +1,6 @@
-# Banking Analytics with AI Agents — Workshop Repo
+![Credit Analytics with AI Agents — five sessions, every one ends at a checkpoint that proves itself](workshop/brand/readme-banner.svg)
+
+# Credit Analytics with AI Agents
 
 **The promise: at any moment, one command tells you where you are — and that it works.**
 
