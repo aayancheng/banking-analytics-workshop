@@ -28,18 +28,24 @@ reminder a reason to be opened.
 
 ## Layer 2 — batch, manual, ~5 minutes: the catch-up send
 
-Export from Tally, then:
+Export from Tally, then — **keeping the export you last mailed from** — run:
 
 ```bash
-python workshop/facilitator/cohort.py --since 2026-08-31
+python workshop/facilitator/cohort.py --not-in <the export you last mailed from>.csv
 ```
 
-Prints the stats and a comma-separated **Bcc list of only the people who signed up after that
-date** — deduplicated on email, with your own test rows dropped. Paste into Gmail, reuse the
-body of the last send, done.
+That is an exact set difference: everyone in the new export whose address is absent from the
+old one. **Prefer it over `--since`**, which is date-only and cannot distinguish two sends on
+the same day. Paste the Bcc list into Gmail, reuse the body of the last send, done.
 
-Run it with no `--since` for the whole cohort, `--live` for only those attending live. The
-export is PII and gitignored; the script is not.
+No filter gives the whole cohort; `--since YYYY-MM-DD` (inclusive) works when you have no
+previous export; `--live` narrows to those attending live. The export is PII and gitignored;
+the script is not.
+
+The script picks the export with the **newest sign-up inside it**, not the newest file on disk,
+and prints that timestamp every run — so a stale export announces itself instead of quietly
+producing an old list. Paths resolve against the repo root, so it behaves the same from any
+directory.
 
 **Always Bcc, never To.** Over ~90 recipients, split into two sends — Gmail throttles large
 Bcc lists and a personal account is likelier to be spam-filtered.

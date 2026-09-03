@@ -1,15 +1,20 @@
-"""Turn the latest Tally export into a clean BCC list — and nothing else.
+"""Turn the latest Tally export into a clean Bcc list — and nothing else.
 
-The export is PII and gitignored; this script is not. Run it, paste the output,
-delete nothing. Sign-ups arrive continuously, so the recurring question is never
-"who signed up" but "who signed up since I last emailed anyone".
+The export is PII and gitignored; this script is not. Sign-ups arrive continuously,
+so the recurring question is never "who signed up" but "who signed up since I last
+emailed anyone".
 
-    python workshop/facilitator/cohort.py                 # everyone, deduped
-    python workshop/facilitator/cohort.py --since 2026-08-31
-    python workshop/facilitator/cohort.py --live          # only "yes live"
+    python workshop/facilitator/cohort.py                      # everyone, deduped
+    python workshop/facilitator/cohort.py --since 2026-08-31   # on/after that date
+    python workshop/facilitator/cohort.py --not-in OLD.csv     # exact set difference
+    python workshop/facilitator/cohort.py --live               # only "yes live"
 
---since takes the date of your last send and prints only the people who arrived
-after it, which is the list you actually want most of the time.
+Prefer --not-in over --since when you have the export you last mailed from: it is an
+exact set difference and cannot be off by a day. --since is date-only and INCLUSIVE,
+so it can re-include someone who signed up earlier that same day — harmless (a second
+confirmation costs nothing) but not exact.
+
+Paths are resolved against the repo root, so it behaves the same from any directory.
 """
 from __future__ import annotations
 
@@ -18,26 +23,41 @@ import csv
 import glob
 import os
 from collections import Counter
+from pathlib import Path
 
-# Your own test submissions — never mail yourself.
-OWN = {"teamyan2025@gmail.com", "aayancheng@gmail.com"}
-SEARCH = ("workshop/facilitator/*Submissions*.csv", "*Submissions*.csv")
+ROOT = Path(__file__).resolve().parents[2]
+OWN = {"teamyan2025@gmail.com", "aayancheng@gmail.com"}   # your own test submissions
+PATTERNS = ("workshop/facilitator/*Submissions*.csv", "*Submissions*.csv")
 SUBMITTED, NAME, EMAIL, REGION, ATTEND, BACKGROUND = 2, 3, 4, 5, 6, 7
 
 
-def newest_export() -> str:
-    found = [f for pat in SEARCH for f in glob.glob(pat)]
-    if not found:
-        raise SystemExit("No *Submissions*.csv found. Export from Tally first.")
-    return max(found, key=os.path.getmtime)
+def candidates() -> list[Path]:
+    seen, out = set(), []
+    for pat in PATTERNS:
+        for f in glob.glob(str(ROOT / pat)):
+            rp = Path(f).resolve()
+            if rp not in seen:
+                seen.add(rp)
+                out.append(rp)
+    return out
 
 
-def load(path: str) -> list[list[str]]:
-    """Deduplicate on email, keeping the FIRST submission — the original sign-up
-    timestamp is what --since needs to be correct."""
-    rows = [r for r in csv.reader(open(path)) if any(r)][1:]
+def rows_of(path: Path) -> list[list[str]]:
+    return [r for r in csv.reader(open(path, encoding="utf-8-sig")) if any(r)][1:]
+
+
+def latest_submission(path: Path) -> str:
+    stamps = [r[SUBMITTED].strip() for r in rows_of(path) if len(r) > SUBMITTED]
+    return max(stamps) if stamps else ""
+
+
+def dedupe(rows: list[list[str]]) -> list[list[str]]:
+    """Keep the FIRST submission per email — the original sign-up time is what the
+    date filter has to reason about."""
     seen, out = set(), []
     for r in rows:
+        if len(r) <= BACKGROUND:
+            continue
         email = r[EMAIL].strip().lower()
         if not email or email in OWN or email in seen:
             continue
@@ -48,34 +68,59 @@ def load(path: str) -> list[list[str]]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--since", help="YYYY-MM-DD — only sign-ups after this date")
+    ap.add_argument("--since", help="YYYY-MM-DD — sign-ups on or after this date")
+    ap.add_argument("--not-in", dest="not_in", help="a previous export; show only emails absent from it")
     ap.add_argument("--live", action="store_true", help="only those attending live")
     a = ap.parse_args()
 
-    path = newest_export()
-    people = load(path)
+    files = candidates()
+    if not files:
+        raise SystemExit(f"No *Submissions*.csv under {ROOT}. Export from Tally first.")
+
+    chosen = max(files, key=lambda p: latest_submission(p) or "")
+    newest_mtime = max(files, key=os.path.getmtime)
+
+    print(f"export:   {chosen.name}")
+    print(f"latest sign-up in it: {latest_submission(chosen) or '(none)'}   <- if this looks old, re-export")
+    if chosen != newest_mtime:
+        print(f"note:     {newest_mtime.name} was copied more recently but contains older "
+              f"sign-ups; using the one with the newest data.")
+    if len(files) > 1:
+        print(f"          ({len(files)} exports on disk; delete stale ones to keep this simple)")
+
+    people = dedupe(rows_of(chosen))
     total = len(people)
 
+    if a.not_in:
+        prev = Path(a.not_in)
+        if not prev.exists():
+            prev = ROOT / a.not_in
+        if not prev.exists():
+            raise SystemExit(f"--not-in file not found: {a.not_in}")
+        already = {r[EMAIL].strip().lower() for r in rows_of(prev) if len(r) > EMAIL}
+        people = [r for r in people if r[EMAIL].strip().lower() not in already]
+        print(f"filter:   not in {prev.name} ({len(already)} addresses)")
     if a.since:
-        people = [r for r in people if r[SUBMITTED].strip()[:10] > a.since]
+        people = [r for r in people if r[SUBMITTED].strip()[:10] >= a.since]
+        print(f"filter:   signed up on or after {a.since} (inclusive)")
     if a.live:
         people = [r for r in people if r[ATTEND].strip().startswith("Yes")]
+        print("filter:   attending live only")
 
-    print(f"export:   {os.path.basename(path)}")
     print(f"distinct: {total}   selected: {len(people)}")
     for label, idx in (("attendance", ATTEND), ("region", REGION), ("background", BACKGROUND)):
         counts = Counter(r[idx].strip() for r in people).most_common()
         print(f"{label:11}" + " · ".join(f"{v} {k}" for k, v in counts))
 
     if not people:
-        print("\nNobody new. Nothing to send.")
+        print("\nNobody selected. Nothing to send.")
         return
 
     print(f"\n--- BCC ({len(people)}) — paste into Gmail's Bcc field ---")
     print(", ".join(r[EMAIL].strip() for r in people))
     if len(people) > 90:
-        print("\n⚠️  Over ~90 recipients: split into two sends. Gmail throttles large "
-              "Bcc lists and a personal account is more likely to be spam-filtered.")
+        print("\n⚠️  Over ~90 recipients: split into two sends. Gmail throttles large Bcc "
+              "lists and a personal account is likelier to be spam-filtered.")
 
 
 if __name__ == "__main__":
