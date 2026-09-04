@@ -78,4 +78,17 @@ python verify.py            # ✅ Stage 1 verified — you are here, and it work
 python verify.py --json     # show the facilitator on the way out
 ```
 
-**Homework:** read the reference build journal (teamyan.substack.com/p/claude-code-credit-app-suite). Five lines: *which of the four decision apps would you trust least, and what would you check first?*
+## Homework — 30 minutes, and Session 2 gets twice as useful
+
+Run `notebooks/01_stage1_portfolio.ipynb` first (after `verify.py` is green). It ends with a
+checkpoint card and the full brief for items 1–3.
+
+1. **Bin one feature by hand and compute WoE.** `dscr`, `utilization` or `prior_delinquencies`,
+   five bins, count + bad rate + WoE per bin. Lab 2 Part A opens with exactly this. Bring the table.
+2. **Five in, five out.** From the 20 safe columns, name five you would put in a scorecard and
+   five you would refuse — one line each. The notebook's IV scan is evidence, not a verdict.
+3. **Seal a number.** Write down the held-out AUC you expect from your five features. The S2 gate
+   is 0.78. You only learn anything from the gap if you commit before you see the answer.
+4. **Read the reference build journal**
+   (teamyan.substack.com/p/claude-code-credit-app-suite). Five lines: *which of the four decision
+   apps would you trust least, and what would you check first?*
