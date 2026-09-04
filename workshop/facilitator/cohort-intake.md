@@ -67,10 +67,74 @@ Keep it short — they've had the long one:
 
 Regenerate the Bcc list the same morning — anyone who signs up on Sep 9 still deserves it.
 
-## What changes now the cohort is ~46, not ~16
+## Closing sign-ups — close the *live* seats, not the form
 
-Sign-ups roughly tripled, and some of the material still assumes a small room. Free-event
-attendance typically runs 40–60% of those who said yes, so **expect 15–25 live**, not 46.
+**Zoom Pro caps a meeting at 100 participants.** At ~90 sign-ups that is no longer academic:
+the export's own split runs about 64% "yes live", so 90 sign-ups implies ~58 intending to
+attend, and a strong show rate would put the room near the cap with no headroom for a
+re-join after a dropped connection.
+
+**But there is no capacity limit on the recording.** So don't close the form — close the live
+seats and keep taking people on the recording track. Nobody is turned away, the list keeps
+growing, and the room stays a size one person can actually run.
+
+Edit the Tally form (or its thank-you page) to say roughly this:
+
+> **Live seats for the September pilot are full.**
+>
+> Around 90 people signed up in three weeks. That is more than I can support live in a
+> 90-minute session whose whole promise is that nobody gets left stuck — so I'm capping the
+> room to keep that promise.
+>
+> **You can still join on the recording track.** Every session is recorded and sent out
+> afterwards, the repo is public, and every checkpoint is self-sufficient — you will end up in
+> exactly the same place, on your own clock. Sign up below and I'll send you the recordings and
+> the material.
+>
+> **Or take a live seat in the next cohort.** Same five sessions, running again after this
+> pilot. Tick the box below and you'll get first refusal.
+
+Three things that copy does deliberately: it gives the real reason rather than manufacturing
+scarcity, it makes the recording track a genuine option rather than a consolation prize (which
+it is — a third of the existing cohort chose it on purpose), and it converts overflow into the
+waitlist for cohort two instead of losing it.
+
+**Announce it publicly too.** "Live seats closed, 90 sign-ups in three weeks" is honest social
+proof, and it is the single best moment to open the cohort-two waitlist while attention is high.
+
+## Contingency — assume something breaks
+
+At ~40 live, a hiccup stops being a hiccup. Decide these now, not at 8:05.
+
+**Get a co-host.** The biggest single risk reduction available, and it costs one ask. Someone to
+watch chat and admit late joiners while you teach. You have two academics in the cohort who
+would likely say yes. Solo, you will either teach badly or miss chat entirely.
+
+**Say the backstop out loud in the first minute.** *"Everything tonight is recorded and goes out
+tomorrow. If my connection dies, give me five minutes and rejoin on the same link. If yours
+dies, the recording has you covered — nothing here is lost."* It costs fifteen seconds, and it
+converts a potential crisis into an inconvenience for everybody, including you.
+
+**Zoom settings for a room this size:**
+- **Mute on entry** — non-negotiable at 40+
+- **Waiting room ON only if you have a co-host.** Solo it is a second job; without one, leave it
+  off and **lock the meeting at 8:15** instead, which stops both stragglers and strangers.
+- Chat on, but say at the top that questions go to chat, not open mic
+- Screen share: host only
+
+**Rehearse the fallback path.** The demo frames (`workshop/demo/frames/frame_01.png`,
+`frame_06.png`) are already in the pre-flight. Know which tab they are in without looking.
+
+**The pre-work is your real turnout control.** People who arrive un-green are the ones who
+consume the room. The rule — *red at the start means join from Codespaces, we do not debug your
+laptop live* — has to be said in the reminder email and again at 0:03. At 40 people it is the
+only thing standing between you and a session spent on someone's corporate proxy.
+
+## What changes now the cohort is ~90, not ~16
+
+Sign-ups have gone up more than fivefold, and some of the material still assumes a small room.
+About 64% choose "yes live", and free-event attendance runs 40–60% of those, so **expect roughly
+35–45 live** out of 90 — comfortably under the 100 cap, but with little headroom if it grows.
 
 Three things to revisit before Sep 10:
 
