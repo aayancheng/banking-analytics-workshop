@@ -4,6 +4,7 @@
 
 > **If anything breaks for more than 5 minutes:** open this repo in GitHub Codespaces and keep moving. Fix your laptop later.
 > **If you edited something and are lost:** `git stash && git checkout stage-1 && python verify.py`
+> Notebooks vanish after a stage jump? They live on `main` only — `make notebooks` brings them back.
 
 ## Before you start (both tracks)
 

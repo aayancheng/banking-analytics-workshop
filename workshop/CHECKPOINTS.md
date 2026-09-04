@@ -77,6 +77,19 @@ git stash pop      # get them back later
 out a tag. It only means *"you're looking at a fixed point in history rather than the tip of a
 branch."* Look around all you like. `git checkout main` always brings you home.
 
+**3. The notebooks disappear, and that is expected.** `notebooks/` lives on `main` only — no tag
+contains it. The notebooks are a *view onto* whatever stage you are at, not part of any stage's
+contents, so there is one copy that is kept current rather than five frozen ones. Bring them
+along after a jump:
+
+```bash
+make notebooks
+```
+
+It restores `notebooks/` from `main` without moving you off the stage, and refuses if you have
+unsaved notebook edits rather than overwriting them. Afterwards `git status` lists the notebooks
+as staged new files — that is normal and harmless; they are simply not part of this stage.
+
 ---
 
 ## Keeping your own work — the safe way

@@ -3,6 +3,7 @@
 **Checkpoint:** `stage-4` · Tonight contains the program's most important lesson. Don't read ahead past Part A, step 3 — seriously.
 
 > First command: `make stop`. Lost? `git stash && git checkout stage-4 && python verify.py`.
+> Notebooks vanish after a stage jump? They live on `main` only — `make notebooks` brings them back.
 > Weak laptop + big panel? Codespaces. (The lab reads a pre-aggregated feature cache; the full 200,064-row groupby is optional.)
 
 ## Part A — the Early Warning System (40 min)

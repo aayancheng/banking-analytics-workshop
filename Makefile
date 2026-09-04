@@ -3,7 +3,7 @@
 
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
-.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop
+.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop notebooks
 
 setup:
 	python3 -m venv .venv
@@ -48,3 +48,16 @@ stop:
 	-@lsof -ti :8100 | xargs kill 2>/dev/null || true
 	-@lsof -ti :5180 | xargs kill 2>/dev/null || true
 	@echo "Workshop ports (8100, 5180) are free."
+
+# The notebooks live on `main` only — they are a *view onto* whatever stage you are
+# at, not part of any stage's contents (no tag contains them). So `git checkout
+# stage-N` deletes them, which looks like they were lost. This brings them back
+# without moving you off the stage. It refuses if you have unsaved notebook edits.
+notebooks:
+	@git rev-parse --verify -q main >/dev/null || \
+	  { echo "No 'main' branch here. Are you in a clone of the workshop repo?"; exit 1; }
+	@git diff --quiet -- notebooks || \
+	  { echo "You have unsaved edits in notebooks/ — this would overwrite them."; \
+	    echo "Park them first:  git stash push -- notebooks"; exit 1; }
+	@git checkout main -- notebooks
+	@echo "notebooks/ restored from main. Open the one matching stage.txt ($$(cat stage.txt))."

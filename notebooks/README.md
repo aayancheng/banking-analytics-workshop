@@ -47,9 +47,14 @@ worth reporting — they are running the same code.
 
 ## If you jumped to an older stage
 
-These notebooks live on `main`. After `git checkout stage-N` they will seem to vanish. Bring
-them along:
+These notebooks live on `main` — **no stage tag contains them**, on purpose. They are a view onto
+whatever stage you are at, so there is one copy that stays current instead of five frozen ones.
+After `git checkout stage-N` they will seem to vanish. Bring them along:
 
 ```bash
-git checkout main -- notebooks
+make notebooks
 ```
+
+That restores `notebooks/` from `main` without moving you off the stage, and refuses rather than
+overwriting if you have unsaved notebook edits. It is a wrapper around `git checkout main --
+notebooks`, if you would rather type it yourself.
