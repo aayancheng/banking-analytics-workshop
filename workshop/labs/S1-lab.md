@@ -81,8 +81,10 @@ python verify.py --json     # show the facilitator on the way out
 
 ## Homework — 30 minutes, and Session 2 gets twice as useful
 
-Run `notebooks/01_stage1_portfolio.ipynb` first (after `verify.py` is green). It ends with a
-checkpoint card and the full brief for items 1–3.
+First `make notebooks`, then open `notebooks/01_stage1_portfolio.ipynb` and run it. (You are on
+`stage-1`; the notebooks live on `main` only, and that one command brings them across without
+moving you off the stage.) The notebook ends with a checkpoint card and the full brief for
+items 1–3.
 
 1. **Bin one feature by hand and compute WoE.** `dscr`, `utilization` or `prior_delinquencies`,
    five bins, count + bad rate + WoE per bin. Lab 2 Part A opens with exactly this. Bring the table.

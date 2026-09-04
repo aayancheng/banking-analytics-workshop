@@ -48,12 +48,23 @@ platform on their own machine.
 | **0:55–1:05** | Anatomy of a DGP | attributes → latent logit → **+ noise** → Bernoulli draw → label. The three rules they'll defend: noise is deliberate · the label is a **draw, not a formula** · truth columns are written down and denied. |
 | **1:05–1:12** | Leakage: the six forbidden columns | **First: `git checkout stage-1` — the room is still on `stage-0` and cannot see this file.** See *Stage-1 handoff* below. Then `shared/config.py::LEAKAGE_COLUMNS`, named and reviewable. The line to land: *a deny-list in someone's head is not a control; a deny-list in `config.py` is.* |
 | **1:12–1:25** | Guided lab — do it together | *(Requires `stage-1` — done at 1:05.)* `make data` live (it's fast). Confirm **12,000 / 8,336 / 200,064**, default 16.7%, booked 69.5%. Ask: *why is 8,336 not a round number?* Then the **leakage probe together** — train on a denied column, watch AUC ≈ 1.0, feel the poison, delete the file. This is the emotional peak of the night; protect the time. |
-| **1:25–1:30** | Checkpoint + homework | `python verify.py` → ✅ *Stage 1 verified*. **Nobody leaves un-green.** Homework below. |
+| **1:25–1:30** | Checkpoint + homework | `python verify.py` → ✅ *Stage 1 verified*. **Nobody leaves un-green.** Then, before anyone closes the tab: **`make notebooks`** — the room is on `stage-1` and `notebooks/` lives on `main` only, so tonight's homework opens a file they do not currently have. Homework below. |
 
 **Homework to assign (30–45 min):**
+
+> **Say this first:** `make notebooks`, then open `notebooks/01_stage1_portfolio.ipynb` and run it.
+> Items 2–4 come straight off the end of that notebook. It is also the only way they see the
+> portfolio profile, the booking funnel and the IV scan — none of which fit in the 90-minute cut.
+
 1. Finish the full audit checklist on the lab sheet (agent track: run prompt card **AC-1** and *review* the agent's audit — you are the reviewer, not the typist)
-2. Read the [4-day build journal](https://teamyan.substack.com/p/claude-code-credit-app-suite)
-3. Five lines: *which of the four decision apps would you trust least, and what would you check first?* — collected at the top of S2
+2. **Bin one feature by hand and compute WoE** — `dscr`, `utilization` or `prior_delinquencies`, five bins. **Lab 2 Part A opens with exactly this**, so this is the item that buys back time next week. Bring the table.
+3. **Five in, five out** — from the 20 safe columns, five they would put in a scorecard and five they would refuse, one line each
+4. **Seal a number** — the held-out AUC they expect from their five features, written down before S2. The gate is 0.78; the gap is the lesson — collected at the top of S2
+5. Read the [4-day build journal](https://teamyan.substack.com/p/claude-code-credit-app-suite). Five lines: *which of the four decision apps would you trust least, and what would you check first?* — collected at the top of S2
+
+⚠️ **Items 2–4 are new and they change how S2 opens.** Lab 2 gives 45 minutes to binning on the
+assumption the room arrives cold. If they do the homework they will not — open Part A by asking
+who brought a WoE table, and spend the recovered time on the *decisions* rather than the mechanics.
 
 ---
 
