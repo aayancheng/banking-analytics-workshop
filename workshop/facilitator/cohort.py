@@ -7,7 +7,12 @@ emailed anyone".
     python workshop/facilitator/cohort.py                      # everyone, deduped
     python workshop/facilitator/cohort.py --since 2026-08-31   # on/after that date
     python workshop/facilitator/cohort.py --not-in OLD.csv     # exact set difference
-    python workshop/facilitator/cohort.py --live               # only "yes live"
+    python workshop/facilitator/cohort.py --live               # the room on the night
+    python workshop/facilitator/cohort.py --recording --later  # everyone else
+
+Attendance buckets (--live / --recording / --later) union when combined. Note that
+"Recording then join later" means live *eventually* — they belong on the recording list
+for Session 1 but still want the join link for sessions 2-5.
 
 Prefer --not-in over --since when you have the export you last mailed from: it is an
 exact set difference and cannot be off by a day. --since is date-only and INCLUSIVE,
@@ -70,7 +75,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--since", help="YYYY-MM-DD — sign-ups on or after this date")
     ap.add_argument("--not-in", dest="not_in", help="a previous export; show only emails absent from it")
-    ap.add_argument("--live", action="store_true", help="only those attending live")
+    ap.add_argument("--live", action="store_true", help='bucket: "Yes live"')
+    ap.add_argument("--recording", action="store_true", help='bucket: "Recording only"')
+    ap.add_argument("--later", action="store_true", help='bucket: "Recording then join later"')
     a = ap.parse_args()
 
     files = candidates()
@@ -103,9 +110,17 @@ def main() -> None:
     if a.since:
         people = [r for r in people if r[SUBMITTED].strip()[:10] >= a.since]
         print(f"filter:   signed up on or after {a.since} (inclusive)")
+    # Attendance buckets. Passing several unions them; passing none keeps everyone.
+    wanted = set()
     if a.live:
-        people = [r for r in people if r[ATTEND].strip().startswith("Yes")]
-        print("filter:   attending live only")
+        wanted.add("yes live")
+    if a.recording:
+        wanted.add("recording only")
+    if a.later:
+        wanted.add("recording then join later")
+    if wanted:
+        people = [r for r in people if r[ATTEND].strip().lower() in wanted]
+        print(f"filter:   attendance in {sorted(wanted)}")
 
     print(f"distinct: {total}   selected: {len(people)}")
     for label, idx in (("attendance", ATTEND), ("region", REGION), ("background", BACKGROUND)):
