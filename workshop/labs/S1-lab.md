@@ -95,3 +95,8 @@ items 1–3.
 4. **Read the reference build journal**
    (teamyan.substack.com/p/claude-code-credit-app-suite). Five lines: *which of the four decision
    apps would you trust least, and what would you check first?*
+
+**Optional, if you want the longer version:** `workshop/reading/S1-data-generation.pdf` — the
+data-generating process in full. Every weight in the default logit, the eleven columns with no
+causal role (and the two of them that predict anyway), and how the 0.78 gate was set against a
+ceiling that was measured first. Not assigned, not assessed.

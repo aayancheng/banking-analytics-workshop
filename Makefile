@@ -3,7 +3,7 @@
 
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
-.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop notebooks
+.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop notebooks reading
 
 setup:
 	python3 -m venv .venv
@@ -61,3 +61,20 @@ notebooks:
 	    echo "Park them first:  git stash push -- notebooks"; exit 1; }
 	@git checkout main -- notebooks
 	@echo "notebooks/ restored from main. Open the one matching stage.txt ($$(cat stage.txt))."
+
+# Post-session reading notes. The HTML is the source of truth; the PDF is committed
+# next to it so students can just download it. You only need this target to re-render
+# after editing the HTML. Any recent Chrome or Chromium will do.
+CHROME := $(shell for p in "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+	"/Applications/Chromium.app/Contents/MacOS/Chromium" \
+	"$$(command -v google-chrome)" "$$(command -v chromium)"; do \
+	  [ -n "$$p" ] && [ -x "$$p" ] && echo "$$p" && break; done)
+
+reading:
+	@[ -n "$(CHROME)" ] || { echo "No Chrome/Chromium found. The PDFs are committed, so you only need this to re-render."; exit 1; }
+	@for f in workshop/reading/*.html; do \
+	  "$(CHROME)" --headless --disable-gpu --no-pdf-header-footer \
+	    --print-to-pdf="$${f%.html}.pdf" --virtual-time-budget=4000 \
+	    "file://$(CURDIR)/$$f" >/dev/null 2>&1; \
+	  echo "rendered $${f%.html}.pdf"; \
+	done

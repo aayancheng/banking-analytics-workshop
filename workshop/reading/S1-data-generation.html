@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How the Portfolio Was Made</title>
+<style>
+  @page { size: Letter; margin: 19mm 17mm 17mm 17mm; }
+
+  :root{
+    --paper:#FDFBF7; --ink:#0C1522; --body:#1E2733; --muted:#5C6878;
+    --rule:#E5DCD1; --accent:#245bb2; --hot:#C9530C; --teal:#17879B;
+    --tint:#F4EFE7;
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-print-color-adjust:exact; print-color-adjust:exact; background:var(--paper);}
+  body{
+    margin:0; background:var(--paper); color:var(--body);
+    font:11.1pt/1.62 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    text-rendering:optimizeLegibility;
+  }
+  .sans{font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;}
+  code,pre,.mono{font-family:"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;}
+
+  /* ---------- masthead ---------- */
+  header.mast{border-bottom:2.5px solid var(--ink); padding-bottom:14px; margin-bottom:26px;}
+  .eyebrow{font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size:8.1pt; letter-spacing:.13em; text-transform:uppercase;
+    color:var(--muted); font-weight:600; margin-bottom:9px;}
+  h1{font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size:25pt; line-height:1.12; letter-spacing:-.018em;
+    color:var(--ink); margin:0 0 7px; font-weight:700;}
+  .deck{font-size:12.4pt; color:var(--muted); font-style:italic; margin:0 0 12px; line-height:1.45;}
+  .byline{font-family:"Inter",Helvetica,Arial,sans-serif; font-size:8.6pt;
+    color:var(--muted); border-top:1px solid var(--rule); padding-top:9px;}
+  .byline b{color:var(--body); font-weight:600;}
+
+  /* ---------- structure ---------- */
+  h2{font-family:"Inter",Helvetica,Arial,sans-serif; font-size:14.2pt; letter-spacing:-.01em;
+    color:var(--ink); font-weight:700; margin:26px 0 3px; break-after:avoid;}
+  h2 .num{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:.5em;}
+  h2 + .sub{font-family:"Inter",Helvetica,Arial,sans-serif; font-size:8.8pt; color:var(--muted);
+    margin:0 0 13px; letter-spacing:.01em; break-after:avoid;}
+  h3{font-family:"Inter",Helvetica,Arial,sans-serif; font-size:10.8pt; color:var(--ink);
+    font-weight:650; margin:19px 0 6px; break-after:avoid;}
+  p{margin:0 0 11px;}
+  a{color:var(--accent); text-decoration:none;}
+  strong{color:var(--ink); font-weight:650;}
+  em.term{font-style:italic; color:var(--ink);}
+
+  /* ---------- lead ---------- */
+  .lead{background:var(--tint); border-left:3px solid var(--accent);
+    padding:15px 18px; margin:0 0 24px; font-size:10.6pt;}
+  .lead p:last-child{margin-bottom:0;}
+
+  /* ---------- code ---------- */
+  pre{background:#F6F2EA; border:1px solid var(--rule); border-left:3px solid var(--muted);
+    padding:11px 13px; margin:13px 0; font-size:8.7pt; line-height:1.5;
+    overflow-x:auto; white-space:pre; color:#26313F; break-inside:avoid;}
+  pre.long{break-inside:auto;}
+  pre .c{color:#8A939E;}
+  pre .k{color:var(--accent);}
+  pre .n{color:var(--hot);}
+  code{font-size:.885em; background:#F1ECE3; padding:.08em .32em;
+    border-radius:2px; color:#2A3542;}
+
+  /* ---------- tables ---------- */
+  table{width:100%; border-collapse:collapse; margin:14px 0 16px;
+    font-family:"Inter",Helvetica,Arial,sans-serif; font-size:8.9pt; break-inside:avoid;}
+  caption{caption-side:top; text-align:left; font-family:"Inter",Helvetica,Arial,sans-serif;
+    font-size:8.2pt; letter-spacing:.07em; text-transform:uppercase; color:var(--muted);
+    font-weight:600; padding-bottom:6px;}
+  th{text-align:left; font-weight:650; color:var(--ink); border-bottom:1.5px solid var(--ink);
+    padding:5px 9px 5px 0; vertical-align:bottom;}
+  td{padding:5px 9px 5px 0; border-bottom:1px solid var(--rule); vertical-align:top;}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--ink);}
+  .num-col{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;}
+  td.mono,th.mono{font-family:"SF Mono",Menlo,Consolas,monospace; font-size:8.3pt;}
+  tr.hot td{background:#FBF0E6;}
+  tr.hot td:first-child{box-shadow:inset 3px 0 0 var(--hot);padding-left:8px;}
+
+  /* ---------- callouts ---------- */
+  .call{border:1px solid var(--rule); border-top:2.5px solid var(--teal);
+    background:#F4F8F8; padding:13px 16px; margin:16px 0; font-size:10.2pt; break-inside:avoid;}
+  .call.warn{border-top-color:var(--hot); background:#FCF4EC;}
+  .call .lbl{font-family:"Inter",Helvetica,Arial,sans-serif; font-size:7.9pt;
+    letter-spacing:.11em; text-transform:uppercase; font-weight:700;
+    color:var(--teal); margin-bottom:5px;}
+  .call.warn .lbl{color:var(--hot);}
+  .call p:last-child{margin-bottom:0;}
+
+  /* ---------- figures ---------- */
+  figure{margin:18px 0 20px; break-inside:avoid;}
+  figcaption{font-family:"Inter",Helvetica,Arial,sans-serif; font-size:8.2pt;
+    color:var(--muted); margin-top:8px; line-height:1.45;}
+  figcaption b{color:var(--body); font-weight:650;}
+
+  /* bar chart */
+  .bars{font-family:"Inter",Helvetica,Arial,sans-serif; font-size:8.6pt;}
+  .bar-row{display:flex; align-items:center; gap:9px; margin-bottom:3.5px;}
+  .bar-lab{flex:0 0 118px; text-align:right; color:var(--body);
+    font-family:"SF Mono",Menlo,Consolas,monospace; font-size:8pt;}
+  .bar-track{flex:1 1 auto; position:relative; height:13px;}
+  .bar-fill{height:13px; background:var(--accent); border-radius:0 3px 3px 0;}
+  .bar-row.hot .bar-fill{background:var(--hot);}
+  .bar-row.hot .bar-lab{color:var(--hot); font-weight:600;}
+  .bar-val{flex:0 0 40px; font-variant-numeric:tabular-nums; color:var(--muted); font-size:8pt;}
+  .bar-row.hot .bar-val{color:var(--hot); font-weight:600;}
+
+  ul,ol{margin:0 0 12px; padding-left:19px;}
+  li{margin-bottom:5px;}
+  li::marker{color:var(--muted);}
+  hr.sec{border:0; border-top:1px solid var(--rule); margin:26px 0;}
+  .kicker{font-family:"Inter",Helvetica,Arial,sans-serif; font-weight:650;
+    color:var(--ink); font-size:10pt;}
+  footer.end{margin-top:30px; padding-top:12px; border-top:2.5px solid var(--ink);
+    font-family:"Inter",Helvetica,Arial,sans-serif; font-size:8.3pt; color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="eyebrow">Credit Analytics with AI Agents &middot; Session 1 &middot; Post-session reading</div>
+  <h1>How the Portfolio Was Made</h1>
+  <p class="deck">A closer look at the data-generating process behind the 12,000 businesses &mdash;
+  what drives default, what only appears to, and the ceiling it puts on every model you will build.</p>
+  <div class="byline"><b>For curious readers, after the session.</b> Nothing here is needed to
+  pass a checkpoint. Everything here is reproducible: the appendix has the code for every number
+  on these pages. Source: <span class="mono">shared/data_generator.py</span> (195 lines &mdash;
+  short enough to read in one sitting, and worth it).</div>
+</header>
+
+<div class="lead">
+  <p>Session 1 compressed the whole generator into one arrow:</p>
+  <p class="mono" style="font-size:9.2pt;margin:10px 0;">attributes &rarr; latent risk (logit)
+  &rarr; + noise &rarr; Bernoulli draw &rarr; label</p>
+  <p>That arrow is correct, and it hides four things worth knowing: <b>noise enters twice, not
+  once</b>; <b>eleven of your twenty usable columns have no causal role at all</b>; two of those
+  eleven nonetheless carry real predictive signal; and the whole construction puts a hard,
+  computable ceiling on model performance &mdash; one the committed scorecard has
+  effectively already reached.</p>
+</div>
+
+<h2><span class="num">1</span>The shape of the thing</h2>
+<p class="sub">Two seeds, three tables, one dependency chain</p>
+
+<p><span class="kicker">Everything is deterministic.</span> <code>generate_businesses()</code> runs
+on <code>SEED = 42</code>; <code>generate_portfolio_and_panel()</code> runs on <code>seed + 1</code>.
+The split matters: the panel is generated <em>from</em> the booked subset, so the two cannot be
+re-run independently without desynchronising. <code>make data</code> always does both, which is why
+your numbers match the slides to the digit.</p>
+
+<p>The three tables are not three datasets. They are one population, filtered twice:</p>
+
+<table>
+  <caption>The dependency chain</caption>
+  <thead><tr><th>Table</th><th class="num-col">Rows</th><th>Is</th><th>Depends on</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">businesses</td><td class="num-col">12,000</td>
+        <td>every applicant, with counterfactual outcomes</td><td>seed 42</td></tr>
+    <tr><td class="mono">portfolio</td><td class="num-col">8,336</td>
+        <td>the subset where <code>booked = 1</code></td><td>businesses + seed 43</td></tr>
+    <tr><td class="mono">panel</td><td class="num-col">200,064</td>
+        <td>24 monthly rows per booked account</td><td>portfolio + seed 43</td></tr>
+  </tbody>
+</table>
+
+<p>8,336 is not chosen. It falls out of an approval model applied to 12,000 applicants, which is
+how a real book accumulates &mdash; and it is why the book defaults at 10.9% while the people who
+applied default at 16.7%.</p>
+
+<figure>
+<svg viewBox="0 0 700 168" width="100%" role="img" aria-label="Pipeline: attributes to latent logit to two noise injections to label">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5C6878"/>
+    </marker>
+  </defs>
+  <g font-family="Inter,Helvetica,Arial,sans-serif">
+    <rect x="1" y="34" width="120" height="42" rx="4" fill="#F4EFE7" stroke="#E5DCD1"/>
+    <text x="61" y="52" text-anchor="middle" font-size="10.5" font-weight="650" fill="#0C1522">20 attributes</text>
+    <text x="61" y="66" text-anchor="middle" font-size="8.5" fill="#5C6878">drawn independently</text>
+
+    <line x1="124" y1="55" x2="158" y2="55" stroke="#5C6878" stroke-width="1.4" marker-end="url(#ar)"/>
+
+    <rect x="161" y="34" width="132" height="42" rx="4" fill="#EAF0F9" stroke="#245bb2"/>
+    <text x="227" y="52" text-anchor="middle" font-size="10.5" font-weight="650" fill="#245bb2">latent logit</text>
+    <text x="227" y="66" text-anchor="middle" font-size="8.5" fill="#5C6878">10 weighted terms</text>
+
+    <line x1="296" y1="55" x2="330" y2="55" stroke="#5C6878" stroke-width="1.4" marker-end="url(#ar)"/>
+
+    <rect x="333" y="34" width="126" height="42" rx="4" fill="#FBF0E6" stroke="#C9530C"/>
+    <text x="396" y="52" text-anchor="middle" font-size="10.5" font-weight="650" fill="#C9530C">+ N(0, 0.5)</text>
+    <text x="396" y="66" text-anchor="middle" font-size="8.5" fill="#5C6878">unobserved drivers</text>
+
+    <line x1="462" y1="55" x2="496" y2="55" stroke="#5C6878" stroke-width="1.4" marker-end="url(#ar)"/>
+
+    <rect x="499" y="34" width="126" height="42" rx="4" fill="#FBF0E6" stroke="#C9530C"/>
+    <text x="562" y="52" text-anchor="middle" font-size="10.5" font-weight="650" fill="#C9530C">Bernoulli draw</text>
+    <text x="562" y="66" text-anchor="middle" font-size="8.5" fill="#5C6878">the coin flip</text>
+
+    <line x1="628" y1="55" x2="660" y2="55" stroke="#5C6878" stroke-width="1.4" marker-end="url(#ar)"/>
+    <text x="678" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0C1522">label</text>
+    <text x="678" y="66" text-anchor="middle" font-size="8.5" fill="#5C6878">0 / 1</text>
+
+    <path d="M396 88 L396 108 L562 108 L562 88" fill="none" stroke="#C9530C" stroke-width="1.2" stroke-dasharray="3 2.5"/>
+    <rect x="356" y="112" width="246" height="17" rx="3" fill="#FBF0E6"/>
+    <text x="479" y="124" text-anchor="middle" font-size="9" font-weight="650" fill="#C9530C">two independent noise sources &mdash; &sect;5</text>
+
+    <path d="M227 88 L227 146" fill="none" stroke="#245bb2" stroke-width="1.2" stroke-dasharray="3 2.5"/>
+    <rect x="1" y="140" width="452" height="17" rx="3" fill="#EAF0F9"/>
+    <text x="227" y="152" text-anchor="middle" font-size="9" font-weight="650" fill="#245bb2">only 9 of the 20 attributes reach this box &mdash; &sect;4</text>
+  </g>
+</svg>
+<figcaption><b>The generator, with the two things the one-line version omits.</b>
+Noise is injected at two separate points, and the arrow into the logit is far narrower than
+it looks &mdash; less than half the attribute table gets through it.</figcaption>
+</figure>
+
+<h2><span class="num">2</span>Stage one &mdash; the marginals</h2>
+<p class="sub">Each attribute drawn from a named distribution, chosen for shape</p>
+
+<p>The first 25 lines of the generator draw attributes one at a time, independently. Each
+distribution was picked so the <em class="term">shape</em> is recognisable to anyone who has looked
+at a real SME book:</p>
+
+<table>
+  <caption>Selected marginals &mdash; data_generator.py lines 38&ndash;56</caption>
+  <thead><tr><th>Attribute</th><th class="mono">Draw</th><th>Why that shape</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">years_in_business</td><td class="mono">gamma(3, 3)</td>
+        <td>right-skewed; most SMEs are young, a few are 40 years old</td></tr>
+    <tr><td class="mono">annual_revenue</td><td class="mono">lognormal(13, 1)</td>
+        <td>the long tail &mdash; median $437k, mean $736k, max $24.8M</td></tr>
+    <tr><td class="mono">employees</td><td class="mono">lognormal(2, 1)</td>
+        <td>median 7 people; this is a small-business book</td></tr>
+    <tr><td class="mono">dscr</td><td class="mono">normal(1.4, 0.5)</td>
+        <td>centred just above the 1.0 covenant line, so both sides are populated</td></tr>
+    <tr><td class="mono">utilization</td><td class="mono">beta(2, 3)</td>
+        <td>naturally bounded 0&ndash;1, with mass toward the low end</td></tr>
+    <tr><td class="mono">prior_delinquencies</td><td class="mono">poisson(0.6)</td>
+        <td>count data, mostly zero &mdash; 54% of the book has none</td></tr>
+    <tr><td class="mono">public_records</td><td class="mono">binomial(1, 0.08)</td>
+        <td>an 8% base rate for liens, judgments, filings</td></tr>
+  </tbody>
+</table>
+
+<p><span class="kicker">Three attributes are derived, not drawn.</span> This is the only place
+correlation enters the applicant table:</p>
+
+<pre><span class="c"># the entire correlation structure of the dataset, in three lines</span>
+net_income       = annual_revenue * profit_margin
+leverage         = total_debt / annual_revenue
+requested_amount = annual_revenue * uniform(0.05, 0.50)</pre>
+
+<p>Remember those three lines. Section 4 is almost entirely about their consequences.</p>
+
+<h2><span class="num">3</span>Stage two &mdash; the latent logit</h2>
+<p class="sub">Ten terms, and why the largest weight is nearly the smallest effect</p>
+
+<p>Risk is assembled as a linear score on the log-odds scale. Most terms are standardised through
+<code>_z()</code> first, so their weights are broadly comparable:</p>
+
+<pre>logit = <span class="n">-2.2</span>
+      <span class="n">- 0.60</span>·z(log years)      <span class="n">- 0.50</span>·z(log revenue)   <span class="n">- 0.70</span>·z(dscr)
+      <span class="n">- 0.40</span>·z(current_ratio)  <span class="n">+ 0.60</span>·z(leverage)     <span class="n">+ 0.55</span>·z(utilization)
+      <span class="n">+ 0.50</span>·z(prior_delinq)   <span class="n">+ 0.70</span>·public_records <span class="n">- 0.40</span>·z(log credit_history)
+      <span class="n">- 1.50</span>·profit_margin
+      <span class="k">+ normal(0, 0.5)</span>          <span class="c"># &lt;- noise source one</span></pre>
+
+<p>The intercept of &minus;2.2 sets the base rate. Signs encode credit intuition: more coverage and
+more history push risk down, more leverage and more utilization push it up.</p>
+
+<div class="call warn">
+  <div class="lbl">A weight is not an effect size</div>
+  <p><code>profit_margin</code> carries <b>&minus;1.50</b>, the largest coefficient in the equation,
+  and contributes <b>0.3%</b> of the variance in risk. It is one of two terms that is <em>not</em>
+  standardised, and its raw spread is about 0.06. Multiply through and its effective swing is
+  ~0.09 log-odds &mdash; against 0.70 for <code>dscr</code>.</p>
+  <p style="margin-top:8px;">A coefficient becomes an effect only when you multiply it by how much
+  the variable actually moves. This is worth carrying into every model review you ever do.</p>
+</div>
+
+<p>Decomposing the logit into the share of variance each term contributes gives the honest
+ranking:</p>
+
+<figure>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-lab">dscr</div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><div class="bar-val">18.7%</div></div>
+    <div class="bar-row"><div class="bar-lab">leverage</div><div class="bar-track"><div class="bar-fill" style="width:73.3%"></div></div><div class="bar-val">13.7%</div></div>
+    <div class="bar-row"><div class="bar-lab">years_in_business</div><div class="bar-track"><div class="bar-fill" style="width:73.3%"></div></div><div class="bar-val">13.7%</div></div>
+    <div class="bar-row"><div class="bar-lab">utilization</div><div class="bar-track"><div class="bar-fill" style="width:61.5%"></div></div><div class="bar-val">11.5%</div></div>
+    <div class="bar-row"><div class="bar-lab">annual_revenue</div><div class="bar-track"><div class="bar-fill" style="width:50.8%"></div></div><div class="bar-val">9.5%</div></div>
+    <div class="bar-row"><div class="bar-lab">prior_delinquencies</div><div class="bar-track"><div class="bar-fill" style="width:50.8%"></div></div><div class="bar-val">9.5%</div></div>
+    <div class="bar-row hot"><div class="bar-lab">NOISE N(0, 0.5)</div><div class="bar-track"><div class="bar-fill" style="width:50.8%"></div></div><div class="bar-val">9.5%</div></div>
+    <div class="bar-row"><div class="bar-lab">current_ratio</div><div class="bar-track"><div class="bar-fill" style="width:32.6%"></div></div><div class="bar-val">6.1%</div></div>
+    <div class="bar-row"><div class="bar-lab">credit_history</div><div class="bar-track"><div class="bar-fill" style="width:32.6%"></div></div><div class="bar-val">6.1%</div></div>
+    <div class="bar-row"><div class="bar-lab">public_records</div><div class="bar-track"><div class="bar-fill" style="width:7.5%"></div></div><div class="bar-val">1.4%</div></div>
+    <div class="bar-row"><div class="bar-lab">profit_margin</div><div class="bar-track"><div class="bar-fill" style="width:1.6%"></div></div><div class="bar-val">0.3%</div></div>
+  </div>
+  <figcaption><b>Share of latent-risk variance, by term.</b> The orange bar is not a feature &mdash;
+  it is the injected noise, and it outranks four of the ten real drivers. Signal std 1.545
+  against noise std 0.499 — drawn as 0.5, recovered from the data at 0.499.</figcaption>
+</figure>
+
+<p>Two readings of that chart matter. First, <code>dscr</code> is the single most important driver
+&mdash; which is why Session 3's adjudication policy puts a hard floor on it, and why your Session 2
+scorecard will lean on it. Second, <b>the noise term is the seventh-largest contributor to risk.</b>
+It is not a rounding detail. It is a design decision with consequences that run to Section 6.</p>
+
+<h2><span class="num">4</span>What is <em>not</em> in the logit</h2>
+<p class="sub">Eleven columns with no causal role &mdash; and why two of them predict anyway</p>
+
+<p>Your feature scan produced twenty candidates. The logit touches nine of them. The other eleven
+have <b>no causal effect on default whatsoever</b>. But they fail in two completely different ways,
+and telling them apart is the transferable skill in this whole note.</p>
+
+<h3>Case one: structural zeros</h3>
+
+<p>Eight columns are absent from the logit <em>and</em> uncorrelated with anything in it:
+<code>industry</code>, <code>region</code>, <code>entity_type</code>, <code>loan_purpose</code>,
+<code>term_months</code>, <code>collateral_flag</code>, <code>trade_lines</code>,
+<code>employees</code>. Their true effect is exactly zero, and their measured Information Value
+&mdash; 0.0005 to 0.006 &mdash; is the residue of finite sampling.</p>
+
+<p>The Session 1 notebook makes this concrete with a chart you have already seen: default rate by
+industry, ten bars, a clean 3.3-point spread from Wholesale at 15.1% to Construction at 18.4%, in
+an order that invites a story. Construction is cyclical. Hospitality is fragile. It reads as a
+finding.</p>
+
+<div class="call">
+  <div class="lbl">The uncomfortable part</div>
+  <p>The data was not misleading. The chart was an accurate rendering of 12,000 rows. The
+  <em>story</em> &mdash; the mechanism that made the spread feel real &mdash; was supplied by the
+  reader, and it fit the noise perfectly.</p>
+  <p style="margin-top:8px;">You cannot fix this with better data hygiene, because nothing was
+  wrong with the data. You fix it by requiring a number before you accept a story: an IV of 0.006
+  against a "usable" floor of 0.02 settles in one line what an afternoon of segment discussion
+  will not.</p>
+</div>
+
+<h3>Case two: inherited proxies &mdash; the dangerous one</h3>
+
+<p>Two columns are absent from the logit but carry <b>real, medium-strength, monotonic IV</b>.
+They inherit it from <code>annual_revenue</code>, which is a genuine driver, through the three
+derived-column lines in Section 2.</p>
+
+<table>
+  <caption>Signal with no cause</caption>
+  <thead><tr><th>Column</th><th class="num-col">IV</th><th class="num-col">Rank-corr with revenue</th><th>Where the signal comes from</th></tr></thead>
+  <tbody>
+    <tr class="hot"><td class="mono">requested_amount</td><td class="num-col">0.103</td><td class="num-col">+0.85</td>
+        <td><code>= revenue &times; uniform(0.05, 0.50)</code></td></tr>
+    <tr><td class="mono">net_income</td><td class="num-col">0.100</td><td class="num-col">+0.65</td>
+        <td><code>= revenue &times; profit_margin</code></td></tr>
+    <tr><td class="mono">total_debt</td><td class="num-col">0.014</td><td class="num-col">+0.81</td>
+        <td>enters risk only as the ratio <code>leverage</code></td></tr>
+  </tbody>
+</table>
+
+<p><code>requested_amount</code> is the one to remember. On a feature scan it looks like a keeper:
+medium strength, cleanly monotonic, comfortably above every screening threshold. It will survive
+your train/test split. It will hold up on a holdout. It will still be there next quarter.</p>
+
+<p>And it has <b>no causal relationship to default at all.</b> It works for exactly as long as the
+relationship between what a business earns and what it asks for stays where it is.</p>
+
+<div class="call warn">
+  <div class="lbl">Why a borrowed feature is worse than a weak one</div>
+  <p>A weak feature is harmless: you drop it and lose nothing. A borrowed feature fails
+  <em>silently and late</em>.</p>
+  <p style="margin-top:8px;">Change the product &mdash; a campaign pushing larger asks, a new
+  minimum ticket, a segment that borrows differently against the same revenue &mdash; and the
+  borrowed signal drains out of the feature while every drift monitor you own stays green. The
+  distribution of <code>requested_amount</code> has not moved. Its <em>relationship to the thing
+  that actually drives risk</em> has, and nothing in a standard monitoring pack is watching
+  that.</p>
+</div>
+
+<p>Session 2's scorecard drops both proxies and keeps <code>annual_revenue</code>: take the driver,
+not the shadow. That is defensible, and it is worth being clear that it was <b>a judgement, not an
+output</b>. Nothing in the feature scan told anyone to do it &mdash; on IV alone,
+<code>requested_amount</code> outranks <code>credit_history_months</code>, which the scorecard
+keeps.</p>
+
+<p>On real data you cannot open the generator and check. You have the correlation, the domain
+argument, and your judgement. The question is the same either way, and it is the one to take
+back to work:</p>
+
+<div class="call">
+  <div class="lbl">The question</div>
+  <p style="font-size:11pt;"><b>If this feature works, what is the mechanism &mdash; and what would
+  have to change for it to stop working?</b></p>
+  <p style="margin-top:8px;">A feature that cannot answer the first half is a proxy you have not
+  identified yet. A feature that cannot answer the second half has never been stress-tested. Here,
+  uniquely, you can practise the question with the answer key open on the desk. That is the entire
+  reason this data is synthetic.</p>
+</div>
+
+<h2><span class="num">5</span>Stage three &mdash; noise enters twice</h2>
+<p class="sub">Two independent sources, doing two different jobs</p>
+
+<p>"+ noise" on the slide covers two mechanisms. They are not interchangeable.</p>
+
+<h3>(a) The latent noise &mdash; <span class="mono">normal(0, 0.5)</span></h3>
+<p>Added inside the logit, before any probability exists. It contributes 9.5% of risk variance
+(recovered from the data at std 0.499 against a signal std of 1.545).</p>
+<p>Conceptually this is <b>real risk drivers you did not observe</b>: the owner's health, a customer
+concentration nobody disclosed, a lawsuit filed next March. It genuinely moved the outcome. You
+simply had no column for it. No feature engineering recovers it, because the information was never
+in the table.</p>
+
+<h3>(b) The Bernoulli draw &mdash; <span class="mono">rng.binomial(1, pd_true)</span></h3>
+<p>This is the larger effect, and the one people find hardest to accept.</p>
+<p>The label is not a threshold on PD. It is a <b>coin flip weighted by</b> PD. A borrower at
+PD 0.30 defaults 30% of the time &mdash; meaning 70% of your worst-scored applicants repay
+perfectly, and always will, no matter how good your model is.</p>
+
+<pre>mean pd_default_origination = 0.1696
+realised default rate       = 0.1672   <span class="c"># the draw, not the formula</span></pre>
+
+<p>This is the design rule Session 1 states as <em>"the label is a draw, not a formula."</em> It is
+also the reason perfect prediction is impossible <b>by construction</b> rather than by accident
+&mdash; and it sets up the only number in this note that should change how you work.</p>
+
+<h2><span class="num">6</span>The ceiling this creates</h2>
+<p class="sub">Where the gate came from, and why 0.82 is not "room for improvement"</p>
+
+<p>Because the generator is known, the maximum achievable performance can be computed rather than
+guessed. Score the noise-free signal &mdash; the logit with its noise term removed &mdash; against
+the labels that were actually drawn. Over all 12,000 applicants that gives <b>AUC 0.8177</b>: the
+best any model using observable features could possibly do. An omniscient observer who could also
+see the injected noise would reach 0.8311, and no one can.</p>
+
+<p>Comparing that with a trained model takes care, because both numbers must be measured on the
+<em>same rows</em>. The committed scorecard reports 0.8176 on its held-out 20%. Recomputing the
+ceiling on <b>that same split</b> gives <b>0.8353</b> &mdash; those particular 2,400 rows happen
+to be easier to rank than the population as a whole.</p>
+
+<figure>
+<svg viewBox="0 0 700 152" width="100%" role="img" aria-label="Ceiling and scorecard AUC measured on two different samples, with a sampling interval">
+  <g font-family="Inter,Helvetica,Arial,sans-serif">
+    <line x1="309" y1="32" x2="309" y2="124" stroke="#C9530C" stroke-width="1.3" stroke-dasharray="4 3"/>
+    <text x="309" y="26" text-anchor="middle" font-size="9" font-weight="650" fill="#C9530C">gate 0.78</text>
+
+    <line x1="150" y1="124" x2="680" y2="124" stroke="#5C6878" stroke-width="1.2"/>
+    <g font-size="8" fill="#5C6878">
+      <line x1="150" y1="124" x2="150" y2="129" stroke="#5C6878"/><text x="150" y="140" text-anchor="middle">0.750</text>
+      <line x1="256" y1="124" x2="256" y2="129" stroke="#5C6878"/><text x="256" y="140" text-anchor="middle">0.770</text>
+      <line x1="362" y1="124" x2="362" y2="129" stroke="#5C6878"/><text x="362" y="140" text-anchor="middle">0.790</text>
+      <line x1="468" y1="124" x2="468" y2="129" stroke="#5C6878"/><text x="468" y="140" text-anchor="middle">0.810</text>
+      <line x1="574" y1="124" x2="574" y2="129" stroke="#5C6878"/><text x="574" y="140" text-anchor="middle">0.830</text>
+      <line x1="680" y1="124" x2="680" y2="129" stroke="#5C6878"/><text x="680" y="140" text-anchor="middle">0.850</text>
+    </g>
+
+    <text x="142" y="55" text-anchor="end" font-size="8.6" fill="#5C6878">all 12,000 applicants</text>
+    <circle cx="509" cy="52" r="5" fill="#0C1522"/>
+    <text x="509" y="42" text-anchor="middle" font-size="9" font-weight="650" fill="#0C1522">ceiling 0.8177</text>
+
+    <text x="142" y="89" text-anchor="end" font-size="8.6" fill="#5C6878">the scorecard&rsquo;s held-out 20%</text>
+    <text x="142" y="100" text-anchor="end" font-size="8" fill="#8A939E">2,400 rows</text>
+    <line x1="394" y1="88" x2="623" y2="88" stroke="#245bb2" stroke-width="1.4"/>
+    <line x1="394" y1="83" x2="394" y2="93" stroke="#245bb2" stroke-width="1.4"/>
+    <line x1="623" y1="83" x2="623" y2="93" stroke="#245bb2" stroke-width="1.4"/>
+    <circle cx="602" cy="88" r="5" fill="#0C1522"/>
+    <text x="616" y="74" text-anchor="middle" font-size="9" font-weight="650" fill="#0C1522">ceiling 0.8353</text>
+    <circle cx="508" cy="88" r="5.5" fill="#245bb2" stroke="#FDFBF7" stroke-width="2"/>
+    <text x="494" y="108" text-anchor="middle" font-size="9" font-weight="650" fill="#245bb2">scorecard 0.8176</text>
+  </g>
+</svg>
+<figcaption><b>The ceiling depends on which rows you measure it over.</b> The blue bar is the 95%
+sampling interval on an AUC estimated from 2,400 rows (&plusmn;0.02, bootstrapped). It covers the
+ceiling measured on those same rows &mdash; so on the evidence available, the scorecard and the
+theoretical maximum <b>cannot be told apart</b>. The gate sits about 0.04 below the population
+ceiling.</figcaption>
+</figure>
+
+<table>
+  <caption>The numbers, with their samples attached</caption>
+  <thead><tr><th>Quantity</th><th>Measured over</th><th class="num-col">AUC</th></tr></thead>
+  <tbody>
+    <tr><td>Ceiling &mdash; noise-free signal</td><td>all 12,000 applicants</td><td class="num-col">0.8177</td></tr>
+    <tr><td>Ceiling &mdash; true PD, incl. the noise</td><td>all 12,000 applicants</td><td class="num-col">0.8311</td></tr>
+    <tr><td>Ceiling &mdash; noise-free signal</td><td>the scorecard&rsquo;s held-out 20%</td><td class="num-col">0.8353</td></tr>
+    <tr class="hot"><td>Committed scorecard</td><td>the scorecard&rsquo;s held-out 20%</td><td class="num-col">0.8176</td></tr>
+    <tr><td>The gate asserted in <span class="mono">train.py</span></td><td>the same held-out 20%</td><td class="num-col">0.7800</td></tr>
+  </tbody>
+</table>
+
+<p>On the same rows, then, the scorecard sits <b>0.018 below its ceiling</b> &mdash; and the 95%
+interval on a 2,400-row AUC is about &plusmn;0.02. The gap is inside the noise of the measurement.
+The honest statement is not "0.018 short of the maximum"; it is <b>"indistinguishable from the
+maximum, and this much test data cannot resolve the difference."</b></p>
+
+<div class="call warn">
+  <div class="lbl">A 20% split buys you &plusmn;0.02 &mdash; and that is its own lesson</div>
+  <p>The ceiling moved from 0.8177 to 0.8353 purely by changing which 2,400 rows it was computed
+  over. Nothing about the model, the features or the data changed. Only the sample did.</p>
+  <p style="margin-top:8px;">Carry that number back to work. Two models whose held-out AUCs differ
+  by 0.01 on a test set this size have not been distinguished, and the third decimal place in a
+  model report is decoration. If a decision rests on a difference that small, it needs
+  cross-validation or a bootstrap interval &mdash; not a bigger table.</p>
+</div>
+
+<p>Two caveats on the ceiling itself, stated precisely. It involves <b>no fitting</b> &mdash; it
+scores a known quantity against known labels &mdash; so overfitting does not apply to it and
+computing it over the full population is legitimate. And it is a property of <em>this</em> data:
+change the generator&rsquo;s noise term and every number in this section moves.</p>
+
+<div class="call">
+  <div class="lbl">What this changes</div>
+  <p>The scorecard is not "a good model with room to improve." It is <b>at, or indistinguishably
+  near, the wall</b>. The 0.18 of AUC that remains is unreachable by anyone, with any method, ever
+  &mdash; it is the Bernoulli draw, and no amount of gradient boosting touches it.</p>
+  <p style="margin-top:8px;">Which reframes what a metric target <em>is</em>. A gate is not an
+  ambition. It is a claim about what this data can support, and it should be set after measuring
+  the ceiling &mdash; never before. Set a gate above the ceiling and you have not been demanding;
+  you have ordered something impossible, and someone will eventually deliver it by leaking.</p>
+  <p style="margin-top:8px;">On synthetic data the ceiling is computable. On real data it still
+  exists &mdash; you just cannot see it, which is worse. Sessions 4 and 5 return to this.</p>
+</div>
+
+<h2><span class="num">7</span>The three downstream labels</h2>
+<p class="sub">Where the book, the watchlist and the line-increase targets come from</p>
+
+<h3><span class="mono">booked</span> &mdash; the approval filter</h3>
+<pre>approve_logit = 2.0 - 6.0 * pd_true + normal(0, 0.5)
+booked        = binomial(1, sigmoid(approve_logit))</pre>
+<p>A steep but deliberately <b>soft</b> function of true PD. The bank is good at declining bad risk,
+not perfect at it, and the noise term is what leaves genuinely bad accounts on the book &mdash;
+without which no early-warning problem would exist in Session 4.</p>
+<p>This one line produces the entire selection-bias story: 10.9% default on the book against 29.9%
+among those who never reached it, and a mean DSCR of 1.46 versus 1.28. It is also why the dataset
+can show you something a real book never will &mdash; the counterfactual outcomes of the applicants
+you turned away.</p>
+
+<h3><span class="mono">deterioration_next_6_12mo</span> &mdash; the Session 4 target</h3>
+<p>Driven by <code>pd_true</code> plus two quantities computed <em>from the panel</em>: mean
+utilization over the last three months above 0.85, and the utilization trend across all 24 months.
+The behavioural panel must therefore exist before this label can &mdash; which is why Session 4's
+features are trajectory-shaped rather than snapshots, and why its gate is written on top-decile
+capture rather than AUC.</p>
+
+<h3><span class="mono">line_increase_good</span> &mdash; and an honest note</h3>
+<p>Its noise term is deliberately smaller (<code>normal(0, 0.18)</code>, against 0.4 and 0.5
+elsewhere) and it leans harder on observable on-book behaviour. The comment above it in the source
+says why:</p>
+<pre><span class="c"># The reference build's first version of this label was noise-capped below its
+# metric gate — the fix (and when such a fix is safe at all) is a Session 4 story.</span></pre>
+<p>Someone raised a label's signal-to-noise ratio so that a model could clear a bar. Whether that
+is legitimate depends entirely on whether the bar or the label was the thing that was wrong &mdash;
+and it is left in the open, in a comment, rather than quietly smoothed over. That is the behaviour
+worth copying.</p>
+
+<h2><span class="num">8</span>What this generator deliberately does not do</h2>
+<p class="sub">The limitations, stated first</p>
+
+<p>A room of risk practitioners will find these. Better to name them:</p>
+
+<ul>
+  <li><b>The risk drivers are mutually independent.</b> Every pairwise correlation among
+  <code>dscr</code>, <code>leverage</code>, <code>current_ratio</code>, <code>utilization</code>,
+  <code>years_in_business</code>, <code>credit_history_months</code> and
+  <code>prior_delinquencies</code> is under |0.025|. In reality DSCR and leverage are mechanically
+  linked. <b>This is the single largest departure from a real book</b>, and it makes the
+  scorecard's job unrealistically clean &mdash; no multicollinearity, no unstable coefficients, no
+  argument about which of two correlated features to keep.</li>
+  <li><b>No macro dimension and no time at origination.</b> No vintages, no cycle, no downturn.
+  Every applicant is drawn from one stationary world. This is part of why segment features carry
+  nothing: there is no shock for an industry to be differentially exposed to.</li>
+  <li><b>No missingness.</b> Which is why the notebook's null audit is a pure bug check rather
+  than an imputation exercise &mdash; and why nothing in the workshop teaches imputation.</li>
+  <li><b>The panel is a random walk with drift, not a behavioural model.</b> Utilization drifts by
+  <code>(pd_true &minus; mean) &times; 0.015</code> per month plus <code>normal(0, 0.03)</code>;
+  balances, days past due, deposits and overdrafts are then deterministic functions of that path.
+  Real accounts have seasonality, paydown cycles and step changes. This one does not.</li>
+</ul>
+
+<p>Each of these makes the platform easier than reality. None of them makes it dishonest, because
+they are written down. A synthetic dataset whose limitations are documented is a teaching
+instrument; the same dataset with the limitations unstated is a misleading one.</p>
+
+<h2><span class="num">9</span>What to take back to work</h2>
+
+<ol>
+  <li><b>Multiply the coefficient by the spread.</b> The largest weight in this model contributes
+  0.3% of its variance. Weight tables mislead unless standardised, and most are not.</li>
+  <li><b>Get a number before you accept a story.</b> The industry chart was accurate, the story was
+  invented, and one IV calculation settled it.</li>
+  <li><b>Ask what mechanism makes a feature work.</b> A feature that predicts without a mechanism
+  is borrowing signal from something you have not identified, and it will fail silently when the
+  loan relationship changes rather than when the feature does.</li>
+  <li><b>Monitor relationships, not just distributions.</b> Every drift check on
+  <code>requested_amount</code> would stay green through the exact failure that breaks it.</li>
+  <li><b>Measure the ceiling before you set the target.</b> On synthetic data you can compute it.
+  On real data you cannot &mdash; which is an argument for humility about targets, not for
+  ignoring them.</li>
+</ol>
+
+<h2><span class="num">A</span>Appendix &mdash; reproduce every number here</h2>
+<p class="sub">Nothing in this note should be taken on trust</p>
+
+<p>Run from the repo root at <code>stage-1</code> or later. The first block reconstructs the
+signal-only logit and computes the two ceilings; the second reproduces the variance decomposition
+in Section 3.</p>
+
+<pre class="long"><span class="k">import</span> numpy <span class="k">as</span> np, pandas <span class="k">as</span> pd
+<span class="k">from</span> sklearn.metrics <span class="k">import</span> roc_auc_score
+<span class="k">from</span> shared.config <span class="k">import</span> RAW
+
+b = pd.read_parquet(RAW / <span class="n">"businesses.parquet"</span>); y = b[<span class="n">"default"</span>].to_numpy()
+z = <span class="k">lambda</span> x: (np.asarray(x, float) - np.mean(x)) / np.std(x)
+pm = np.clip(b[<span class="n">"net_income"</span>] / np.maximum(b[<span class="n">"annual_revenue"</span>], 1), -1, 1)
+
+<span class="c"># the DGP's logit, with the noise term left out</span>
+signal = (-2.2
+    - 0.60*z(np.log(b[<span class="n">"years_in_business"</span>])) - 0.50*z(np.log(b[<span class="n">"annual_revenue"</span>]))
+    - 0.70*z(b[<span class="n">"dscr"</span>])                    - 0.40*z(b[<span class="n">"current_ratio"</span>])
+    + 0.60*z(b[<span class="n">"leverage"</span>])                + 0.55*z(b[<span class="n">"utilization"</span>])
+    + 0.50*z(b[<span class="n">"prior_delinquencies"</span>].astype(float)) + 0.70*b[<span class="n">"public_records"</span>]
+    - 0.40*z(np.log(b[<span class="n">"credit_history_months"</span>])) - 1.50*pm).to_numpy()
+
+<span class="k">print</span>(roc_auc_score(y, signal))                          <span class="c"># 0.8177  population ceiling</span>
+<span class="k">print</span>(roc_auc_score(y, b[<span class="n">"pd_default_origination"</span>]))     <span class="c"># 0.8311  omniscient</span>
+
+<span class="c"># the ceiling on the SAME rows the scorecard was scored on - the only fair comparison</span>
+<span class="k">from</span> sklearn.model_selection <span class="k">import</span> train_test_split
+<span class="k">from</span> shared.config <span class="k">import</span> SEED
+_, te = train_test_split(np.arange(len(b)), test_size=0.2, random_state=SEED, stratify=y)
+<span class="k">print</span>(roc_auc_score(y[te], signal[te]))                    <span class="c"># 0.8353  same-split ceiling</span>
+
+<span class="c"># recover the injected noise: full logit minus the signal you just rebuilt</span>
+p = b[<span class="n">"pd_default_origination"</span>].to_numpy()
+noise = np.log(p / (1 - p)) - signal
+<span class="k">print</span>(signal.std(), noise.std())                          <span class="c"># 1.545  0.499</span></pre>
+
+<p>The proxy claims in Section 4, and the scorecard's committed metrics:</p>
+
+<pre class="long"><span class="c"># rank-correlation, because IV is computed on bins</span>
+<span class="k">for</span> c <span class="k">in</span> [<span class="n">"requested_amount"</span>, <span class="n">"net_income"</span>, <span class="n">"total_debt"</span>]:
+    <span class="k">print</span>(c, b[c].corr(b[<span class="n">"annual_revenue"</span>], method=<span class="n">"spearman"</span>).round(2))
+
+<span class="c"># the driver-independence claim in section 8</span>
+<span class="k">print</span>(b[[<span class="n">"dscr"</span>,<span class="n">"leverage"</span>,<span class="n">"current_ratio"</span>,<span class="n">"utilization"</span>]].corr().round(3))
+
+<span class="c"># the committed scorecard's numbers (stage-2 or later)</span>
+<span class="k">import</span> json; d = json.load(open(<span class="n">"score/models/metadata.json"</span>))
+<span class="k">print</span>(d[<span class="n">"metrics"</span>][<span class="n">"auc"</span>], d[<span class="n">"gate"</span>])              <span class="c"># 0.8176  {'auc_min': 0.78}</span></pre>
+
+<p>The Session 1 notebook (<code>notebooks/01_stage1_portfolio.ipynb</code>) computes the feature
+scan, the industry case and the proxy case interactively. The oracle-ceiling calculator for
+Session 4's target lives at <code>workshop/labs/oracle_ceiling.py</code> and does for
+<code>deterioration</code> what the appendix block above does for <code>default</code>.</p>
+
+<footer class="end">
+  <b>Credit Analytics with AI Agents</b> &middot; Session 1 post-session reading &middot;
+  Every figure recomputed from <span class="mono">shared/data_generator.py</span> at
+  <span class="mono">seed 42</span>.<br>
+  If a number here disagrees with what your machine prints, your machine is right and this note is
+  a bug &mdash; please say so.
+</footer>
+
+</body>
+</html>

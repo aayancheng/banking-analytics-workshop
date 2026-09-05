@@ -62,6 +62,12 @@ platform on their own machine.
 4. **Seal a number** — the held-out AUC they expect from their five features, written down before S2. The gate is 0.78; the gap is the lesson — collected at the top of S2
 5. Read the [4-day build journal](https://teamyan.substack.com/p/claude-code-credit-app-suite). Five lines: *which of the four decision apps would you trust least, and what would you check first?* — collected at the top of S2
 
+**Point at the optional note on the way out.** `workshop/reading/S1-data-generation.pdf` is the
+long-form version of the 0:55 DGP block — the full logit, the columns that carry nothing, and the
+arithmetic behind the 0.78 gate. Say plainly that it is optional and unassessed; the people who
+want it are the ones who asked the hardest questions tonight, and they will find it on their own
+if you name it once.
+
 ⚠️ **Items 2–4 are new and they change how S2 opens.** Lab 2 gives 45 minutes to binning on the
 assumption the room arrives cold. If they do the homework they will not — open Part A by asking
 who brought a WoE table, and spend the recovered time on the *decisions* rather than the mechanics.
