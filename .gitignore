@@ -19,7 +19,7 @@ workshop/demo/frames/narration.wav
 workshop/demo/frames/silent.mp4
 workshop/demo/frames/narration/
 
-# Rendered slides (instructor-only; regenerate with marp-cli)
+# Rendered slides (instructor-only; regenerate with `make slides`, or marp-cli)
 workshop/slides/*.html
 workshop/slides/*.pdf
 

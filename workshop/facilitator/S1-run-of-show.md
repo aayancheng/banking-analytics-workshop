@@ -20,7 +20,11 @@ Format: online · **free pilot** · checkpoint: `stage-1`
       `notebooks/01_stage1_portfolio.ipynb` **already executed** and scrolled to the
       default-rate-by-industry chart. You are showing it, not running it.
 - [ ] `verify.py` run **twice** (first run is slow on cold imports — your own slides say so)
-- [ ] Slides rendered: `npx @marp-team/marp-cli workshop/slides/S1.md --html`
+- [ ] Slides rendered: **`make slides`** → `workshop/slides/S1.html`, open it in a browser.
+      No npm, no network, and it **flags any slide that overflows the 16:9 frame** — the
+      failure you otherwise discover while standing in front of the room. (`npx
+      @marp-team/marp-cli workshop/slides/S1.md --html` still works if you want Marp's own
+      output, but it needs a download.)
 - [ ] Demo fallback open in tabs: `workshop/demo/frames/frame_01.png`, `frame_06.png`
 - [ ] `workshop/prompt-cards/AC-1.md` and `workshop/labs/S1-lab.md` open
 - [ ] Screen-share tested; terminal font scaled up for the smallest screen in the room

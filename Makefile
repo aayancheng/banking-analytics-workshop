@@ -3,7 +3,7 @@
 
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
-.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop notebooks reading
+.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop slides notebooks reading
 
 setup:
 	python3 -m venv .venv
@@ -74,6 +74,10 @@ CHROME := $(shell for p in "/Applications/Google Chrome.app/Contents/MacOS/Googl
 	"/Applications/Chromium.app/Contents/MacOS/Chromium" \
 	"$$(command -v google-chrome)" "$$(command -v chromium)"; do \
 	  [ -n "$$p" ] && [ -x "$$p" ] && echo "$$p" && break; done)
+
+slides:
+	$(PY) workshop/slides/render_html.py
+	@echo "Open workshop/slides/S1.html in a browser. Overflowing slides are flagged in red."
 
 reading:
 	@[ -n "$(CHROME)" ] || { echo "No Chrome/Chromium found. The PDFs are committed, so you only need this to re-render."; exit 1; }
