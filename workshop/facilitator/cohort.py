@@ -27,12 +27,28 @@ from __future__ import annotations
 import argparse
 import csv
 import glob
+import json
 import os
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OWN = {"teamyan2025@gmail.com", "aayancheng@gmail.com"}   # your own test submissions
+
+# Typos corrected on read. Fixing the CSV alone does not last — the next Tally export
+# reintroduces whatever the person actually typed. Keep the correction here as well, and
+# fix it in Tally too if you want it right at the source.
+#
+# The corrections ARE attendee addresses, and THIS REPO IS PUBLIC, so they live in a
+# gitignored file rather than in this one — same reason the CSV exports do. Create it by
+# hand as a flat {"what they typed": "what they meant"} map:
+#
+#     echo '{"someone@gnail.com": "someone@gmail.com"}' > workshop/facilitator/email_fixes.json
+#
+# Missing file means no corrections, which is the right default for anyone who clones this.
+EMAIL_FIXES_FILE = ROOT / "workshop" / "facilitator" / "email_fixes.json"
+EMAIL_FIXES = (json.loads(EMAIL_FIXES_FILE.read_text(encoding="utf-8"))
+               if EMAIL_FIXES_FILE.exists() else {})
 PATTERNS = ("workshop/facilitator/*Submissions*.csv", "*Submissions*.csv")
 # Columns are resolved BY HEADER NAME, never by position. Tally exports reorder and
 # rename as the form is edited — "Your background" and "Can you make Session 1 live"
@@ -105,6 +121,9 @@ def dedupe(rows: list[list[str]], col: dict[str, int]) -> list[list[str]]:
             short += 1
             continue
         email = r[col["email"]].strip().lower()
+        if email in EMAIL_FIXES:
+            email = EMAIL_FIXES[email]
+            r[col["email"]] = email          # so the Bcc list emits the corrected address
         if not email or email in OWN or email in seen:
             continue
         seen.add(email)

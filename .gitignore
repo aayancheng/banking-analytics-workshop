@@ -29,6 +29,8 @@ workshop/facilitator/*.csv
 workshop/facilitator/attendees*
 # Form exports land wherever they're downloaded — catch them anywhere in the tree.
 *Submissions*.csv
+# Address corrections keyed by attendee email — same PII, same rule (see cohort.py).
+workshop/facilitator/email_fixes.json
 **/attendees*.csv
 # Session and dry-run recordings — large, and they contain people. Keep them out.
 workshop/facilitator/*.mp4
