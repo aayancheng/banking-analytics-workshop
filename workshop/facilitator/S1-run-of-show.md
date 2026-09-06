@@ -302,7 +302,7 @@ cannot be said in a terminal, and it is Session 1's whole argument in a picture:
 > already hear yourself explaining it in a credit committee. Construction is riskier, of course
 > it is.
 >
-> It isn't. `industry` has an Information Value of 0.005 and **exactly zero** causal role in how
+> It isn't. `industry` has an Information Value of 0.006 and **exactly zero** causal role in how
 > this data was made. I know that, because I wrote the generator. That chart is honest and the
 > story is invented — and the only reason you can be sure is that somebody could check the code.
 >
