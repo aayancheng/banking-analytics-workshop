@@ -52,9 +52,12 @@ whatever stage you are at, so there is one copy that stays current instead of fi
 After `git checkout stage-N` they will seem to vanish. Bring them along:
 
 ```bash
-make notebooks
+git checkout main -- notebooks
 ```
 
-That restores `notebooks/` from `main` without moving you off the stage, and refuses rather than
-overwriting if you have unsaved notebook edits. It is a wrapper around `git checkout main --
-notebooks`, if you would rather type it yourself.
+That works from **any** stage, because it needs nothing but git.
+
+There is also `make notebooks`, which does the same thing and refuses rather than overwriting if
+you have unsaved notebook edits — but it only exists **on `main`**. Each stage tag ships the
+Makefile it had at the time and the tags never move, so the target is not there after a jump.
+Use it while you are on `main`; use the git command everywhere else.

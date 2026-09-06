@@ -53,6 +53,11 @@ stop:
 # at, not part of any stage's contents (no tag contains them). So `git checkout
 # stage-N` deletes them, which looks like they were lost. This brings them back
 # without moving you off the stage. It refuses if you have unsaved notebook edits.
+#
+# NOTE this target only exists on `main`: a stage tag ships the Makefile it had at
+# the time, and tags never move. After a stage jump the student-facing command is
+# `git checkout main -- notebooks`, which needs nothing but git. That is what the
+# lab sheets and CHECKPOINTS.md print; this target is the nicety for main.
 notebooks:
 	@git rev-parse --verify -q main >/dev/null || \
 	  { echo "No 'main' branch here. Are you in a clone of the workshop repo?"; exit 1; }

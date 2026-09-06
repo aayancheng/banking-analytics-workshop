@@ -3,7 +3,7 @@
 **Checkpoint:** `stage-5` · Today's artifact is a document; today's skill is a defense.
 
 > `python verify.py` first, as always. Lost? `git stash && git checkout stage-5 && python verify.py`.
-> Notebooks vanish after a stage jump? They live on `main` only — `make notebooks` brings them back.
+> Notebooks vanish after a stage jump? They live on `main` only — `git checkout main -- notebooks` brings them back from any stage.
 
 ## Part A — assemble YOUR documentation pack (40 min)
 

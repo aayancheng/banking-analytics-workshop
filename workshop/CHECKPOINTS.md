@@ -83,12 +83,18 @@ contents, so there is one copy that is kept current rather than five frozen ones
 along after a jump:
 
 ```bash
-make notebooks
+git checkout main -- notebooks
 ```
 
-It restores `notebooks/` from `main` without moving you off the stage, and refuses if you have
-unsaved notebook edits rather than overwriting them. Afterwards `git status` lists the notebooks
-as staged new files — that is normal and harmless; they are simply not part of this stage.
+That restores `notebooks/` from `main` without moving you off the stage, and it works from
+**any** stage. Afterwards `git status` lists the notebooks as staged new files — that is normal
+and harmless; they are simply not part of this stage.
+
+> **Why not `make notebooks`?** There is such a target, and it is friendlier — it refuses rather
+> than overwriting if you have unsaved notebook edits. But it only exists on `main`. Each stage
+> tag ships the Makefile it had at the time, and the tags never move, so at `stage-2` the target
+> is simply not there. The git command above needs nothing but git, which is why it is the one
+> printed here.
 
 ---
 

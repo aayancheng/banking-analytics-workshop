@@ -4,7 +4,7 @@
 
 > **If anything breaks for more than 5 minutes:** open this repo in GitHub Codespaces and keep moving. Fix your laptop later.
 > **If you edited something and are lost:** `git stash && git checkout stage-1 && python verify.py`
-> Notebooks vanish after a stage jump? They live on `main` only — `make notebooks` brings them back.
+> Notebooks vanish after a stage jump? They live on `main` only — `git checkout main -- notebooks` brings them back from any stage.
 
 ## Before you start (both tracks)
 
@@ -81,10 +81,10 @@ python verify.py --json     # show the facilitator on the way out
 
 ## Homework — 30 minutes, and Session 2 gets twice as useful
 
-First `make notebooks`, then open `notebooks/01_stage1_portfolio.ipynb` and run it. (You are on
-`stage-1`; the notebooks live on `main` only, and that one command brings them across without
-moving you off the stage.) The notebook ends with a checkpoint card and the full brief for
-items 1–3.
+First `git checkout main -- notebooks`, then open `notebooks/01_stage1_portfolio.ipynb` and run
+it. (You are on `stage-1`; the notebooks live on `main` only, and that one command brings them
+across without moving you off the stage.) The notebook ends with a checkpoint card and the full
+brief for items 1–3.
 
 1. **Bin one feature by hand and compute WoE.** `dscr`, `utilization` or `prior_delinquencies`,
    five bins, count + bad rate + WoE per bin. Lab 2 Part A opens with exactly this. Bring the table.
