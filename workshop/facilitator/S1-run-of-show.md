@@ -16,6 +16,9 @@ Format: online · **free pilot** · checkpoint: `stage-1`
 
 - [ ] Instructor Codespace on `stage-5`, `make run` **already warmed** — a cold container during the demo is the worst 90 seconds of the night
 - [ ] Second window: clean repo at `stage-1`, mirroring what students see
+- [ ] Third window on **`main`** (not a tag — `notebooks/` exists nowhere else) with
+      `notebooks/01_stage1_portfolio.ipynb` **already executed** and scrolled to the
+      default-rate-by-industry chart. You are showing it, not running it.
 - [ ] `verify.py` run **twice** (first run is slow on cold imports — your own slides say so)
 - [ ] Slides rendered: `npx @marp-team/marp-cli workshop/slides/S1.md --html`
 - [ ] Demo fallback open in tabs: `workshop/demo/frames/frame_01.png`, `frame_06.png`
@@ -48,14 +51,15 @@ platform on their own machine.
 | **0:55–1:05** | Anatomy of a DGP | attributes → latent logit → **+ noise** → Bernoulli draw → label. The three rules they'll defend: noise is deliberate · the label is a **draw, not a formula** · truth columns are written down and denied. |
 | **1:05–1:12** | Leakage: the six forbidden columns | **First: `git checkout stage-1` — the room is still on `stage-0` and cannot see this file.** See *Stage-1 handoff* below. Then `shared/config.py::LEAKAGE_COLUMNS`, named and reviewable. The line to land: *a deny-list in someone's head is not a control; a deny-list in `config.py` is.* |
 | **1:12–1:25** | Guided lab — do it together | *(Requires `stage-1` — done at 1:05.)* `make data` live (it's fast). Confirm **12,000 / 8,336 / 200,064**, default 16.7%, booked 69.5%. Ask: *why is 8,336 not a round number?* Then the **leakage probe together** — train on a denied column, watch AUC ≈ 1.0, feel the poison, delete the file. This is the emotional peak of the night; protect the time. |
-| **1:25–1:30** | Checkpoint + homework | `python verify.py` → ✅ *Stage 1 verified*. **Nobody leaves un-green.** Then, before anyone closes the tab: **`git checkout main -- notebooks`** — the room is on `stage-1` and `notebooks/` lives on `main` only, so tonight's homework opens a file they do not currently have. (Not `make notebooks`: that target exists only on `main`, and the room is not on `main`.) Homework below. |
+| **1:25–1:30** | Checkpoint · **the notebook** · homework | Three beats in five minutes, in this order. **1:25** `python verify.py` → ✅ *Stage 1 verified*. **Nobody leaves un-green.** **1:26–1:28** show the notebook — see *The notebook moment* below; if you are behind, this is the beat you cut, because it is homework anyway. **1:28** then, before anyone closes the tab: **`git checkout main -- notebooks`** — the room is on `stage-1` and `notebooks/` lives on `main` only, so tonight's homework opens a file they do not currently have. (Not `make notebooks`: that target exists only on `main`, and the room is not on `main`.) Homework below. |
 
 **Homework to assign (30–45 min):**
 
 > **Say this first:** `git checkout main -- notebooks`, then open
 > `notebooks/01_stage1_portfolio.ipynb` and run it.
-> Items 2–4 come straight off the end of that notebook. It is also the only way they see the
-> portfolio profile, the booking funnel and the IV scan — none of which fit in the 90-minute cut.
+> Items 2–4 come straight off the end of that notebook. They have now seen exactly one chart
+> from it (1:26); the portfolio profile, the booking funnel and the full IV scan are still
+> waiting, and none of those fit in the 90-minute cut.
 
 1. Finish the full audit checklist on the lab sheet (agent track: run prompt card **AC-1** and *review* the agent's audit — you are the reviewer, not the typist)
 2. **Bin one feature by hand and compute WoE** — `dscr`, `utilization` or `prior_delinquencies`, five bins. **Lab 2 Part A opens with exactly this**, so this is the item that buys back time next week. Bring the table.
@@ -282,6 +286,37 @@ in a Codespace. Nothing to do before Sept 10 — the block above is retained bec
 | `Missing: pandas, ...` | `make setup` — or ship the `remoteEnv` fix above |
 | Port 8100 won't open in S3 | Ports panel → set 8100 to Public |
 | Locked-down corporate laptop | Codespaces *is* the escape hatch. Do not debug it live |
+
+---
+
+## The notebook moment (1:26) — 90 seconds, one chart
+
+New in v1.3: `notebooks/01_stage1_portfolio.ipynb`, 40 cells. **Do not run it in the room and do
+not tour it.** Forty cells at 9:26pm, to a room that does not yet have the file, is how a good
+night ends badly. Show **one chart** from your own pre-run window on `main`.
+
+**Show the default-rate-by-industry chart.** Of everything in the notebook this is the one that
+cannot be said in a terminal, and it is Session 1's whole argument in a picture:
+
+> "Here is default rate by industry. Look at it — a 3.3-point spread, tidy, orderly, and you can
+> already hear yourself explaining it in a credit committee. Construction is riskier, of course
+> it is.
+>
+> It isn't. `industry` has an Information Value of 0.005 and **exactly zero** causal role in how
+> this data was made. I know that, because I wrote the generator. That chart is honest and the
+> story is invented — and the only reason you can be sure is that somebody could check the code.
+>
+> The notebook runs that same scan across all twenty candidates. That's tonight's homework."
+
+**Why here and not earlier.** The terminal says *Stage 1 verified*; this says what that means.
+Green tells them it worked, the chart tells them what they made — and it turns the homework from
+a chore into a question they now want answered.
+
+**Where the two minutes come from:** *How a bank decides* (0:16–0:32), already flagged as the
+recoverable block. Not the lab.
+
+**Then, and only then, the checkout command.** Show first, admin second — the command is the
+bridge to homework, not the point.
 
 ---
 

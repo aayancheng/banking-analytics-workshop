@@ -90,6 +90,9 @@ brief for items 1–3.
    five bins, count + bad rate + WoE per bin. Lab 2 Part A opens with exactly this. Bring the table.
 2. **Five in, five out.** From the 20 safe columns, name five you would put in a scorecard and
    five you would refuse — one line each. The notebook's IV scan is evidence, not a verdict.
+   You saw one case in the session: default rate by industry looks like a finding and has an IV
+   of 0.005. There are nineteen more columns and the scan puts a number on every one of them —
+   including two that carry real signal without having any causal role at all.
 3. **Seal a number.** Write down the held-out AUC you expect from your five features. The S2 gate
    is 0.78. You only learn anything from the gap if you commit before you see the answer.
 4. **Read the reference build journal**

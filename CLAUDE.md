@@ -157,7 +157,12 @@ Session 1 material as it now stands:
 - `workshop/reading/S1-data-generation.pdf` — 10pp, optional and unassessed, the DGP in full.
 - `workshop/facilitator/S1-run-of-show.md` — the room moves `main` → `stage-0` (0:13) →
   `stage-1` (1:05) and **ends the night on `stage-1`**, which is why the homework pointer is
-  `git checkout main -- notebooks`.
+  `git checkout main -- notebooks`. The notebook also gets **90 seconds in-session at 1:26**:
+  the facilitator shows *one* chart (default rate by industry — IV 0.005, zero causal role)
+  from a pre-run window on `main`. Never run live: 40 cells, at 9:26pm, to a room that does not
+  yet have the file. It is the first beat to cut if the night is running long, because it is
+  homework regardless. Slides, lab and AC-1 all carry the same command and the same 4 homework
+  items — check all four together if any one of them changes.
 
 Open threads, none started:
 
