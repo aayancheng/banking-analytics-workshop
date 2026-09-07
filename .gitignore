@@ -37,3 +37,9 @@ workshop/facilitator/*.mp4
 workshop/facilitator/*.m4a
 workshop/facilitator/*.mov
 workshop/facilitator/recordings/
+
+# AC-1 lab output. The prompt card tells each student's agent to write
+# reports/audit_AC1.md, so this is per-student work, not repo content — and one
+# committed sample would read as the reference answer to a lab whose whole point is
+# that YOU review the agent.
+reports/audit_AC1*.md
