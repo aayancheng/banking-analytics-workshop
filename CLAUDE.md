@@ -86,6 +86,12 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   needs `ipykernel` (pinned). `nbconvert` is a test-only tool for executing notebooks headlessly.
 - **Notebooks chdir to the repo root** because modules use root-relative paths like
   `Path("score/models")`.
+- **`workshop/` and `notebooks/` both live on `main` and are in NO tag** — not stage-1, not even
+  stage-5. A stage jump therefore deletes the lab sheet, the prompt cards and `CHECKPOINTS.md`
+  along with the notebooks. The S1 handoff at 1:05 is `git checkout stage-1` **followed by**
+  `git checkout main -- workshop notebooks`. ⚠️ Never restore before the `stage-0` "eight files"
+  beat at 0:13: restored files are staged and survive a later checkout, so `git ls-files` then
+  reports 80 instead of 8 (verified in a clean clone at the tag). Same reasoning below.
 - **`notebooks/` lives on `main` and is in no tag** — on purpose: one copy that stays current
   beats five frozen ones. A stage jump deletes it. The command to give a student is
   `git checkout main -- notebooks`, which needs nothing but git. **Not `make notebooks`** — that

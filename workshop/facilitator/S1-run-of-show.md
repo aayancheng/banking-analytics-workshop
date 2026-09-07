@@ -27,6 +27,9 @@ Format: online · **free pilot** · checkpoint: `stage-1`
       output, but it needs a download.)
 - [ ] Demo fallback open in tabs: `workshop/demo/frames/frame_01.png`, `frame_06.png`
 - [ ] `workshop/prompt-cards/AC-1.md` and `workshop/labs/S1-lab.md` open
+- [ ] **Tell the room to read the lab sheet from GitHub in a browser**, not from their
+      checkout. Between 0:13 and 1:05 they are on `stage-0`, where `workshop/` does not
+      exist. github.com/aayancheng/banking-analytics-workshop always shows `main`.
 - [ ] Screen-share tested; terminal font scaled up for the smallest screen in the room
 
 **Pre-work email (send ~3 days ahead).** At 90 minutes the room sweep cannot absorb a broken
@@ -342,13 +345,27 @@ fails on the first command, in front of everyone, at the emotional peak of the n
 
 ```bash
 git checkout stage-1
+git checkout main -- workshop notebooks
 python verify.py
 ```
+
+**The second line is not optional.** `workshop/` is on `main` and **in no tag at all** — not
+stage-1, not even stage-5 — exactly like `notebooks/`. So the moment the room lands on
+`stage-1` they lose **`workshop/labs/S1-lab.md`, `workshop/prompt-cards/AC-1.md` and
+`workshop/CHECKPOINTS.md`**: the lab sheet, the agent brief and the checkpoint manual all
+vanish at the precise moment the lab begins. One command brings them back without moving
+anyone off the stage.
 
 ```
 [3/3] Data: synthetic SME portfolio .......... OK
 ✅ Stage 1 verified — you are here, and it works.
 ```
+
+⚠️ **Do not run the restore before the 0:13 beat.** Files brought over with
+`git checkout main --` are staged in the index and survive a later `git checkout`, so
+`git ls-files` at `stage-0` would report **80 files instead of 8** and the "eight files, and
+you are going to build all of it" moment dies on the spot. Restore at 1:05, never earlier.
+(Verified in a clean clone at the tag: 8 before, 80 after.)
 
 > "You've just watched where we finish and stood at zero. Now here's tonight: one command, and
 > you're holding the code we're about to run. This is the contract — every week you can jump

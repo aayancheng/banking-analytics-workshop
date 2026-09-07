@@ -9,8 +9,14 @@
 ## Before you start (both tracks)
 
 ```bash
-make stop && python verify.py     # stage-1 green (this lab needs shared/, which stage-0 doesn't have)
+git checkout main -- workshop notebooks   # if this sheet vanished when you jumped to stage-1
+make stop && python verify.py             # stage-1 green (this lab needs shared/)
 ```
+
+**Why the first line.** `workshop/` and `notebooks/` live on `main` and are in **no stage tag**,
+so jumping to `stage-1` removes this sheet, the AC-1 card and `CHECKPOINTS.md` from your
+checkout. That one command brings them back **without moving you off `stage-1`**. You can also
+just read them on GitHub in a browser — that always shows `main`.
 
 The first `verify.py` after a fresh install is slow (cold imports). Run it twice; the second run is the real speed. That's normal.
 
@@ -81,10 +87,9 @@ python verify.py --json     # show the facilitator on the way out
 
 ## Homework — 30 minutes, and Session 2 gets twice as useful
 
-First `git checkout main -- notebooks`, then open `notebooks/01_stage1_portfolio.ipynb` and run
-it. (You are on `stage-1`; the notebooks live on `main` only, and that one command brings them
-across without moving you off the stage.) The notebook ends with a checkpoint card and the full
-brief for items 1–3.
+Open `notebooks/01_stage1_portfolio.ipynb` and run it — you already restored it with the command
+at the top of this sheet. (If it is missing: `git checkout main -- workshop notebooks`.) The
+notebook ends with a checkpoint card and the full brief for items 1–3.
 
 1. **Bin one feature by hand and compute WoE.** `dscr`, `utilization` or `prior_delinquencies`,
    five bins, count + bad rate + WoE per bin. Lab 2 Part A opens with exactly this. Bring the table.
