@@ -4,7 +4,7 @@
 
 > First command of the night, always: `make stop` (S2 leftovers hold the ports).
 > Lost? `git stash && git checkout stage-3 && python verify.py`.
-> Notebooks vanish after a stage jump? They live on `main` only — `git checkout main -- notebooks` brings them back from any stage.
+> This sheet or the notebooks vanish after a stage jump? `workshop/` and `notebooks/` live on `main` and are in no tag — `git checkout main -- workshop notebooks` brings them all back from any stage, without moving you off it.
 
 ## Part A — the adjudication app (45 min)
 

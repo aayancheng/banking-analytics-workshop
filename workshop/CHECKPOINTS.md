@@ -83,7 +83,7 @@ contents, so there is one copy that is kept current rather than five frozen ones
 along after a jump:
 
 ```bash
-git checkout main -- notebooks
+git checkout main -- workshop notebooks
 ```
 
 That restores `notebooks/` from `main` without moving you off the stage, and it works from

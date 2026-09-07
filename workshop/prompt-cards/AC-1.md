@@ -24,7 +24,7 @@
 - [ ] Are the rank-ordering directions *stated and checked*, or just tabulated?
 - [ ] Did it answer your extra question, or paraphrase it away?
 - [ ] Find **one thing it did not check** and send it back to check that.
-- [ ] **Mark it against the notebook.** `git checkout main -- notebooks`, run
+- [ ] **Mark it against the notebook.** `git checkout main -- workshop notebooks`, run
       `notebooks/01_stage1_portfolio.ipynb`, and compare its IV scan to what the agent reported.
       Where the agent found a story in a column the scan gives an IV near zero, that is the
       finding — the agent did what you nearly did with the industry chart in the session. An

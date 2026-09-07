@@ -3,7 +3,7 @@
 **Checkpoint:** `stage-4` · Tonight contains the program's most important lesson. Don't read ahead past Part A, step 3 — seriously.
 
 > First command: `make stop`. Lost? `git stash && git checkout stage-4 && python verify.py`.
-> Notebooks vanish after a stage jump? They live on `main` only — `git checkout main -- notebooks` brings them back from any stage.
+> This sheet or the notebooks vanish after a stage jump? `workshop/` and `notebooks/` live on `main` and are in no tag — `git checkout main -- workshop notebooks` brings them all back from any stage, without moving you off it.
 > Weak laptop + big panel? Codespaces. (The lab reads a pre-aggregated feature cache; the full 200,064-row groupby is optional.)
 
 ## Part A — the Early Warning System (40 min)

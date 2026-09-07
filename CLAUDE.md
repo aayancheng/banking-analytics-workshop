@@ -94,7 +94,7 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   reports 80 instead of 8 (verified in a clean clone at the tag). Same reasoning below.
 - **`notebooks/` lives on `main` and is in no tag** — on purpose: one copy that stays current
   beats five frozen ones. A stage jump deletes it. The command to give a student is
-  `git checkout main -- notebooks`, which needs nothing but git. **Not `make notebooks`** — that
+  `git checkout main -- workshop notebooks`, which needs nothing but git. **Not `make notebooks`** — that
   target exists only on `main`, because a tag ships the Makefile it had at the time and tags
   never move. Same trap applies to any future `make` target you are tempted to put in
   stage-jump advice.
@@ -163,7 +163,7 @@ Session 1 material as it now stands:
 - `workshop/reading/S1-data-generation.pdf` — 10pp, optional and unassessed, the DGP in full.
 - `workshop/facilitator/S1-run-of-show.md` — the room moves `main` → `stage-0` (0:13) →
   `stage-1` (1:05) and **ends the night on `stage-1`**, which is why the homework pointer is
-  `git checkout main -- notebooks`. The notebook also gets **90 seconds in-session at 1:26**:
+  `git checkout main -- workshop notebooks`. The notebook also gets **90 seconds in-session at 1:26**:
   the facilitator shows *one* chart (default rate by industry — IV 0.006, zero causal role)
   from a pre-run window on `main`. Never run live: 40 cells, at 9:26pm, to a room that does not
   yet have the file. It is the first beat to cut if the night is running long, because it is

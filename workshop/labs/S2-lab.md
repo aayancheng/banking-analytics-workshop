@@ -3,7 +3,7 @@
 **Checkpoint:** `stage-2` · The gate is **AUC ≥ 0.78 on the held-out split, hard assert** — and `verify.py` recomputes it from the tag's committed constant, so it cannot be negotiated locally.
 
 > Lost? `git stash && git checkout stage-2 && python verify.py` puts you at a working scorecard.
-> Notebooks vanish after a stage jump? They live on `main` only — `git checkout main -- notebooks` brings them back from any stage.
+> This sheet or the notebooks vanish after a stage jump? `workshop/` and `notebooks/` live on `main` and are in no tag — `git checkout main -- workshop notebooks` brings them all back from any stage, without moving you off it.
 > Ports busy? `make stop`.
 
 ## Part A — bin and weigh by hand-ish (45 min, before the break)

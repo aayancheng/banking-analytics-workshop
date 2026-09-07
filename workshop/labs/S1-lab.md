@@ -4,7 +4,7 @@
 
 > **If anything breaks for more than 5 minutes:** open this repo in GitHub Codespaces and keep moving. Fix your laptop later.
 > **If you edited something and are lost:** `git stash && git checkout stage-1 && python verify.py`
-> Notebooks vanish after a stage jump? They live on `main` only — `git checkout main -- notebooks` brings them back from any stage.
+> This sheet or the notebooks vanish after a stage jump? `workshop/` and `notebooks/` live on `main` and are in no tag — `git checkout main -- workshop notebooks` brings them all back from any stage, without moving you off it.
 
 ## Before you start (both tracks)
 
