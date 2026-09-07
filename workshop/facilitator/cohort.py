@@ -46,6 +46,11 @@ OWN = {"teamyan2025@gmail.com", "aayancheng@gmail.com"}   # your own test submis
 #     echo '{"someone@gnail.com": "someone@gmail.com"}' > workshop/facilitator/email_fixes.json
 #
 # Missing file means no corrections, which is the right default for anyone who clones this.
+# Live seats closed once the cohort outgrew a room one person can run: anyone who
+# signed up ON OR AFTER this date is on the recording track whatever they ticked, because
+# the form kept accepting "yes live" for a while after the seats were gone.
+LIVE_CLOSED_FROM = "2026-09-05"
+
 EMAIL_FIXES_FILE = ROOT / "workshop" / "facilitator" / "email_fixes.json"
 EMAIL_FIXES = (json.loads(EMAIL_FIXES_FILE.read_text(encoding="utf-8"))
                if EMAIL_FIXES_FILE.exists() else {})
@@ -133,6 +138,13 @@ def dedupe(rows: list[list[str]], col: dict[str, int]) -> list[list[str]]:
     return out
 
 
+def bucket(row: list[str], col: dict[str, int], closed_from: str) -> str:
+    """Effective attendance, which is not always what the person selected."""
+    if closed_from and row[col["submitted"]].strip()[:10] >= closed_from:
+        return "recording only"
+    return row[col["attend"]].strip().lower()
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--since", help="YYYY-MM-DD — sign-ups on or after this date")
@@ -142,6 +154,9 @@ def main() -> None:
     ap.add_argument("--later", action="store_true", help='bucket: "Recording then join later"')
     ap.add_argument("--unknown", action="store_true",
                     help="bucket: attendance left blank (the form was edited mid-flight)")
+    ap.add_argument("--live-closed-from", default=LIVE_CLOSED_FROM, metavar="YYYY-MM-DD",
+                    help=f"sign-ups on/after this date are recording-only whatever they "
+                         f"ticked (default {LIVE_CLOSED_FROM}; pass '' to disable)")
     a = ap.parse_args()
 
     files = candidates()
@@ -190,12 +205,24 @@ def main() -> None:
         wanted.add("recording then join later")
     if a.unknown:
         wanted.add("")
+    cutoff = a.live_closed_from
+    if cutoff:
+        # count everyone whose effective bucket differs from what they selected —
+        # a blank answer after the cutoff is a reclassification too, not just "yes live"
+        moved = Counter(r[ATTEND].strip().lower() or "(blank)" for r in people
+                        if bucket(r, col, cutoff) != (r[ATTEND].strip().lower() or ""))
+        n = sum(moved.values())
+        detail = ", ".join(f"{v} {k!r}" for k, v in moved.most_common())
+        print(f"cutoff:   live seats closed {cutoff} — {n} later sign-up(s) moved to "
+              f"recording only" + (f" ({detail})" if n else ""))
     if wanted:
-        people = [r for r in people if r[ATTEND].strip().lower() in wanted]
+        people = [r for r in people if bucket(r, col, cutoff) in wanted]
         print(f"filter:   attendance in {sorted(wanted)}")
 
     print(f"selected: {len(people)}")
-    for label, idx in (("attendance", ATTEND), ("region", REGION), ("background", BACKGROUND)):
+    eff = Counter(bucket(r, col, cutoff) or "(blank)" for r in people).most_common()
+    print("attendance " + " · ".join(f"{v} {k}" for k, v in eff) + "   (effective)")
+    for label, idx in (("region", REGION), ("background", BACKGROUND)):
         counts = Counter(r[idx].strip() for r in people).most_common()
         print(f"{label:11}" + " · ".join(f"{v} {k}" for k, v in counts))
 

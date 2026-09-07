@@ -3,9 +3,14 @@
 **Facilitator notes. Not student-facing.** Template only: no names, no live list.
 
 **Send to the live list**, not everyone: `python workshop/facilitator/cohort.py --live --unknown`
-→ 65 addresses as of the Sep 5 export. The `--unknown` bucket is the seven people who left the
-attendance question blank when the form was edited mid-flight; a blank answer should not cost
-someone the join link. Recording-only sign-ups get the video afterwards and do not need this.
+→ **58 addresses** as of the Sep 7 export (109 distinct sign-ups: 58 live, 51 recording).
+Recording-track sign-ups get the video afterwards and do not need a join link.
+
+**Live seats closed 2026-09-05**, and `cohort.py` enforces that: anyone who signed up on or
+after that date is recording-only whatever they ticked, because the form kept accepting
+sign-ups after the seats were gone. Currently that moves **16 people** — all of them blank
+answers, since the form stopped asking once seats closed. Change the date with
+`--live-closed-from YYYY-MM-DD`, or pass `''` to disable the rule.
 
 **Re-export from Tally on the morning of Sep 9** and regenerate — the list is only as current as
 the file on disk, and the script prints the newest sign-up it contains so a stale export says so.
