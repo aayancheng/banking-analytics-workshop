@@ -92,6 +92,35 @@ quiet voice), and timestamps on recordings **off** — they look like surveillan
 
 ---
 
+## Where the course should live — and when to decide
+
+**Not yet.** Every course platform exists to capture the customer into *its* funnel, which is
+orthogonal to growing a list of your own. Buy one when you want to charge and have evidence
+people will pay — not before.
+
+| Platform | Cost (2026) | Who owns the student | Fit while the goal is list growth |
+|---|---|---|---|
+| **Udemy** | free to publish, ~63% cut on organic sales | **Udemy.** External promotion restricted | ✗ actively works against it |
+| Teachable | $29–39/mo, **7.5%** fee on Starter | You | Premature |
+| Thinkific | from $49/mo, 0% fees | You | Premature |
+| Kajabi | $143–179/mo | You | Overkill — duplicates what Substack already does |
+| Gumroad | $0/mo, 5–10% per sale | You | ✓ *if* you later sell a bundle |
+| **GitHub + Substack + YouTube** | $0 | You | ✓ **already in place** |
+
+Free tiers are gone: Teachable, Thinkific and Kajabi are trial-only as of 2026. Gumroad is the
+only zero-fixed-cost option, and it is a storefront rather than a course platform — which is
+fine, because a self-verifying public repo does not need a hosting platform.
+
+**Udemy deserves the sharpest warning.** It brings its own audience, which is real. But it owns
+the student relationship, restricts linking out, and takes the majority of organic revenue. As a
+reach play once a list exists it is arguable; as the *first* move while the goal is subscribers,
+it is the worst option on the table.
+
+**And Substack already charges.** If monetisation comes later, paid subscriptions or a one-off
+Gumroad bundle cover it without a $49/month platform ever entering the picture.
+
+---
+
 ## If the destination is Udemy
 
 The technical bar is low but two of its four requirements catch Zoom recordings specifically.
