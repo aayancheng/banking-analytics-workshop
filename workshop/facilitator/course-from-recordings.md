@@ -60,6 +60,84 @@ is what you'll rewrite around — but it doesn't have to ship.
 
 ---
 
+## Zoom settings that decide whether the footage is usable
+
+Beyond the three in [online-delivery.md](online-delivery.md) (local recording, per-participant
+audio, optimize for 3rd-party editor), four settings change what you can do afterwards. All are
+in the **web portal → Settings → Recording**, and all must be on **before** the session — none
+can be applied to footage you already have.
+
+**1 · Record active speaker, gallery view and shared screen separately.** The single most
+valuable one. It writes an extra `shared_screen` MP4 with **no webcam picture-in-picture burned
+into it**. In the dry run your camera sat over the top-right of VS Code; in a composited file
+those pixels are gone for good, and that corner is where tab bars and window controls live. With
+the separate file you choose per-lecture whether your face appears at all.
+
+**2 · "Display participants' names in the recording" — turn OFF.** Names burned into video
+cannot be removed later. With ~40 bank practitioners, that is both a consent problem and an
+irreversible one: if somebody asks to be taken out of a clip in October, the answer with names
+burned in is "I can't."
+
+**3 · "Ask participants for consent when a recording starts" — turn ON.** It puts a consent
+prompt in front of every attendee at the moment recording begins, and the participation log
+records it. That is the auditable half of the consent plan; the spoken notice at 0:00 is the
+human half. Publishing clips of identifiable employees of named institutions — and CIBC, FNBO,
+Milliman and BDC addresses are in this cohort — is exactly where you want a record.
+
+**4 · Auto-save chat.** Chat is where the questions will be, and questions are the syllabus for
+the re-recorded version. Save it, mine it, do not publish it — it carries names.
+
+Also worth setting: background noise suppression to **Auto** (High can clip consonants on a
+quiet voice), and timestamps on recordings **off** — they look like surveillance footage.
+
+---
+
+## If the destination is Udemy
+
+The technical bar is low but two of its four requirements catch Zoom recordings specifically.
+
+| Requirement | Where Zoom trips you |
+|---|---|
+| **720p minimum, 16:9** | Fine — record at 1920×1080 as the dry-run protocol already says |
+| **Audio in BOTH channels** | ⚠️ Per-participant tracks are **mono**. A mono track that lands on one side is a standard rejection |
+| **30+ minutes total** | Not a constraint; you will have ~7.5 hours of raw |
+| **Custom, dynamic visuals** | Your portal, charts and notebook clear this easily; a static terminal for 20 minutes would not |
+
+**The stereo gotcha, concretely.** Before submitting anything, force dual-mono:
+
+```bash
+ffmpeg -i lecture.mp4 -af "pan=stereo|c0=c0|c1=c0" -c:v copy lecture-stereo.mp4
+```
+
+Check it landed:
+
+```bash
+ffprobe -v error -show_entries stream=channels,channel_layout -of default=nw=1 lecture-stereo.mp4
+```
+
+**Two things you already have that most first-time instructors do not:**
+
+- **A promo video.** `workshop/demo/demo.mp4` — 121 seconds, narrated, showing the finished
+  platform. That is exactly the asset Udemy asks for and it is already built.
+- **A completion check.** Almost no course can verify a student actually did the work. Yours ends
+  every module on `python verify.py` and a green line. Lead the sales page with that rather than
+  with hours of content — it is the only genuinely unusual thing about the course.
+
+**Captions.** YouTube auto-generates and is fine for highlights. For Udemy, generate them
+properly and edit — Whisper runs locally and free, no subscription:
+
+```bash
+pip install openai-whisper && whisper lecture.mp4 --model small --output_format srt
+```
+
+**The clean-take habit, worth ten minutes a week.** Immediately after each session, while the
+material is still loaded, record one solo pass of that night's key demo — no interruptions, no
+"can everyone see my screen", no waiting for stragglers. Five of those become five course
+lectures, and they will beat any live capture. The live recording is then only for the cohort
+and for highlights, which is all it was ever good for.
+
+---
+
 ## Raw sessions are not a course
 
 You'll finish Oct 8 with ~7.5 hours containing setup time, "can everyone see my screen",
