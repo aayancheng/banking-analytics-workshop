@@ -31,6 +31,9 @@ Format: online · **free pilot** · checkpoint: `stage-1`
       checkout. Between 0:13 and 1:05 they are on `stage-0`, where `workshop/` does not
       exist. github.com/aayancheng/banking-analytics-workshop always shows `main`.
 - [ ] Screen-share tested; terminal font scaled up for the smallest screen in the room
+- [ ] **Three polls created in the Zoom web portal and set to anonymous** — see
+      [session-polls.md](session-polls.md). Find the launch button before 8:00pm; hunting
+      the Polls menu live is a visible fumble.
 
 **Pre-work email (send ~3 days ahead).** At 90 minutes the room sweep cannot absorb a broken
 laptop. Ask everyone to open the repo in Codespaces *before* the session and confirm it goes
@@ -50,15 +53,15 @@ platform on their own machine.
 | Time | Block | Beats to hit |
 |---|---|---|
 | **0:00–0:03** | Welcome | Origin story, **3 minutes hard**: ~30 years bank credit risk → rebuilt this platform solo with AI agents in **4 days, ~$150 in tokens**. That artifact is real; they are inside it within ten minutes. |
-| **0:03–0:13** | **Containers** — full script in *Containers, in ten minutes* below | They click the Codespaces badge in minute one; you teach into the 2–4 minute build. Ends with the room green and the rule for all five weeks stated: *no debugging at your seat.* |
-| **0:13–0:16** | Promise of five sessions | By S5 they **defend**, not demo. The checkpoint contract: one command always says *"you are here, and it works."* Missing a session costs nothing. |
+| **0:03–0:13** | **Containers** + **Poll A** (0:04, while their container builds — see [session-polls.md](session-polls.md)) | They click the Codespaces badge in minute one; you teach into the 2–4 minute build. Ends with the room green and the rule for all five weeks stated: *no debugging at your seat.* |
+| **0:13–0:16** | Promise of five sessions + **Poll B** (0:14, what they're here to build) | By S5 they **defend**, not demo. The checkpoint contract: one command always says *"you are here, and it works."* Missing a session costs nothing. |
 | **0:16–0:32** | How a bank decides | Lifecycle: Originate → Adjudicate → Price → Monitor → Manage. PD as the one shared number — *score the business, not the loan*; 300–850 is PD in a friendlier suit. **Signature idea #1:** the leverage is in the **application**, not the model. |
 | **0:32–0:42** | The destination — live demo · **10 min hard cap** | stage-5 dashboard: 12,000 scored, approval mix, **$1.28B** mispriced exposure. Walk one Approve and one Decline through Customer 360. Resist rabbit holes — every module reappears in a later session. |
 | **0:42–0:55** | Why synthetic data | Privacy · control · teachability. Seed 42 → their numbers match your slides exactly. **Discussion, 3 min:** *why would identical numbers alarm you in production?* (stale data, broken pipeline, copied artifacts). Don't answer it for them — count to ten in silence. |
 | **0:55–1:05** | Anatomy of a DGP | attributes → latent logit → **+ noise** → Bernoulli draw → label. The three rules they'll defend: noise is deliberate · the label is a **draw, not a formula** · truth columns are written down and denied. |
 | **1:05–1:12** | Leakage: the six forbidden columns | **First: `git checkout stage-1` — the room is still on `stage-0` and cannot see this file.** See *Stage-1 handoff* below. Then `shared/config.py::LEAKAGE_COLUMNS`, named and reviewable. The line to land: *a deny-list in someone's head is not a control; a deny-list in `config.py` is.* |
 | **1:12–1:25** | Guided lab — do it together | *(Requires `stage-1` — done at 1:05.)* `make data` live (it's fast). Confirm **12,000 / 8,336 / 200,064**, default 16.7%, booked 69.5%. Ask: *why is 8,336 not a round number?* Then the **leakage probe together** — train on a denied column, watch AUC ≈ 1.0, feel the poison, delete the file. This is the emotional peak of the night; protect the time. |
-| **1:25–1:30** | Checkpoint · **the notebook** · homework | Three beats in five minutes, in this order. **1:25** `python verify.py` → ✅ *Stage 1 verified*. **Nobody leaves un-green.** **1:26–1:28** show the notebook — see *The notebook moment* below; if you are behind, this is the beat you cut, because it is homework anyway. **1:28** then, before anyone closes the tab: **`git checkout main -- workshop notebooks`** — belt and braces — they restored these at 1:05, and this catches anyone who joined late or re-jumped. (Not `make notebooks`: that target exists only on `main`, and the room is not on `main`.) Homework below. |
+| **1:25–1:30** | Checkpoint · **the notebook** · homework | Three beats in five minutes, in this order. **1:25** `python verify.py` → ✅ *Stage 1 verified*. **Nobody leaves un-green.** **1:26–1:28** show the notebook — see *The notebook moment* below; if you are behind, this is the beat you cut, because it is homework anyway. **1:28** then, before anyone closes the tab: **`git checkout main -- workshop notebooks`** — and launch **Poll C** at **1:29** (do *not* share its results on screen) — belt and braces — they restored these at 1:05, and this catches anyone who joined late or re-jumped. (Not `make notebooks`: that target exists only on `main`, and the room is not on `main`.) Homework below. |
 
 **Homework to assign (30–45 min):**
 
