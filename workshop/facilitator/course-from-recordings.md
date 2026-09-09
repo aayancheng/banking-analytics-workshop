@@ -81,8 +81,9 @@ burned in is "I can't."
 **3 · "Ask participants for consent when a recording starts" — turn ON.** It puts a consent
 prompt in front of every attendee at the moment recording begins, and the participation log
 records it. That is the auditable half of the consent plan; the spoken notice at 0:00 is the
-human half. Publishing clips of identifiable employees of named institutions — and CIBC, FNBO,
-Milliman and BDC addresses are in this cohort — is exactly where you want a record.
+human half. This cohort includes people using their employers' corporate email addresses at
+banks, an actuarial consultancy and a development bank, so clips can identify both a person and
+where they work — exactly the case where you want the consent on record rather than recalled.
 
 **4 · Auto-save chat.** Chat is where the questions will be, and questions are the syllabus for
 the re-recorded version. Save it, mine it, do not publish it — it carries names.
