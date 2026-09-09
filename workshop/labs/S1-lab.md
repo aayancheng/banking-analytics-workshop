@@ -59,7 +59,7 @@ You are the **reviewer**, not the typist. The agent generates and audits; you gr
 Feel the poison once, on purpose:
 
 ```python
-# leakage_probe.py — run it, read the two numbers, then delete this file
+# leakage_probe.py — run it, read the three numbers, then delete this file
 import pandas as pd
 from lightgbm import LGBMClassifier
 from sklearn.metrics import roc_auc_score
@@ -67,16 +67,31 @@ from sklearn.model_selection import train_test_split
 from shared.config import RAW
 
 biz = pd.read_parquet(RAW / "businesses.parquet")
-X_ok  = biz[["dscr", "leverage", "utilization", "prior_delinquencies"]]
-X_bad = X_ok.assign(cheat=biz["pd_default_origination"])   # <- deny-listed column
-y = biz["default"]
-for name, X in [("honest", X_ok), ("LEAKED", X_bad)]:
+X_ok, y = biz[["dscr", "leverage", "utilization", "prior_delinquencies"]], biz["default"]
+
+rungs = [
+    ("honest — 4 real features", X_ok,                                        ""),
+    ("+ pd_default_origination", X_ok.assign(cheat=biz["pd_default_origination"]),
+                                                    "the generator's true PD"),
+    ("+ default",                X_ok.assign(cheat=biz["default"]),
+                                                    "the answer itself"),
+]
+for name, X, note in rungs:
     Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-    m = LGBMClassifier(verbose=-1).fit(Xtr, ytr)
-    print(f"{name}: AUC = {roc_auc_score(yte, m.predict_proba(Xte)[:, 1]):.4f}")
+    auc = roc_auc_score(yte, LGBMClassifier(verbose=-1).fit(Xtr, ytr).predict_proba(Xte)[:, 1])
+    print(f"{name:<26} AUC = {auc:.4f}   {note}")
 ```
 
-Write down both numbers. In production, the second number is what a **silent join mistake** looks like. It will not announce itself with a `cheat` column name.
+Expect roughly **0.73 → 0.83 → 1.00**.
+
+**The 1.00 is not the lesson.** Training on `default` is the answer copied into the features —
+obviously broken, trivially caught, nobody ships it.
+
+**The middle rung is the one that gets you.** `pd_default_origination` buys about **+0.10 AUC**
+and looks entirely plausible. A model with that number passes review, ships, and then performs at
+0.73 in production — because at decision time the true PD does not exist. In production this is
+what a **silent join mistake** looks like, and it will not announce itself with a column called
+`cheat`.
 
 ## Converge (both tracks)
 
