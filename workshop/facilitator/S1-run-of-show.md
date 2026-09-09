@@ -50,6 +50,12 @@ platform on their own machine.
 
 ## Run of show
 
+> **Live timer:** open [run-of-show-app.html](run-of-show-app.html) in a browser on your second
+> screen. It counts the 90 minutes against the table below, fires each timed cue (polls,
+> commands, the two-minute demo warning), and flags how far behind you are if you click the
+> block you are actually on. **The app mirrors this table — change one, change the other.**
+
+
 | Time | Block | Beats to hit |
 |---|---|---|
 | **0:00–0:03** | Welcome | Origin story, **3 minutes hard**: ~30 years bank credit risk → rebuilt this platform solo with AI agents in **4 days, ~$150 in tokens**. That artifact is real; they are inside it within ten minutes. |

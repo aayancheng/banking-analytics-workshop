@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>S1 Run of Show — facilitator timer</title>
+<style>
+:root{
+  --bg:#0e1420; --panel:#161e2e; --panel2:#1d2739; --line:#2a3648;
+  --ink:#e8edf5; --dim:#8fa0b8; --accent:#4d8ff0; --good:#3fbf7f;
+  --warn:#e0a33e; --bad:#e0574a; --hard:#c94f42;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);
+  color:var(--ink);border-radius:7px;padding:7px 13px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#06101f;font-weight:650}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em;
+  background:#0a111c;padding:2px 6px;border-radius:4px;color:#9ecbff}
+
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);
+  padding:12px 20px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.clock{font-variant-numeric:tabular-nums;font-size:46px;font-weight:700;line-height:1;letter-spacing:-1px}
+.clock .of{font-size:20px;color:var(--dim);font-weight:500}
+.wall{font-variant-numeric:tabular-nums;color:var(--dim);font-size:14px}
+.drift{margin-left:auto;font-weight:650;padding:7px 15px;border-radius:8px;
+  background:var(--panel2);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.drift.ok{color:var(--good);border-color:#2c5a45}
+.drift.late{color:var(--bad);border-color:#5c2f2b}
+.drift.early{color:var(--warn);border-color:#5c4a26}
+
+main{display:grid;grid-template-columns:1fr 340px;gap:18px;padding:18px 20px;align-items:start}
+@media(max-width:940px){main{grid-template-columns:1fr}}
+
+.now{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+.now .win{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:650;letter-spacing:.4px}
+.now h1{margin:6px 0 4px;font-size:31px;line-height:1.15}
+.now .left{color:var(--dim);font-variant-numeric:tabular-nums;margin-bottom:14px}
+.now .beats{color:#c6d3e4;font-size:15px}
+.bar{height:7px;background:#0a111c;border-radius:4px;overflow:hidden;margin:14px 0 4px}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .4s linear}
+.bar.hard i{background:var(--hard)}
+
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.7px;
+  padding:3px 9px;border-radius:20px;margin-right:7px;vertical-align:2px}
+.tag.hard{background:#3a1c19;color:#ff9d92;border:1px solid #6d302a}
+.tag.prot{background:#12312a;color:#6fe0ac;border:1px solid #2c5a45}
+.tag.rec{background:#33280f;color:#f0c675;border:1px solid #5c4a26}
+
+.cues{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+.cue{display:flex;gap:12px;align-items:flex-start;background:var(--panel2);
+  border:1px solid var(--line);border-left:3px solid var(--dim);border-radius:8px;padding:11px 13px}
+.cue.due{border-left-color:var(--accent);background:#152744;box-shadow:0 0 0 1px #2b4a7d}
+.cue.past{opacity:.42}
+.cue .at{font-variant-numeric:tabular-nums;font-weight:700;color:var(--dim);min-width:44px}
+.cue.due .at{color:var(--accent)}
+.cue .txt{flex:1}
+.cue .cmd{margin-top:6px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.cue button.copy{padding:3px 9px;font-size:12px}
+
+.next{margin-top:14px;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:13px 18px;color:var(--dim)}
+.next b{color:var(--ink)}
+
+aside{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+aside h2{margin:0;padding:12px 16px;font-size:12px;letter-spacing:1.1px;color:var(--dim);
+  text-transform:uppercase;border-bottom:1px solid var(--line)}
+.row{display:flex;gap:11px;padding:9px 16px;border-bottom:1px solid #1b2434;cursor:pointer;align-items:baseline}
+.row:hover{background:var(--panel2)}
+.row .t{font-variant-numeric:tabular-nums;color:var(--dim);font-size:12.5px;min-width:38px}
+.row .n{flex:1;font-size:13.5px}
+.row.done{opacity:.4}
+.row.cur{background:#152744;border-left:3px solid var(--accent);padding-left:13px}
+.row.cur .n{font-weight:650}
+.opts{padding:12px 16px;color:var(--dim);font-size:12.5px;line-height:1.7}
+.opts label{cursor:pointer;user-select:none;display:block}
+kbd{background:#0a111c;border:1px solid var(--line);border-bottom-width:2px;
+  border-radius:4px;padding:1px 6px;font-size:11.5px;font-family:inherit}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="clock"><span id="el">0:00</span><span class="of"> / 1:30</span></div>
+    <div class="wall">wall clock <span id="wall">—</span> · <span id="state">not started</span></div>
+  </div>
+  <button id="go" class="primary">Start</button>
+  <button id="reset">Reset</button>
+  <div id="drift" class="drift ok">on plan</div>
+</header>
+
+<main>
+  <div>
+    <section class="now">
+      <div class="win" id="win">0:00 – 0:03</div>
+      <h1 id="title">Welcome</h1>
+      <div class="left" id="left">—</div>
+      <div class="bar" id="barwrap"><i id="bar" style="width:0%"></i></div>
+      <div class="beats" id="beats"></div>
+      <div class="cues" id="cues"></div>
+    </section>
+    <div class="next" id="next"></div>
+  </div>
+
+  <aside>
+    <h2>Timeline — click to jump</h2>
+    <div id="rail"></div>
+    <div class="opts">
+      <label><input type="checkbox" id="brk"> Insert 3-min break at 0:42 <span style="opacity:.7">(shifts everything after)</span></label>
+      <div style="margin-top:9px"><kbd>space</kbd> start / pause · <kbd>R</kbd> reset · <kbd>←</kbd> <kbd>→</kbd> jump block</div>
+    </div>
+  </aside>
+</main>
+
+<script>
+// Mirrors workshop/facilitator/S1-run-of-show.md. If that file changes, change this too.
+const BASE = [
+ {m:0,  d:3,  t:"Welcome", tag:["hard","3 MIN HARD"],
+  b:"Origin story. ~30 years bank credit risk → rebuilt this platform solo with AI agents in <b>4 days, ~$150 in tokens</b>. That artifact is real; they are inside it within ten minutes.",
+  c:[{o:0,x:"Say the recording notice out loud — recorded, goes out after, cameras and mics are your choice."}]},
+
+ {m:3,  d:10, t:"Containers", 
+  b:"They click the Codespaces badge in minute one; you teach into the 2–4 minute build. Ends with the room green and the rule for all five weeks: <b>no debugging at your seat.</b>",
+  c:[{o:0,x:"“Click the badge now — it takes 2–4 minutes. I'll talk while it builds.”"},
+     {o:1,x:"<b>LAUNCH POLL A</b> — agents / where they run them / which models. Anonymous.",p:1},
+     {o:7,x:"Share Poll A results. Heavy on “employer doesn't permit” → the browser story is the headline. Heavy on “local” → pitch the identical-machine guarantee."}]},
+
+ {m:13, d:3,  t:"Promise of five sessions",
+  b:"By S5 they <b>defend</b>, not demo. The checkpoint contract: one command always says <i>“you are here, and it works.”</i> Missing a session costs nothing.",
+  c:[{o:1,x:"<b>LAUNCH POLL B</b> — what are you here to build? Maps onto the five sessions.",p:1}]},
+
+ {m:16, d:16, t:"How a bank decides", tag:["rec","RECOVERABLE — CUT HERE IF BEHIND"],
+  b:"Originate → Adjudicate → Price → Monitor → Manage. PD as the one shared number — <i>score the business, not the loan</i>; 300–850 is PD in a friendlier suit. <b>Signature idea #1: the leverage is in the application, not the model.</b>",
+  c:[{o:0,x:"If you are behind, this is the block to shorten. Not the lab."}]},
+
+ {m:32, d:10, t:"The destination — live demo", tag:["hard","10 MIN HARD CAP"],
+  b:"stage-5 dashboard: 12,000 scored, approval mix, <b>$1.28B</b> mispriced exposure. Walk one Approve and one Decline through Customer 360.",
+  c:[{o:0,x:"Portal must already be warm on :8100. <code>make run</code> frees the port first."},
+     {o:8,x:"<b>Two minutes left — start closing.</b> Resist rabbit holes; every module returns in a later session."}]},
+
+ {m:42, d:13, t:"Why synthetic data",
+  b:"Privacy · control · teachability. Seed 42 → their numbers match your slides exactly.",
+  c:[{o:6,x:"<b>Discussion, 3 min:</b> “why would identical numbers alarm you in production?” Stale data, broken pipeline, copied artifacts. <b>Don't answer it — count to ten in silence.</b>"}]},
+
+ {m:55, d:10, t:"Anatomy of a DGP",
+  b:"attributes → latent logit → <b>+ noise</b> → Bernoulli draw → label. The three rules they'll defend: noise is deliberate · the label is a <b>draw, not a formula</b> · truth columns are written down and denied.",
+  c:[]},
+
+ {m:65, d:7,  t:"Leakage — the six forbidden columns",
+  b:"<code>shared/config.py::LEAKAGE_COLUMNS</code>, named and reviewable. The line to land: <i>a deny-list in someone's head is not a control; a deny-list in config.py is.</i>",
+  c:[{o:0,x:"<b>STAGE-1 HANDOFF FIRST.</b> The room is on stage-0 and cannot see this file — or the lab sheet.",
+      cmd:"git checkout stage-1 && git checkout main -- workshop notebooks"},
+     {o:1,x:"Then <code>python verify.py</code> → ✅ Stage 1 verified. “One command, and you're holding tonight's code.”"}]},
+
+ {m:72, d:13, t:"Guided lab — do it together", tag:["prot","PROTECT THIS TIME"],
+  b:"<code>make data</code> live. Confirm <b>12,000 / 8,336 / 200,064</b>, default 16.7%, booked 69.5%. Ask: <i>why is 8,336 not a round number?</i>",
+  c:[{o:6,x:"<b>The leakage probe, together.</b> Train on a denied column, watch AUC ≈ 1.0, feel the poison, delete the file. <b>Emotional peak of the night.</b>"}]},
+
+ {m:85, d:5,  t:"Checkpoint · notebook · homework",
+  b:"Three beats in five minutes, in this order.",
+  c:[{o:0,x:"<code>python verify.py</code> → ✅ Stage 1 verified. <b>Nobody leaves un-green.</b> Ask them to type their stage number in chat."},
+     {o:1,x:"<b>The notebook, 90 seconds, ONE chart</b> — default rate by industry, IV 0.006, zero causal role. From your pre-run window on <b>main</b>. Never run it live. <b>Cut this beat first if behind.</b>"},
+     {o:3,x:"Restore for homework (belt and braces — they did this at 1:05).",
+      cmd:"git checkout main -- workshop notebooks"},
+     {o:4,x:"<b>LAUNCH POLL C</b> — the pulse. ⚠️ <b>Do NOT share these results on screen.</b>",p:1}]}
+];
+
+const $=s=>document.querySelector(s);
+const fmt=m=>`${Math.floor(m/60)}:${String(Math.floor(m%60)).padStart(2,"0")}`;
+const K="s1-ros-v1";
+
+let blocks=[], t0=null, paused=0, pauseAt=null, cur=0, manual=false, builtBrk=null;
+
+function build(){
+  const brk=$("#brk").checked; builtBrk=brk; blocks=[];
+  BASE.forEach(b=>{
+    if(brk && b.m===42) blocks.push({m:42,d:3,t:"BREAK",tag:["prot","5 MIN — SAY WHEN YOU'RE BACK"],
+      b:"Say the time you'll resume, out loud and in chat. At this size, people who wander off during an unbounded break do not come back.",c:[],brk:1});
+    blocks.push({...b, m: (brk && b.m>=42) ? b.m+3 : b.m});
+  });
+}
+const total=()=>blocks.at(-1).m+blocks.at(-1).d;
+const elapsed=()=>t0===null?0:((pauseAt??Date.now())-t0-paused)/60000;
+
+// Storage is a convenience, never a dependency: Chrome disables localStorage on some
+// file:// and data: contexts, and an unguarded throw here once killed the whole render loop.
+function save(){try{localStorage.setItem(K,JSON.stringify({t0,paused,pauseAt,brk:$("#brk").checked}));}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(K)||"{}");
+  if(s.t0){t0=s.t0;paused=s.paused||0;pauseAt=s.pauseAt||null;$("#brk").checked=!!s.brk;}}catch(e){}}
+function wipe(){try{localStorage.removeItem(K);}catch(e){}}
+
+function render(){
+  if($("#brk").checked!==builtBrk){ build(); save(); }   // reconcile, don't trust the event
+  const e=elapsed(), tot=total();
+  $("#el").textContent=fmt(e); $("#of")&&0;
+  document.querySelector(".of").textContent=" / "+fmt(tot);
+  $("#wall").textContent=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  $("#state").textContent = t0===null?"not started" : pauseAt?"paused":"running";
+  $("#go").textContent   = t0===null?"Start" : pauseAt?"Resume":"Pause";
+
+  if(!manual){ let i=0; blocks.forEach((b,k)=>{ if(e>=b.m) i=k; }); cur=i; }
+  const b=blocks[cur];
+
+  $("#win").textContent=`${fmt(b.m)} – ${fmt(b.m+b.d)}`;
+  $("#title").innerHTML=(b.tag?`<span class="tag ${b.tag[0]}">${b.tag[1]}</span>`:"")+b.t;
+  $("#beats").innerHTML=b.b;
+
+  const into=e-b.m, rem=b.d-into;
+  $("#left").textContent = t0===null ? `${b.d} min block`
+    : rem>=0 ? `${fmt(Math.max(0,rem))} left in this block` : `${fmt(-rem)} OVER this block`;
+  $("#bar").style.width=Math.max(0,Math.min(100,into/b.d*100))+"%";
+  $("#barwrap").className="bar"+(b.tag&&b.tag[0]==="hard"?" hard":"");
+
+  $("#cues").innerHTML=(b.c||[]).map(c=>{
+    const at=b.m+c.o, due=t0!==null&&e>=at, past=t0!==null&&e>=at+2;
+    return `<div class="cue ${due&&!past?"due":""} ${past?"past":""}">
+      <div class="at">${fmt(at)}</div><div class="txt">${c.p?"📊 ":""}${c.x}
+      ${c.cmd?`<div class="cmd"><code>${c.cmd}</code><button class="copy" data-c="${c.cmd.replace(/"/g,"&quot;")}">copy</button></div>`:""}
+      </div></div>`;}).join("") || `<div class="cue past"><div class="txt">No timed cues in this block.</div></div>`;
+
+  const n=blocks[cur+1];
+  $("#next").innerHTML = n ? `<b>Next ${fmt(n.m)}</b> — ${n.t}${n.tag?` · <span style="color:#f0c675">${n.tag[1]}</span>`:""}`
+                           : "<b>End of session.</b> Stop the recording. Poll C results: read later, not on screen.";
+
+  $("#rail").innerHTML=blocks.map((x,i)=>`<div class="row ${i<cur?"done":""} ${i===cur?"cur":""}" data-i="${i}">
+      <div class="t">${fmt(x.m)}</div><div class="n">${x.t}</div></div>`).join("");
+
+  const d=Math.round(e-b.m-(manual?0:into));
+  const off=manual?Math.round(e-b.m):0;
+  const el=$("#drift");
+  if(t0===null||!manual){ el.className="drift ok"; el.textContent="on plan"; }
+  else if(Math.abs(off)<1){ el.className="drift ok"; el.textContent="on plan"; }
+  else if(off>0){ el.className="drift late"; el.textContent=`${off} min BEHIND`; }
+  else { el.className="drift early"; el.textContent=`${-off} min ahead`; }
+
+  document.title=(t0!==null&&!pauseAt?`${fmt(e)} · `:"")+b.t;
+}
+
+$("#go").onclick=()=>{ if(t0===null){t0=Date.now();}
+  else if(pauseAt){paused+=Date.now()-pauseAt;pauseAt=null;} else {pauseAt=Date.now();} save();render();};
+$("#reset").onclick=()=>{ if(!confirm("Reset the timer?"))return;
+  t0=null;paused=0;pauseAt=null;manual=false;cur=0;wipe();render();};
+$("#brk").addEventListener("change",()=>{build();save();render();});
+$("#rail").onclick=e=>{const r=e.target.closest(".row"); if(!r)return; cur=+r.dataset.i; manual=true; render();};
+$("#cues").onclick=e=>{const b=e.target.closest("button.copy"); if(!b)return;
+  navigator.clipboard.writeText(b.dataset.c).then(()=>{b.textContent="copied";setTimeout(()=>b.textContent="copy",1200);});};
+addEventListener("keydown",e=>{ if(e.target.tagName==="INPUT")return;
+  if(e.code==="Space"){e.preventDefault();$("#go").click();}
+  if(e.key==="r"||e.key==="R")$("#reset").click();
+  if(e.key==="ArrowRight"&&cur<blocks.length-1){cur++;manual=true;render();}
+  if(e.key==="ArrowLeft"&&cur>0){cur--;manual=true;render();}});
+
+load(); build(); render(); setInterval(render,1000);
+</script>
+</body>
+</html>
