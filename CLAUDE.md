@@ -24,6 +24,8 @@ tools/         doc-pack builder
 notebooks/     one per stage: a visual read-out of that stage's key results
 workshop/      slides, labs, prompt cards, CHECKPOINTS.md (students), facilitator/
 workshop/reading/  optional post-session notes: .html is source, .pdf committed beside it
+workshop/slides/render_html.py  `make slides` -> browsable S*.html, stdlib only, flags overflow
+workshop/facilitator/  run-of-show + the live timer app, polls, cohort.py, email templates
 ```
 
 ## Invariants — do not break these
@@ -101,6 +103,18 @@ Then cut/annotate a `v1.x` tag recording what was verified.
 - **Notebook 01 must run at `stage-1`, where `score/` does not exist.** It imports
   `FEATURE_COLUMNS` from `score.src.feature_engineering` inside a `try`, with a hard-coded
   fallback. Anything else it reaches for from a later stage needs the same treatment.
+- **The leakage probe's headline number was wrong for a month.** Every artifact said "watch AUC
+  hit ~1.0" while the shipped code leaked `pd_default_origination` — the generator's *true PD*,
+  not the label — which measures **0.8326**. Only leaking `default` reaches 1.0000. It is now a
+  three-rung ladder (**0.7299 / 0.8326 / 1.0000**) and the teaching point is the *middle* rung:
+  +0.10 AUC, plausible-looking, passes review, ships, then performs at 0.73 because at decision
+  time the true PD does not exist. If you change one artifact's numbers, change all five —
+  notebook cell 35, `S1-lab.md`, `S1.md` (twice), `S1-run-of-show.md`, `run-of-show-app.html`.
+- **`localStorage` throws, it does not return null.** Chrome disables it on `data:` URLs and
+  restricts some `file://` contexts. An unguarded `save()` in `run-of-show-app.html` killed a
+  change handler silently, and once it was also called from `render()` it would have killed the
+  render loop every second. Wrap every access; treat persistence as a convenience, never a
+  dependency. Same rule for any future local HTML tool here.
 - **Reading notes render with headless Chrome** (`make reading`) — no npm, LaTeX or pandoc. The
   `.html` is source and the `.pdf` is committed beside it so students need no toolchain.
 
@@ -149,34 +163,50 @@ repo is decoration.
 - Student-facing wording matters more than usual here: these people are choosing whether to
   trust the material.
 
-## Where things stand — updated 2026-09-06
+## Where things stand — updated 2026-09-08
 
-Released **v1.3** (annotated tag on `main`, pushed). Pilot cohort starts **Thu 10 Sep 2026,
-8:00–9:30pm EDT**; Session 1 ends at `stage-1`.
+Released **v1.4** (annotated tag on `main`, pushed). **Session 1 is Thu 10 Sep 2026,
+8:00–9:30pm EDT — two days out.** Session 1 ends at `stage-1`.
 
-Session 1 material as it now stands:
+### The cohort (no names or addresses here — this repo is public)
 
-- `notebooks/01_stage1_portfolio.ipynb` — 40 cells. Portfolio profile, the applicant→booked
-  funnel (16.7% / 10.9% / 29.9%), IV + monotonicity scan over all 20 candidates, the two
-  no-causal-role cases above, a computed checkpoint card, and homework that feeds Lab 2 Part A
-  (hand-bin + WoE, five-in/five-out, a sealed AUC prediction against the 0.78 gate).
-- `workshop/reading/S1-data-generation.pdf` — 10pp, optional and unassessed, the DGP in full.
-- `workshop/facilitator/S1-run-of-show.md` — the room moves `main` → `stage-0` (0:13) →
-  `stage-1` (1:05) and **ends the night on `stage-1`**, which is why the homework pointer is
-  `git checkout main -- workshop notebooks`. The notebook also gets **90 seconds in-session at 1:26**:
-  the facilitator shows *one* chart (default rate by industry — IV 0.006, zero causal role)
-  from a pre-run window on `main`. Never run live: 40 cells, at 9:26pm, to a room that does not
-  yet have the file. It is the first beat to cut if the night is running long, because it is
-  homework regardless. Slides, lab and AC-1 all carry the same command and the same 4 homework
-  items — check all four together if any one of them changes.
+**109 distinct sign-ups; live seats closed 2026-09-05.** 58 on the live list, 51 on the
+recording track. Expect **35–45 in the room**. Zoom Pro (100-participant cap) is being bought
+2026-09-09 — one month covers all five sessions if bought that day; auto-renew off immediately.
 
-Open threads, none started:
+`workshop/facilitator/cohort.py` turns a Tally export into a Bcc list. Buckets are
+`--live / --recording / --later / --unknown`, they union, and **sign-ups on or after
+`LIVE_CLOSED_FROM` (2026-09-05) are recording-only whatever they ticked** — the form kept
+accepting "yes live" after the seats were gone. Columns resolve **by header name**, because
+Tally reordered them mid-flight. Exports and `email_fixes.json` are gitignored; never inline an
+address (invariant 6).
 
-- A *"how these ten were chosen"* subsection for the reading note, between §3 and §4. It explains
-  *what* is in the logit but never *why those nine*: the sentence test, unarguable signs, routing
-  levels through ratios, excluding what a bank must not price on, designing the decoys
-  deliberately, and setting weights by target variance share.
+### Facilitator tooling added since v1.3
+
+- **`workshop/facilitator/run-of-show-app.html`** — open in a browser on a second screen. Counts
+  the 90 minutes, fires every timed cue (polls, the stage-1 handoff command with a copy button,
+  the two-minute demo warning), and shows drift if you click the block you are actually on.
+  Marks *How a bank decides* RECOVERABLE and the lab PROTECT. **It mirrors the run-of-show table
+  — change one, change the other.**
+- **`workshop/facilitator/session-polls.md`** — three anonymous Zoom polls: A at 0:04 in the
+  container-build gap, B at 0:14, C at 1:29 (a pulse whose results are **not** shared on screen).
+- **`workshop/facilitator/course-from-recordings.md`** — Zoom recording settings that must be on
+  *before* the session (record shared screen **separately**, participant names **off**, consent
+  prompt **on**), the Udemy bar, and the platform comparison. **Decision: buy no course platform
+  yet**; Substack + the public repo + YouTube is the stack while the goal is list growth.
+- **`make slides`** → `render_html.py`, stdlib-only deck preview that **flags any slide
+  overflowing the 16:9 frame**. Rendered `.html` is gitignored.
+- **`make run` now depends on `stop`** — a leftover uvicorn on 8100 killed the dry run.
+
+### Open threads, none started
+
+- A *"how these ten were chosen"* subsection for the reading note, between §3 and §4: the
+  sentence test, unarguable signs, routing levels through ratios, excluding what a bank must not
+  price on, designing the decoys deliberately, weights by target variance share.
 - Nothing equivalent to the S1 reading note exists for Sessions 2–5.
+- **S2 still needs its own 90-minute re-cut before Sep 17.**
+- The dry run ran **22% long** (9m48s against 8m). Applied to 90 minutes that is ~110. The
+  recoverable block is named in the run of show; the lab is not it.
 
-Housekeeping: a local `backup/pre-pii-rewrite` branch holds the pre-rewrite `cohort.py` history
-and was never pushed — delete it when it is no longer wanted.
+Housekeeping: local-only branches `backup/pre-pii-rewrite` and `archive/yanexercise` (the
+deleted remote branch, SHA `bcb055b`) — delete when no longer wanted.
