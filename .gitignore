@@ -19,8 +19,10 @@ workshop/demo/frames/narration.wav
 workshop/demo/frames/silent.mp4
 workshop/demo/frames/narration/
 
-# Rendered slides (instructor-only; regenerate with `make slides`, or marp-cli)
-workshop/slides/*.html
+# Rendered slides: the .html is COMMITTED beside its .md, like workshop/reading/.
+# A Codespace has no `open` and no file:// — an uncommitted deck means `make slides`
+# plus a forwarded port before you can read a slide. Regenerate with `make slides`;
+# it is derived from the .md in the same commit, so re-render when you edit one.
 workshop/slides/*.pdf
 
 # Attendee lists and form exports — PII, and this repo is PUBLIC.
