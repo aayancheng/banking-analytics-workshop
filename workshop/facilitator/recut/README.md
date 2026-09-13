@@ -36,6 +36,15 @@ nine-second card, the wrong one for an hour of footage (its own docs route
   The footage is encoded exactly once. Audio: fixed gain to ≈ −16 LUFS (Zoom's
   AGC already flattens it — measure with `ebur128` first), a −1 dB limiter,
   50 ms fades and `apad` so every piece's audio is exactly as long as its video.
+- **A chapter is a freeze.** The keep is split at the chapter point; between the
+  halves goes a silent piece that holds the chapter's first frame for `freeze`
+  seconds (2.6) while the banner rises from below the frame to mid-left and
+  holds; the resumed footage carries the banner's drop-out (the MOV's last
+  0.5 s, via `-ss` into the file). So a chapter point **must sit on a pause** —
+  a two-second silence mid-sentence is worse than no chapter. Chapter marks are
+  embedded in the MP4 (VLC, IINA, mpv, QuickTime) and written to
+  `<stem>-chapters.txt` for the YouTube description — YouTube reads chapters
+  from the description, never from the file; first line `00:00`, each ≥ 10 s.
 
 ## Workflow
 
@@ -80,7 +89,8 @@ cue). Two anchors that worked:
 Then `snap.py` moves each boundary onto a real pause. Cue times are only good
 to ~1 s, so for any boundary next to something you must exclude (an attendee's
 name, the sentence that starts the hiccup) look at the pause structure at
-`silencedetect=noise=-30dB:d=0.3` and pick the pause by hand.
+`silencedetect=noise=-30dB:d=0.3` and pick the pause by hand. Chapter points
+that fall mid-keep need the same treatment (`snap.py` only handles keeps).
 
 ## What to cut, from S1
 

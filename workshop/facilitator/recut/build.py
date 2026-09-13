@@ -15,6 +15,10 @@ Division of labour, on purpose:
     with the watermark and its timed overlays baked in, in parallel, to an MPEG-TS
     intermediate; the pieces are then concatenated with stream copy, so the
     lecture footage is encoded exactly once.
+  * A chapter is a FREEZE: the chapter's first frame held (silent) while the
+    banner rises to mid-left and holds; the footage resumes as it drops out.
+    Chapter marks are embedded in the MP4 and written out as a YouTube
+    description block (<stem>-chapters.txt).
 
 Stdlib + ffmpeg + `npx hyperframes`. Inputs and outputs live in a gitignored
 folder (see README.md); only this tooling is tracked.
@@ -114,43 +118,99 @@ def graphics(doc, out: Path, force: bool):
         render(comps / "callouts" / f"{c['id']}.html", g / f"{c['id']}.mov", "mov")
 
 
-# --------------------------------------------------------------------------- segments
-def overlays_for(doc, keep):
-    """(local_start, dur, file) for every chapter/callout inside this keep."""
-    items = []
-    for c in doc["chapters"]:
-        if keep["in"] <= c["at"] < keep["out"]:
-            items.append((c["at"] - keep["in"], c["dur"], f"ch{c['num']}.mov"))
+# --------------------------------------------------------------------------- pieces
+# The timeline is a list of PIECES, concatenated in order:
+#   card    intro / outro (HyperFrames MP4 + silent audio)
+#   keep    a source range, watermark + timed overlays baked in
+#   freeze  a chapter break: the chapter's first frame held for `freeze` seconds,
+#           silent, with the banner rising and holding over it
+# A keep that contains a chapter point is split there: [in, at) | freeze | [at, out).
+# The banner MOV is 3.1 s: [0, freeze) plays over the freeze piece, the rest --
+# the drop-out -- over the first half-second of the resumed footage.
+
+def pieces(doc):
+    out = [{"name": "intro", "kind": "card"}]
+    chapters = sorted(doc["chapters"], key=lambda c: c["at"])
+    for k in doc["keeps"]:
+        cuts = [c for c in chapters if k["in"] <= c["at"] < k["out"]]
+        # boundaries: keep start, every chapter point, keep end -> consecutive keep pieces
+        bounds = [k["in"], *(c["at"] for c in cuts), k["out"]]
+        part = 0
+        for i in range(len(bounds) - 1):
+            b0, b1 = bounds[i], bounds[i + 1]
+            if b1 - b0 <= 0.04:                     # chapter at the very start: no lead-in piece
+                continue
+            ch = next((c for c in cuts if c["at"] == b0), None)
+            overlays = []
+            if ch:
+                out.append({"name": f"ch{ch['num']}", "kind": "freeze", "at": ch["at"], "dur": ch["freeze"],
+                            "title": ch["title"], "num": ch["num"],
+                            "overlays": [(0.0, ch["freeze"], f"ch{ch['num']}.mov", 0.0)]})
+                # the resumed footage carries the banner's drop-out
+                overlays.append((0.0, ch["dur"] - ch["freeze"], f"ch{ch['num']}.mov", ch["freeze"]))
+            name = k["id"] if not cuts else f"{k['id']}{'abcdef'[part]}"
+            out.append({"name": name, "kind": "keep", "in": b0, "out": b1, "note": k["note"], "overlays": overlays})
+            part += 1
+    # callouts go into whichever keep piece contains them: (local, dur, file, ss-into-file)
     for c in doc["callouts"]:
-        if keep["in"] <= c["at"] < keep["out"]:
-            items.append((c["at"] - keep["in"], c["dur"], f"{c['id']}.mov"))
-    return sorted(items)
+        for pc in out:
+            if pc["kind"] == "keep" and pc["in"] <= c["at"] < pc["out"]:
+                pc["overlays"].append((c["at"] - pc["in"], c["dur"], f"{c['id']}.mov", 0.0))
+                break
+        else:
+            sys.exit(f"callout {c['id']} at {fmt(c['at'])} is not inside any keep")
+    out.append({"name": "outro", "kind": "card"})
+    return out
 
 
-def segment_cmd(doc, keep, src: Path, g: Path, target: Path, draft: bool):
-    length = round(keep["out"] - keep["in"], 3)
-    cmd = ["ffmpeg", "-hide_banner", "-nostats", "-y",
-           "-ss", f"{keep['in']:.3f}", "-t", f"{length:.3f}", "-i", str(src),
-           "-i", str(g / "watermark.png")]
-    ov = overlays_for(doc, keep)
-    for local, dur, name in ov:
-        cmd += ["-itsoffset", f"{local:.3f}", "-i", str(g / name)]
-
-    chain = ["[0:v][1:v]overlay=0:0[v0]"]
-    last = "v0"
-    for i, (local, dur, _) in enumerate(ov):
+def _overlay_chain(cmd, overlays, g: Path, first_index: int):
+    """Append overlay inputs to cmd; return the filter steps and the last label."""
+    for local, dur, name, ss in overlays:
+        cmd += ["-ss", f"{ss:.3f}", "-t", f"{dur:.3f}", "-itsoffset", f"{local:.3f}", "-i", str(g / name)]
+    steps, last = [], "v0"
+    for i, (local, dur, _, _) in enumerate(overlays):
         nxt = f"v{i + 1}"
-        chain.append(f"[{last}][{i + 2}:v]overlay=0:0:eof_action=pass:"
+        steps.append(f"[{last}][{first_index + i}:v]overlay=0:0:eof_action=pass:"
                      f"enable='between(t,{local:.3f},{local + dur:.3f})'[{nxt}]")
         last = nxt
+    return steps, last
+
+
+def keep_cmd(doc, pc, src: Path, g: Path, target: Path, draft: bool):
+    length = round(pc["out"] - pc["in"], 3)
+    cmd = ["ffmpeg", "-hide_banner", "-nostats", "-y",
+           "-ss", f"{pc['in']:.3f}", "-t", f"{length:.3f}", "-i", str(src),
+           "-i", str(g / "watermark.png")]
+    steps, last = _overlay_chain(cmd, sorted(pc["overlays"]), g, 2)
+    chain = ["[0:v][1:v]overlay=0:0[v0]", *steps]
     if draft:
-        chain.append(f"[{last}]scale=960:-2[vout]")
-        last = "vout"
+        chain.append(f"[{last}]scale=960:-2[vout]"); last = "vout"
     a = doc["audio"]
     chain.append(f"[0:a]volume={a['gain_db']}dB,alimiter=limit={a['limit']}:attack=5:release=50,"
                  f"afade=t=in:st=0:d=0.05,afade=t=out:st={max(length - 0.05, 0):.3f}:d=0.05,"
                  f"apad=whole_dur={length:.3f}[aout]")   # audio exactly as long as the video: no gap at the seam
     cmd += ["-filter_complex", ";".join(chain), "-map", f"[{last}]", "-map", "[aout]",
+            *(VIDEO_DRAFT if draft else VIDEO_FINAL), "-r", str(doc["fps"]), *AUDIO,
+            "-f", "mpegts", str(target)]
+    return cmd
+
+
+def freeze_cmd(doc, pc, src: Path, g: Path, frames: Path, target: Path, draft: bool):
+    """Hold the chapter's first frame, silent, with the banner rising over it."""
+    frame = frames / f"{pc['name']}.png"
+    if not frame.exists():
+        run(["ffmpeg", "-hide_banner", "-nostats", "-y", "-ss", f"{pc['at']:.3f}", "-i", str(src),
+             "-frames:v", "1", str(frame)])
+    length = pc["dur"]
+    cmd = ["ffmpeg", "-hide_banner", "-nostats", "-y",
+           "-loop", "1", "-framerate", str(doc["fps"]), "-t", f"{length:.3f}", "-i", str(frame),
+           "-i", str(g / "watermark.png"),
+           "-f", "lavfi", "-t", f"{length:.3f}", "-i", "anullsrc=r=48000:cl=stereo"]
+    steps, last = _overlay_chain(cmd, pc["overlays"], g, 3)
+    chain = ["[0:v][1:v]overlay=0:0[v0]", *steps]
+    if draft:
+        chain.append(f"[{last}]scale=960:-2[vout]"); last = "vout"
+    cmd += ["-filter_complex", ";".join(chain), "-map", f"[{last}]", "-map", "2:a",
             *(VIDEO_DRAFT if draft else VIDEO_FINAL), "-r", str(doc["fps"]), *AUDIO,
             "-f", "mpegts", str(target)]
     return cmd
@@ -165,27 +225,51 @@ def card_cmd(doc, src: Path, target: Path, draft: bool):
             "-f", "mpegts", str(target)]
 
 
+def write_chapters(doc, marks, final: Path, out: Path, stem: str):
+    """Embed MP4 chapter atoms (VLC, IINA, mpv, QuickTime show them) and write the
+    YouTube description block -- YouTube reads chapters from the description, not
+    from the file. First line must be 00:00 and each chapter >= 10 s."""
+    total = duration(final)
+    meta = [";FFMETADATA1"]
+    bounds = [(0.0, "Intro")] + marks
+    for i, (t, title) in enumerate(bounds):
+        end = bounds[i + 1][0] if i + 1 < len(bounds) else total
+        meta += ["[CHAPTER]", "TIMEBASE=1/1000", f"START={int(t * 1000)}", f"END={int(end * 1000)}", f"title={title}"]
+    mfile = out / f"{stem}-chapters.ffmeta"
+    mfile.write_text("\n".join(meta) + "\n")
+    tmp = final.with_suffix(".chap.mp4")
+    run(["ffmpeg", "-hide_banner", "-nostats", "-y", "-i", str(final), "-i", str(mfile),
+         "-map_metadata", "1", "-map", "0", "-c", "copy", "-movflags", "+faststart", str(tmp)],
+        out / "logs" / f"chapters-{stem}.log")
+    tmp.replace(final)
+    def yt(t): 
+        t = int(t); return f"{t // 3600}:{t % 3600 // 60:02d}:{t % 60:02d}" if t >= 3600 else f"{t // 60:02d}:{t % 60:02d}"
+    lines = [f"{yt(t)} {title}" for t, title in bounds]
+    (out / f"{stem}-chapters.txt").write_text("\n".join(lines) + "\n")
+    return lines
+
+
 def build(doc, out: Path, draft: bool, only: str | None, keep_segments: bool, workers: int):
     src = ROOT / doc["source"]
     g = out / "graphics"
+    frames = out / "frames"; frames.mkdir(parents=True, exist_ok=True)
     seg = out / ("segments-draft" if draft else "segments")
     seg.mkdir(parents=True, exist_ok=True)
     (out / "logs").mkdir(exist_ok=True)
+    plan = pieces(doc)
     jobs = []
-    for key in ("intro", "outro"):
-        t = seg / f"{key}.ts"
-        if only and only != key:
+    for pc in plan:
+        t = seg / f"{pc['name']}.ts"
+        if only and not pc["name"].startswith(only):
             continue
         if keep_segments and t.exists():
             continue
-        jobs.append((key, card_cmd(doc, g / f"{key}.mp4", t, draft)))
-    for k in doc["keeps"]:
-        t = seg / f"{k['id']}.ts"
-        if only and only != k["id"]:
-            continue
-        if keep_segments and t.exists():
-            continue
-        jobs.append((k["id"], segment_cmd(doc, k, src, g, t, draft)))
+        if pc["kind"] == "card":
+            jobs.append((pc["name"], card_cmd(doc, g / f"{pc['name']}.mp4", t, draft)))
+        elif pc["kind"] == "freeze":
+            jobs.append((pc["name"], freeze_cmd(doc, pc, src, g, frames, t, draft)))
+        else:
+            jobs.append((pc["name"], keep_cmd(doc, pc, src, g, t, draft)))
 
     print(f"{len(jobs)} ffmpeg jobs, {workers} at a time ({'draft' if draft else 'final'})")
     t0 = time.time()
@@ -196,45 +280,51 @@ def build(doc, out: Path, draft: bool, only: str | None, keep_segments: bool, wo
             f.result()  # raises with the ffmpeg tail on failure
             print(f"  done {name:<6} {time.time() - t0:5.0f}s")
 
-    # concat, in order: intro, keeps, outro
-    order = [seg / "intro.ts", *(seg / f"{k['id']}.ts" for k in doc["keeps"]), seg / "outro.ts"]
+    order = [seg / f"{pc['name']}.ts" for pc in plan]
     missing = [p.name for p in order if not p.exists()]
     if missing:
         sys.exit(f"cannot concat, missing: {missing}")
     lst = seg / "concat.txt"
     lst.write_text("".join(f"file '{p.resolve()}'\n" for p in order))
-    final = out / ("S1-draft.mp4" if draft else "S1-compact.mp4")
+    stem = doc.get("stem", "S1")
+    final = out / (f"{stem}-draft.mp4" if draft else f"{stem}-compact.mp4")
     run(["ffmpeg", "-hide_banner", "-nostats", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
          "-c", "copy", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart", str(final)],
         out / "logs" / f"concat{'-draft' if draft else ''}.log")
 
-    # report: expected vs actual, and where each graphic lands in OUTPUT time
-    expected = sum(duration(p) for p in order)
+    # output-time map, chapter marks, and the length check
+    durs = {pc["name"]: duration(seg / f"{pc['name']}.ts") for pc in plan}
+    expected = sum(durs.values())
+    offset, rows, marks = 0.0, [], []
+    for pc in plan:
+        if pc["kind"] == "keep":
+            rows.append((offset, f"{pc['name']:<5} {fmt(pc['in'])}-{fmt(pc['out'])}  {pc['note'][:58]}"))
+            for local, dur, name, ss in pc["overlays"]:
+                if ss == 0.0 and not name.startswith("ch"):
+                    rows.append((offset + local, f"      callout {name[:-4]}"))
+        elif pc["kind"] == "freeze":
+            rows.append((offset, f"      >> chapter {pc['num']}: {pc['title']}  (freeze {pc['dur']}s @ source {fmt(pc['at'])})"))
+            marks.append((offset, pc["title"]))
+        else:
+            rows.append((offset, pc["name"]))
+        offset += durs[pc["name"]]
+    yt = write_chapters(doc, marks, final, out, stem + ("-draft" if draft else ""))
     actual = duration(final)
     print(f"\n{final.name}: {fmt(actual)}  (pieces sum to {fmt(expected)}, "
           f"{'OK' if abs(actual - expected) < 0.5 else 'MISMATCH'})  {final.stat().st_size / 1e6:.0f} MB")
-    print("\noutput-time map (source -> output):")
-    offset = duration(seg / "intro.ts")
-    rows = []
-    for k in doc["keeps"]:
-        rows.append((offset, f"{k['id']:<4} {fmt(k['in'])}-{fmt(k['out'])}  {k['note'][:60]}"))
-        for c in doc["chapters"]:
-            if k["in"] <= c["at"] < k["out"]:
-                rows.append((offset + c["at"] - k["in"], f"     chapter {c['num']}: {c['title']}"))
-        for c in doc["callouts"]:
-            if k["in"] <= c["at"] < k["out"]:
-                rows.append((offset + c["at"] - k["in"], f"     callout {c['id']}"))
-        offset += duration(seg / f"{k['id']}.ts")
-    rows.append((offset, "outro"))
-    for t, label in sorted(rows):
+    print("\noutput-time map:")
+    for t, label in rows:
         print(f"  {fmt(t)}  {label}")
+    print(f"\nchapters (embedded in the MP4; paste into the YouTube description):")
+    for line in yt:
+        print(f"  {line}")
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("cuts")
     ap.add_argument("stage", choices=["graphics", "draft", "final", "all"])
-    ap.add_argument("--only", help="rebuild a single piece: K5, intro, outro")
+    ap.add_argument("--only", help="rebuild pieces whose name starts with this: K5, ch3, intro")
     ap.add_argument("--keep-segments", action="store_true", help="reuse existing .ts pieces")
     ap.add_argument("--force", action="store_true", help="re-render graphics even if up to date")
     ap.add_argument("--workers", type=int, default=4)

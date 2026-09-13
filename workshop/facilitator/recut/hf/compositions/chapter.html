@@ -7,25 +7,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
-    <title>chapter lower-third</title>
+    <title>chapter banner</title>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <link rel="stylesheet" href="shared.css" />
-    <script src="shared.js"></script>
     <style>
       html, body { background: transparent; }   /* alpha render */
       .clip { position: absolute; inset: 0; }
+      /* The banner rests at the vertical middle of the left side. Flex centring,
+         not a CSS transform, so GSAP owns the only transform on the panel. */
+      #dock { position: absolute; left: 72px; top: 0; bottom: 0; display: flex; align-items: center; }
+      #panel { position: static; max-width: 1240px; }
+      #panel .title { font-size: 54px; }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="chapter" data-start="0" data-duration="4.6"
+    <!-- 0.0-0.6 rise from below the frame; 0.6-2.6 hold (the video is frozen
+         under it); 2.6-3.1 drop back out through the bottom as the video resumes.
+         build.py plays [0, 2.6) over the freeze frame and [2.6, 3.1) over the
+         first half-second of the resumed footage. -->
+    <div id="root" data-composition-id="chapter" data-start="0" data-duration="3.1"
          data-width="1920" data-height="1080">
-      <div id="scene" class="clip" data-start="0" data-duration="4.6" data-track-index="1">
-        <div id="panel" class="lt" data-layout-allow-caption-zone>
-          <div class="kicker">Session 1 · Chapter <span data-var-text="num">1</span></div>
-          <div class="title main" data-var-text="title">Set up: GitHub Codespaces</div>
+      <div id="scene" class="clip" data-start="0" data-duration="3.1" data-track-index="1">
+        <div id="dock">
+          <div id="panel" class="lt" data-layout-allow-caption-zone>
+            <div class="kicker">Session 1 · Chapter <span data-var-text="num">1</span></div>
+            <div class="title main" data-var-text="title">Set up: GitHub Codespaces</div>
+          </div>
         </div>
       </div>
     </div>
-    <script>lowerThirdTimeline("chapter", "#panel", 4.6);</script>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#panel", { y: 720, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6, ease: "power3.out" }, 0);
+      tl.fromTo("#panel .kicker", { y: 10, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.35, ease: "power2.out" }, 0.35);
+      tl.fromTo("#panel .main", { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4, ease: "power2.out" }, 0.45);
+      tl.to("#panel", { y: 720, autoAlpha: 0, duration: 0.5, ease: "power2.in" }, 2.6);
+      window.__timelines["chapter"] = tl;
+    </script>
   </body>
 </html>

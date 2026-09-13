@@ -90,43 +90,50 @@
       "at": 41.7,
       "num": 1,
       "title": "Set up: GitHub Codespaces",
-      "dur": 4.6
+      "dur": 3.1,
+      "freeze": 2.6
     },
     {
       "at": 410.57,
       "num": 2,
       "title": "The promise of five sessions",
-      "dur": 4.6
+      "dur": 3.1,
+      "freeze": 2.6
     },
     {
-      "at": 1146.75,
+      "at": 1155.25,
       "num": 3,
       "title": "Live demo: the integrated credit app",
-      "dur": 4.6
+      "dur": 3.1,
+      "freeze": 2.6
     },
     {
-      "at": 1773.75,
+      "at": 1751.35,
       "num": 4,
       "title": "Data generating program: the business portfolio",
-      "dur": 4.6
+      "dur": 3.1,
+      "freeze": 2.6
     },
     {
       "at": 2477.92,
       "num": 5,
       "title": "Lab: make data — or ask the AI to audit it",
-      "dur": 4.6
+      "dur": 3.1,
+      "freeze": 2.6
     },
     {
       "at": 3642.48,
       "num": 6,
       "title": "Notebook: what the data says",
-      "dur": 4.6
+      "dur": 3.1,
+      "freeze": 2.6
     },
     {
-      "at": 4372.75,
+      "at": 4373.9,
       "num": 7,
       "title": "Homework and Session 2",
-      "dur": 4.6
+      "dur": 3.1,
+      "freeze": 2.6
     }
   ],
   "callouts": [
@@ -166,5 +173,6 @@
       "dur": 8
     }
   ],
-  "snapped": "hand-verified against silencedetect pauses and transcript cues, 2026-09-12"
+  "snapped": "hand-verified against silencedetect pauses and transcript cues, 2026-09-12",
+  "stem": "S1"
 }
