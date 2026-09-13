@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>callout c1-verify</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="../shared.css" />
+    <script src="../shared.js"></script>
+    <style>
+      html, body { background: transparent; }
+      .clip { position: absolute; inset: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="c1-verify" data-start="0" data-duration="7"
+         data-width="1920" data-height="1080">
+      <div id="scene" class="clip" data-start="0" data-duration="7" data-track-index="1">
+        <div id="panel" class="lt" data-layout-allow-caption-zone>
+          <div class="kicker">The one promise</div>
+          <div class="body main"><code>python verify.py</code> — tells you where you are, and that it works.</div>
+          <div class="note main">Every stage. Every claim recomputed from scratch; nothing is trusted from a stored result.</div>
+        </div>
+      </div>
+    </div>
+    <script>lowerThirdTimeline("c1-verify", "#panel", 7);</script>
+  </body>
+</html>

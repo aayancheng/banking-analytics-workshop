@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>callout c4-dgp</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="../shared.css" />
+    <script src="../shared.js"></script>
+    <style>
+      html, body { background: transparent; }
+      .clip { position: absolute; inset: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="c4-dgp" data-start="0" data-duration="8"
+         data-width="1920" data-height="1080">
+      <div id="scene" class="clip" data-start="0" data-duration="8" data-track-index="1">
+        <div id="panel" class="lt" data-layout-allow-caption-zone>
+          <div class="kicker">How the portfolio is made</div>
+          <div class="body main">20 features<span class=arrow>→</span>latent logit<span class=arrow>→</span>+ noise<span class=arrow>→</span>PD<span class=arrow>→</span>Bernoulli draw<span class=arrow>→</span>default</div>
+          <div class="note main">The logit and the true PD exist only in the generator. No model may see them — that is the leakage rule.</div>
+        </div>
+      </div>
+    </div>
+    <script>lowerThirdTimeline("c4-dgp", "#panel", 8);</script>
+  </body>
+</html>

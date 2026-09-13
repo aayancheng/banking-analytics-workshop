@@ -1,0 +1,170 @@
+{
+  "_comment": "Source times in seconds. Rough boundaries came from the Zoom transcript aligned to the video (offset 20:03:49.25 by audio cross-correlation); every keep boundary was then moved onto a pause between sentences. Chapters/callouts are source times too; build.py maps them to output time.",
+  "source": "workshop/LectureSummaryandRecordings/video1763836570.mp4",
+  "out_dir": "workshop/LectureSummaryandRecordings/out",
+  "fps": 25,
+  "audio": {
+    "gain_db": 3.5,
+    "limit": 0.89
+  },
+  "cards": {
+    "intro": "intro",
+    "outro": "outro"
+  },
+  "keeps": [
+    {
+      "id": "K1",
+      "in": 41.7,
+      "out": 145.45,
+      "note": "Codespace tour: Explorer, terminal, Copilot chat"
+    },
+    {
+      "id": "K2",
+      "in": 410.57,
+      "out": 605.7,
+      "note": "The thesis: I didn't write a line of this — you can do it too; who I am"
+    },
+    {
+      "id": "K3",
+      "in": 628.25,
+      "out": 1661.4,
+      "note": "Slides: five milestones, PD as the spine, credit score; platform demo"
+    },
+    {
+      "id": "K4",
+      "in": 1741.8,
+      "out": 2230.95,
+      "note": "Why synthetic data; the DGP; noise; the leakage rule"
+    },
+    {
+      "id": "K5",
+      "in": 2477.92,
+      "out": 2555.85,
+      "note": "Terminal; git tag shows stage-0..5 and what they are for"
+    },
+    {
+      "id": "K6",
+      "in": 2689.2,
+      "out": 3024.85,
+      "note": "Manual track: make data, DQ report, generator code, Copilot explains the logit"
+    },
+    {
+      "id": "K7",
+      "in": 3099.3,
+      "out": 3297.58,
+      "note": "Agent track: prompt card AC-1, launch"
+    },
+    {
+      "id": "K8",
+      "in": 3361.65,
+      "out": 3557.34,
+      "note": "The audit report: DSCR monotonic, the extra question, AUC 0.63"
+    },
+    {
+      "id": "K9",
+      "in": 3565.9,
+      "out": 3623.6,
+      "note": "Codespace vs local; the Windows warning"
+    },
+    {
+      "id": "K10",
+      "in": 3642.48,
+      "out": 4391.82,
+      "note": "Notebook: distributions, DSCR split, industry trap, IV, the 0.72/0.83/1.00 ladder, homework"
+    },
+    {
+      "id": "K11",
+      "in": 4473.55,
+      "out": 4502.2,
+      "note": "Pointer to the reading note"
+    },
+    {
+      "id": "K12",
+      "in": 4541.85,
+      "out": 4592.0,
+      "note": "GitHub Discussions and Substack as the channels"
+    }
+  ],
+  "chapters": [
+    {
+      "at": 41.7,
+      "num": 1,
+      "title": "Set up: GitHub Codespaces",
+      "dur": 4.6
+    },
+    {
+      "at": 410.57,
+      "num": 2,
+      "title": "The promise of five sessions",
+      "dur": 4.6
+    },
+    {
+      "at": 1146.75,
+      "num": 3,
+      "title": "Live demo: the integrated credit app",
+      "dur": 4.6
+    },
+    {
+      "at": 1773.75,
+      "num": 4,
+      "title": "Data generating program: the business portfolio",
+      "dur": 4.6
+    },
+    {
+      "at": 2477.92,
+      "num": 5,
+      "title": "Lab: make data — or ask the AI to audit it",
+      "dur": 4.6
+    },
+    {
+      "at": 3642.48,
+      "num": 6,
+      "title": "Notebook: what the data says",
+      "dur": 4.6
+    },
+    {
+      "at": 4372.75,
+      "num": 7,
+      "title": "Homework and Session 2",
+      "dur": 4.6
+    }
+  ],
+  "callouts": [
+    {
+      "at": 678.0,
+      "id": "c1-verify",
+      "dur": 7
+    },
+    {
+      "at": 1240.0,
+      "id": "c2-make",
+      "dur": 8
+    },
+    {
+      "at": 2535.75,
+      "id": "c3-stages",
+      "dur": 9
+    },
+    {
+      "at": 2046.75,
+      "id": "c4-dgp",
+      "dur": 8
+    },
+    {
+      "at": 3941.0,
+      "id": "c5-industry",
+      "dur": 7
+    },
+    {
+      "at": 4318.0,
+      "id": "c6-ladder",
+      "dur": 9
+    },
+    {
+      "at": 4378.0,
+      "id": "c7-homework",
+      "dur": 8
+    }
+  ],
+  "snapped": "hand-verified against silencedetect pauses and transcript cues, 2026-09-12"
+}

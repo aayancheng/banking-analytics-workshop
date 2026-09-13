@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>callout c6-ladder</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="../shared.css" />
+    <script src="../shared.js"></script>
+    <style>
+      html, body { background: transparent; }
+      .clip { position: absolute; inset: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="c6-ladder" data-start="0" data-duration="9"
+         data-width="1920" data-height="1080">
+      <div id="scene" class="clip" data-start="0" data-duration="9" data-track-index="1">
+        <div id="panel" class="lt" data-layout-allow-caption-zone>
+          <div class="kicker">The leakage ladder — AUC</div>
+          <div class="body main"><b>0.72</b> honest<span class=arrow>·</span><b>0.83</b> true PD leaked<span class=arrow>·</span><b>1.00</b> label leaked</div>
+          <div class="note main">The middle rung is the one that ships: plausible, passes review — and the true PD does not exist at decision time.</div>
+        </div>
+      </div>
+    </div>
+    <script>lowerThirdTimeline("c6-ladder", "#panel", 9);</script>
+  </body>
+</html>

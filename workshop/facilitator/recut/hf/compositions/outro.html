@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>S1 outro</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      html, body { background: var(--ink); }
+      #bg { position: absolute; inset: 0;
+            background: radial-gradient(1200px 700px at 82% 80%, rgba(36, 91, 178, 0.35), transparent 70%), var(--ink); }
+      .clip { position: absolute; inset: 0; }
+      .stack { position: absolute; left: 140px; right: 140px; top: 0; bottom: 0;
+               display: flex; flex-direction: column; justify-content: center; }
+      .eyebrow { font-size: 30px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-soft); }
+      h1 { font-size: 96px; font-weight: 800; line-height: 1.05; margin: 22px 0 22px; letter-spacing: -0.01em; }
+      .sub { font-size: 44px; font-weight: 500; color: #dfe6f0; line-height: 1.25; max-width: 1500px; }
+      .links { margin-top: 64px; display: grid; grid-template-columns: max-content 1fr; gap: 18px 36px; font-size: 34px; color: #dfe6f0; align-items: baseline; }
+      .links .k { color: #9fb0c6; font-size: 26px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+      .links code { font-size: 0.92em; background: rgba(255,255,255,0.10); padding: 0.05em 0.35em; border-radius: 6px; }
+      .links .dot { width: 12px; height: 12px; border-radius: 3px; background: var(--substack); display: inline-block; margin-right: 12px; vertical-align: 2px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="outro" data-start="0" data-duration="8.4" data-width="1920" data-height="1080">
+      <div id="bg"></div>
+      <div id="card" class="clip" data-start="0" data-duration="8.4" data-track-index="1">
+        <div class="stack" id="o-stack">
+          <div class="eyebrow o-in">Next · Session 2 of 5</div>
+          <h1 class="o-in">Score the portfolio</h1>
+          <div class="sub o-in">The scorecard — the spine every other module consumes. Bring your WoE table and your sealed number.</div>
+          <div class="links o-in">
+            <span class="k">Repo</span><span><code>github.com/aayancheng/banking-analytics-workshop</code></span>
+            <span class="k">Questions</span><span>GitHub Discussions on the repo</span>
+            <span class="k">Summaries</span><span><span class="dot"></span>teamyan.substack.com</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#card .o-in", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, ease: "power3.out", stagger: 0.14 }, 0.2);
+      tl.to("#o-stack", { autoAlpha: 0, duration: 0.6, ease: "power2.in" }, 7.6);
+      window.__timelines["outro"] = tl;
+    </script>
+  </body>
+</html>

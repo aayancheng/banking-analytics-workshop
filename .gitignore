@@ -39,6 +39,10 @@ workshop/facilitator/*.mp4
 workshop/facilitator/*.m4a
 workshop/facilitator/*.mov
 workshop/facilitator/recordings/
+# Session recordings, Zoom transcripts (attendee names) and recut outputs.
+# The recut TOOLING is tracked in workshop/facilitator/recut/; its inputs and
+# outputs are not. See workshop/facilitator/recut/README.md.
+workshop/LectureSummaryandRecordings/
 
 # AC-1 lab output. The prompt card tells each student's agent to write
 # reports/audit_AC1.md, so this is per-student work, not repo content — and one

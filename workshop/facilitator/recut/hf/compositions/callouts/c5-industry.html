@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>callout c5-industry</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="../shared.css" />
+    <script src="../shared.js"></script>
+    <style>
+      html, body { background: transparent; }
+      .clip { position: absolute; inset: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="c5-industry" data-start="0" data-duration="7"
+         data-width="1920" data-height="1080">
+      <div id="scene" class="clip" data-start="0" data-duration="7" data-track-index="1">
+        <div id="panel" class="lt" data-layout-allow-caption-zone>
+          <div class="kicker">The industry trap</div>
+          <div class="body main">An honest chart, an invented story.</div>
+          <div class="note main">Default rate by industry looks like a finding. Its IV is 0.006 — the generator gives industry no role at all.</div>
+        </div>
+      </div>
+    </div>
+    <script>lowerThirdTimeline("c5-industry", "#panel", 7);</script>
+  </body>
+</html>

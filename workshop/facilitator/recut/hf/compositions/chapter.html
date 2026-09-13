@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"
+  data-composition-variables='[
+    {"id":"num","type":"string","label":"Chapter number","default":"1"},
+    {"id":"title","type":"string","label":"Chapter title","default":"Set up: GitHub Codespaces"}
+  ]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>chapter lower-third</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="shared.css" />
+    <script src="shared.js"></script>
+    <style>
+      html, body { background: transparent; }   /* alpha render */
+      .clip { position: absolute; inset: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="chapter" data-start="0" data-duration="4.6"
+         data-width="1920" data-height="1080">
+      <div id="scene" class="clip" data-start="0" data-duration="4.6" data-track-index="1">
+        <div id="panel" class="lt" data-layout-allow-caption-zone>
+          <div class="kicker">Session 1 · Chapter <span data-var-text="num">1</span></div>
+          <div class="title main" data-var-text="title">Set up: GitHub Codespaces</div>
+        </div>
+      </div>
+    </div>
+    <script>lowerThirdTimeline("chapter", "#panel", 4.6);</script>
+  </body>
+</html>

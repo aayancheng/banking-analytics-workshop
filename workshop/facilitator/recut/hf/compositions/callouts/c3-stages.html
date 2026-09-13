@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>callout c3-stages</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="../shared.css" />
+    <script src="../shared.js"></script>
+    <style>
+      html, body { background: transparent; }
+      .clip { position: absolute; inset: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="c3-stages" data-start="0" data-duration="9"
+         data-width="1920" data-height="1080">
+      <div id="scene" class="clip" data-start="0" data-duration="9" data-track-index="1">
+        <div id="panel" class="lt" data-layout-allow-caption-zone>
+          <div class="kicker">Jumping to a stage — the command that works</div>
+          <div class="body main"><code>git stash &amp;&amp; git checkout stage-1 &amp;&amp; python verify.py</code></div>
+          <div class="note main">Tags <code>stage-0</code> … <code>stage-5</code> are fixed checkpoints. The labs and notebooks live on <code>main</code>: <code>git checkout main -- workshop notebooks</code> brings them back from any stage.</div>
+        </div>
+      </div>
+    </div>
+    <script>lowerThirdTimeline("c3-stages", "#panel", 9);</script>
+  </body>
+</html>
