@@ -73,6 +73,12 @@ python build.py S2.cuts.json final --only K5 --keep-segments
 in the finished file) and checks that the concatenated length equals the sum
 of the pieces.
 
+**A promo is just another cut list.** `S1-promo.cuts.json` keeps the strongest
+~20 s of each chapter and puts the chapter freeze on that excerpt's first
+frame, between a hook card and a CTA card (`promo-intro.html`,
+`promo-outro.html`) — 3:04 for LinkedIn. `stem` keys the frames, segments and
+output so two cut lists on one recording never clobber each other.
+
 ## Aligning the transcript to the video
 
 Zoom's transcript is wall-clock; the recording is not, and it need not start

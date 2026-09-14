@@ -100,7 +100,8 @@ def graphics(doc, out: Path, force: bool):
         print("  up to date  watermark.png")
     # cards
     for key in ("intro", "outro"):
-        render(comps / f"{doc['cards'][key]}.html", g / f"{key}.mp4", "mp4", ["--quality", "high"])
+        comp = doc["cards"][key]
+        render(comps / f"{comp}.html", g / f"{comp}.mp4", "mp4", ["--quality", "high"])
     # chapters: one composition, many renders
     for c in doc["chapters"]:
         vars_ = json.dumps({"num": str(c["num"]), "title": c["title"]}, ensure_ascii=False)
@@ -252,8 +253,9 @@ def write_chapters(doc, marks, final: Path, out: Path, stem: str):
 def build(doc, out: Path, draft: bool, only: str | None, keep_segments: bool, workers: int):
     src = ROOT / doc["source"]
     g = out / "graphics"
-    frames = out / "frames"; frames.mkdir(parents=True, exist_ok=True)
-    seg = out / ("segments-draft" if draft else "segments")
+    stem = doc.get("stem", "S1")
+    frames = out / f"frames-{stem}"; frames.mkdir(parents=True, exist_ok=True)
+    seg = out / (f"segments-{stem}-draft" if draft else f"segments-{stem}")
     seg.mkdir(parents=True, exist_ok=True)
     (out / "logs").mkdir(exist_ok=True)
     plan = pieces(doc)
@@ -265,7 +267,7 @@ def build(doc, out: Path, draft: bool, only: str | None, keep_segments: bool, wo
         if keep_segments and t.exists():
             continue
         if pc["kind"] == "card":
-            jobs.append((pc["name"], card_cmd(doc, g / f"{pc['name']}.mp4", t, draft)))
+            jobs.append((pc["name"], card_cmd(doc, g / f"{doc['cards'][pc['name']]}.mp4", t, draft)))
         elif pc["kind"] == "freeze":
             jobs.append((pc["name"], freeze_cmd(doc, pc, src, g, frames, t, draft)))
         else:
@@ -286,7 +288,6 @@ def build(doc, out: Path, draft: bool, only: str | None, keep_segments: bool, wo
         sys.exit(f"cannot concat, missing: {missing}")
     lst = seg / "concat.txt"
     lst.write_text("".join(f"file '{p.resolve()}'\n" for p in order))
-    stem = doc.get("stem", "S1")
     final = out / (f"{stem}-draft.mp4" if draft else f"{stem}-compact.mp4")
     run(["ffmpeg", "-hide_banner", "-nostats", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
          "-c", "copy", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart", str(final)],

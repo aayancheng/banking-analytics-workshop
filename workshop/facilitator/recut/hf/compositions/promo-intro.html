@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>S1 promo hook</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      html, body { background: var(--ink); }
+      #bg { position: absolute; inset: 0;
+            background: radial-gradient(1200px 700px at 18% 20%, rgba(36, 91, 178, 0.35), transparent 70%), var(--ink); }
+      .clip { position: absolute; inset: 0; }
+      .stack { position: absolute; left: 140px; right: 140px; top: 0; bottom: 0;
+               display: flex; flex-direction: column; justify-content: center; }
+      .eyebrow { font-size: 30px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-soft); }
+      h1 { font-size: 104px; font-weight: 800; line-height: 1.05; margin: 22px 0 26px; letter-spacing: -0.01em; }
+      .sub { font-size: 46px; font-weight: 500; color: #dfe6f0; line-height: 1.25; max-width: 1500px; }
+      .meta { font-size: 30px; color: #9fb0c6; margin-top: 44px; display: flex; gap: 28px; align-items: center; }
+      .meta .dot { width: 14px; height: 14px; border-radius: 3px; background: var(--substack); display: inline-block; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="promo-intro" data-start="0" data-duration="6.0" data-width="1920" data-height="1080">
+      <div id="bg"></div>
+      <div id="title" class="clip" data-start="0" data-duration="6.0" data-track-index="1">
+        <div class="stack" id="t-stack">
+          <div class="eyebrow t-in">Credit Analytics with AI Agents · Session 1 of 5</div>
+          <h1 class="t-in">How a bank decides</h1>
+          <div class="sub t-in">A credit analytics platform, built without writing a line of code — the session in three minutes.</div>
+          <div class="meta t-in"><span>7 chapters · full session 59 min</span><span class="dot"></span><span>teamyan.substack.com</span></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#title .t-in", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, ease: "power3.out", stagger: 0.14 }, 0.15);
+      tl.to("#t-stack", { autoAlpha: 0, duration: 0.45, ease: "power2.in" }, 5.4);
+      window.__timelines["promo-intro"] = tl;
+    </script>
+  </body>
+</html>

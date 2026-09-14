@@ -1,0 +1,124 @@
+{
+  "_comment": "LinkedIn promo for Session 1: the seven chapter transitions, each entering the chapter's strongest ~20 s. Every boundary sits on a silencedetect pause (hand-checked against the transcript, 2026-09-14). Source seconds.",
+  "stem": "S1-promo",
+  "source": "workshop/LectureSummaryandRecordings/video1763836570.mp4",
+  "out_dir": "workshop/LectureSummaryandRecordings/out",
+  "fps": 25,
+  "audio": {
+    "gain_db": 3.5,
+    "limit": 0.89
+  },
+  "cards": {
+    "intro": "promo-intro",
+    "outro": "promo-outro"
+  },
+  "keeps": [
+    {
+      "id": "P1",
+      "in": 113.6,
+      "out": 132.23,
+      "note": "Copilot chat in the Codespace — work with the AI without installing anything"
+    },
+    {
+      "id": "P2",
+      "in": 456.3,
+      "out": 483.75,
+      "note": "I didn't write it myself; Claude wrote all the code; I gave direction and feedback"
+    },
+    {
+      "id": "P3",
+      "in": 1326.95,
+      "out": 1346.95,
+      "note": "The dashboard: 12,000 scored, mean 581, 31% approved, $1.3B mispriced"
+    },
+    {
+      "id": "P4",
+      "in": 2145.9,
+      "out": 2165.75,
+      "note": "Not AI escaping — but if it sees the latent risk it will use it; protect that leakage"
+    },
+    {
+      "id": "P5",
+      "in": 3361.65,
+      "out": 3381.15,
+      "note": "The agent finished the run: DSCR is the strongest single feature; writing the audit"
+    },
+    {
+      "id": "P6",
+      "in": 4271.5,
+      "out": 4283.0,
+      "note": "I'm going to cheat a little bit — by looking at the actual PD"
+    },
+    {
+      "id": "P7",
+      "in": 4300.25,
+      "out": 4317.6,
+      "note": "Even with that peeking it's not perfect — but better, 83%"
+    },
+    {
+      "id": "P8",
+      "in": 4374.75,
+      "out": 4391.82,
+      "note": "There's some homework — it sets up the foundation for Session 2"
+    }
+  ],
+  "chapters": [
+    {
+      "at": 113.6,
+      "num": 1,
+      "title": "Set up: GitHub Codespaces",
+      "dur": 3.1,
+      "freeze": 2.6
+    },
+    {
+      "at": 456.3,
+      "num": 2,
+      "title": "The promise of five sessions",
+      "dur": 3.1,
+      "freeze": 2.6
+    },
+    {
+      "at": 1326.95,
+      "num": 3,
+      "title": "Live demo: the integrated credit app",
+      "dur": 3.1,
+      "freeze": 2.6
+    },
+    {
+      "at": 2145.9,
+      "num": 4,
+      "title": "Data generating program: the business portfolio",
+      "dur": 3.1,
+      "freeze": 2.6
+    },
+    {
+      "at": 3361.65,
+      "num": 5,
+      "title": "Lab: make data — or ask the AI to audit it",
+      "dur": 3.1,
+      "freeze": 2.6
+    },
+    {
+      "at": 4271.5,
+      "num": 6,
+      "title": "Notebook: what the data says",
+      "dur": 3.1,
+      "freeze": 2.6
+    },
+    {
+      "at": 4374.75,
+      "num": 7,
+      "title": "Homework and Session 2",
+      "dur": 3.1,
+      "freeze": 2.6
+    }
+  ],
+  "callouts": [
+    {
+      "at": 4307.1,
+      "id": "c6-ladder",
+      "dur": 9
+    }
+  ],
+  "snapped": "hand-verified 2026-09-14"
+}
