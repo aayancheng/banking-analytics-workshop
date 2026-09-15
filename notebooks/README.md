@@ -7,7 +7,7 @@ line that says it worked.
 | Notebook | Run it after | Shows you |
 |---|---|---|
 | `01_stage1_portfolio.ipynb` | Session 1 | who is in the book (segments, size, skew), the applicant→booked funnel and what it selected on, row counts, null audit, rank-ordering plus an Information Value scan of all 20 candidate features, the panel over 24 months, the deny-list and the leakage probe — ending in a computed checkpoint card and homework for Session 2 |
-| `02_stage2_score_spine.ipynb` | Session 2 | the AUC gate with its margin, the banded score distribution, default rate by band, ROC + KS, and one borrower's reason codes |
+| `02_stage2_score_spine.ipynb` | Session 2 | Session 1's homework worked (utilization WoE; five-in/five-out scored against your sealed AUC), the AUC gate with its margin, the banded score distribution, default rate by band, ROC + KS, a WoE scorecard built by hand on one variable (the Lab 2 surface — change `VAR` and `EDGES`), the gate re-measured on booked-only loans, and one borrower's reason codes |
 | `03_stage3_decisions_and_price.ipynb` | Session 3 | the approve/refer/decline mix, why people were referred, price as a function of risk, the ROE distribution, and where the $1.28B of mispricing sits |
 | `04_stage4_portfolio_watch.ipynb` | Session 4 | watchlist tiers, how often each named trigger fires, the capture curve (work 10% of the book, catch how much?), and the line-increase cohort |
 | `05_stage5_governance.ipynb` | Session 5 | every gate in the platform on one page, one borrower traced through all five modules, and the doc-pack contents |

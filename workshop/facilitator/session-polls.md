@@ -1,6 +1,6 @@
 # Session polls — three launches, all earning their time
 
-**Facilitator notes. Not student-facing.**
+**Facilitator notes. Not student-facing.** This is the **Session 1** set; Session 2's four polls are in [S2-polls.md](S2-polls.md).
 
 Set up in the Zoom **web portal** → your scheduled meeting → *Polls/Quizzes* → before the day.
 Basic polling covers all of this; nothing here needs Advanced. **Make every poll anonymous** —

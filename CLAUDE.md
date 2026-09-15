@@ -115,6 +115,20 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   change handler silently, and once it was also called from `render()` it would have killed the
   render loop every second. Wrap every access; treat persistence as a convenience, never a
   dependency. Same rule for any future local HTML tool here.
+- **The gate passes on a population the bank never lends to.** The scorecard trains and gates on all
+  12,000 applicants; on the 8,336 *booked* it scores held-out AUC **0.7447** (rejected-only 0.8440,
+  everyone 0.8176). Not a defect — the DGP gives every applicant an outcome — but it is S2's set-piece
+  reveal (notebook 02 §7) and the memo's fourth clause. Any "AUC" quoted without its population is
+  incomplete. Dropping the four bureau columns gives **0.7643** — the rehearsed live gate-fail.
+- **`requested_amount` crashes optbinning's default CP solver** (`TypeError: __radd__` inside
+  `optbinning/binning/cp.py`) on the training rows with the pinned `ortools==9.14.6206`; row
+  subsets (booked-only) can trip it on other variables too. `solver="mip"` binds every safe column
+  identically (net_income gets 8 bins instead of 7). The committed 15 `FEATURE_COLUMNS` are fine
+  under CP on the full training split, so `train.py` is unaffected — but any cell that lets a
+  student pick raw columns must pass `binning_fit_params={c: {"solver": "mip"}}` (notebook 02
+  does). Five raw columns (`dscr, utilization, prior_delinquencies, leverage, years_in_business`)
+  score **0.7804** held out; the five structural zeros score 0.50; the five `annual_revenue`
+  proxies 0.62.
 - **Reading notes render with headless Chrome** (`make reading`) — no npm, LaTeX or pandoc. The
   `.html` is source and the `.pdf` is committed beside it so students need no toolchain.
 
@@ -204,7 +218,9 @@ address (invariant 6).
   sentence test, unarguable signs, routing levels through ratios, excluding what a bank must not
   price on, designing the decoys deliberately, weights by target variance share.
 - Nothing equivalent to the S1 reading note exists for Sessions 2–5.
-- **S2 still needs its own 90-minute re-cut before Sep 17.**
+- **S2 re-cut to 90 minutes on 2026-09-14** — `workshop/facilitator/S2-run-of-show.md` + `S2-polls.md`,
+  deck retimed, lab cut to 28 min guided and driven from notebook 02 §6 (`VAR`/`EDGES`). Not done:
+  `run-of-show-app.html` still mirrors S1 — use a phone timer for S2.
 - The dry run ran **22% long** (9m48s against 8m). Applied to 90 minutes that is ~110. The
   recoverable block is named in the run of show; the lab is not it.
 
