@@ -8,8 +8,8 @@
     "limit": 0.89
   },
   "cards": {
-    "intro": "intro",
-    "outro": "outro"
+    "intro": "S1-intro",
+    "outro": "S1-outro"
   },
   "keeps": [
     {
@@ -139,40 +139,43 @@
   "callouts": [
     {
       "at": 678.0,
-      "id": "c1-verify",
+      "id": "S1-c1-verify",
       "dur": 7
     },
     {
       "at": 1240.0,
-      "id": "c2-make",
+      "id": "S1-c2-make",
       "dur": 8
     },
     {
       "at": 2535.75,
-      "id": "c3-stages",
+      "id": "S1-c3-stages",
       "dur": 9
     },
     {
       "at": 2046.75,
-      "id": "c4-dgp",
+      "id": "S1-c4-dgp",
       "dur": 8
     },
     {
       "at": 3941.0,
-      "id": "c5-industry",
+      "id": "S1-c5-industry",
       "dur": 7
     },
     {
       "at": 4318.0,
-      "id": "c6-ladder",
+      "id": "S1-c6-ladder",
       "dur": 9
     },
     {
       "at": 4378.0,
-      "id": "c7-homework",
+      "id": "S1-c7-homework",
       "dur": 8
     }
   ],
   "snapped": "hand-verified against silencedetect pauses and transcript cues, 2026-09-12",
-  "stem": "S1"
+  "stem": "S1",
+  "transcript": "workshop/LectureSummaryandRecordings/zoomtranscript.txt",
+  "session": "1",
+  "transcript_offset": 72229.25
 }

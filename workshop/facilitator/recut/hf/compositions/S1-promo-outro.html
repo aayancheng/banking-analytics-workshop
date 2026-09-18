@@ -23,7 +23,7 @@
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="promo-outro" data-start="0" data-duration="8.0" data-width="1920" data-height="1080">
+    <div id="root" data-composition-id="S1-promo-outro" data-start="0" data-duration="8.0" data-width="1920" data-height="1080">
       <div id="bg"></div>
       <div id="card" class="clip" data-start="0" data-duration="8.0" data-track-index="1">
         <div class="stack" id="o-stack">
@@ -42,7 +42,7 @@
       const tl = gsap.timeline({ paused: true });
       tl.fromTo("#card .o-in", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, ease: "power3.out", stagger: 0.14 }, 0.2);
       tl.to("#o-stack", { autoAlpha: 0, duration: 0.5, ease: "power2.in" }, 7.4);
-      window.__timelines["promo-outro"] = tl;
+      window.__timelines["S1-promo-outro"] = tl;
     </script>
   </body>
 </html>

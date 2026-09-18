@@ -104,7 +104,8 @@ def graphics(doc, out: Path, force: bool):
         render(comps / f"{comp}.html", g / f"{comp}.mp4", "mp4", ["--quality", "high"])
     # chapters: one composition, many renders
     for c in doc["chapters"]:
-        vars_ = json.dumps({"num": str(c["num"]), "title": c["title"]}, ensure_ascii=False)
+        vars_ = json.dumps({"session": str(doc.get("session", "1")), "num": str(c["num"]), "title": c["title"]},
+                           ensure_ascii=False)
         target = g / f"ch{c['num']}.mov"
         # the variables are part of the "source": remember them beside the render
         stamp = target.with_suffix(".vars")

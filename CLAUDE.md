@@ -26,6 +26,8 @@ workshop/      slides, labs, prompt cards, CHECKPOINTS.md (students), facilitato
 workshop/reading/  optional post-session notes: .html is source, .pdf committed beside it
 workshop/slides/render_html.py  `make slides` -> browsable S*.html, stdlib only, flags overflow
 workshop/facilitator/  run-of-show + the live timer app, polls, cohort.py, email templates
+workshop/facilitator/recut/  session-recording recut pipeline (align/snap/build + HyperFrames graphics)
+workshop/LectureSummaryandRecordings/  GITIGNORED: recordings, Zoom transcripts, recut outputs, blog drafts
 ```
 
 ## Invariants — do not break these
@@ -131,6 +133,18 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   proxies 0.62.
 - **Reading notes render with headless Chrome** (`make reading`) — no npm, LaTeX or pandoc. The
   `.html` is source and the `.pdf` is committed beside it so students need no toolchain.
+- **Recutting a recording** (`workshop/facilitator/recut/README.md` is the runbook; S1 is the
+  worked example). The things that cost time once: **HyperFrames renders the graphics only**
+  (one Chrome screenshot per frame — never the footage; ffmpeg cuts and composites). **This
+  ffmpeg has no `drawtext`** — all text is a HyperFrames render. **Zoom's transcript is
+  wall-clock and the recording starts later** (S1: 13 min later) — `align.py offset` finds the
+  offset by matching transcript gaps to audio pauses; never author a cut from raw cue times.
+  **Every cut and every chapter point must sit on a pause**, and a boundary next to an attendee's
+  spoken first name gets moved by hand (`align.py window`). **Chapter breaks are freezes**, so a
+  mid-sentence chapter point is worse than none. **HyperFrames root-level clips are pinned to
+  top-left** — wrap anything positioned elsewhere. **`npx hyperframes lint` on a missing path
+  reports 0 findings.** The recordings folder is gitignored because the transcript names people;
+  the cut lists' `note` fields must not.
 
 ## The DGP, in numbers
 
@@ -177,10 +191,37 @@ repo is decoration.
 - Student-facing wording matters more than usual here: these people are choosing whether to
   trust the material.
 
-## Where things stand — updated 2026-09-08
+## Where things stand — updated 2026-09-18
 
-Released **v1.4** (annotated tag on `main`, pushed). **Session 1 is Thu 10 Sep 2026,
-8:00–9:30pm EDT — two days out.** Session 1 ends at `stage-1`.
+**v1.4** is the public release. **Session 1 ran Thu 10 Sep** (recording recut to 58:53 and a
+3:04 LinkedIn promo — see *Session recordings* below). **Session 2 ran Thu 17 Sep** at the
+90-minute re-cut; its recording is the next recut job. Sessions 3–5 are Thursdays 8pm EDT.
+Local `main` may be ahead of `origin/main` — check `git status -sb`; nothing is pushed without
+being asked.
+
+### Session recordings — S1 done, S2 next
+
+`workshop/facilitator/recut/` (tracked) turns a Zoom recording + transcript into the student
+video and the promo; `workshop/LectureSummaryandRecordings/` (gitignored) holds the inputs and
+outputs. **The README there is the step-by-step for S2** — `cp S1.cuts.json S2.cuts.json`,
+`align.py offset` / `dump`, author keeps from the dump, `snap.py`, read every boundary, cards
+and callouts, `build.py draft` → `final`, then the promo from `S1-promo.cuts.json`.
+
+What S1 settled, so S2 does not re-decide it: cut the polls entirely, cut time checks and
+cohort logistics and plugs, cut a hiccup *and* its later apology; where a hiccup contradicted
+the curriculum (S1's failed stage checkout ended in "don't do stages"), a **correction card**
+at that moment quoting the lab's own command; chapter breaks are a 2.6 s freeze with the banner
+rising to mid-left; watermark bottom-right; chapter marks embedded in the MP4 *and* written as
+a YouTube description block (YouTube ignores embedded chapters); the promo is the strongest
+~20 s of each chapter, not its first 20 s, entered through the chapter freeze. Both S1 videos
+were checked by frame pairs at every seam and by audio cross-correlation (constant −26 ms,
+no drift) — **not by ear**: a words-at-the-seam check needs `whisper-cpp` and a ~150 MB model,
+which was not installed without asking.
+
+S1's Substack post (four milestone screenshots), LinkedIn copy, and the S2 T−1 reminder are in
+`workshop/LectureSummaryandRecordings/blog/` and `workshop/facilitator/emails/`. The S1 post's
+shape — thesis, the "right question" reframe, four milestones, the leakage ladder as the core
+insight, a governance section, homework — is the template for the S2 post.
 
 ### The cohort (no names or addresses here — this repo is public)
 
@@ -209,7 +250,10 @@ address (invariant 6).
   prompt **on**), the Udemy bar, and the platform comparison. **Decision: buy no course platform
   yet**; Substack + the public repo + YouTube is the stack while the goal is list growth.
 - **`make slides`** → `render_html.py`, stdlib-only deck preview that **flags any slide
-  overflowing the 16:9 frame**. Rendered `.html` is gitignored.
+  overflowing the 16:9 frame**. The rendered `S*.html` **are committed** beside their `.md`
+  (since 2026-09-09: a Codespace has no `open` and no `file://`, so an uncommitted deck meant a
+  render plus a forwarded port before you could read a slide). Re-run `make slides` when you
+  edit an `.md`; in a Codespace, `python -m http.server 5180 --directory workshop/slides`.
 - **`make run` now depends on `stop`** — a leftover uvicorn on 8100 killed the dry run.
 
 ### Open threads, none started
@@ -218,6 +262,12 @@ address (invariant 6).
   sentence test, unarguable signs, routing levels through ratios, excluding what a bank must not
   price on, designing the decoys deliberately, weights by target variance share.
 - Nothing equivalent to the S1 reading note exists for Sessions 2–5.
+- **S2 recording recut** — not started; the README in `recut/` is the runbook. Then the S2 post
+  and promo. `run-of-show-app.html` still mirrors S1 (S2 used a phone timer).
+- **S2's run of show assumed students arrive on `stage-1`**; after S1's failed handoff the room
+  stayed on `main` ("Stage 5 verified"). The S2 T−1 reminder says that state is correct and the
+  move to `stage-2` is a group step at the lab (`git stash -u && git checkout stage-2`). Carry
+  that assumption into S3–S5 material: students are wherever the last group step left them.
 - **S2 re-cut to 90 minutes on 2026-09-14** — `workshop/facilitator/S2-run-of-show.md` + `S2-polls.md`,
   deck retimed, lab cut to 28 min guided and driven from notebook 02 §6 (`VAR`/`EDGES`). Not done:
   `run-of-show-app.html` still mirrors S1 — use a phone timer for S2.

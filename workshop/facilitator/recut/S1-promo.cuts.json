@@ -9,8 +9,8 @@
     "limit": 0.89
   },
   "cards": {
-    "intro": "promo-intro",
-    "outro": "promo-outro"
+    "intro": "S1-promo-intro",
+    "outro": "S1-promo-outro"
   },
   "keeps": [
     {
@@ -116,9 +116,12 @@
   "callouts": [
     {
       "at": 4307.1,
-      "id": "c6-ladder",
+      "id": "S1-c6-ladder",
       "dur": 9
     }
   ],
-  "snapped": "hand-verified 2026-09-14"
+  "snapped": "hand-verified 2026-09-14",
+  "session": "1",
+  "transcript": "workshop/LectureSummaryandRecordings/zoomtranscript.txt",
+  "transcript_offset": 72229.25
 }
