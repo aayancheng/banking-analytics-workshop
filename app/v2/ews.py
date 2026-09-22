@@ -1,41 +1,65 @@
 """Per-loan early-warning read path: the account's actual 24-month behavioural
-series, the fired triggers with their thresholds and this account's value against
-each, the SHAP drivers, and the model's own limits displayed beside its output.
+series, the fired triggers with their clauses' thresholds and this account's value
+against each, the SHAP drivers, and the model's own limits displayed beside its
+output.
 
-score_population (ews/src/watchlist.py) already aggregates util_recent, util_drift,
-dpd_max, deposit_decline_pct and overdraft_recent per account and evaluates
-flag_triggers over them -- this module only surfaces what it already computed. It
-never re-evaluates a trigger comparator itself, so this screen cannot disagree with
-the batch watchlist.
+score_population (ews/src/watchlist.py) already aggregates the behavioural features
+per account and evaluates flag_triggers over them -- this module only surfaces what
+it already computed. `fired` is always the module's verdict, taken from
+flag_triggers' own output and never recomputed here.
 """
 from __future__ import annotations
 
 from shared.config import EWS_TRIGGERS
 from app.v2.explain import _booked_row
 
+# Each trigger is a LIST of clauses joined by OR, because flag_triggers' DELINQUENCY
+# rule is compound: (dpd_max >= dpd_severe) | (dpd_recent > 0). Representing it as the
+# single dpd_max clause made the screen contradict itself on every account where it
+# fires -- all 4,225 of them (50.7% of the book) trip the recent clause with dpd_max
+# below 30, so the row read "value 2, threshold 30, FIRED". A clause's threshold
+# source is a config key, or a literal number where the rule has one (dpd_recent > 0).
 _TRIGGER_SPECS = [
-    ("HIGH_UTILIZATION", "util_recent", ">", "high_utilization"),
-    ("RISING_UTILIZATION", "util_drift", ">", "rising_utilization"),
-    ("DELINQUENCY", "dpd_max", ">=", "dpd_severe"),
-    ("DEPOSIT_DECLINE", "deposit_decline_pct", ">", "deposit_decline"),
-    ("FREQUENT_OVERDRAFTS", "overdraft_recent", ">=", "overdraft_recent"),
+    ("HIGH_UTILIZATION",    [("util_recent", ">", "high_utilization")]),
+    ("RISING_UTILIZATION",  [("util_drift", ">", "rising_utilization")]),
+    ("DELINQUENCY",         [("dpd_max", ">=", "dpd_severe"),
+                             ("dpd_recent", ">", 0)]),
+    ("DEPOSIT_DECLINE",     [("deposit_decline_pct", ">", "deposit_decline")]),
+    ("FREQUENT_OVERDRAFTS", [("overdraft_recent", ">=", "overdraft_recent")]),
 ]
+
+_CLAUSE_OPS = {">": lambda a, b: a > b, ">=": lambda a, b: a >= b}
 
 _PANEL_SERIES = ["utilization", "balance", "deposit_inflow",
                  "days_past_due", "overdraft_count"]
 
 
-def _trigger_rows(ews_row, cfg: dict, fired_names: set[str]) -> list[dict]:
-    """Threshold and value for every trigger, with fired taken from flag_triggers --
-    never recomputed here, so this screen cannot disagree with the module."""
+def _trigger_rows(feat_row, cfg: dict, fired_names: set[str]) -> list[dict]:
+    """Every trigger's clauses with their thresholds and this account's values, and
+    `fired` taken from flag_triggers -- never recomputed here.
+
+    `fired` is the module's verdict. `met` on each clause is display metadata that
+    EXPLAINS that verdict. They must always agree (a fired trigger has at least one
+    met clause); a test asserts it across the whole book, because a screen showing
+    "value 2, threshold 30, FIRED" destroys trust in every other number on it.
+
+    feat_row comes from the EWS FEATURE frame, not the scored watchlist row: the
+    watchlist carries only KEY_METRICS, which excludes dpd_recent, so reading clause
+    values off it would silently show 0.0 for the clause that actually fired.
+    """
     rows = []
-    for name, value_key, comparator, cfg_key in _TRIGGER_SPECS:
-        rows.append({
-            "name": name, "value_key": value_key, "comparator": comparator,
-            "threshold": float(cfg[cfg_key]),
-            "value": round(float(ews_row.get(value_key, 0.0)), 4),
-            "fired": name in fired_names,
-        })
+    for name, clauses in _TRIGGER_SPECS:
+        spelled = []
+        for metric, comparator, source in clauses:
+            threshold = float(cfg[source]) if isinstance(source, str) else float(source)
+            value = float(feat_row.get(metric, 0.0))
+            spelled.append({
+                "metric": metric, "comparator": comparator, "threshold": threshold,
+                "value": round(value, 4),
+                "met": bool(_CLAUSE_OPS[comparator](value, threshold)),
+            })
+        rows.append({"name": name, "join": "OR", "clauses": spelled,
+                     "fired": name in fired_names})
     return rows
 
 
@@ -51,7 +75,8 @@ def ews_detail(app_state, business_id: str):
         "prob": float(e["prob"]),
         "risk_tier": str(e["risk_tier"]),
         "tiers": meta["tiers"],
-        "triggers": _trigger_rows(e, EWS_TRIGGERS, set(e["triggers"])),
+        "triggers": _trigger_rows(app_state.v2.ews_feats.loc[business_id],
+                                  EWS_TRIGGERS, set(e["triggers"])),
         "panel": {
             "months": [int(m) for m in panel["month_index"]],
             "series": {c: [float(v) for v in panel[c]] for c in _PANEL_SERIES},

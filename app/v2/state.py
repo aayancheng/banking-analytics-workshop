@@ -3,7 +3,10 @@
 v1's app.state already holds the scored populations, and v2 reuses them rather than
 re-scoring. v2 adds only what per-loan explanation needs: the scorecard object (for
 the WoE x beta ledger), a SHAP explainer over the adjudication model, the feature
-matrices to index into, and the 24-month behavioural panel.
+matrices to index into, the 24-month behavioural panel, and the EWS feature frame
+(ews_feats) -- the watchlist row only carries KEY_METRICS, which excludes columns
+like dpd_recent that a compound trigger rule reads, so explaining a fired trigger
+needs the full feature row, not the scored one.
 
 Nothing is precomputed across the population — a per-loan explanation is 2-3ms, so
 precomputing 12,000 of them would cost seconds of boot to save nothing. Measured
@@ -27,6 +30,7 @@ from adjudication.src.feature_engineering import (
     ADJ_FEATURE_COLUMNS, compute_adjudication_features,
 )
 from adjudication.src.policy import PolicyConfig
+from ews.src.feature_engineering import compute_ews_features
 from app.v2 import loans
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -40,6 +44,7 @@ class V2State:
     adj_explainer: object
     panel: pd.DataFrame
     index: pd.DataFrame
+    ews_feats: pd.DataFrame
 
 
 def build_state(app_state) -> V2State:
@@ -54,4 +59,6 @@ def build_state(app_state) -> V2State:
     index = loans.build_index(app_state)
     app_state.policy_config = PolicyConfig.from_dict(
         json.loads((ROOT / "adjudication" / "models" / "policy_config.json").read_text()))
-    return V2State(scorecard, score_X, adj_X, adj_explainer, panel, index)
+    ews_feats = compute_ews_features(pd.read_parquet(RAW / "portfolio.parquet"))
+    ews_feats = ews_feats.set_index(ews_feats["business_id"].astype(str))
+    return V2State(scorecard, score_X, adj_X, adj_explainer, panel, index, ews_feats)

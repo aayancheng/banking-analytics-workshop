@@ -395,8 +395,25 @@ def test_ews_triggers_show_thresholds_and_values_not_just_names(client):
     e = client.get("/api/v2/loan/BIZ100002/ews").json()
     assert [t["name"] for t in e["triggers"]] == TRIGGER_NAMES
     hu = next(t for t in e["triggers"] if t["name"] == "HIGH_UTILIZATION")
-    assert hu["threshold"] == 0.90
+    assert hu["clauses"][0]["threshold"] == 0.90
     assert isinstance(hu["fired"], bool)
+    delinq = next(t for t in e["triggers"] if t["name"] == "DELINQUENCY")
+    assert [c["metric"] for c in delinq["clauses"]] == ["dpd_max", "dpd_recent"]
+
+
+def test_every_fired_trigger_can_explain_itself(client, booked_sample_ids):
+    """`fired` is the module's verdict; `met` on each clause is the explanation the
+    screen shows. If they ever disagree the screen contradicts itself.
+
+    This is not hypothetical. Representing DELINQUENCY as its dpd_max clause alone
+    made all 4,225 fired accounts -- 50.7% of the book -- render as
+    "value 2, threshold 30, FIRED", because every one of them trips the
+    `dpd_recent > 0` clause instead. A banker who sees that stops believing every
+    other number on the screen."""
+    for bid in booked_sample_ids:
+        for t in client.get(f"/api/v2/loan/{bid}/ews").json()["triggers"]:
+            met = [c["met"] for c in t["clauses"]]
+            assert t["fired"] == any(met), (bid, t["name"], t["clauses"])
 
 
 def test_ews_fired_triggers_match_the_batch_watchlist(client, booked_sample_ids):
