@@ -627,8 +627,16 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 4: Decision tab read path
 
 **Files:**
-- Create: `app/v2/rules.py`
+- Create: `app/v2/rules.py`, `app/v2/ledgers.py`
 - Modify: `app/v2/explain.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+
+**File structure note.** `score_ledger`, `shap_ledger` and their helpers (`_logit`,
+`_jsonable_value`) live in `app/v2/ledgers.py`, not in `explain.py`. They are a
+self-contained "model rationale" concern, unrelated to `explain.py`'s orchestration
+role, and `explain.py` is already at its ceiling with three more detail functions still
+to come (Tasks 6, 8, 10). This establishes the pattern those tasks follow: one module
+per concern, and `explain.py`'s `*_detail()` functions call into them — exactly as
+`decision_detail()` already delegates to `rules.ledger()` instead of inlining policy.
 
 **Interfaces:**
 - Produces: `rules.ledger(profile_row, score_row, config) -> dict` with `knockouts` and `refer_overrides` lists of `{rule, label, threshold, value, comparator, fired, applicable}`, and `nearest_flip(ledger, pd_value, config) -> dict`. `explain.decision_detail(app_state, business_id) -> dict` with `pd_zones`, `rules`, `score_ledger`, `shap`, `nearest_flip`.
@@ -655,32 +663,71 @@ def test_pd_zones_match_the_committed_policy(client):
     assert d["pd_zones"]["zone"] in ("Approve", "Refer", "Decline")
 
 
-def test_score_ledger_is_exactly_additive(client):
+@pytest.fixture(scope="module")
+def sample_ids(client):
+    """A numeric identity asserted on ONE hardcoded loan passes by luck. BIZ100002's
+    SHAP gap happens to be exactly 0.0 and its PD sits nowhere near the tails, which
+    is why a single-loan version of these tests stayed green while 62 of 120 loans
+    breached the tolerance. Always sample."""
+    return [l["business_id"] for l in
+            client.get("/api/v2/loans", params={"limit": 40}).json()["loans"]]
+
+
+def test_score_ledger_is_exactly_additive(client, sample_ids):
     """intercept + sum(WoE x beta) == logit(pd). This identity is the whole reason a
-    scorecard is explainable, and the screen claims it -- so assert it."""
+    scorecard is explainable, and the screen claims it -- so assert it, on many loans."""
     import math
-    d = client.get("/api/v2/loan/BIZ100002/decision").json()
-    led = d["score_ledger"]
-    total = led["intercept"] + sum(c["contribution"] for c in led["contributions"])
-    assert len(led["contributions"]) == 15
-    assert total == pytest.approx(led["logit_pd"], abs=1e-9)
-    assert led["logit_pd"] == pytest.approx(
-        math.log(led["pd"] / (1 - led["pd"])), abs=1e-6)
+    for bid in sample_ids:
+        led = client.get(f"/api/v2/loan/{bid}/decision").json()["score_ledger"]
+        total = led["intercept"] + sum(c["contribution"] for c in led["contributions"])
+        assert len(led["contributions"]) == 15, bid
+        assert total == pytest.approx(led["logit_pd"], abs=1e-9), bid
+        assert led["logit_pd"] == pytest.approx(
+            math.log(led["pd"] / (1 - led["pd"])), abs=1e-6), bid
 
 
-def test_shap_is_exactly_additive(client):
-    d = client.get("/api/v2/loan/BIZ100002/decision").json()
-    sh = d["shap"]
-    total = sh["base_value"] + sum(c["contribution"] for c in sh["contributions"])
-    assert len(sh["contributions"]) == 21
-    assert total == pytest.approx(sh["logit_pd_model"], abs=1e-6)
+def test_shap_is_exactly_additive(client, sample_ids):
+    for bid in sample_ids:
+        sh = client.get(f"/api/v2/loan/{bid}/decision").json()["shap"]
+        total = sh["base_value"] + sum(c["contribution"] for c in sh["contributions"])
+        assert len(sh["contributions"]) == 21, bid
+        assert total == pytest.approx(sh["logit_pd_model"], abs=1e-6), bid
 
 
-def test_decision_matches_the_batch_pipeline(client):
-    """v2's decision detail must agree with what v1 already decided."""
-    v1 = client.get("/api/adjudicate/BIZ100002").json()
-    v2 = client.get("/api/v2/loan/BIZ100002").json()
-    assert v1["decision"] == v2["decision"]
+def test_ledger_identities_hold_at_the_pd_extremes(client):
+    """The tails are where rounding a PD before recomputing its logit does the most
+    damage -- 5.85e-4 on the lowest-PD applicant, 585x the tolerance."""
+    import math
+    lo = client.get("/api/v2/loans", params={"limit": 500}).json()["loans"]
+    for bid in (lo[0]["business_id"], lo[-1]["business_id"]):
+        led = client.get(f"/api/v2/loan/{bid}/decision").json()["score_ledger"]
+        assert led["logit_pd"] == pytest.approx(
+            math.log(led["pd"] / (1 - led["pd"])), abs=1e-6), bid
+
+
+def test_nearest_flip_can_rank_a_zero_threshold_rule(client):
+    """public_records_cap is committed at 0 and 11,041 of 12,000 applicants sit exactly
+    on it. An earlier version skipped every zero threshold, so the tightest margin a
+    rule can have was invisible on 92% of the book."""
+    nf = client.get("/api/v2/loan/BIZ100002/decision").json()["nearest_flip"]
+    levers = {c["lever"] for c in nf["candidates"]}
+    assert "public_records_cap" in levers
+    pr = next(c for c in nf["candidates"] if c["lever"] == "public_records_cap")
+    assert pr["at_threshold"] is True          # value 0, cap 0
+    assert pr["distance_to_cross"] == 1.0      # one whole record, not zero
+    gaps = [c["gap"] for c in nf["candidates"]]
+    assert gaps == sorted(gaps)                 # candidates come back ranked
+    assert nf["lever"] == nf["candidates"][0]["lever"]
+
+
+def test_decision_endpoint_matches_the_batch_pipeline(client, sample_ids):
+    """v2's DECISION endpoint -- not just the header -- must agree with what v1
+    already decided, and must report the same reasons."""
+    for bid in sample_ids:
+        v1 = client.get(f"/api/adjudicate/{bid}").json()
+        v2 = client.get(f"/api/v2/loan/{bid}/decision").json()
+        assert v1["decision"] == v2["decision"], bid
+        assert sorted(v1["rule_hits"]) == sorted(v2["rule_hits"]), bid
 ```
 
 - [ ] **Step 2: Run and watch them fail**
@@ -764,26 +811,44 @@ def ledger(profile_row, score_row, config, decision_zone: str) -> dict:
 
 
 def nearest_flip(led: dict, pd_value: float, config) -> dict:
-    """Which single lever is closest to changing this decision, in relative terms.
+    """Which single lever is closest to changing this decision.
 
-    Relative distance so thresholds on different scales compare: a DSCR 0.05 from
-    its floor and a score 30 points from its floor are both ~5%.
+    Ranked by distance-to-cross divided by the rule's own scale, so thresholds on
+    different scales compare. Distance-to-cross is how far this loan's value must move
+    to trip the rule -- for an integer count rule with a `>` comparator sitting exactly
+    on its cap, that is one whole record, not zero.
+
+    A threshold of exactly 0 has no meaningful relative scale, so it falls back to unit
+    scale. It is NEVER dropped. An earlier version skipped every zero threshold, which
+    silently made `public_records_cap` unrankable on 11,041 of the 12,000 applicants --
+    every loan sitting exactly on the cap, which is the tightest margin a rule can have.
     """
+    INTEGER_COUNT_RULES = {"public_records_cap"}
     candidates = []
     for r in led["knockouts"] + led["refer_overrides"]:
-        if not r["applicable"] or r["threshold"] == 0:
+        if not r["applicable"]:
             continue
-        gap = abs(r["value"] - r["threshold"]) / max(abs(r["threshold"]), 1e-9)
-        candidates.append({"lever": r["rule"], "label": r["label"],
-                           "value": r["value"], "threshold": r["threshold"],
-                           "relative_gap": round(gap, 4),
-                           "currently_firing": r["fired"]})
+        distance = abs(r["value"] - r["threshold"])
+        if r["rule"] in INTEGER_COUNT_RULES and r["comparator"] == ">" and not r["fired"]:
+            distance = max(distance, 1.0)   # only trips at the next whole record
+        scale = abs(r["threshold"]) or 1.0
+        candidates.append({
+            "lever": r["rule"], "label": r["label"], "value": r["value"],
+            "threshold": r["threshold"], "distance_to_cross": round(distance, 4),
+            "gap": round(distance / scale, 4), "at_threshold": r["value"] == r["threshold"],
+            "currently_firing": r["fired"],
+        })
     for name, t in (("t_low", float(config.t_low)), ("t_high", float(config.t_high))):
-        gap = abs(pd_value - t) / max(t, 1e-9)
-        candidates.append({"lever": name, "label": f"PD zone cutoff {name}",
-                           "value": round(pd_value, 4), "threshold": t,
-                           "relative_gap": round(gap, 4), "currently_firing": None})
-    return min(candidates, key=lambda c: c["relative_gap"]) if candidates else {}
+        candidates.append({
+            "lever": name, "label": f"PD zone cutoff {name}", "value": pd_value,
+            "threshold": t, "distance_to_cross": round(abs(pd_value - t), 6),
+            "gap": round(abs(pd_value - t) / (abs(t) or 1.0), 4),
+            "at_threshold": False, "currently_firing": None,
+        })
+    if not candidates:
+        return {}
+    ranked = sorted(candidates, key=lambda c: c["gap"])
+    return {**ranked[0], "candidates": ranked}
 ```
 
 - [ ] **Step 4: Add `decision_detail` to `app/v2/explain.py`**
@@ -819,16 +884,21 @@ def score_ledger(app_state, business_id: str) -> dict:
     contrib = feature_contributions(v2.scorecard, X).iloc[0]
     raw = app_state.profiles.loc[business_id]
     pd_value = float(app_state.scores.loc[business_id, "pd"])
+    # NOTHING here is rounded. Rounding 15 addends to 6dp and then summing them
+    # breaks the identity by ~1e-6, and rounding `pd` breaks the logit recomputation
+    # by up to 5.85e-4 near the tails, where d(logit)/d(pd) blows up. Rounding is a
+    # DISPLAY concern and the browser already owns display -- it formats and draws but
+    # never calculates.
     rows = [{"feature": str(f),
-             "contribution": round(float(contrib[f]), 6),
+             "contribution": float(contrib[f]),
              "value": _jsonable_value(raw.get(f, X.iloc[0].get(f)))}
             for f in FEATURE_COLUMNS]
     rows.sort(key=lambda r: -r["contribution"])
     return {
-        "intercept": round(float(v2.scorecard.estimator_.intercept_[0]), 6),
+        "intercept": float(v2.scorecard.estimator_.intercept_[0]),
         "contributions": rows,
-        "pd": round(pd_value, 6),
-        "logit_pd": round(_logit(pd_value), 6),
+        "pd": float(pd_value),
+        "logit_pd": _logit(pd_value),
     }
 
 
@@ -850,13 +920,15 @@ def shap_ledger(app_state, business_id: str) -> dict:
     base = v2.adj_explainer.expected_value
     base = float(np.ravel(base)[-1]) if np.ndim(base) > 0 else float(base)
     pd_model = float(app_state.decisions.loc[business_id, "pd"])
-    rows = [{"feature": str(f), "contribution": round(float(c), 6),
+    # Unrounded, for the same reason as score_ledger: 21 addends rounded to 6dp and
+    # then summed breach the 1e-6 identity on 62 of 120 sampled loans (worst 3.0e-6).
+    rows = [{"feature": str(f), "contribution": float(c),
              "value": _jsonable_value(X.iloc[0][f])}
             for f, c in zip(ADJ_FEATURE_COLUMNS, sv)]
     rows.sort(key=lambda r: -r["contribution"])
-    return {"base_value": round(base, 6), "contributions": rows,
-            "pd_model": round(pd_model, 6),
-            "logit_pd_model": round(_logit(pd_model), 6)}
+    return {"base_value": float(base), "contributions": rows,
+            "pd_model": float(pd_model),
+            "logit_pd_model": _logit(pd_model)}
 
 
 def decision_detail(app_state, business_id: str) -> dict:
