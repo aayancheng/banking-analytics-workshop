@@ -1499,13 +1499,15 @@ def _book_under(app_state, market: MarketAssumptions) -> dict:
 
 
 def pricing_whatif(app_state, business_id: str, overrides: PricingOverrides):
-    from app.v2 import explain
+    from app.v2 import explain, pricing
 
-    # via _row(), so an unknown id raises UnknownLoan and the router answers 404
+    # via _row(), so an unknown id raises UnknownLoan and the router answers 404.
+    # price_one does a raw .loc[] and would raise a bare KeyError, which _guard
+    # deliberately does not catch -- so the lookup MUST happen first.
     if not bool(explain._row(app_state, business_id)["booked"]):
         return None
     market = overrides.market()
-    out = explain.price_one(app_state, business_id, market, overrides.quoted_rate)
+    out = pricing.price_one(app_state, business_id, market, overrides.quoted_rate)
     out["book"] = _book_under(app_state, market)
     return out
 ```
@@ -1728,7 +1730,18 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 9: Early-warning what-if
 
 **Files:**
-- Modify: `app/v2/whatif.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+- Modify: `app/v2/ews.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+
+**Where this code goes.** `EwsOverrides` and `ews_whatif` join `ews.py` beside the
+read path they share state with — **not** `whatif.py`, which is at 145 of ~150 lines
+after Task 7 and has no room. Import `InvalidOverride` from `app.v2.whatif`; `_guard`
+already turns it into a 422, so the cross-field check below needs no new routing.
+
+**The cross-field trap applies here too.** Task 5 found that per-field Pydantic bounds
+let `{"t_low": 0.9}` through, because it is only incoherent once merged with the
+committed `t_high`. `EwsOverrides` has the same shape: `t_med > t_high` empties the
+Medium tier entirely. Validate the **merged** tiers in `tiers()` and raise
+`InvalidOverride`, exactly as `DecisionOverrides.apply_to` does.
 
 **Interfaces:**
 - Produces: `whatif.EwsOverrides` (Pydantic, bounded); `whatif.ews_whatif(app_state, business_id, overrides) -> dict | None` with `risk_tier`, `triggers[]`, `book_tiers{High,Medium,Low}`, `tiers`, `trigger_config`.
