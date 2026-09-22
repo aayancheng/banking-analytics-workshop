@@ -1262,7 +1262,7 @@ def _booked_row(app_state, business_id: str):
 ```
 
 **Interfaces:**
-- Produces: `explain.pricing_detail(app_state, business_id) -> dict | None` with `ead`, `pd`, `rates{quoted,break_even,hurdle_clearing,recommended}`, `waterfall[]` (each line as `{line, dollars, bps}`), `verdict{roe,raroc,clears_hurdle,rate_shortfall_bps,roe_hurdle}`, `market`.
+- Produces: `pricing.pricing_detail(app_state, business_id) -> dict | None` with `ead`, `pd`, `rates{quoted,break_even,hurdle_clearing,recommended}`, `waterfall[]` (each line as `{line, dollars, bps}`), `verdict{roe,raroc,clears_hurdle,rate_shortfall_bps,roe_hurdle}`, `market`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1366,7 +1366,7 @@ def pricing_detail(app_state, business_id: str):
 ```python
 @router.get("/loan/{business_id}/pricing")
 def loan_pricing(request: Request, business_id: str):
-    return _guard(explain.pricing_detail, request.app.state, business_id)
+    return _guard(pricing.pricing_detail, request.app.state, business_id)
 ```
 
 - [ ] **Step 5: Run the tests**
@@ -1417,10 +1417,16 @@ def test_pricing_whatif_with_no_overrides_reproduces_the_batch_pipeline(client):
 
 
 def test_pricing_whatif_book_matches_the_committed_summary(client):
+    """All four fields, not just the two that are easiest to compare. n_clears and
+    mispriced_ead currently match exactly, and nothing would catch a regression in
+    either -- an off-by-one in _book_under's clears mask would move both and leave
+    n and share_clears looking fine."""
     summary = client.get("/api/pricing/summary").json()
-    live = client.post("/api/v2/loan/BIZ100002/pricing/whatif", json={}).json()
-    assert live["book"]["n"] == summary["n"]
-    assert live["book"]["share_clears"] == pytest.approx(summary["share_clears"], abs=1e-4)
+    live = client.post("/api/v2/loan/BIZ100002/pricing/whatif", json={}).json()["book"]
+    assert live["n"] == summary["n"]
+    assert live["n_clears"] == summary["n_clears"]
+    assert live["share_clears"] == pytest.approx(summary["share_clears"], abs=1e-4)
+    assert live["mispriced_ead"] == pytest.approx(summary["mispriced_ead"], rel=1e-9)
 
 
 def test_raising_lgd_hurts_the_book(client):
@@ -1570,7 +1576,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 - Modify: `app/v2/router.py`, `tests/test_app_v2.py`
 
 **Interfaces:**
-- Produces: `explain.ews_detail(app_state, business_id) -> dict | None` with `prob`, `risk_tier`, `tiers`, `triggers[]` (`{name, threshold, value, fired}`), `panel{months[], series{utilization,balance,deposit_inflow,days_past_due,overdraft_count}}`, `drivers[]`, `model_caveat`.
+- Produces: `ews.ews_detail(app_state, business_id) -> dict | None` with `prob`, `risk_tier`, `tiers`, `triggers[]` (`{name, threshold, value, fired}`), `panel{months[], series{utilization,balance,deposit_inflow,days_past_due,overdraft_count}}`, `drivers[]`, `model_caveat`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1700,7 +1706,7 @@ Expected: `['util_recent', 'util_drift', 'dpd_max', 'deposit_decline_pct', 'over
 ```python
 @router.get("/loan/{business_id}/ews")
 def loan_ews(request: Request, business_id: str):
-    return _guard(explain.ews_detail, request.app.state, business_id)
+    return _guard(ews.ews_detail, request.app.state, business_id)
 ```
 
 - [ ] **Step 5: Run the tests**
@@ -1853,7 +1859,7 @@ def ews_whatif(app_state, business_id: str, overrides: EwsOverrides):
         "prob": float(ews.loc[business_id, "prob"]),
         "risk_tier": retiered[pos],
         "tiers": tiers,
-        "triggers": explain._trigger_rows(ews.loc[business_id], cfg, fired),
+        "triggers": ews._trigger_rows(ews.loc[business_id], cfg, fired),
         "trigger_config": cfg,
         "book_tiers": book_tiers,
         "book_trigger_counts": dict(sorted(counts.items(), key=lambda kv: -kv[1])),
@@ -1933,7 +1939,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 - Modify: `app/v2/router.py`, `tests/test_app_v2.py`
 
 **Interfaces:**
-- Produces: `explain.line_increase_detail(app_state, business_id) -> dict | None` with `prob`, `caps[]` (`{name, amount, binding}`), `recommended_amount`, `incremental{ead, waterfall[], roe, clears_hurdle}`, `eligibility{clauses[], eligible}`.
+- Produces: `line_increase.line_increase_detail(app_state, business_id) -> dict | None` with `prob`, `caps[]` (`{name, amount, binding}`), `recommended_amount`, `incremental{ead, waterfall[], roe, clears_hurdle}`, `eligibility{clauses[], eligible}`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2064,7 +2070,7 @@ def line_increase_detail(app_state, business_id: str):
 ```python
 @router.get("/loan/{business_id}/line-increase")
 def loan_line_increase(request: Request, business_id: str):
-    return _guard(explain.line_increase_detail, request.app.state, business_id)
+    return _guard(line_increase.line_increase_detail, request.app.state, business_id)
 ```
 
 - [ ] **Step 5: Run the tests**
