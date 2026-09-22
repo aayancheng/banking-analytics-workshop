@@ -25,6 +25,7 @@ from score.src.feature_engineering import FEATURE_COLUMNS, compute_features
 from adjudication.src.feature_engineering import (
     ADJ_FEATURE_COLUMNS, compute_adjudication_features,
 )
+from app.v2 import loans
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -36,14 +37,17 @@ class V2State:
     adj_X: pd.DataFrame
     adj_explainer: object
     panel: pd.DataFrame
+    index: pd.DataFrame
 
 
-def build_state(profiles: pd.DataFrame) -> V2State:
-    """profiles is v1's app.state.profiles: businesses.parquet indexed by business_id."""
+def build_state(app_state) -> V2State:
+    """app_state is the FastAPI app.state, after v1's lifespan has populated it."""
+    profiles = app_state.profiles
     scorecard = joblib.load(ROOT / "score" / "models" / "scorecard.pkl")
     score_X = compute_features(profiles)[FEATURE_COLUMNS]
     adj_X = compute_adjudication_features(profiles)[ADJ_FEATURE_COLUMNS]
     adj_model = joblib.load(ROOT / "adjudication" / "models" / "adjudication_model.pkl")
     adj_explainer = shap.TreeExplainer(adj_model)
     panel = pd.read_parquet(RAW / "panel.parquet").set_index("business_id")
-    return V2State(scorecard, score_X, adj_X, adj_explainer, panel)
+    index = loans.build_index(app_state)
+    return V2State(scorecard, score_X, adj_X, adj_explainer, panel, index)

@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
         (ROOT / "line_increase" / "models" / "metadata.json").read_text())
     app.state.ews_meta = json.loads(
         (ROOT / "ews" / "models" / "metadata.json").read_text())
-    app.state.v2 = v2_state.build_state(profiles)
+    app.state.v2 = v2_state.build_state(app.state)
     yield
 
 
