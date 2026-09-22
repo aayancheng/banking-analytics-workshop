@@ -2038,6 +2038,20 @@ def test_line_increase_shows_which_cap_binds(client):
     assert len(binding) == 1
 
 
+def test_exactly_one_cap_binds_on_every_booked_account(client):
+    """Whole book. Two caps can tie exactly -- BIZ111364's pct_cap and
+    revenue_ceiling are both 5,000.00 -- and a single-loan test cannot see it. Same
+    shape as every other defect this file has produced: a silent contract violation
+    on one rare row."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    for bid in st.li.index:
+        caps = li_mod.line_increase_detail(st, bid)["caps"]
+        if not caps:                      # credit_limit <= 0 returns no caps
+            continue
+        assert sum(1 for c in caps if c["binding"]) == 1, (bid, caps)
+
+
 def test_eligibility_explains_itself_on_every_booked_account(client):
     """`eligible` is candidates()' verdict; the clauses explain it. They must agree.
 
@@ -2157,8 +2171,14 @@ def _caps(current_balance: float, credit_limit: float, annual_revenue: float,
         "pct_cap": cfg["pct_cap"] * credit_limit,
         "revenue_ceiling": cfg["revenue_mult_cap"] * annual_revenue - credit_limit,
     }
-    lowest = min(values.values())
-    return [{"name": k, "amount": round(float(v), 2), "binding": v == lowest}
+    # min() over the KEYS, not a value comparison: two caps can tie exactly.
+    # BIZ111364 (balance 10,180 · limit 10,000 · revenue 50,000) gives pct_cap
+    # 0.50*10,000 = 5,000.00 and revenue_ceiling 0.30*50,000-10,000 = 5,000.00 --
+    # an exact float tie, not a rounding artifact. Comparing `v == lowest` marks both
+    # binding, and the tab's whole claim is that ONE cap binds. First key wins, which
+    # is deterministic because `values` is built in a fixed order.
+    binding_key = min(values, key=values.get)
+    return [{"name": k, "amount": round(float(v), 2), "binding": k == binding_key}
             for k, v in values.items()]
 
 
