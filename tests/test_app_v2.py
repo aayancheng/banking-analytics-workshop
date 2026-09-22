@@ -311,3 +311,63 @@ def test_pricing_is_null_for_an_unbooked_applicant(client):
     r = client.get(f"/api/v2/loan/{unbooked['business_id']}/pricing")
     assert r.status_code == 200
     assert r.json() is None
+
+
+def test_pricing_whatif_with_no_overrides_reproduces_the_batch_pipeline(client, booked_sample_ids):
+    """The invariant test for pricing. Loops over booked_sample_ids (40 booked loans)
+    rather than a single hardcoded id -- Task 4 found defects that a single-loan
+    identity assertion missed."""
+    for bid in booked_sample_ids:
+        batch = client.get(f"/api/pricing/{bid}").json()
+        live = client.post(f"/api/v2/loan/{bid}/pricing/whatif", json={}).json()
+        assert live["verdict"]["roe"] == pytest.approx(batch["roe_at_quoted"], abs=1e-9), bid
+        assert live["verdict"]["clears_hurdle"] == batch["clears_hurdle"], bid
+
+
+def test_pricing_whatif_book_matches_the_committed_summary(client):
+    summary = client.get("/api/pricing/summary").json()
+    live = client.post("/api/v2/loan/BIZ100002/pricing/whatif", json={}).json()
+    assert live["book"]["n"] == summary["n"]
+    assert live["book"]["share_clears"] == pytest.approx(summary["share_clears"], abs=1e-4)
+
+
+def test_raising_lgd_hurts_the_book(client):
+    base = client.post("/api/v2/loan/BIZ100002/pricing/whatif", json={}).json()
+    worse = client.post("/api/v2/loan/BIZ100002/pricing/whatif",
+                        json={"lgd": 0.90}).json()
+    assert worse["book"]["share_clears"] < base["book"]["share_clears"]
+    assert worse["waterfall"][2]["line"] == "expected_loss"
+    assert abs(worse["waterfall"][2]["dollars"]) > abs(base["waterfall"][2]["dollars"])
+
+
+def test_raising_the_quoted_rate_lifts_roe(client):
+    base = client.post("/api/v2/loan/BIZ100002/pricing/whatif", json={}).json()
+    up = client.post("/api/v2/loan/BIZ100002/pricing/whatif",
+                     json={"quoted_rate": 0.15}).json()
+    assert up["verdict"]["roe"] > base["verdict"]["roe"]
+
+
+def test_pricing_whatif_rejects_out_of_range(client):
+    assert client.post("/api/v2/loan/BIZ100002/pricing/whatif",
+                       json={"lgd": 1.5}).status_code == 422
+    assert client.post("/api/v2/loan/BIZ100002/pricing/whatif",
+                       json={"capital_ratio": 0.0}).status_code == 422
+
+
+def test_pricing_whatif_rejects_tax_rate_at_the_unity_boundary(client):
+    """tax_rate == 1.0 would zero net_income for every clearing loan; the Field bound
+    is `lt=1.0`, so this must be a 422, not a 200 with a degenerate book."""
+    assert client.post("/api/v2/loan/BIZ100002/pricing/whatif",
+                       json={"tax_rate": 1.0}).status_code == 422
+
+
+def test_pricing_whatif_is_none_for_an_unbooked_applicant(client):
+    unbooked = client.get("/api/v2/loans", params={"booked": "false"}).json()["loans"][0]
+    r = client.post(f"/api/v2/loan/{unbooked['business_id']}/pricing/whatif", json={})
+    assert r.status_code == 200
+    assert r.json() is None
+
+
+def test_pricing_whatif_404s_for_an_unknown_business_id(client):
+    r = client.post("/api/v2/loan/BIZ999999/pricing/whatif", json={})
+    assert r.status_code == 404

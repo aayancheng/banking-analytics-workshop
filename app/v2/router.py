@@ -75,3 +75,9 @@ def decision_whatif(request: Request, business_id: str,
 @router.get("/loan/{business_id}/pricing")
 def loan_pricing(request: Request, business_id: str):
     return _guard(pricing.pricing_detail, request.app.state, business_id)
+
+
+@router.post("/loan/{business_id}/pricing/whatif")
+def pricing_whatif(request: Request, business_id: str,
+                   overrides: whatif.PricingOverrides):
+    return _guard(whatif.pricing_whatif, request.app.state, business_id, overrides)

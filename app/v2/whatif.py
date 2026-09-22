@@ -14,9 +14,14 @@ cheaper frame is used deliberately, not by default.
 """
 from __future__ import annotations
 
+import numpy as np
 from pydantic import BaseModel, Field
 
 from adjudication.src.policy import PolicyConfig, decide
+from shared.config import MARKET
+from pricing.src.engine import MarketAssumptions, price_loan
+
+_MARKET = MarketAssumptions.from_market(MARKET)
 
 
 class InvalidOverride(ValueError):
@@ -90,3 +95,51 @@ def decision_whatif(app_state, business_id: str, overrides: DecisionOverrides) -
         "flipped_count": flipped,
         "config": config.to_dict(),
     }
+
+
+class PricingOverrides(BaseModel):
+    quoted_rate: float | None = Field(default=None, ge=0.0, le=1.0)
+    cost_of_funds: float | None = Field(default=None, ge=0.0, le=1.0)
+    lgd: float | None = Field(default=None, ge=0.0, le=1.0)
+    opex_rate: float | None = Field(default=None, ge=0.0, le=1.0)
+    tax_rate: float | None = Field(default=None, ge=0.0, lt=1.0)
+    capital_ratio: float | None = Field(default=None, gt=0.0, le=1.0)
+    base_margin: float | None = Field(default=None, ge=0.0, le=1.0)
+    roe_hurdle: float | None = Field(default=None, ge=0.0, le=2.0)
+    fee_rate: float | None = Field(default=None, ge=0.0, le=1.0)
+
+    def market(self) -> MarketAssumptions:
+        d = self.model_dump(exclude={"quoted_rate"})
+        return _MARKET.replace(**{k: v for k, v in d.items() if v is not None})
+
+
+def _book_under(app_state, market: MarketAssumptions) -> dict:
+    """Re-price the whole booked book under these assumptions. ~8ms for 8,336 loans,
+    so this can run on every slider tick. Uses the same price_loan the batch uses."""
+    priced = app_state.priced
+    pds = priced["pd"].to_numpy(dtype=float)
+    eads = priced["ead"].to_numpy(dtype=float)
+    rates = priced["quoted_rate"].to_numpy(dtype=float)
+    clears = np.empty(len(priced), dtype=bool)
+    for i in range(len(priced)):
+        clears[i] = price_loan(pds[i], eads[i], rates[i], market)["clears_hurdle"]
+    n = int(len(priced))
+    n_clears = int(clears.sum())
+    return {
+        "n": n,
+        "n_clears": n_clears,
+        "share_clears": round(n_clears / n, 4) if n else 0.0,
+        "mispriced_ead": round(float(eads[~clears].sum()), 2),
+    }
+
+
+def pricing_whatif(app_state, business_id: str, overrides: PricingOverrides):
+    from app.v2 import explain, pricing
+
+    # via _row(), so an unknown id raises UnknownLoan and the router answers 404
+    if not bool(explain._row(app_state, business_id)["booked"]):
+        return None
+    market = overrides.market()
+    out = pricing.price_one(app_state, business_id, market, overrides.quoted_rate)
+    out["book"] = _book_under(app_state, market)
+    return out
