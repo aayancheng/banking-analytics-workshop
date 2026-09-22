@@ -1882,7 +1882,17 @@ def ews_whatif(app_state, business_id: str, overrides: EwsOverrides):
     tiers = overrides.tiers(app_state.ews_meta["tiers"])
     cfg = overrides.trigger_cfg()
 
-    retiered = [risk_tier(p, tiers) for p in ews["prob"].to_numpy(dtype=float)]
+    # score_population() derives risk_tier from the model's UNROUNDED probability but
+    # persists prob rounded to 4dp. Two accounts (BIZ103657 0.16486203 -> 0.1649 and
+    # BIZ108170 0.50725440 -> 0.5073) round exactly ONTO a cutoff, and risk_tier uses
+    # >=, so re-deriving from the stored number flips both. With no tier override the
+    # batch's own column is therefore the authority; risk_tier() is only re-run when
+    # the caller actually moved a cutoff, which is the one case where the committed
+    # column cannot answer. The residual 2-in-8,336 imprecision under an override is
+    # inherent to the artifact, not introduced here.
+    overrode = overrides.t_high is not None or overrides.t_med is not None
+    retiered = ([risk_tier(p, tiers) for p in ews["prob"].to_numpy(dtype=float)]
+                if overrode else list(ews["risk_tier"]))
     refired = flag_triggers(ews, cfg)
 
     pos = ews.index.get_loc(business_id)
@@ -1921,10 +1931,20 @@ Run:
 ```bash
 PYTHONPATH=. .venv/bin/python - <<'EOF'
 import warnings; warnings.filterwarnings("ignore")
+import pandas as pd
+from shared.config import RAW
 from ews.src.watchlist import score_population
+from ews.src.feature_engineering import compute_ews_features
 from ews.src.triggers import flag_triggers
+
+# Probe the frame ews_whatif ACTUALLY passes -- the cached EWS feature frame, which
+# carries dpd_recent. Running this against score_population()'s output instead gives
+# 4111/8336, because the watchlist row only carries KEY_METRICS and flag_triggers
+# then reads dpd_recent as 0.0. That is the frame's limitation, not a regression.
 ews = score_population()
-refired = flag_triggers(ews)
+feats = compute_ews_features(pd.read_parquet(RAW / "portfolio.parquet"))
+feats.index = feats["business_id"].astype(str)
+refired = flag_triggers(feats.loc[ews.index])
 same = sum(sorted(a) == sorted(b) for a, b in zip(ews["triggers"], refired))
 print(f"rows whose triggers reproduce exactly: {same} / {len(ews)}")
 EOF
