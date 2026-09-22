@@ -57,3 +57,8 @@ def loan_list(request: Request, decision: str | None = None, score_band: str | N
 @router.get("/loan/{business_id}")
 def loan_header(request: Request, business_id: str):
     return _guard(explain.header, request.app.state, business_id)
+
+
+@router.get("/loan/{business_id}/decision")
+def loan_decision(request: Request, business_id: str):
+    return _guard(explain.decision_detail, request.app.state, business_id)

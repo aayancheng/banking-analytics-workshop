@@ -13,6 +13,7 @@ adj_X is recomputed here rather than shared out of v1's lifespan. It costs 0.05s
 it keeps app/main.py at four added statements, which is the point of v2 being a
 side-by-side demo rather than a rewrite.
 """
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -25,6 +26,7 @@ from score.src.feature_engineering import FEATURE_COLUMNS, compute_features
 from adjudication.src.feature_engineering import (
     ADJ_FEATURE_COLUMNS, compute_adjudication_features,
 )
+from adjudication.src.policy import PolicyConfig
 from app.v2 import loans
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -50,4 +52,6 @@ def build_state(app_state) -> V2State:
     adj_explainer = shap.TreeExplainer(adj_model)
     panel = pd.read_parquet(RAW / "panel.parquet").set_index("business_id")
     index = loans.build_index(app_state)
+    app_state.policy_config = PolicyConfig.from_dict(
+        json.loads((ROOT / "adjudication" / "models" / "policy_config.json").read_text()))
     return V2State(scorecard, score_X, adj_X, adj_explainer, panel, index)

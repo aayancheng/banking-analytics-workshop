@@ -123,3 +123,49 @@ def test_internal_keyerror_does_not_become_a_404(client, monkeypatch):
     monkeypatch.setattr(explain, "header", boom)
     with pytest.raises(KeyError):
         client.get("/api/v2/loan/BIZ100002")
+
+
+def test_decision_detail_rules_ledger(client):
+    d = client.get("/api/v2/loan/BIZ100002/decision").json()
+    names = {r["rule"] for r in d["rules"]["knockouts"]}
+    assert names == {"dscr_floor", "public_records_cap",
+                     "prior_delinq_cap", "leverage_cap"}
+    dscr = next(r for r in d["rules"]["knockouts"] if r["rule"] == "dscr_floor")
+    assert dscr["threshold"] == 1.0
+    assert dscr["value"] == pytest.approx(1.78)
+    assert dscr["fired"] is False
+
+
+def test_pd_zones_match_the_committed_policy(client):
+    d = client.get("/api/v2/loan/BIZ100002/decision").json()
+    assert d["pd_zones"]["t_low"] == 0.0955
+    assert d["pd_zones"]["t_high"] == 0.4943
+    assert d["pd_zones"]["zone"] in ("Approve", "Refer", "Decline")
+
+
+def test_score_ledger_is_exactly_additive(client):
+    """intercept + sum(WoE x beta) == logit(pd). This identity is the whole reason a
+    scorecard is explainable, and the screen claims it -- so assert it."""
+    import math
+    d = client.get("/api/v2/loan/BIZ100002/decision").json()
+    led = d["score_ledger"]
+    total = led["intercept"] + sum(c["contribution"] for c in led["contributions"])
+    assert len(led["contributions"]) == 15
+    assert total == pytest.approx(led["logit_pd"], abs=1e-9)
+    assert led["logit_pd"] == pytest.approx(
+        math.log(led["pd"] / (1 - led["pd"])), abs=1e-6)
+
+
+def test_shap_is_exactly_additive(client):
+    d = client.get("/api/v2/loan/BIZ100002/decision").json()
+    sh = d["shap"]
+    total = sh["base_value"] + sum(c["contribution"] for c in sh["contributions"])
+    assert len(sh["contributions"]) == 21
+    assert total == pytest.approx(sh["logit_pd_model"], abs=1e-6)
+
+
+def test_decision_matches_the_batch_pipeline(client):
+    """v2's decision detail must agree with what v1 already decided."""
+    v1 = client.get("/api/adjudicate/BIZ100002").json()
+    v2 = client.get("/api/v2/loan/BIZ100002").json()
+    assert v1["decision"] == v2["decision"]
