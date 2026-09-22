@@ -54,8 +54,8 @@ def line_increase_detail(app_state, business_id: str):
     # family as the EWS tier-rounding defect: the persisted number is a display
     # value, and reusing it as an input is how a screen quietly stops matching the
     # pipeline it claims to mirror.
-    r = incremental_roe(float(app_state.scores.loc[business_id, "pd"]),
-                        float(li["recommended_amount"]),
+    pd_exact = float(app_state.scores.loc[business_id, "pd"])
+    r = incremental_roe(pd_exact, float(li["recommended_amount"]),
                         float(li["utilization_onbook"]), float(li["rate"]))
     w = r["waterfall"]
     ead = float(r["incremental_ead"])
@@ -63,9 +63,17 @@ def line_increase_detail(app_state, business_id: str):
         {"name": "prob_above_threshold", "value": float(li["prob"]),
          "threshold": meta["offer_threshold"], "comparator": ">=",
          "pass": bool(float(li["prob"]) >= meta["offer_threshold"])},
-        {"name": "pd_within_appetite", "value": float(li["pd"]),
+        # Unrounded, for the same reason as the ROE above: candidates tests the
+        # unrounded pd_score against this cap, so using the persisted 4dp value makes
+        # the clause disagree with the module. On BIZ101719 (exact 0.0741049689, cap
+        # 0.0741) the rounded value reads as PASS while the batch excluded the loan
+        # for precisely this reason -- and `eligible == all(pass)` cannot catch it,
+        # because two other clauses also fail, so the verdict stays right while the
+        # REASON is wrong. A tab whose whole job is to say which clause stopped the
+        # offer must not name the wrong one.
+        {"name": "pd_within_appetite", "value": pd_exact,
          "threshold": meta["offer_max_pd"], "comparator": "<=",
-         "pass": bool(float(li["pd"]) <= meta["offer_max_pd"])},
+         "pass": bool(pd_exact <= meta["offer_max_pd"])},
         {"name": "amount_positive", "value": float(li["recommended_amount"]),
          "threshold": 0.0, "comparator": ">",
          "pass": bool(float(li["recommended_amount"]) > 0)},

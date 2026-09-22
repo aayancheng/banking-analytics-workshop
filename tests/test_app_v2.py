@@ -568,6 +568,28 @@ def test_line_increase_matches_the_batch_pipeline(client, booked_sample_ids):
         assert v2["incremental"]["roe"] == pytest.approx(v1["incremental_roe"], abs=6e-5), bid
 
 
+def test_every_clause_agrees_with_the_module_that_computed_it(client):
+    """Whole book, clause by clause -- not just the verdict.
+
+    `eligible == all(pass)` is necessary but NOT sufficient: on BIZ101719 the
+    pd_within_appetite clause read PASS from the rounded pd while candidates had
+    excluded the loan for exactly that reason, and the test stayed green because two
+    other clauses also failed. The verdict was right and the REASON was wrong, which
+    on a reason-code screen is the defect that matters."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    meta = st.li_meta
+    for bid in st.li.index:
+        e = li_mod.line_increase_detail(st, bid)["eligibility"]
+        by = {c["name"]: c for c in e["clauses"]}
+        exact_pd = float(st.scores.loc[bid, "pd"])
+        assert by["pd_within_appetite"]["pass"] == (exact_pd <= meta["offer_max_pd"]), bid
+        assert by["prob_above_threshold"]["pass"] == (
+            float(st.li.loc[bid, "prob"]) >= meta["offer_threshold"]), bid
+        assert by["amount_positive"]["pass"] == (
+            float(st.li.loc[bid, "recommended_amount"]) > 0), bid
+
+
 def test_clears_hurdle_matches_the_batch_on_every_loan_with_an_amount(client):
     """Whole book. The flip this guards happens on exactly ONE of 1,243 loans, so a
     40-loan sample cannot see it -- the same blindness that let the eligibility
