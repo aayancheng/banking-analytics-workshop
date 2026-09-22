@@ -221,8 +221,11 @@ Expected: both PASS.
 Run: `PYTHONPATH=. .venv/bin/python verify.py | tail -3`
 Expected: the same result as before this task — no new failures.
 
-Run: `git diff --stat app/main.py`
-Expected: `4 insertions(+)`, 0 deletions. If deletions appear, v1 was modified — revert and redo.
+Run: `git diff --stat HEAD -- app/main.py`
+Expected: `4 insertions(+)`, 0 deletions. Diff against `HEAD` explicitly — bare
+`git diff` compares the working tree to the index, so once anything is staged or
+committed it prints nothing and this check passes no matter what you changed.
+If deletions appear, v1 was modified — revert and redo.
 
 - [ ] **Step 9: Commit**
 
@@ -2759,8 +2762,14 @@ Expected: passes, same as before.
 Then prove the guard holds where `app/v2` is absent, in a clean clone at a tag —
 a worktree is not good enough, it carries `main`'s files:
 
+Clone the **main repository path**, not this worktree: a worktree's `.git` is a file
+and its HEAD is the feature branch, so `git clone .` here would sweep the wrong tree
+and leave the stage-tag guarantee unverified.
+
 ```bash
-rm -rf /tmp/v2sweep && git clone . /tmp/v2sweep && cd /tmp/v2sweep
+rm -rf /tmp/v2sweep
+git clone "$(git rev-parse --path-format=absolute --git-common-dir | sed 's;/\.git$;;')" /tmp/v2sweep
+cd /tmp/v2sweep
 python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt
 for t in stage-3 stage-4 stage-5; do
   git checkout -q $t && echo -n "$t: " && .venv/bin/python verify.py | tail -1
@@ -2826,11 +2835,14 @@ v2 is the demo artifact for it.
 ```bash
 PYTHONPATH=. .venv/bin/python -m pytest -q tests
 PYTHONPATH=. .venv/bin/python verify.py | tail -2
-git diff --stat app/main.py
+git diff --stat $(git merge-base main HEAD) HEAD -- app/main.py
 ```
 
-Expected: all tests pass; verify.py unchanged from baseline; `app/main.py` still
-shows 4 insertions and 0 deletions across the whole branch.
+Expected: all tests pass; `verify.py` reports `Stage 5 verified` exactly as the
+pre-v2 baseline did; `app/main.py` shows 4 insertions and 0 deletions **across the
+whole branch**. The explicit merge-base range matters: bare `git diff` compares the
+working tree to the index and prints nothing once the work is committed, so it would
+pass however badly v1 had been mangled.
 
 - [ ] **Step 7: Commit**
 
