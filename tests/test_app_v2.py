@@ -84,3 +84,27 @@ def test_on_book_filters_return_the_count_their_facet_advertises(client):
                              params={facet: str(v).lower()}).json()["total"]
             assert got == advertised[str(v).lower()], f"{facet}={v}"
         assert sum(advertised.values()) == 8336, facet
+
+
+def test_header_of_a_booked_loan(client):
+    h = client.get("/api/v2/loan/BIZ100002").json()
+    assert h["business_id"] == "BIZ100002"
+    assert h["identity"]["industry"] == "Transport"
+    assert h["terms"]["requested_amount"] == 209000.0
+    assert h["booked"] is True
+    assert h["decision"] in ("Approve", "Refer", "Decline")
+    assert 300 <= h["score"]["business_score"] <= 850
+    assert set(h["modules_present"]) == {"score", "adjudication", "pricing",
+                                         "ews", "line_increase"}
+
+
+def test_header_of_an_unbooked_applicant(client):
+    """Not booked is not an error. Only the two application-time modules apply."""
+    unbooked = client.get("/api/v2/loans", params={"booked": "false"}).json()["loans"][0]
+    h = client.get(f"/api/v2/loan/{unbooked['business_id']}").json()
+    assert h["booked"] is False
+    assert set(h["modules_present"]) == {"score", "adjudication"}
+
+
+def test_unknown_id_is_404_not_500(client):
+    assert client.get("/api/v2/loan/NOPE").status_code == 404

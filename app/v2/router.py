@@ -4,11 +4,20 @@ Read endpoints assemble one loan's explanation on demand. What-if endpoints take
 overrides body and call the same module function the batch pipeline calls, so an
 empty override body must reproduce the batch numbers exactly.
 """
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 
-from app.v2 import loans
+from app.v2 import explain, loans
 
 router = APIRouter(prefix="/api/v2", tags=["v2"])
+
+
+def _guard(fn, app_state, business_id, *rest):
+    """Every loan endpoint turns an unknown id into a 404 the same way. The extra
+    args carry a what-if overrides body once Task 5 adds one."""
+    try:
+        return fn(app_state, business_id, *rest)
+    except KeyError:
+        raise HTTPException(404, f"unknown business_id {business_id}")
 
 
 @router.get("/health")
@@ -37,3 +46,8 @@ def loan_list(request: Request, decision: str | None = None, score_band: str | N
                         score_band=score_band, industry=industry, region=region,
                         booked=booked, ews_tier=ews_tier, mispriced=mispriced,
                         li_eligible=li_eligible, q=q, limit=min(limit, 500))
+
+
+@router.get("/loan/{business_id}")
+def loan_header(request: Request, business_id: str):
+    return _guard(explain.header, request.app.state, business_id)
