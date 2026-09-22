@@ -527,8 +527,23 @@ UI renders as "never funded" rather than as an error.
 from __future__ import annotations
 
 
+class UnknownLoan(KeyError):
+    """The business_id is not in the population.
+
+    A dedicated type, rather than a bare KeyError, because the router turns this into
+    a 404. Every other KeyError raised inside a detail function -- a renamed column, a
+    typo in a metadata path -- is a bug and must surface as a 500 with a traceback, not
+    as "unknown business_id" for a loan the user can see in the dropdown.
+    """
+
+
 def _row(app_state, business_id: str):
-    return app_state.profiles.loc[business_id]   # raises KeyError if unknown
+    """The profile row, or UnknownLoan. Every entry point looks a loan up through
+    this, which is what makes the narrow catch in the router safe."""
+    try:
+        return app_state.profiles.loc[business_id]
+    except KeyError:
+        raise UnknownLoan(business_id) from None
 
 
 def header(app_state, business_id: str) -> dict:
@@ -570,10 +585,15 @@ from app.v2 import explain, loans
 
 def _guard(fn, app_state, business_id, *rest):
     """Every loan endpoint turns an unknown id into a 404 the same way. The extra
-    args carry a what-if overrides body once Task 5 adds one."""
+    args carry a what-if overrides body once Task 5 adds one.
+
+    Catches only UnknownLoan, never bare KeyError: a KeyError from anywhere else in a
+    detail function is a bug and must reach the client as a 500 with a traceback.
+    Reporting it as 404 would tell the demo audience a loan does not exist while it
+    sits in the dropdown in front of them."""
     try:
         return fn(app_state, business_id, *rest)
-    except KeyError:
+    except explain.UnknownLoan:
         raise HTTPException(404, f"unknown business_id {business_id}")
 
 
@@ -1339,7 +1359,8 @@ def _book_under(app_state, market: MarketAssumptions) -> dict:
 def pricing_whatif(app_state, business_id: str, overrides: PricingOverrides):
     from app.v2 import explain
 
-    if not bool(app_state.profiles.loc[business_id, "booked"]):
+    # via _row(), so an unknown id raises UnknownLoan and the router answers 404
+    if not bool(explain._row(app_state, business_id)["booked"]):
         return None
     market = overrides.market()
     out = explain.price_one(app_state, business_id, market, overrides.quoted_rate)
@@ -1650,7 +1671,8 @@ class EwsOverrides(BaseModel):
 def ews_whatif(app_state, business_id: str, overrides: EwsOverrides):
     from app.v2 import explain
 
-    if not bool(app_state.profiles.loc[business_id, "booked"]):
+    # via _row(), so an unknown id raises UnknownLoan and the router answers 404
+    if not bool(explain._row(app_state, business_id)["booked"]):
         return None
     ews = app_state.ews
     tiers = overrides.tiers(app_state.ews_meta["tiers"])
