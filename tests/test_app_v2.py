@@ -176,10 +176,16 @@ def test_shap_is_exactly_additive(client, sample_ids):
 
 def test_ledger_identities_hold_at_the_pd_extremes(client):
     """The tails are where rounding a PD before recomputing its logit does the most
-    damage -- 5.85e-4 on the lowest-PD applicant, 585x the tolerance."""
+    damage -- 5.85e-4 on the lowest-PD applicant, 585x the tolerance.
+
+    The IDs are hardcoded because they ARE the measured extremes: BIZ101650 has the
+    population's minimum modelled PD (0.000419) and BIZ111827 its maximum (0.991464).
+    Do not swap these for the first and last rows of /api/v2/loans -- that endpoint
+    sorts by business_id and does not even return pd, so it would silently test two
+    ordinary mid-book loans while claiming to test the tails.
+    """
     import math
-    lo = client.get("/api/v2/loans", params={"limit": 500}).json()["loans"]
-    for bid in (lo[0]["business_id"], lo[-1]["business_id"]):
+    for bid in ("BIZ101650", "BIZ111827"):
         led = client.get(f"/api/v2/loan/{bid}/decision").json()["score_ledger"]
         assert led["logit_pd"] == pytest.approx(
             math.log(led["pd"] / (1 - led["pd"])), abs=1e-6), bid
@@ -208,3 +214,35 @@ def test_decision_endpoint_matches_the_batch_pipeline(client, sample_ids):
         v2 = client.get(f"/api/v2/loan/{bid}/decision").json()
         assert v1["decision"] == v2["decision"], bid
         assert sorted(v1["rule_hits"]) == sorted(v2["rule_hits"]), bid
+
+
+def test_decision_whatif_with_no_overrides_reproduces_the_batch_pipeline(client):
+    """THE invariant test. If this ever fails, the demo is lying: the what-if and the
+    production pipeline have drifted apart."""
+    ids = [l["business_id"] for l in
+           client.get("/api/v2/loans", params={"limit": 25}).json()["loans"]]
+    for bid in ids:
+        batch = client.get(f"/api/adjudicate/{bid}").json()
+        live = client.post(f"/api/v2/loan/{bid}/decision/whatif", json={}).json()
+        assert live["decision"] == batch["decision"], bid
+        assert sorted(live["rule_hits"]) == sorted(batch["rule_hits"]), bid
+
+
+def test_decision_whatif_book_mix_sums_to_the_population(client):
+    r = client.post("/api/v2/loan/BIZ100002/decision/whatif", json={}).json()
+    assert sum(r["book_mix"].values()) == 12000
+
+
+def test_dragging_t_low_to_zero_removes_every_approval(client):
+    r = client.post("/api/v2/loan/BIZ100002/decision/whatif",
+                    json={"t_low": 0.0}).json()
+    assert r["book_mix"].get("Approve", 0) == 0
+    assert r["flipped_count"] > 0
+
+
+def test_whatif_rejects_out_of_range_overrides(client):
+    """A slider that silently clamps produces a number that looks real and is not."""
+    assert client.post("/api/v2/loan/BIZ100002/decision/whatif",
+                       json={"t_low": 1.5}).status_code == 422
+    assert client.post("/api/v2/loan/BIZ100002/decision/whatif",
+                       json={"dscr_floor": -1}).status_code == 422

@@ -6,7 +6,7 @@ empty override body must reproduce the batch numbers exactly.
 """
 from fastapi import APIRouter, HTTPException, Request
 
-from app.v2 import explain, loans
+from app.v2 import explain, loans, whatif
 
 router = APIRouter(prefix="/api/v2", tags=["v2"])
 
@@ -62,3 +62,9 @@ def loan_header(request: Request, business_id: str):
 @router.get("/loan/{business_id}/decision")
 def loan_decision(request: Request, business_id: str):
     return _guard(explain.decision_detail, request.app.state, business_id)
+
+
+@router.post("/loan/{business_id}/decision/whatif")
+def decision_whatif(request: Request, business_id: str,
+                    overrides: whatif.DecisionOverrides):
+    return _guard(whatif.decision_whatif, request.app.state, business_id, overrides)
