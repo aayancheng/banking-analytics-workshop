@@ -1240,7 +1240,26 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 6: Pricing tab read path
 
 **Files:**
+- Create: `app/v2/pricing.py`
 - Modify: `app/v2/explain.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+
+**File structure.** `price_one` and `pricing_detail` live in `app/v2/pricing.py`,
+following the pattern Task 4 set with `ledgers.py`: one module per concern. `explain.py`
+keeps the shared primitives (`UnknownLoan`, `_row`, `_booked_row`, `header`) and
+`decision_detail`. Tasks 8 and 10 follow with `ews.py` and `line_increase.py`. Without
+this, `explain.py` would take three more detail functions and land near 300 lines.
+
+**Add `_booked_row` to `explain.py`** — Tasks 8 and 10 reuse it rather than repeating
+the fetch-row / check-booked / return-None dance a third and fourth time:
+
+```python
+def _booked_row(app_state, business_id: str):
+    """(profile_row, booked). Unknown id raises UnknownLoan so the router answers 404;
+    an applicant that was never funded returns booked=False, which every on-book detail
+    function turns into a null payload rather than an error."""
+    p = _row(app_state, business_id)
+    return p, bool(p["booked"])
+```
 
 **Interfaces:**
 - Produces: `explain.pricing_detail(app_state, business_id) -> dict | None` with `ead`, `pd`, `rates{quoted,break_even,hurdle_clearing,recommended}`, `waterfall[]` (each line as `{line, dollars, bps}`), `verdict{roe,raroc,clears_hurdle,rate_shortfall_bps,roe_hurdle}`, `market`.
