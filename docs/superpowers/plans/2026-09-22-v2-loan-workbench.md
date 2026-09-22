@@ -263,6 +263,22 @@ def test_facets_cover_every_filter(client):
     assert {o["value"] for o in f["decision"]} == {"Approve", "Refer", "Decline"}
     assert {o["value"] for o in f["score_band"]} == {"AAA", "A", "B", "C", "D"}
     assert sum(o["count"] for o in f["decision"]) == 12000
+    # On-book facets are scoped to the booked population, not the applicant one.
+    for on_book in ("mispriced", "ews_tier", "li_eligible"):
+        assert sum(o["count"] for o in f[on_book]) == 8336, on_book
+
+
+def test_on_book_filters_return_the_count_their_facet_advertises(client):
+    """The bug this guards: coercing the unbooked null to False made
+    mispriced=false return 6,198 while its own facet said 2,534."""
+    f = client.get("/api/v2/filters").json()
+    for facet, values in (("mispriced", (True, False)), ("li_eligible", (True, False))):
+        advertised = {str(o["value"]).lower(): o["count"] for o in f[facet]}
+        for v in values:
+            got = client.get("/api/v2/loans",
+                             params={facet: str(v).lower()}).json()["total"]
+            assert got == advertised[str(v).lower()], f"{facet}={v}"
+        assert sum(advertised.values()) == 8336, facet
 
 
 def test_search_unfiltered_reports_true_total_and_caps_the_list(client):
@@ -375,7 +391,14 @@ def search(index: pd.DataFrame, *, decision=None, score_band=None, industry=None
                      ("li_eligible", li_eligible)):
         b = _as_bool(val)
         if b is not None:
-            m &= index[col].fillna(False).astype(bool) == b
+            # NOT fillna(False): an unbooked applicant was never priced and is
+            # neither mispriced nor correctly priced. Coercing that null to False
+            # would make `mispriced=false` partition all 12,000 applicants while the
+            # facet endpoint reports it over the 8,336 booked -- the dropdown would
+            # read "False (2,534)" and return 6,198. A filter must return the count
+            # its own facet advertises.
+            vals = index[col]
+            m &= vals.notna() & (vals.fillna(False).astype(bool) == b)
     if q:
         m &= index.index.str.contains(str(q).strip(), case=False, regex=False)
 
