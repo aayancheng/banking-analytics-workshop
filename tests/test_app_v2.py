@@ -108,3 +108,18 @@ def test_header_of_an_unbooked_applicant(client):
 
 def test_unknown_id_is_404_not_500(client):
     assert client.get("/api/v2/loan/NOPE").status_code == 404
+
+
+def test_internal_keyerror_does_not_become_a_404(client, monkeypatch):
+    """_guard must catch only explain.UnknownLoan. A bare KeyError raised inside a
+    detail function -- a renamed column, a typo in a metadata path -- is a bug, and
+    reporting it as "unknown business_id" would hide it as a 404 for a loan the demo
+    audience can see sitting in the dropdown."""
+    from app.v2 import explain
+
+    def boom(app_state, business_id, *rest):
+        raise KeyError("industry")
+
+    monkeypatch.setattr(explain, "header", boom)
+    with pytest.raises(KeyError):
+        client.get("/api/v2/loan/BIZ100002")

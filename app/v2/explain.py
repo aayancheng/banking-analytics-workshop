@@ -7,8 +7,23 @@ UI renders as "never funded" rather than as an error.
 from __future__ import annotations
 
 
+class UnknownLoan(KeyError):
+    """The business_id is not in the population.
+
+    A dedicated type, rather than a bare KeyError, because the router turns this into
+    a 404. Every other KeyError raised inside a detail function -- a renamed column, a
+    typo in a metadata path -- is a bug and must surface as a 500 with a traceback, not
+    as "unknown business_id" for a loan the user can see in the dropdown.
+    """
+
+
 def _row(app_state, business_id: str):
-    return app_state.profiles.loc[business_id]   # raises KeyError if unknown
+    """The profile row, or UnknownLoan. Every entry point looks a loan up through
+    this, which is what makes the narrow catch in the router safe."""
+    try:
+        return app_state.profiles.loc[business_id]
+    except KeyError:
+        raise UnknownLoan(business_id) from None
 
 
 def header(app_state, business_id: str) -> dict:

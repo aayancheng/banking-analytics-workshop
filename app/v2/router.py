@@ -13,10 +13,16 @@ router = APIRouter(prefix="/api/v2", tags=["v2"])
 
 def _guard(fn, app_state, business_id, *rest):
     """Every loan endpoint turns an unknown id into a 404 the same way. The extra
-    args carry a what-if overrides body once Task 5 adds one."""
+    args carry a what-if overrides body once Task 5 adds one.
+
+    Catches only UnknownLoan, never bare KeyError: a KeyError from anywhere else in a
+    detail function is a bug and must reach the client as a 500 with a traceback.
+    Reporting it as 404 would tell the demo audience a loan does not exist while it
+    sits in the dropdown in front of them.
+    """
     try:
         return fn(app_state, business_id, *rest)
-    except KeyError:
+    except explain.UnknownLoan:
         raise HTTPException(404, f"unknown business_id {business_id}")
 
 
