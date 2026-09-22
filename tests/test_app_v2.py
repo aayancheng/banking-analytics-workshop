@@ -325,10 +325,16 @@ def test_pricing_whatif_with_no_overrides_reproduces_the_batch_pipeline(client, 
 
 
 def test_pricing_whatif_book_matches_the_committed_summary(client):
+    """All four fields, not just the two that are easiest to compare. n_clears and
+    mispriced_ead currently match exactly, and nothing would catch a regression in
+    either -- an off-by-one in _book_under's clears mask would move both and leave
+    n and share_clears looking fine."""
     summary = client.get("/api/pricing/summary").json()
-    live = client.post("/api/v2/loan/BIZ100002/pricing/whatif", json={}).json()
-    assert live["book"]["n"] == summary["n"]
-    assert live["book"]["share_clears"] == pytest.approx(summary["share_clears"], abs=1e-4)
+    live = client.post("/api/v2/loan/BIZ100002/pricing/whatif", json={}).json()["book"]
+    assert live["n"] == summary["n"]
+    assert live["n_clears"] == summary["n_clears"]
+    assert live["share_clears"] == pytest.approx(summary["share_clears"], abs=1e-4)
+    assert live["mispriced_ead"] == pytest.approx(summary["mispriced_ead"], rel=1e-9)
 
 
 def test_raising_lgd_hurts_the_book(client):
