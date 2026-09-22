@@ -29,6 +29,14 @@ def _row(app_state, business_id: str):
         raise UnknownLoan(business_id) from None
 
 
+def _booked_row(app_state, business_id: str):
+    """(profile_row, booked). Unknown id raises UnknownLoan so the router answers 404;
+    an applicant that was never funded returns booked=False, which every on-book detail
+    function turns into a null payload rather than an error."""
+    p = _row(app_state, business_id)
+    return p, bool(p["booked"])
+
+
 def header(app_state, business_id: str) -> dict:
     p = _row(app_state, business_id)
     s = app_state.scores.loc[business_id]

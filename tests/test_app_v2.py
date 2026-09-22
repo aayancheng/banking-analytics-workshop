@@ -266,3 +266,48 @@ def test_whatif_rejects_an_inverted_pd_band(client):
 def test_whatif_rejects_an_inverted_dscr_band(client):
     r = client.post("/api/v2/loan/BIZ100002/decision/whatif", json={"dscr_floor": 5.0})
     assert r.status_code == 422, r.json()
+
+
+WATERFALL_LINES = ["interest_income", "cost_of_funds", "expected_loss",
+                   "operating_cost", "pre_tax_profit", "tax", "net_income",
+                   "allocated_equity"]
+
+
+@pytest.fixture(scope="module")
+def booked_sample_ids(client):
+    """sample_ids is drawn from the unfiltered (12,000-applicant) list and can include
+    unbooked ids; pricing is only defined for the 8,336 booked, so this fixture filters
+    to booked from the start rather than filtering sample_ids down per-test."""
+    return [l["business_id"] for l in
+            client.get("/api/v2/loans", params={"booked": "true", "limit": 40}).json()["loans"]]
+
+
+def test_pricing_detail_has_every_waterfall_line_in_dollars_and_bps(client, booked_sample_ids):
+    for bid in booked_sample_ids:
+        p = client.get(f"/api/v2/loan/{bid}/pricing").json()
+        assert [w["line"] for w in p["waterfall"]] == WATERFALL_LINES, bid
+        ead = p["ead"]
+        for w in p["waterfall"]:
+            assert w["bps"] == pytest.approx(w["dollars"] / ead * 10_000, abs=1e-6), bid
+
+
+def test_pricing_detail_matches_the_batch_priced_book(client, booked_sample_ids):
+    for bid in booked_sample_ids:
+        v1 = client.get(f"/api/pricing/{bid}").json()
+        v2 = client.get(f"/api/v2/loan/{bid}/pricing").json()
+        assert v2["verdict"]["roe"] == pytest.approx(v1["roe_at_quoted"], abs=1e-9), bid
+        assert v2["rates"]["recommended"] == pytest.approx(v1["recommended_rate"], abs=1e-9), bid
+        assert v2["verdict"]["clears_hurdle"] == v1["clears_hurdle"], bid
+
+
+def test_rate_ladder_is_ordered(client, booked_sample_ids):
+    for bid in booked_sample_ids:
+        r = client.get(f"/api/v2/loan/{bid}/pricing").json()["rates"]
+        assert r["break_even"] < r["hurdle_clearing"] < r["recommended"], bid
+
+
+def test_pricing_is_null_for_an_unbooked_applicant(client):
+    unbooked = client.get("/api/v2/loans", params={"booked": "false"}).json()["loans"][0]
+    r = client.get(f"/api/v2/loan/{unbooked['business_id']}/pricing")
+    assert r.status_code == 200
+    assert r.json() is None
