@@ -696,10 +696,16 @@ def test_shap_is_exactly_additive(client, sample_ids):
 
 def test_ledger_identities_hold_at_the_pd_extremes(client):
     """The tails are where rounding a PD before recomputing its logit does the most
-    damage -- 5.85e-4 on the lowest-PD applicant, 585x the tolerance."""
+    damage -- 5.85e-4 on the lowest-PD applicant, 585x the tolerance.
+
+    The IDs are hardcoded because they ARE the measured extremes: BIZ101650 has the
+    population's minimum modelled PD (0.000419) and BIZ111827 its maximum (0.991464).
+    Do not swap these for the first and last rows of /api/v2/loans -- that endpoint
+    sorts by business_id and does not even return pd, so it would silently test two
+    ordinary mid-book loans while claiming to test the tails.
+    """
     import math
-    lo = client.get("/api/v2/loans", params={"limit": 500}).json()["loans"]
-    for bid in (lo[0]["business_id"], lo[-1]["business_id"]):
+    for bid in ("BIZ101650", "BIZ111827"):
         led = client.get(f"/api/v2/loan/{bid}/decision").json()["score_ledger"]
         assert led["logit_pd"] == pytest.approx(
             math.log(led["pd"] / (1 - led["pd"])), abs=1e-6), bid
