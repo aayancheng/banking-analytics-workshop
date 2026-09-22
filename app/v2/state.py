@@ -61,4 +61,11 @@ def build_state(app_state) -> V2State:
         json.loads((ROOT / "adjudication" / "models" / "policy_config.json").read_text()))
     ews_feats = compute_ews_features(pd.read_parquet(RAW / "portfolio.parquet"))
     ews_feats = ews_feats.set_index(ews_feats["business_id"].astype(str))
+    # ews_whatif re-tiers positionally against app_state.ews, so the two frames must
+    # stay in the same ORDER, not merely hold the same ids. They do today because both
+    # derive from this one call, but nothing else enforces it and a silent reorder
+    # would return another loan's tier under the right business_id.
+    assert ews_feats.index.equals(app_state.ews.index), (
+        "ews_feats and app.state.ews are misaligned; v2 would report the wrong "
+        "loan's risk tier")
     return V2State(scorecard, score_X, adj_X, adj_explainer, panel, index, ews_feats)
