@@ -6,7 +6,7 @@ empty override body must reproduce the batch numbers exactly.
 """
 from fastapi import APIRouter, HTTPException, Request
 
-from app.v2 import explain, ews, ews_whatif, loans, pricing, whatif
+from app.v2 import explain, ews, ews_whatif, line_increase, loans, pricing, whatif
 
 router = APIRouter(prefix="/api/v2", tags=["v2"])
 
@@ -94,3 +94,8 @@ def ews_whatif_endpoint(request: Request, business_id: str,
     # Named _endpoint, not ews_whatif: that name is the imported module's, and a
     # module-level def would shadow it, breaking the ews_whatif.ews_whatif call below.
     return _guard(ews_whatif.ews_whatif, request.app.state, business_id, overrides)
+
+
+@router.get("/loan/{business_id}/line-increase")
+def loan_line_increase(request: Request, business_id: str):
+    return _guard(line_increase.line_increase_detail, request.app.state, business_id)

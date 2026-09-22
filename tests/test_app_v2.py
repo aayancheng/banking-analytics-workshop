@@ -505,3 +505,62 @@ def test_ews_whatif_is_null_for_an_unbooked_applicant(client):
 def test_ews_whatif_404s_for_an_unknown_business_id(client):
     r = client.post("/api/v2/loan/BIZ999999/ews/whatif", json={})
     assert r.status_code == 404
+
+
+def test_line_increase_shows_which_cap_binds(client):
+    li = client.get("/api/v2/loan/BIZ100002/line-increase").json()
+    assert [c["name"] for c in li["caps"]] == [
+        "headroom_to_target_util", "pct_cap", "revenue_ceiling"]
+    binding = [c for c in li["caps"] if c["binding"]]
+    assert len(binding) == 1
+
+
+def test_eligibility_is_four_clauses_not_one_number(client):
+    """The documented trap: 95 accounts are eligible, 1,243 have a positive
+    recommended amount. Showing the clauses is what makes the gap legible."""
+    li = client.get("/api/v2/loan/BIZ100002/line-increase").json()
+    names = [c["name"] for c in li["eligibility"]["clauses"]]
+    assert names == ["prob_above_threshold", "pd_within_appetite",
+                     "amount_positive", "clears_hurdle"]
+    assert li["eligibility"]["eligible"] == all(
+        c["pass"] for c in li["eligibility"]["clauses"])
+
+
+def test_every_eligibility_verdict_can_explain_itself(client, booked_sample_ids):
+    """The eligibility rule is an AND of four clauses (line_increase/src/candidates.py:
+    `prob[i] >= threshold and pd_i <= max_pd and amt > 0 and r["clears_hurdle"]`), the
+    same shape as EWS's compound DELINQUENCY trigger but ANDed instead of ORed.
+    `eligible` must always equal the AND of the four `pass` flags shown on screen --
+    if it ever does not, the screen contradicts itself the way "value 2, threshold 30,
+    FIRED" did for EWS. Looped over 40 booked loans, not one hardcoded id."""
+    for bid in booked_sample_ids:
+        e = client.get(f"/api/v2/loan/{bid}/line-increase").json()["eligibility"]
+        assert e["eligible"] == all(c["pass"] for c in e["clauses"]), (bid, e)
+
+
+def test_line_increase_matches_the_batch_pipeline(client, booked_sample_ids):
+    """Looped over booked_sample_ids, not one hardcoded id -- Task 4 defects survived
+    a single-loan identity assertion."""
+    for bid in booked_sample_ids:
+        v1 = client.get(f"/api/line-increase/{bid}").json()
+        v2 = client.get(f"/api/v2/loan/{bid}/line-increase").json()
+        assert v2["recommended_amount"] == pytest.approx(v1["recommended_amount"], abs=1e-6), bid
+        assert v2["eligibility"]["eligible"] == v1["eligible"], bid
+        assert v2["incremental"]["roe"] == pytest.approx(v1["incremental_roe"], abs=1e-4), bid
+
+
+def test_eligible_count_is_95_not_the_positive_amount_count(client):
+    """Guards the gotcha directly."""
+    eligible = client.get("/api/v2/loans", params={"li_eligible": "true"}).json()
+    assert eligible["total"] == 95
+
+
+def test_line_increase_is_null_for_an_unbooked_applicant(client):
+    unbooked = client.get("/api/v2/loans", params={"booked": "false"}).json()["loans"][0]
+    assert client.get(
+        f"/api/v2/loan/{unbooked['business_id']}/line-increase").json() is None
+
+
+def test_line_increase_404s_for_an_unknown_business_id(client):
+    r = client.get("/api/v2/loan/BIZ999999/line-increase")
+    assert r.status_code == 404
