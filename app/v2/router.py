@@ -86,3 +86,8 @@ def pricing_whatif(request: Request, business_id: str,
 @router.get("/loan/{business_id}/ews")
 def loan_ews(request: Request, business_id: str):
     return _guard(ews.ews_detail, request.app.state, business_id)
+
+
+@router.post("/loan/{business_id}/ews/whatif")
+def ews_whatif(request: Request, business_id: str, overrides: ews.EwsOverrides):
+    return _guard(ews.ews_whatif, request.app.state, business_id, overrides)

@@ -444,3 +444,64 @@ def test_ews_is_null_for_an_unbooked_applicant(client):
 def test_ews_404s_for_an_unknown_business_id(client):
     r = client.get("/api/v2/loan/BIZ999999/ews")
     assert r.status_code == 404
+
+
+def test_ews_whatif_with_no_overrides_reproduces_the_batch_pipeline(client, booked_sample_ids):
+    for bid in booked_sample_ids:
+        batch = client.get(f"/api/ews/{bid}").json()
+        live = client.post(f"/api/v2/loan/{bid}/ews/whatif", json={}).json()
+        assert live["risk_tier"] == batch["risk_tier"], bid
+        assert sorted(t["name"] for t in live["triggers"] if t["fired"]) == \
+               sorted(batch["triggers"]), bid
+
+
+def test_ews_whatif_book_tiers_match_the_batch_summary(client):
+    summary = client.get("/api/ews/summary").json()
+    live = client.post("/api/v2/loan/BIZ100002/ews/whatif", json={}).json()
+    assert live["book_tiers"] == summary["tiers"]
+
+
+def test_lowering_the_high_cutoff_grows_the_high_tier(client):
+    base = client.post("/api/v2/loan/BIZ100002/ews/whatif", json={}).json()
+    loose = client.post("/api/v2/loan/BIZ100002/ews/whatif",
+                        json={"t_high": 0.25}).json()
+    assert loose["book_tiers"]["High"] > base["book_tiers"]["High"]
+
+
+def test_lowering_a_trigger_threshold_fires_it_for_more_accounts(client):
+    loose = client.post("/api/v2/loan/BIZ100002/ews/whatif",
+                        json={"high_utilization": 0.10}).json()
+    hu = next(t for t in loose["triggers"] if t["name"] == "HIGH_UTILIZATION")
+    assert hu["clauses"][0]["threshold"] == 0.10
+    assert loose["book_trigger_counts"]["HIGH_UTILIZATION"] > 0
+
+
+def test_ews_whatif_rejects_out_of_range(client):
+    assert client.post("/api/v2/loan/BIZ100002/ews/whatif",
+                       json={"t_high": 2.0}).status_code == 422
+
+
+def test_ews_whatif_rejects_an_inverted_tier_band(client):
+    """Per-field bounds are not enough. t_med=0.9 is in range on its own, but merged
+    with the committed t_high of 0.5073 it inverts the band and empties the Medium
+    tier -- the same trap DecisionOverrides guards against for t_low/t_high."""
+    r = client.post("/api/v2/loan/BIZ100002/ews/whatif", json={"t_med": 0.9})
+    assert r.status_code == 422, r.json()
+    assert "t_high" in r.json()["detail"]
+    # Explicitly-paired values that are coherent must still be accepted.
+    ok = client.post("/api/v2/loan/BIZ100002/ews/whatif",
+                     json={"t_med": 0.1, "t_high": 0.2})
+    assert ok.status_code == 200
+    assert sum(ok.json()["book_tiers"].values()) == 8336
+
+
+def test_ews_whatif_is_null_for_an_unbooked_applicant(client):
+    unbooked = client.get("/api/v2/loans", params={"booked": "false"}).json()["loans"][0]
+    r = client.post(f"/api/v2/loan/{unbooked['business_id']}/ews/whatif", json={})
+    assert r.status_code == 200
+    assert r.json() is None
+
+
+def test_ews_whatif_404s_for_an_unknown_business_id(client):
+    r = client.post("/api/v2/loan/BIZ999999/ews/whatif", json={})
+    assert r.status_code == 404
