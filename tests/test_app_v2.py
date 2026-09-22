@@ -143,29 +143,68 @@ def test_pd_zones_match_the_committed_policy(client):
     assert d["pd_zones"]["zone"] in ("Approve", "Refer", "Decline")
 
 
-def test_score_ledger_is_exactly_additive(client):
+@pytest.fixture(scope="module")
+def sample_ids(client):
+    """A numeric identity asserted on ONE hardcoded loan passes by luck. BIZ100002's
+    SHAP gap happens to be exactly 0.0 and its PD sits nowhere near the tails, which
+    is why a single-loan version of these tests stayed green while 62 of 120 loans
+    breached the tolerance. Always sample."""
+    return [l["business_id"] for l in
+            client.get("/api/v2/loans", params={"limit": 40}).json()["loans"]]
+
+
+def test_score_ledger_is_exactly_additive(client, sample_ids):
     """intercept + sum(WoE x beta) == logit(pd). This identity is the whole reason a
-    scorecard is explainable, and the screen claims it -- so assert it."""
+    scorecard is explainable, and the screen claims it -- so assert it, on many loans."""
     import math
-    d = client.get("/api/v2/loan/BIZ100002/decision").json()
-    led = d["score_ledger"]
-    total = led["intercept"] + sum(c["contribution"] for c in led["contributions"])
-    assert len(led["contributions"]) == 15
-    assert total == pytest.approx(led["logit_pd"], abs=1e-9)
-    assert led["logit_pd"] == pytest.approx(
-        math.log(led["pd"] / (1 - led["pd"])), abs=1e-6)
+    for bid in sample_ids:
+        led = client.get(f"/api/v2/loan/{bid}/decision").json()["score_ledger"]
+        total = led["intercept"] + sum(c["contribution"] for c in led["contributions"])
+        assert len(led["contributions"]) == 15, bid
+        assert total == pytest.approx(led["logit_pd"], abs=1e-9), bid
+        assert led["logit_pd"] == pytest.approx(
+            math.log(led["pd"] / (1 - led["pd"])), abs=1e-6), bid
 
 
-def test_shap_is_exactly_additive(client):
-    d = client.get("/api/v2/loan/BIZ100002/decision").json()
-    sh = d["shap"]
-    total = sh["base_value"] + sum(c["contribution"] for c in sh["contributions"])
-    assert len(sh["contributions"]) == 21
-    assert total == pytest.approx(sh["logit_pd_model"], abs=1e-6)
+def test_shap_is_exactly_additive(client, sample_ids):
+    for bid in sample_ids:
+        sh = client.get(f"/api/v2/loan/{bid}/decision").json()["shap"]
+        total = sh["base_value"] + sum(c["contribution"] for c in sh["contributions"])
+        assert len(sh["contributions"]) == 21, bid
+        assert total == pytest.approx(sh["logit_pd_model"], abs=1e-6), bid
 
 
-def test_decision_matches_the_batch_pipeline(client):
-    """v2's decision detail must agree with what v1 already decided."""
-    v1 = client.get("/api/adjudicate/BIZ100002").json()
-    v2 = client.get("/api/v2/loan/BIZ100002").json()
-    assert v1["decision"] == v2["decision"]
+def test_ledger_identities_hold_at_the_pd_extremes(client):
+    """The tails are where rounding a PD before recomputing its logit does the most
+    damage -- 5.85e-4 on the lowest-PD applicant, 585x the tolerance."""
+    import math
+    lo = client.get("/api/v2/loans", params={"limit": 500}).json()["loans"]
+    for bid in (lo[0]["business_id"], lo[-1]["business_id"]):
+        led = client.get(f"/api/v2/loan/{bid}/decision").json()["score_ledger"]
+        assert led["logit_pd"] == pytest.approx(
+            math.log(led["pd"] / (1 - led["pd"])), abs=1e-6), bid
+
+
+def test_nearest_flip_can_rank_a_zero_threshold_rule(client):
+    """public_records_cap is committed at 0 and 11,041 of 12,000 applicants sit exactly
+    on it. An earlier version skipped every zero threshold, so the tightest margin a
+    rule can have was invisible on 92% of the book."""
+    nf = client.get("/api/v2/loan/BIZ100002/decision").json()["nearest_flip"]
+    levers = {c["lever"] for c in nf["candidates"]}
+    assert "public_records_cap" in levers
+    pr = next(c for c in nf["candidates"] if c["lever"] == "public_records_cap")
+    assert pr["at_threshold"] is True          # value 0, cap 0
+    assert pr["distance_to_cross"] == 1.0      # one whole record, not zero
+    gaps = [c["gap"] for c in nf["candidates"]]
+    assert gaps == sorted(gaps)                 # candidates come back ranked
+    assert nf["lever"] == nf["candidates"][0]["lever"]
+
+
+def test_decision_endpoint_matches_the_batch_pipeline(client, sample_ids):
+    """v2's DECISION endpoint -- not just the header -- must agree with what v1
+    already decided, and must report the same reasons."""
+    for bid in sample_ids:
+        v1 = client.get(f"/api/adjudicate/{bid}").json()
+        v2 = client.get(f"/api/v2/loan/{bid}/decision").json()
+        assert v1["decision"] == v2["decision"], bid
+        assert sorted(v1["rule_hits"]) == sorted(v2["rule_hits"]), bid

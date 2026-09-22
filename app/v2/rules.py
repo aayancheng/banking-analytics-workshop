@@ -71,23 +71,41 @@ def ledger(profile_row, score_row, config, decision_zone: str) -> dict:
 
 
 def nearest_flip(led: dict, pd_value: float, config) -> dict:
-    """Which single lever is closest to changing this decision, in relative terms.
+    """Which single lever is closest to changing this decision.
 
-    Relative distance so thresholds on different scales compare: a DSCR 0.05 from
-    its floor and a score 30 points from its floor are both ~5%.
+    Ranked by distance-to-cross divided by the rule's own scale, so thresholds on
+    different scales compare. Distance-to-cross is how far this loan's value must move
+    to trip the rule -- for an integer count rule with a `>` comparator sitting exactly
+    on its cap, that is one whole record, not zero.
+
+    A threshold of exactly 0 has no meaningful relative scale, so it falls back to unit
+    scale. It is NEVER dropped. An earlier version skipped every zero threshold, which
+    silently made `public_records_cap` unrankable on 11,041 of the 12,000 applicants --
+    every loan sitting exactly on the cap, which is the tightest margin a rule can have.
     """
+    INTEGER_COUNT_RULES = {"public_records_cap"}
     candidates = []
     for r in led["knockouts"] + led["refer_overrides"]:
-        if not r["applicable"] or r["threshold"] == 0:
+        if not r["applicable"]:
             continue
-        gap = abs(r["value"] - r["threshold"]) / max(abs(r["threshold"]), 1e-9)
-        candidates.append({"lever": r["rule"], "label": r["label"],
-                           "value": r["value"], "threshold": r["threshold"],
-                           "relative_gap": round(gap, 4),
-                           "currently_firing": r["fired"]})
+        distance = abs(r["value"] - r["threshold"])
+        if r["rule"] in INTEGER_COUNT_RULES and r["comparator"] == ">" and not r["fired"]:
+            distance = max(distance, 1.0)   # only trips at the next whole record
+        scale = abs(r["threshold"]) or 1.0
+        candidates.append({
+            "lever": r["rule"], "label": r["label"], "value": r["value"],
+            "threshold": r["threshold"], "distance_to_cross": round(distance, 4),
+            "gap": round(distance / scale, 4), "at_threshold": r["value"] == r["threshold"],
+            "currently_firing": r["fired"],
+        })
     for name, t in (("t_low", float(config.t_low)), ("t_high", float(config.t_high))):
-        gap = abs(pd_value - t) / max(t, 1e-9)
-        candidates.append({"lever": name, "label": f"PD zone cutoff {name}",
-                           "value": round(pd_value, 4), "threshold": t,
-                           "relative_gap": round(gap, 4), "currently_firing": None})
-    return min(candidates, key=lambda c: c["relative_gap"]) if candidates else {}
+        candidates.append({
+            "lever": name, "label": f"PD zone cutoff {name}", "value": pd_value,
+            "threshold": t, "distance_to_cross": round(abs(pd_value - t), 6),
+            "gap": round(abs(pd_value - t) / (abs(t) or 1.0), 4),
+            "at_threshold": False, "currently_firing": None,
+        })
+    if not candidates:
+        return {}
+    ranked = sorted(candidates, key=lambda c: c["gap"])
+    return {**ranked[0], "candidates": ranked}
