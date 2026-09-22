@@ -24,6 +24,8 @@ def _guard(fn, app_state, business_id, *rest):
         return fn(app_state, business_id, *rest)
     except explain.UnknownLoan:
         raise HTTPException(404, f"unknown business_id {business_id}")
+    except whatif.InvalidOverride as e:
+        raise HTTPException(422, str(e))
 
 
 @router.get("/health")

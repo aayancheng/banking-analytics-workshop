@@ -19,6 +19,11 @@ from pydantic import BaseModel, Field
 from adjudication.src.policy import PolicyConfig, decide
 
 
+class InvalidOverride(ValueError):
+    """A combination of overrides that is individually in range but jointly
+    incoherent. The router turns this into a 422, never a 200 with a wrong number."""
+
+
 class DecisionOverrides(BaseModel):
     t_low: float | None = Field(default=None, ge=0.0, le=1.0)
     t_high: float | None = Field(default=None, ge=0.0, le=1.0)
@@ -31,8 +36,26 @@ class DecisionOverrides(BaseModel):
     score_floor: float | None = Field(default=None, ge=300, le=850)
 
     def apply_to(self, config: PolicyConfig) -> PolicyConfig:
+        """Merge overrides onto the committed config, then check the pair-wise
+        constraints Pydantic cannot see.
+
+        Per-field bounds are not enough: `{"t_low": 0.9}` is in range on its own, but
+        merged with the committed t_high of 0.4943 it inverts the PD band. decide()
+        tests `pd <= t_low` first, so the Refer zone silently disappears and the book
+        mix comes back plausible-looking and wrong. The whole point of rejecting an
+        out-of-range slider is to refuse numbers that look real and are not, so the
+        same rule has to cover the combination, not just each field alone.
+        """
         d = config.to_dict()
         d.update({k: v for k, v in self.model_dump().items() if v is not None})
+        if d["t_low"] > d["t_high"]:
+            raise InvalidOverride(
+                f"t_low ({d['t_low']:.4f}) must not exceed t_high ({d['t_high']:.4f}): "
+                "an inverted PD band erases the Refer zone")
+        if d["dscr_floor"] > d["dscr_refer_hi"]:
+            raise InvalidOverride(
+                f"dscr_floor ({d['dscr_floor']}) must not exceed dscr_refer_hi "
+                f"({d['dscr_refer_hi']}): the refer band would be empty")
         return PolicyConfig.from_dict(d)
 
 
