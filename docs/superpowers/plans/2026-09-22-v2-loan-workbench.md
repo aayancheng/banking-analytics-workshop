@@ -595,6 +595,8 @@ def _guard(fn, app_state, business_id, *rest):
         return fn(app_state, business_id, *rest)
     except explain.UnknownLoan:
         raise HTTPException(404, f"unknown business_id {business_id}")
+    except whatif.InvalidOverride as e:
+        raise HTTPException(422, str(e))
 
 
 @router.get("/loan/{business_id}")
@@ -1046,6 +1048,26 @@ def test_whatif_rejects_out_of_range_overrides(client):
                        json={"t_low": 1.5}).status_code == 422
     assert client.post("/api/v2/loan/BIZ100002/decision/whatif",
                        json={"dscr_floor": -1}).status_code == 422
+
+
+def test_whatif_rejects_an_inverted_pd_band(client):
+    """Per-field bounds are not enough. t_low=0.9 is in range on its own, but merged
+    with the committed t_high of 0.4943 it inverts the band: decide() tests
+    `pd <= t_low` first, so the Refer zone vanishes and 643 loans change decision
+    while the response still looks like an ordinary book."""
+    r = client.post("/api/v2/loan/BIZ100002/decision/whatif", json={"t_low": 0.9})
+    assert r.status_code == 422, r.json()
+    assert "t_high" in r.json()["detail"]
+    # Explicitly-paired values that are coherent must still be accepted.
+    ok = client.post("/api/v2/loan/BIZ100002/decision/whatif",
+                     json={"t_low": 0.20, "t_high": 0.60})
+    assert ok.status_code == 200
+    assert sum(ok.json()["book_mix"].values()) == 12000
+
+
+def test_whatif_rejects_an_inverted_dscr_band(client):
+    r = client.post("/api/v2/loan/BIZ100002/decision/whatif", json={"dscr_floor": 5.0})
+    assert r.status_code == 422, r.json()
 ```
 
 - [ ] **Step 2: Run and watch them fail**
@@ -1068,6 +1090,11 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from adjudication.src.policy import PolicyConfig, decide
+
+
+class InvalidOverride(ValueError):
+    """A combination of overrides that is individually in range but jointly
+    incoherent. The router turns this into a 422, never a 200 with a wrong number."""
 from adjudication.src.feature_engineering import ADJ_FEATURE_COLUMNS
 
 
@@ -1083,8 +1110,26 @@ class DecisionOverrides(BaseModel):
     score_floor: float | None = Field(default=None, ge=300, le=850)
 
     def apply_to(self, config: PolicyConfig) -> PolicyConfig:
+        """Merge overrides onto the committed config, then check the pair-wise
+        constraints Pydantic cannot see.
+
+        Per-field bounds are not enough: `{"t_low": 0.9}` is in range on its own, but
+        merged with the committed t_high of 0.4943 it inverts the PD band. decide()
+        tests `pd <= t_low` first, so the Refer zone silently disappears and the book
+        mix comes back plausible-looking and wrong. The whole point of rejecting an
+        out-of-range slider is to refuse numbers that look real and are not, so the
+        same rule has to cover the combination, not just each field alone.
+        """
         d = config.to_dict()
         d.update({k: v for k, v in self.model_dump().items() if v is not None})
+        if d["t_low"] > d["t_high"]:
+            raise InvalidOverride(
+                f"t_low ({d['t_low']:.4f}) must not exceed t_high ({d['t_high']:.4f}): "
+                "an inverted PD band erases the Refer zone")
+        if d["dscr_floor"] > d["dscr_refer_hi"]:
+            raise InvalidOverride(
+                f"dscr_floor ({d['dscr_floor']}) must not exceed dscr_refer_hi "
+                f"({d['dscr_refer_hi']}): the refer band would be empty")
         return PolicyConfig.from_dict(d)
 
 
