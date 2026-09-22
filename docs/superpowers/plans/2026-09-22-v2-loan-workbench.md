@@ -1457,7 +1457,7 @@ def test_pricing_whatif_rejects_out_of_range(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k "pricing_whatif or lgd or quoted_rate"`
 Expected: FAIL with 405/404.
 
-- [ ] **Step 3: Add to `app/v2/whatif.py`**
+- [ ] **Step 3: Write `app/v2/ews_whatif.py`**
 
 ```python
 import numpy as np
@@ -1778,12 +1778,20 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 9: Early-warning what-if
 
 **Files:**
-- Modify: `app/v2/ews.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+- Create: `app/v2/ews_whatif.py`
+- Modify: `app/v2/ews.py` (promote one helper), `app/v2/router.py`, `tests/test_app_v2.py`
 
-**Where this code goes.** `EwsOverrides` and `ews_whatif` join `ews.py` beside the
-read path they share state with — **not** `whatif.py`, which is at 145 of ~150 lines
-after Task 7 and has no room. Import `InvalidOverride` from `app.v2.whatif`; `_guard`
-already turns it into a 422, so the cross-field check below needs no new routing.
+**Where this code goes.** `EwsOverrides` and `ews_whatif` go in a new
+`app/v2/ews_whatif.py`. They cannot go in `whatif.py` (145 of ~150 lines after Task 7),
+and putting them in `ews.py` pushes that file to 181 — over the ceiling, which was
+tried and rejected. The new module imports `InvalidOverride` from `app.v2.whatif` and
+`trigger_rows` from `app.v2.ews`; `_guard` already turns `InvalidOverride` into a 422,
+so no new routing is needed.
+
+`ews.py` renames `_trigger_rows` to **`trigger_rows`** — it is now a genuine public
+interface consumed by another module, and the leading underscore would misdescribe it.
+`_TRIGGER_SPECS` and `_CLAUSE_OPS` stay private; only `trigger_rows` crosses the
+boundary.
 
 **The cross-field trap applies here too.** Task 5 found that per-field Pydantic bounds
 let `{"t_low": 0.9}` through, because it is only incoherent once merged with the
@@ -1792,7 +1800,7 @@ Medium tier entirely. Validate the **merged** tiers in `tiers()` and raise
 `InvalidOverride`, exactly as `DecisionOverrides.apply_to` does.
 
 **Interfaces:**
-- Produces: `whatif.EwsOverrides` (Pydantic, bounded); `whatif.ews_whatif(app_state, business_id, overrides) -> dict | None` with `risk_tier`, `triggers[]`, `book_tiers{High,Medium,Low}`, `tiers`, `trigger_config`.
+- Produces: `ews_whatif.EwsOverrides` (Pydantic, bounded); `ews_whatif.ews_whatif(app_state, business_id, overrides) -> dict | None` with `risk_tier`, `triggers[]`, `book_tiers{High,Medium,Low}`, `tiers`, `trigger_config`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1840,7 +1848,7 @@ def test_ews_whatif_rejects_out_of_range(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k "ews_whatif or cutoff or trigger_threshold"`
 Expected: FAIL with 405/404.
 
-- [ ] **Step 3: Add to `app/v2/whatif.py`**
+- [ ] **Step 3: Write `app/v2/ews_whatif.py`**
 
 ```python
 from shared.config import EWS_TRIGGERS
@@ -1957,6 +1965,13 @@ caching the EWS feature frame on `V2State` in `build_state`:
     from ews.src.feature_engineering import compute_ews_features
     ews_feats = compute_ews_features(pd.read_parquet(RAW / "portfolio.parquet"))
     ews_feats.index = ews_feats["business_id"].astype(str)
+    # ews_whatif re-tiers positionally against app_state.ews, so the two frames must
+    # stay in the same ORDER, not merely hold the same ids. They do today because both
+    # derive from this one call, but nothing else enforces it and a silent reorder
+    # would return another loan's tier under the right business_id.
+    assert ews_feats.index.equals(app_state.ews.index), (
+        "ews_feats and app.state.ews are misaligned; v2 would report the wrong "
+        "loan's risk tier")
 ```
 
 add `ews_feats: pd.DataFrame` to `V2State`, and pass `app_state.v2.ews_feats` to
