@@ -1306,7 +1306,7 @@ def test_pricing_is_null_for_an_unbooked_applicant(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k pricing or ladder`
 Expected: FAIL with 404.
 
-- [ ] **Step 3: Add `pricing_detail` to `app/v2/explain.py`**
+- [ ] **Step 3: Write `app/v2/pricing.py`** (`price_one` + `pricing_detail`; see the file-structure note above — these do NOT go in `explain.py`)
 
 ```python
 from shared.config import MARKET
@@ -1564,7 +1564,8 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 8: Early-warning tab read path
 
 **Files:**
-- Modify: `app/v2/explain.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+- Create: `app/v2/ews.py`
+- Modify: `app/v2/router.py`, `tests/test_app_v2.py`
 
 **Interfaces:**
 - Produces: `explain.ews_detail(app_state, business_id) -> dict | None` with `prob`, `risk_tier`, `tiers`, `triggers[]` (`{name, threshold, value, fired}`), `panel{months[], series{utilization,balance,deposit_inflow,days_past_due,overdraft_count}}`, `drivers[]`, `model_caveat`.
@@ -1619,7 +1620,7 @@ def test_ews_is_null_for_an_unbooked_applicant(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k ews`
 Expected: FAIL with 404.
 
-- [ ] **Step 3: Add `ews_detail` to `app/v2/explain.py`**
+- [ ] **Step 3: Write `app/v2/ews.py`** (`_trigger_rows` + `ews_detail`; one module per concern, as Tasks 4 and 6 established — these do NOT go in `explain.py`)
 
 ```python
 from shared.config import EWS_TRIGGERS
@@ -1915,7 +1916,8 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 10: Line-increase tab read path
 
 **Files:**
-- Modify: `app/v2/explain.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+- Create: `app/v2/line_increase.py`
+- Modify: `app/v2/router.py`, `tests/test_app_v2.py`
 
 **Interfaces:**
 - Produces: `explain.line_increase_detail(app_state, business_id) -> dict | None` with `prob`, `caps[]` (`{name, amount, binding}`), `recommended_amount`, `incremental{ead, waterfall[], roe, clears_hurdle}`, `eligibility{clauses[], eligible}`.
@@ -1968,7 +1970,7 @@ def test_line_increase_is_null_for_an_unbooked_applicant(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k "line_increase or eligib or cap"`
 Expected: FAIL with 404.
 
-- [ ] **Step 3: Add `line_increase_detail` to `app/v2/explain.py`**
+- [ ] **Step 3: Write `app/v2/line_increase.py`** (`_caps` + `line_increase_detail`; one module per concern — these do NOT go in `explain.py`)
 
 ```python
 from shared.config import LINE_INCREASE
