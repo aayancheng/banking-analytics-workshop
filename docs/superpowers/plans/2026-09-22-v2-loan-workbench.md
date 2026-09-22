@@ -1604,7 +1604,7 @@ def test_ews_triggers_show_thresholds_and_values_not_just_names(client):
     assert [c["metric"] for c in delinq["clauses"]] == ["dpd_max", "dpd_recent"]
 
 
-def test_every_fired_trigger_can_explain_itself(client, booked_sample_ids):
+def test_every_fired_trigger_can_explain_itself(client):
     """`fired` is the module's verdict; `met` on each clause is the explanation the
     screen shows. If they ever disagree the screen contradicts itself.
 
@@ -1612,11 +1612,19 @@ def test_every_fired_trigger_can_explain_itself(client, booked_sample_ids):
     made all 4,225 fired accounts -- 50.7% of the book -- render as
     "value 2, threshold 30, FIRED", because every one of them trips the
     `dpd_recent > 0` clause instead. A banker who sees that stops believing every
-    other number on the screen."""
-    for bid in booked_sample_ids:
-        for t in client.get(f"/api/v2/loan/{bid}/ews").json()["triggers"]:
-            met = [c["met"] for c in t["clauses"]]
-            assert t["fired"] == any(met), (bid, t["name"], t["clauses"])
+    other number on the screen.
+
+    WHOLE BOOK, not a sample, and called directly rather than over HTTP. A
+    self-consistency check is only worth having if it covers the rare states, and
+    8,336 accounts x 5 triggers costs 0.5s this way."""
+    from shared.config import EWS_TRIGGERS
+    from app.v2 import ews as ews_mod
+    st = client.app.state
+    for bid in st.ews.index:
+        rows = ews_mod.trigger_rows(st.v2.ews_feats.loc[bid], EWS_TRIGGERS,
+                                    set(st.ews.loc[bid, "triggers"]))
+        for t in rows:
+            assert t["fired"] == any(c["met"] for c in t["clauses"]), (bid, t["name"])
 
 
 def test_ews_fired_triggers_match_the_batch_watchlist(client):
@@ -2028,6 +2036,22 @@ def test_line_increase_shows_which_cap_binds(client):
         "headroom_to_target_util", "pct_cap", "revenue_ceiling"]
     binding = [c for c in li["caps"] if c["binding"]]
     assert len(binding) == 1
+
+
+def test_eligibility_explains_itself_on_every_booked_account(client):
+    """`eligible` is candidates()' verdict; the clauses explain it. They must agree.
+
+    WHOLE BOOK, not a sample. The 40-loan `booked_sample_ids` fixture contains ZERO
+    eligible accounts and only 2 with a positive recommended amount, so a sampled
+    version of this test is structurally blind to the exact states it exists to
+    check -- a comparator flip on one clause surfaces on 57 of 8,336 rows and the
+    sample misses all of them. Called directly rather than over HTTP, all 8,336
+    cost 0.6s."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    for bid in st.li.index:
+        e = li_mod.line_increase_detail(st, bid)["eligibility"]
+        assert e["eligible"] == all(c["pass"] for c in e["clauses"]), (bid, e)
 
 
 def test_eligibility_is_four_clauses_not_one_number(client):
