@@ -19,7 +19,7 @@ before/after.
 
 ## Non-goals
 
-- Replacing or refactoring v1. `app/main.py` gains three lines and nothing else.
+- Replacing or refactoring v1. `app/main.py` gains four statements and nothing else.
 - Any new model, gate, or artifact. v2 reads what the modules already produce.
 - A build step. No npm, no bundler, no CDN dependency (must work offline in a
   devcontainer / Codespace).
@@ -57,11 +57,13 @@ No client-side approximation is needed and none is permitted.
 
 ## Architecture
 
-New router and static page inside the existing service, served at `/v2`.
+New router and static page inside the existing service, served at `/v2`. `app/main.py`
+gains exactly four statements: the import, one lifespan line building v2 state,
+`include_router`, and the `/static/v2` mount.
 
 ```
 app/
-  main.py          # +3 lines: import router, include_router, mount /static/v2
+  main.py          # +4 statements: import, lifespan state, include_router, mount
   v2/
     __init__.py
     state.py       # V2State: explainer, panel, cached frames; built in lifespan
