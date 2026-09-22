@@ -551,14 +551,34 @@ def test_eligibility_is_four_clauses_not_one_number(client):
 
 
 def test_line_increase_matches_the_batch_pipeline(client, booked_sample_ids):
-    """Looped over booked_sample_ids, not one hardcoded id -- Task 4 defects survived
-    a single-loan identity assertion."""
+    """Tolerance 6e-5, not 1e-4: the batch rounds incremental_roe to 4dp, so half an
+    ulp (5e-5) is the tightest honest bound and anything looser stops catching the
+    real failure -- recomputing ROE from the PERSISTED 4dp pd instead of the unrounded
+    scorecard pd, which differs by up to 1.4e-4.
+
+    clears_hurdle is compared exactly, because that is where the difference bites: on
+    one of the 1,243 loans with a positive amount the rounded pd flips it, and it is
+    the fourth eligibility clause."""
     for bid in booked_sample_ids:
         v1 = client.get(f"/api/line-increase/{bid}").json()
         v2 = client.get(f"/api/v2/loan/{bid}/line-increase").json()
         assert v2["recommended_amount"] == pytest.approx(v1["recommended_amount"], abs=1e-6), bid
         assert v2["eligibility"]["eligible"] == v1["eligible"], bid
-        assert v2["incremental"]["roe"] == pytest.approx(v1["incremental_roe"], abs=1e-4), bid
+        assert v2["incremental"]["clears_hurdle"] == v1["clears_hurdle"], bid
+        assert v2["incremental"]["roe"] == pytest.approx(v1["incremental_roe"], abs=6e-5), bid
+
+
+def test_clears_hurdle_matches_the_batch_on_every_loan_with_an_amount(client):
+    """Whole book. The flip this guards happens on exactly ONE of 1,243 loans, so a
+    40-loan sample cannot see it -- the same blindness that let the eligibility
+    comparator bug through."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    for bid in st.li.index:
+        if float(st.li.loc[bid, "recommended_amount"]) <= 0:
+            continue
+        v2 = li_mod.line_increase_detail(st, bid)
+        assert v2["incremental"]["clears_hurdle"] == bool(st.li.loc[bid, "clears_hurdle"]), bid
 
 
 def test_eligible_count_is_95_not_the_positive_amount_count(client):

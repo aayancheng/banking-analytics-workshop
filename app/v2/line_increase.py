@@ -46,7 +46,16 @@ def line_increase_detail(app_state, business_id: str):
         return None
     li = app_state.li.loc[business_id]
     meta = app_state.li_meta
-    r = incremental_roe(float(li["pd"]), float(li["recommended_amount"]),
+    # The UNROUNDED scorecard PD, not li["pd"]. candidates.score_population computes
+    # the incremental ROE from the unrounded pd_score but persists `pd` rounded to
+    # 4dp, so recomputing from the stored column silently disagrees with the batch by
+    # up to 1.4e-4 -- and on one of the 1,243 loans with a positive amount that is
+    # enough to flip clears_hurdle, which is the fourth eligibility clause. Same
+    # family as the EWS tier-rounding defect: the persisted number is a display
+    # value, and reusing it as an input is how a screen quietly stops matching the
+    # pipeline it claims to mirror.
+    r = incremental_roe(float(app_state.scores.loc[business_id, "pd"]),
+                        float(li["recommended_amount"]),
                         float(li["utilization_onbook"]), float(li["rate"]))
     w = r["waterfall"]
     ead = float(r["incremental_ead"])
