@@ -377,3 +377,53 @@ def test_pricing_whatif_is_none_for_an_unbooked_applicant(client):
 def test_pricing_whatif_404s_for_an_unknown_business_id(client):
     r = client.post("/api/v2/loan/BIZ999999/pricing/whatif", json={})
     assert r.status_code == 404
+
+
+TRIGGER_NAMES = ["HIGH_UTILIZATION", "RISING_UTILIZATION", "DELINQUENCY",
+                 "DEPOSIT_DECLINE", "FREQUENT_OVERDRAFTS"]
+
+
+def test_ews_detail_returns_the_full_24_month_panel(client):
+    e = client.get("/api/v2/loan/BIZ100002/ews").json()
+    assert e["panel"]["months"] == list(range(24))
+    for name in ["utilization", "balance", "deposit_inflow",
+                 "days_past_due", "overdraft_count"]:
+        assert len(e["panel"]["series"][name]) == 24
+
+
+def test_ews_triggers_show_thresholds_and_values_not_just_names(client):
+    e = client.get("/api/v2/loan/BIZ100002/ews").json()
+    assert [t["name"] for t in e["triggers"]] == TRIGGER_NAMES
+    hu = next(t for t in e["triggers"] if t["name"] == "HIGH_UTILIZATION")
+    assert hu["threshold"] == 0.90
+    assert isinstance(hu["fired"], bool)
+
+
+def test_ews_fired_triggers_match_the_batch_watchlist(client, booked_sample_ids):
+    """Looped over a sample of booked loans, not one hardcoded id -- three Task 4
+    defects survived review that way."""
+    for bid in booked_sample_ids:
+        v1 = client.get(f"/api/ews/{bid}").json()
+        v2 = client.get(f"/api/v2/loan/{bid}/ews").json()
+        assert v2["prob"] == pytest.approx(v1["prob"], abs=1e-9), bid
+        assert v2["risk_tier"] == v1["risk_tier"], bid
+        assert (sorted(t["name"] for t in v2["triggers"] if t["fired"])
+                == sorted(v1["triggers"])), bid
+
+
+def test_ews_quotes_the_metadata_numbers_not_recomputed_ones(client):
+    """Held-out capture, not the in-sample figure. AUC is reported, never gated."""
+    c = client.get("/api/v2/loan/BIZ100002/ews").json()["model_caveat"]
+    assert c["top_decile_capture"] == 0.2159
+    assert c["auc"] == 0.6622
+    assert c["auc_is_gated"] is False
+
+
+def test_ews_is_null_for_an_unbooked_applicant(client):
+    unbooked = client.get("/api/v2/loans", params={"booked": "false"}).json()["loans"][0]
+    assert client.get(f"/api/v2/loan/{unbooked['business_id']}/ews").json() is None
+
+
+def test_ews_404s_for_an_unknown_business_id(client):
+    r = client.get("/api/v2/loan/BIZ999999/ews")
+    assert r.status_code == 404
