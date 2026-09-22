@@ -38,6 +38,9 @@ def test_facets_cover_every_filter(client):
     assert {o["value"] for o in f["decision"]} == {"Approve", "Refer", "Decline"}
     assert {o["value"] for o in f["score_band"]} == {"AAA", "A", "B", "C", "D"}
     assert sum(o["count"] for o in f["decision"]) == 12000
+    # On-book facets are scoped to the booked population, not the applicant one.
+    for on_book in ("mispriced", "ews_tier", "li_eligible"):
+        assert sum(o["count"] for o in f[on_book]) == 8336, on_book
 
 
 def test_search_unfiltered_reports_true_total_and_caps_the_list(client):
@@ -68,3 +71,16 @@ def test_free_text_id_search(client):
     r = client.get("/api/v2/loans", params={"q": "BIZ100002"}).json()
     assert r["total"] == 1
     assert r["loans"][0]["business_id"] == "BIZ100002"
+
+
+def test_on_book_filters_return_the_count_their_facet_advertises(client):
+    """The bug this guards: coercing the unbooked null to False made
+    mispriced=false return 6,198 while its own facet said 2,534."""
+    f = client.get("/api/v2/filters").json()
+    for facet, values in (("mispriced", (True, False)), ("li_eligible", (True, False))):
+        advertised = {str(o["value"]).lower(): o["count"] for o in f[facet]}
+        for v in values:
+            got = client.get("/api/v2/loans",
+                             params={facet: str(v).lower()}).json()["total"]
+            assert got == advertised[str(v).lower()], f"{facet}={v}"
+        assert sum(advertised.values()) == 8336, facet

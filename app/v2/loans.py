@@ -70,7 +70,14 @@ def search(index: pd.DataFrame, *, decision=None, score_band=None, industry=None
                      ("li_eligible", li_eligible)):
         b = _as_bool(val)
         if b is not None:
-            m &= index[col].fillna(False).astype(bool) == b
+            # NOT fillna(False): an unbooked applicant was never priced and is
+            # neither mispriced nor correctly priced. Coercing that null to False
+            # would make `mispriced=false` partition all 12,000 applicants while the
+            # facet endpoint reports it over the 8,336 booked -- the dropdown would
+            # read "False (2,534)" and return 6,198. A filter must return the count
+            # its own facet advertises.
+            vals = index[col]
+            m &= vals.notna() & (vals.fillna(False).astype(bool) == b)
     if q:
         m &= index.index.str.contains(str(q).strip(), case=False, regex=False)
 
