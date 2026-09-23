@@ -523,6 +523,20 @@ def test_line_increase_shows_which_cap_binds(client):
     assert len(binding) == 1
 
 
+def test_exactly_one_cap_binds_on_every_booked_account(client):
+    """Whole book. Two caps can tie exactly -- BIZ111364's pct_cap and
+    revenue_ceiling are both 5,000.00 -- and a single-loan test cannot see it. Same
+    shape as every other defect this file has produced: a silent contract violation
+    on one rare row."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    for bid in st.li.index:
+        caps = li_mod.line_increase_detail(st, bid)["caps"]
+        if not caps:                      # credit_limit <= 0 returns no caps
+            continue
+        assert sum(1 for c in caps if c["binding"]) == 1, (bid, caps)
+
+
 def test_eligibility_explains_itself_on_every_booked_account(client):
     """`eligible` is candidates()' verdict; the clauses explain it. They must agree.
 
