@@ -728,6 +728,25 @@ def test_nearest_flip_can_rank_a_zero_threshold_rule(client):
     assert nf["lever"] == nf["candidates"][0]["lever"]
 
 
+def test_ledger_fired_flags_agree_with_the_module_on_every_applicant(client):
+    """`fired` must mean "this rule contributed", the same as everywhere else.
+
+    Whole book. Computing it from the comparator alone disagreed with
+    policy.decide's own rule_hits on 43.4% of applicants: a refer override whose
+    condition is true but which cannot bite (the loan is already outside the Approve
+    zone) is not a rule that fired. BIZ100052 -- v1 reports "rule hits: none" while
+    the ledger claimed two. A UI painting `fired` red would have shown two red rows
+    on a decision that came purely from the PD zones."""
+    from app.v2 import explain
+    st = client.app.state
+    for bid in st.profiles.index:
+        d = explain.decision_detail(st, bid)
+        rows = d["rules"]["knockouts"] + d["rules"]["refer_overrides"]
+        assert sum(1 for r in rows if r["fired"]) == len(d["rule_hits"]), (bid, rows)
+        for r in rows:
+            assert not (r["fired"] and not r["applicable"]), (bid, r["rule"])
+
+
 def test_decision_endpoint_matches_the_batch_pipeline(client, sample_ids):
     """v2's DECISION endpoint -- not just the header -- must agree with what v1
     already decided, and must report the same reasons."""
@@ -787,16 +806,32 @@ def loan_values(profile_row, score_row) -> dict:
 
 
 def _rows(specs, values, config, applicable) -> list[dict]:
+    """Three distinct facts per rule, because conflating them makes the screen lie.
+
+      condition_met -- the comparator is true for this loan
+      applicable    -- this rule can bite this loan at all
+      fired         -- it actually contributed to the decision (both of the above)
+
+    A refer override only downgrades a loan the PD zones would have APPROVED. On a
+    loan already in the Refer zone its comparator can be true while it changed
+    nothing. Reporting that as `fired` disagreed with policy.decide's own rule_hits
+    on 43.4% of applicants -- BIZ100052 is the case: v1 says "rule hits: none" while
+    the ledger claimed two fired. `fired` means "this rule contributed" everywhere
+    else in this codebase (Task 8 fixed the identical confusion for EWS triggers), so
+    it has to mean that here too.
+    """
     out = []
     for rule, label, value_key, comparator, config_key in specs:
         threshold = float(getattr(config, config_key))
         value = values[value_key]
+        condition_met = bool(_OPS[comparator](value, threshold))
         out.append({
             "rule": rule, "label": label, "value_key": value_key,
             "comparator": comparator, "threshold": threshold,
             "value": round(value, 4),
-            "fired": bool(_OPS[comparator](value, threshold)),
+            "condition_met": condition_met,
             "applicable": applicable,
+            "fired": bool(condition_met and applicable),
         })
     return out
 
@@ -809,7 +844,10 @@ def ledger(profile_row, score_row, config, decision_zone: str) -> dict:
     refer = _rows(REFER_OVERRIDES, values, config, applicable=decision_zone == "Approve")
     for r in refer:
         if r["rule"] == "dscr_refer_hi":
-            r["fired"] = bool(r["fired"] and values["dscr"] >= float(config.dscr_floor))
+            # the band is two-sided: below the floor the knockout already fired
+            r["condition_met"] = bool(r["condition_met"]
+                                      and values["dscr"] >= float(config.dscr_floor))
+            r["fired"] = bool(r["condition_met"] and r["applicable"])
             r["label"] = (f"Thin affordability margin "
                           f"({config.dscr_floor} <= DSCR < {config.dscr_refer_hi})")
     return {
@@ -2829,7 +2867,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 Compose the `svg.js` primitives. Write these four pieces in order, each small:
 
-1. `rulesTable(rows, caption)` — a table with columns rule / this loan / comparator / threshold / status, where status is `✗ fired` in `.fired` or `✓ clear` in `.passed`. Rows with `applicable: false` get a `— n/a` status so the audience sees the rule exists but does not bite.
+1. `rulesTable(rows, caption)` — columns rule / this loan / comparator / threshold / status. Status renders the three flags **distinctly**, because collapsing them is what made the payload lie: `fired` → `✗ fired` in `.fired`; `applicable` but not met → `✓ clear` in `.passed`; **not applicable** → `— n/a (zone)` in muted text, with the row's `condition_met` shown as a quiet parenthetical when it is true, e.g. `— n/a (condition true, but the PD zones already decided)`. Never paint a non-applicable row red: on 43.4% of applicants its condition is true while it changed nothing.
 2. `ledgerBars(ledger)` — `divergingBars(ledger.contributions)` plus a footer line reading `intercept {x} + contributions {y} = log-odds {z}`, every one of those three numbers taken **from the response**. Do not sum the contributions in JS: the server already did, and a JS sum that drifts would be invisible.
 3. `pdRuler(zones, onChange)` — `axisWithHandles` configured for PD:
 
