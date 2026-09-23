@@ -10,7 +10,9 @@ needs the full feature row, not the scored one.
 
 Nothing is precomputed across the population — a per-loan explanation is 2-3ms, so
 precomputing 12,000 of them would cost seconds of boot to save nothing. Measured
-cost of this build: ~0.15s on top of v1's 7.4s.
+2026-09-23 (two cold boots): this build takes ~0.27s, inside a total TestClient boot
+of ~7.0-7.2s (import ~2.2s + lifespan ~4.8s). The two raw-probability recomputes
+below (li_prob_raw, ews_prob_raw) are part of that 0.27s.
 
 adj_X is recomputed here rather than shared out of v1's lifespan. It costs 0.05s and
 it keeps app/main.py at four added statements, which is the point of v2 being a
@@ -21,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import joblib
+import numpy as np
 import pandas as pd
 import shap
 
@@ -30,7 +33,7 @@ from adjudication.src.feature_engineering import (
     ADJ_FEATURE_COLUMNS, compute_adjudication_features,
 )
 from adjudication.src.policy import PolicyConfig
-from ews.src.feature_engineering import compute_ews_features
+from ews.src.feature_engineering import EWS_FEATURE_COLUMNS, compute_ews_features
 from line_increase.src.feature_engineering import (
     LI_FEATURE_COLUMNS, compute_line_increase_features,
 )
@@ -49,6 +52,7 @@ class V2State:
     index: pd.DataFrame
     ews_feats: pd.DataFrame
     li_prob_raw: pd.Series
+    ews_prob_raw: pd.Series
 
 
 def build_state(app_state) -> V2State:
@@ -74,6 +78,25 @@ def build_state(app_state) -> V2State:
         "ews_feats and app.state.ews are misaligned; v2 would report the wrong "
         "loan's risk tier")
 
+    # Final review C1: score_population tiers on the model's UNROUNDED probability
+    # but persists `prob` rounded to 4dp. Re-tiering from that column put BIZ108170
+    # (Medium) in High and BIZ103657 (Low) in Medium the moment the tab re-sent the
+    # committed cutoffs -- which it does on every drag. Recomputed exactly the way
+    # score_population computes it (same model file, same feature frame, same row
+    # order), then checked twice: same order as app_state.ews, and rounding it to
+    # 4dp reproduces the persisted column on every account, so this can only ever be
+    # the number the batch tiered from.
+    ews_model = joblib.load(ROOT / "ews" / "models" / "ews_model.pkl")
+    ews_prob_raw = pd.Series(
+        ews_model.predict_proba(ews_feats[EWS_FEATURE_COLUMNS])[:, 1],
+        index=ews_feats.index, name="prob_raw")
+    assert ews_prob_raw.index.equals(app_state.ews.index), (
+        "ews_prob_raw and app_state.ews are misaligned; v2 would re-tier the wrong loan")
+    assert np.array_equal(np.round(ews_prob_raw.to_numpy(), 4),
+                          app_state.ews["prob"].to_numpy(dtype=float)), (
+        "ews_prob_raw does not round to the persisted prob; it is not the number "
+        "score_population tiered from")
+
     # Fix round 1 (display-precision review): candidates.score_population decides
     # `eligible` on the model's UNROUNDED probability but persists `prob` rounded to
     # 4dp; app/v2/line_increase.py's prob_above_threshold clause was reading that
@@ -96,4 +119,4 @@ def build_state(app_state) -> V2State:
         "loan's raw probability")
 
     return V2State(scorecard, score_X, adj_X, adj_explainer, panel, index, ews_feats,
-                   li_prob_raw)
+                   li_prob_raw, ews_prob_raw)

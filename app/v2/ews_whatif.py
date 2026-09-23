@@ -51,22 +51,29 @@ class EwsOverrides(BaseModel):
         return d
 
 
+def retier_book(app_state, overrides: EwsOverrides) -> list[str]:
+    """Every booked account's tier under these cutoffs, in app_state.ews order,
+    ALWAYS from the unrounded probability (app_state.v2.ews_prob_raw) -- the number
+    score_population itself passes to risk_tier.
+
+    There is deliberately no "cutoffs untouched" shortcut. The first version reused
+    the batch risk_tier column for an empty body and re-tiered from the persisted
+    4dp prob otherwise; the tab re-sends t_med/t_high on EVERY drag, so moving an
+    unrelated trigger slider took the rounded path and moved BIZ108170 Medium ->
+    High and BIZ103657 Low -> Medium (book 5835/1668/833 -> 5834/1668/834). One
+    path, the right input, for every body.
+    """
+    tiers = overrides.tiers(app_state.ews_meta["tiers"])
+    return [risk_tier(p, tiers) for p in app_state.v2.ews_prob_raw.to_numpy(dtype=float)]
+
+
 def ews_whatif(app_state, business_id: str, overrides: EwsOverrides):
     """Re-tier with risk_tier and re-flag with flag_triggers, the functions
-    score_population uses, so an empty override body reproduces the watchlist
-    exactly.
-
-    score_population computes risk_tier from the model's unrounded probability but
-    only persists prob rounded to 4dp, so two of 8,336 accounts sit exactly on a
-    cutoff after rounding and re-deriving their tier from the rounded prob flips
-    both. An unmodified tier config sidesteps this by reusing the batch's own
-    risk_tier column rather than reconstructing it from that lossy value.
-
-    A moved cutoff has no such column to fall back on: it re-tiers every account
-    from the same rounded prob, so a dragged threshold that happens to land exactly
-    on a rounded value carries the identical imprecision, with no batch figure to
-    compare against. That is not fixed here and cannot be from v2 state alone -- no
-    unrounded probability is cached anywhere; only the retrained model has it.
+    score_population uses, on the same inputs it uses: the unrounded probability
+    (retier_book, above) and the EWS feature frame. So any body carrying the
+    committed values -- empty, or explicit as the tab sends them -- reproduces the
+    watchlist exactly, and a moved cutoff re-tiers from the true probability rather
+    than from a 4dp display copy of it.
     """
     _, booked = _booked_row(app_state, business_id)  # UnknownLoan before computation
     if not booked:
@@ -77,10 +84,7 @@ def ews_whatif(app_state, business_id: str, overrides: EwsOverrides):
     tiers = overrides.tiers(app_state.ews_meta["tiers"])
     cfg = overrides.trigger_cfg()
 
-    if overrides.t_high is None and overrides.t_med is None:
-        retiered = list(ews["risk_tier"])
-    else:
-        retiered = [risk_tier(p, tiers) for p in ews["prob"].to_numpy(dtype=float)]
+    retiered = retier_book(app_state, overrides)
     refired = flag_triggers(feats, cfg)
     pos = feats.index.get_loc(business_id)
     fired = set(refired[pos])
