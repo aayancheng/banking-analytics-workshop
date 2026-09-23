@@ -340,12 +340,26 @@ as it does to v1.
   if a tag's committed artifacts differ from `main`'s — `/api/v2/health` answers, and
   every tab's endpoint (`/api/v2/loan/BIZ100002{,/decision,/pricing,/ews,
   /line-increase}`) returns 200.
-- **v2's what-if must equal the batch pipeline.** Every slider calls the same
-  module function the batch run calls; `tests/test_app_v2.py` asserts that an empty
-  override body reproduces `/api/adjudicate` (a 25-loan sample), `/api/pricing/<id>`
-  and `/api/ews/<id>` (the 40-loan `booked_sample_ids` fixture) exactly, and
-  `verify.py`'s v2 smoke re-asserts the adjudication case on every run. If either
-  fails, the demo is lying — fix the drift, never the test or the smoke check.
+- **v2's what-if must equal the batch pipeline — for the bodies the UI SENDS,
+  not only `{}`.** Every slider calls the same module function the batch run calls.
+  After the first interaction the browser always posts explicit values (the EWS tab
+  sends both cutoffs and all five trigger thresholds on every drag), and that path
+  hid the final review's Critical: explicit committed cutoffs re-tiered the book from
+  the 4dp-rounded prob (BIZ108170 Medium -> High). `tests/test_app_v2.py` pins the
+  empty body against `/api/adjudicate`, `/api/pricing/<id>` and `/api/ews/<id>`;
+  `tests/test_app_v2_ui_bodies.py` pins the explicit committed bodies — every one of
+  the 8,336 EWS tiers, `flipped_count == 0` over 12,000 decisions, the full pricing
+  payload. `verify.py`'s v2 smoke re-asserts the adjudication case on every run. If
+  any fails, the demo is lying — fix the drift, never the test or the smoke check.
+  Never re-derive a verdict from a rounded persisted column (`prob`, `pd`): v2 caches
+  the unrounded values (`V2State.ews_prob_raw`, `li_prob_raw`) with alignment asserts.
+- **Every number printed beside a threshold carries a server-chosen `dp`**
+  (`app/v2/display.py`); `tests/test_app_v2_display.py` formats as the browser does
+  and demands distinct strings over the whole book.
+- **The JS display layer has no automated regression coverage, by design** — there
+  is no JS test runner (no new dependency). The rendered-string checks behind each
+  UI fix were one-off browser scripts; re-run them by hand in a browser after any
+  change to `app/static/v2/`.
 - **No financial arithmetic in the v2 JavaScript.** Every number on screen came from
   a server response; the browser only formats and draws. A threshold comparison done
   in JS is a bug even on the loans where it currently agrees with the server.

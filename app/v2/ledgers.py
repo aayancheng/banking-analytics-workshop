@@ -31,6 +31,13 @@ def display_triple(intercept: float, logit: float, dp: int = 4) -> dict:
     (measured) -- on a screen whose entire claim is that the contributions ADD UP, a
     room checking the sum by eye reads that as a bug.
 
+    `contributions_total` is the RECONCILING RESIDUAL, round(logit) - round(intercept)
+    -- not the sum of the displayed contribution bars. Each bar is rounded on its
+    own for display, so adding the bars up by hand can differ from this figure in
+    the last place; the unrounded contributions DO sum exactly to logit - intercept
+    (tests assert 1e-9 for the scorecard, 1e-6 for SHAP). Say so if a room adds
+    the bars.
+
     The browser must not fix that itself. Deriving a displayed number in JS is what
     this project forbids, because the number can no longer be traced to the server and
     nothing would catch it drifting. So the server does the reconciliation and hands
