@@ -718,20 +718,38 @@ def test_ews_clause_precision_never_prints_two_equal_numbers(client):
     and what let BIZ102054's real 3e-5 near miss on DEPOSIT_DECLINE (0.2999701
     against 0.30) hide behind "0.3 > 0.3 -- not met". Confirmed by hand that this
     test fails before app/v2/display.py existed, catching exactly BIZ102054 and
-    BIZ106189 (plus BIZ108823, float noise on the same clause as BIZ106189)."""
+    BIZ106189 (plus BIZ108823, float noise on the same clause as BIZ106189).
+
+    Fix round 2: also asserts the missing half, `tied` implies the value genuinely
+    DIFFERS from the threshold. The first half alone (originally just "tied OR
+    distinguishable") is satisfied trivially by marking every exact match tied --
+    which is exactly how round 1's display.py passed review while relabelling 4,858
+    honest exact-equality rows (4,111 of them healthy zero-days-past-due accounts)
+    as "at the threshold". Round 2's display_precision stops marking an exact match
+    tied, so the first half is restated to allow the third, legitimate case an exact
+    match falls into: `value == threshold` (the plain comparison already reads
+    correctly, e.g. "0 > 0 -> not met" -- nothing to distinguish, nothing to hide).
+    Confirmed by hand that the second half fails against round 1's
+    display_precision, catching those same 4,858 rows (the first half does not fail
+    there, since round 1's tied=True for an exact match satisfies it trivially --
+    which is precisely the gap this second assertion closes)."""
     from app.v2 import ews as ews_mod
     from shared.config import EWS_TRIGGERS
     st = client.app.state
-    bad = []
+    bad, bad_exact_tie = [], []
     for bid in st.ews.index:
         rows = ews_mod.trigger_rows(st.v2.ews_feats.loc[bid], EWS_TRIGGERS,
                                     set(st.ews.loc[bid, "triggers"]))
         for t in rows:
             for c in t["clauses"]:
-                ok = c["tied"] or round(c["value"], c["dp"]) != round(c["threshold"], c["dp"])
-                if not ok:
+                exact = c["value"] == c["threshold"]
+                distinguishable = round(c["value"], c["dp"]) != round(c["threshold"], c["dp"])
+                if not (exact or c["tied"] or distinguishable):
                     bad.append((bid, t["name"], c["metric"]))
+                if c["tied"] and exact:
+                    bad_exact_tie.append((bid, t["name"], c["metric"]))
     assert not bad, bad
+    assert not bad_exact_tie, bad_exact_tie[:5]
 
 
 def test_li_clause_precision_never_prints_two_equal_numbers(client):
@@ -739,14 +757,24 @@ def test_li_clause_precision_never_prints_two_equal_numbers(client):
     four LI eligibility clauses. Task 15's original pd_within_appetite formatting
     (a hardcoded 6dp) was safe only by a 3.3x margin -- data-dependent, not a
     guarantee -- so this checks the server-chosen `dp` actually holds on every
-    clause, not a fixed decimal count picked because it happened to work today."""
+    clause, not a fixed decimal count picked because it happened to work today.
+
+    Fix round 2: also asserts `tied` implies a genuine difference from the
+    threshold -- amount_positive's $0-vs-$0 exact tie (e.g. a loan with no
+    recommended increase) must render the plain comparison, not "at threshold".
+    The first half is restated the same way as the EWS test above, to allow the
+    legitimate `value == threshold` case through without requiring `tied`."""
     from app.v2 import line_increase as li_mod
     st = client.app.state
-    bad = []
+    bad, bad_exact_tie = [], []
     for bid in st.li.index:
         e = li_mod.line_increase_detail(st, bid)["eligibility"]
         for c in e["clauses"]:
-            ok = c["tied"] or round(c["value"], c["dp"]) != round(c["threshold"], c["dp"])
-            if not ok:
+            exact = c["value"] == c["threshold"]
+            distinguishable = round(c["value"], c["dp"]) != round(c["threshold"], c["dp"])
+            if not (exact or c["tied"] or distinguishable):
                 bad.append((bid, c["name"]))
+            if c["tied"] and exact:
+                bad_exact_tie.append((bid, c["name"]))
     assert not bad, bad
+    assert not bad_exact_tie, bad_exact_tie[:5]

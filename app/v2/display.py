@@ -17,22 +17,35 @@ only by float noise -- and the caller should then say the value is AT the thresh
 rather than draw a comparison that looks false. Whether the rule fired/passed is
 always the module's own verdict; this function never decides it and is never used to
 recompute one.
+
+Fix round 2: the first draft treated EXACT equality as a tie too, which was wrong in
+the other direction -- an exact match's plain comparison already reads correctly
+("0 > 0 -> not met", "3 >= 3 -> met"), so marking it tied relabelled 4,858 honest EWS
+rows, 4,111 of them healthy zero-days-past-due accounts, as "at the threshold" of
+delinquency. `tied` now means only "the values differ, but nothing up to max_dp
+separates them" -- exact equality returns `tied: False` at base_dp instead.
 """
 from __future__ import annotations
 
 
 def display_precision(value: float, threshold: float,
-                       base_dp: int = 4, max_dp: int = 8) -> dict:
-    """The fewest decimals at which `value` and `threshold` render differently.
+                      base_dp: int = 4, max_dp: int = 8) -> dict:
+    """The fewest decimals at which a value and the threshold it is compared against
+    render DIFFERENTLY, so a clause never prints two equal numbers under a strict
+    comparator.
 
-    Returns {"dp": int, "tied": bool}. `tied` is True when no precision up to
-    max_dp separates them -- the screen then says the value is AT the threshold
-    instead of printing a comparison that reads as false. Whether the rule
-    met/fired/passed is still the module's own verdict, never recomputed here or
-    from this function's output.
+    A fixed precision chosen in the browser is tuned to today's data and silently
+    breaks on a retrain. `tied` is True when no precision up to max_dp separates them
+    -- genuinely equal, or apart only by floating-point noise -- and the screen then
+    says the value is AT the threshold rather than printing a comparison that reads
+    as false. Whether the rule met is still the module's verdict, never recomputed.
     """
     if value == threshold:
-        return {"dp": base_dp, "tied": True}
+        # EXACTLY equal is not a tie in the sense that matters: the plain comparison
+        # already reads correctly ("0 > 0 -> not met", "3 >= 3 -> met"). Marking it
+        # tied relabelled 4,858 honest EWS rows -- 4,111 of them healthy accounts with
+        # zero days past due, suddenly described as "at the threshold" of delinquency.
+        return {"dp": base_dp, "tied": False}
     for dp in range(base_dp, max_dp + 1):
         if round(value, dp) != round(threshold, dp):
             return {"dp": dp, "tied": False}
