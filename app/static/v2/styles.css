@@ -46,3 +46,15 @@ td, th { border:1px solid var(--line); padding:5px 10px; text-align:right; }
 th:first-child, td:first-child { text-align:left; }
 .fired { color:var(--bad); font-weight:600; }
 .passed { color:var(--ok); }
+.na { color:var(--muted); }
+.rules caption { text-align:left; font-weight:600; caption-side:top; padding:4px 0; }
+.ledger-footer { font-size:13px; color:var(--muted); margin-top:6px; }
+.dec-error { color:var(--bad); font-weight:600; margin:8px 0; }
+.dec-ruler { margin:14px 0; }
+.nearest-flip { font-size:13px; margin-top:6px; }
+.book-mix { display:flex; gap:10px; margin:10px 0; }
+.tile { display:inline-flex; flex-direction:column; align-items:center;
+        padding:8px 16px; border-radius:8px; }
+.tile .n { font-size:22px; font-weight:700; }
+.tile .k { font-size:12px; opacity:.85; }
+.flipcount { font-size:13px; color:var(--muted); margin:2px 0 0; }
