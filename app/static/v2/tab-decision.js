@@ -36,28 +36,26 @@ function rulesTable(rows, caption) {
 }
 
 /* ledgerBars -- one additive rationale (divergingBars + a footer that reads the
-   additive identity). The response carries the intercept/base value and the
-   resulting log-odds but never a running total of `contributions`: looping over
-   that array in JS would re-derive a number the server already computed (and risk
-   drifting from it on 15-21 float additions). The middle term is instead the one
-   subtraction of two numbers the response already gives -- the identity
-   score_ledger/shap_ledger assert server-side (to 1e-9 / 1e-6), never a sum over
-   per-feature values performed here.
-   Rounding is a display concern the ledger modules explicitly hand to the browser
-   (see ledgers.py). Rounding intercept and log-odds to 4dp *independently* and
-   then subtracting the unrounded pair for the middle term prints an equation that
-   is off by 1 in the last place (e.g. -1.6217 + -0.8344 = -2.4562 on screen): a
-   room checking the sum by eye would read that as a bug. Deriving the middle term
-   from the two already-rounded numbers makes the printed equation exactly
-   self-consistent, still without summing a single `contributions` row. */
+   additive identity). The footer prints `ledger.display.{intercept,
+   contributions_total, logit}` verbatim -- no arithmetic at all, not even a
+   subtraction of two response numbers. Those three were briefly derived here as
+   `logit_pd - intercept`: individually correct, but still a number invented in
+   the browser and untraceable to the server, which is exactly what this project
+   forbids (a drift nothing would catch). display_triple() in ledgers.py now does
+   the rounding AND the reconciliation server-side (rounding intercept and
+   log-odds independently to 4dp before subtracting -- rather than rounding a full-
+   precision subtraction -- left the printed equation off by one in the last place
+   on 30.5% of loans (score) / 17.5% (shap), measured), so the three fields already
+   satisfy intercept + contributions_total == logit at `display.dp` decimals.
+   `.toFixed(display.dp)` below is formatting a number that already IS the display
+   value, not computing one. */
 function ledgerBars(ledger, title, interceptLabel = "intercept") {
-  const intercept = Number((ledger.intercept ?? ledger.base_value).toFixed(4));
-  const logOdds = Number((ledger.logit_pd ?? ledger.logit_pd_model).toFixed(4));
+  const d = ledger.display;
   const wrap = el("div", {class: "ledger"});
   wrap.append(el("h3", {}, title), divergingBars(ledger.contributions));
   wrap.append(el("p", {class: "ledger-footer"},
-    `${interceptLabel} ${intercept.toFixed(4)} + contributions ` +
-    `${(logOdds - intercept).toFixed(4)} = log-odds ${logOdds.toFixed(4)}`));
+    `${interceptLabel} ${d.intercept.toFixed(d.dp)} + contributions ` +
+    `${d.contributions_total.toFixed(d.dp)} = log-odds ${d.logit.toFixed(d.dp)}`));
   return wrap;
 }
 

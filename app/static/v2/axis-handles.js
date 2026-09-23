@@ -74,7 +74,13 @@ function axisWithHandles(
       onChange({...values});
     };
     g.addEventListener("pointerdown", ev => {
-      dragging = true; g.setPointerCapture(ev.pointerId); ev.preventDefault();
+      dragging = true;
+      // Guarded like releasePointerCapture below: capture can throw (NotFoundError
+      // when no active pointer matches the id), and an uncaught throw here would
+      // surface as a console error during an otherwise working drag. dragging is set
+      // first so the drag still works without capture.
+      try { g.setPointerCapture(ev.pointerId); } catch (e) { /* capture is optional */ }
+      ev.preventDefault();
     });
     g.addEventListener("pointermove", move);
     g.addEventListener("pointerup", ev => {

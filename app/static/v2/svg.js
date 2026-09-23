@@ -70,7 +70,7 @@ function divergingBars(rows, {width = 620, rowHeight = 20,
                             fill: up ? "var(--bad)" : "var(--ok)"}));
     const lab = svgEl("text", {x: 0, y: yTop + rowHeight - 10, "font-size": 12,
                                fill: "var(--ink)"});
-    lab.textContent = `${r.feature}  ${r.value ?? ""}`;
+    lab.textContent = `${r.feature}  ${fmt.feature(r.value)}`;
     s.append(lab);
     const val = svgEl("text", {x: width - 84, y: yTop + rowHeight - 10,
                                "font-size": 12, fill: "var(--muted)"});

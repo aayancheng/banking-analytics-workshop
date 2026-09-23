@@ -18,6 +18,14 @@ const fmt = {
   pct: (v, d = 1) => (v * 100).toFixed(d) + "%",
   bps: v => Math.round(v).toLocaleString() + " bps",
   num: (v, d = 2) => Number(v).toFixed(d),
+  /* A feature's raw value for a ledger label. Categoricals pass through; integers
+     print bare; floats get 4dp. Without this a computed feature renders at full
+     float width -- `pd_score 0.2219917066245684` on a projected screen. Formatting
+     is the browser's job; calculating is not. */
+  feature: v => {
+    if (typeof v !== "number") return String(v ?? "");
+    return Number.isInteger(v) ? String(v) : v.toFixed(4);
+  },
 };
 
 function el(tag, attrs = {}, ...kids) {

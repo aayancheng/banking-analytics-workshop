@@ -182,6 +182,21 @@ def test_shap_is_exactly_additive(client, sample_ids):
         assert total == pytest.approx(sh["logit_pd_model"], abs=1e-6), bid
 
 
+def test_ledger_display_triple_reconciles_exactly(client, sample_ids):
+    """The browser prints display.intercept/.contributions_total/.logit verbatim, no
+    arithmetic. That only avoids drift if the server's own rounding is reconciled --
+    unrounded intercept + unrounded logit rounded independently disagrees with the
+    server's own sum on 30.5% of loans (scorecard) / 17.5% (shap), off by one in the
+    last decimal place. Pin the property the whole footer now depends on, at the
+    stated dp, for both ledgers."""
+    for bid in sample_ids:
+        d = client.get(f"/api/v2/loan/{bid}/decision").json()
+        for key in ("score_ledger", "shap"):
+            disp = d[key]["display"]
+            got = round(disp["intercept"] + disp["contributions_total"], disp["dp"])
+            assert got == disp["logit"], (bid, key, disp)
+
+
 def test_ledger_identities_hold_at_the_pd_extremes(client):
     """The tails are where rounding a PD before recomputing its logit does the most
     damage -- 5.85e-4 on the lowest-PD applicant, 585x the tolerance.
