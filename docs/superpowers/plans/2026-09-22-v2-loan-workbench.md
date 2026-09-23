@@ -3124,6 +3124,13 @@ The slider panel is shared, not copied. `tab-pricing.js`'s `sliders()` is hardco
 `axis-handles.js` rather than in the pure `util.js` -- and have BOTH the pricing and EWS
 tabs call it. Load it after `axis-handles.js`.
 
+**Every display of a threshold must follow the slider.** The utilization sparkline
+draws a dashed rule at the `high_utilization` threshold. Once that threshold is
+draggable, the rule must be redrawn from the what-if response's `trigger_config` --
+otherwise dragging `high_utilization` to 0.50 leaves the chart's line at 0.90, and the
+chart contradicts the slider beside it. That is the same self-contradiction this branch
+has fixed four times; do not ship a fifth.
+
 **Files:**
 - Create: `app/static/v2/ews-charts.js`, `app/static/v2/tab-ews.js`, `app/static/v2/sliders.js`
 - Modify: `app/static/v2/tab-pricing.js` (use the shared `sliderPanel`)
