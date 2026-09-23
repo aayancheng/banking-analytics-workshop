@@ -30,19 +30,31 @@
 // plain "16.69%", not needless digits.
 const CLAUSE_FMT = {
   amount_positive: v => fmt.money(v),
-  clears_hurdle: (v, dp) => fmt.pct(v, Math.max(2, dp - 2)),
+  clears_hurdle: (v, dp) => fmt.pctAt(v, dp),
 };
 
-function capsChart(caps) {
+/* The caps, then the steps recommended_amount() takes from the lowest of them --
+   all from the server's amount_steps (final review I4). The caption used to say
+   "the binding cap is X, at $-12,345" on 7,069 accounts and "$14,554" beside a
+   $15,000 recommendation on 579 (BIZ100084), because the module floors at 0 and
+   rounds to $1,000 AFTER taking the min. Every amount below is quoted from the
+   payload; the words name each step so they never contradict the bars. */
+function capsChart(caps, steps) {
   const wrap = el("div", {class: "li-caps"});
   if (!caps.length) {
     wrap.append(el("p", {class: "muted"},
       "This account carries no credit limit, so there are no amount caps to compare."));
     return wrap;
   }
-  const binding = caps.find(c => c.binding);
-  wrap.append(hbars(caps), el("p", {class: "li-caption"},
-    `The binding cap is ${binding.name.replace(/_/g, " ")}, at ${fmt.money(binding.amount)}.`));
+  const name = steps.binding.replace(/_/g, " ");
+  const words = steps.no_headroom
+    ? `No headroom: the lowest cap, ${name}, is ${fmt.money(steps.min_cap)} — at or ` +
+      `below zero, so the increase floors at $0 → recommended ` +
+      `${fmt.money(steps.recommended)}.`
+    : `Lowest cap: ${name}, ${fmt.money(steps.min_cap)} → floored at $0: ` +
+      `${fmt.money(steps.floored_at_zero)} → rounded to the nearest ` +
+      `${fmt.money(steps.round_to)} → recommended ${fmt.money(steps.recommended)}.`;
+  wrap.append(hbars(caps), el("p", {class: "li-caption"}, words));
   return wrap;
 }
 
@@ -51,9 +63,11 @@ function capsChart(caps) {
 // `eligibility.eligible` itself: `eligible == all(clause.pass)` is necessary but
 // not sufficient (a wrong clause can still land on the right verdict), so the
 // footer never derives yes/no from the rows above it. When `c.tied` (server-side,
-// app/v2/display.py), the comparator column says the value is at the threshold
-// instead of repeating a symbol that would print two equal numbers -- e.g.
-// BIZ101719's amount_positive, $0 against a $0 threshold, exactly.
+// app/v2/display.py: the values differ, but only by float noise nothing up to 8dp
+// separates), the comparator column says the value is at the threshold instead of
+// repeating a symbol that would print two equal numbers. An EXACT match -- e.g.
+// BIZ101719's amount_positive, $0 against a $0 threshold -- is not tied (fix
+// round 2): "$0 > $0 ✗ fail" already reads correctly.
 function clauseList(eligibility) {
   const body = el("tbody");
   for (const c of eligibility.clauses) {
@@ -86,10 +100,14 @@ function incrementalWaterfallBox(incremental) {
     return wrap;
   }
   wrap.append(waterfallTable(incremental.waterfall, incremental.ead, "Incremental waterfall"));
+  // ROE and hurdle both at the server's dp (final review I3): BIZ103012's
+  // 0.14997 printed "15.00% ... ✗ short of the hurdle" beside a 15.00% hurdle.
+  const d = incremental.dp;
   wrap.append(el("p", {class: "li-caption"},
-    `Incremental ROE ${fmt.pct(incremental.roe, 2)} does not change with the EAD ` +
-    `scale above -- ROE is EAD-invariant. ` +
-    `${incremental.clears_hurdle ? "✓ clears" : "✗ short of"} the hurdle.`));
+    `Incremental ROE ${fmt.pctAt(incremental.roe, d)} against a ` +
+    `${fmt.pctAt(incremental.roe_hurdle, d)} hurdle — ` +
+    `${incremental.clears_hurdle ? "✓ clears" : "✗ short of"} the hurdle. ` +
+    `It does not change with the EAD scale above: ROE is EAD-invariant.`));
   return wrap;
 }
 
@@ -107,8 +125,9 @@ function cohortStrip(cohort) {
   return wrap;
 }
 
-TABS.line_increase = async (panel, id) => {
+TABS.line_increase = async (panel, id, fresh) => {
   const li = await api(`/api/v2/loan/${id}/line-increase`);
+  if (!fresh()) return;   // another loan or tab was chosen while this loaded
   panel.innerHTML = "";
   panel.append(el("p", {class: "li-ribbon"},
     "Optional module — line increase is skippable live without leaving a hole."));
@@ -118,7 +137,7 @@ TABS.line_increase = async (panel, id) => {
     return;
   }
   panel.append(
-    el("h3", {}, "Amount caps"), capsChart(li.caps),
+    el("h3", {}, "Amount caps"), capsChart(li.caps, li.amount_steps),
     el("h3", {}, "Eligibility"), clauseList(li.eligibility),
     el("h3", {}, "Incremental economics"), incrementalWaterfallBox(li.incremental),
     el("h3", {}, "Offered cohort vs book"), cohortStrip(li.cohort));

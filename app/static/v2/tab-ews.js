@@ -1,7 +1,8 @@
 "use strict";
 /* Task 14 -- Early Warning tab: orchestration only. Rendering (smallMultiples/
-   triggerTable/tierBar/tierChip/bookTierTiles/bookTriggerCounts/caveatBlock/
-   driverBars) lives in ews-charts.js, loaded before this file. Uses api/fmt/el
+   triggerTable/tierBar) lives in ews-charts.js and the tiles (tierChip/
+   bookTierTiles/bookTriggerCounts/caveatBlock/driverBars) in ews-tiles.js,
+   both loaded before this file. Uses api/fmt/el
    /postJSON (util.js) and sliderPanel (sliders.js). Formats and draws only --
    every number on screen, including the model's own reported limits, comes
    straight off a server response; nothing here recomputes a probability, a
@@ -28,8 +29,9 @@ const TRIGGER_SLIDER_DEFS = [
   ["overdraft_recent", "Overdraft count", 0, 50, 1, v => fmt.num(v, 0)],
 ];
 
-TABS.ews = async (panel, id) => {
+TABS.ews = async (panel, id, fresh) => {
   const e = await api(`/api/v2/loan/${id}/ews`);
+  if (!fresh()) return;   // another loan or tab was chosen while this loaded
   panel.innerHTML = "";
   if (e === null) {
     panel.append(el("p", {class: "muted"},
@@ -41,6 +43,7 @@ TABS.ews = async (panel, id) => {
   // the same reason tab-decision.js and tab-pricing.js both seed from an
   // empty-body POST rather than the GET alone.
   const seed = await postJSON(EWS_WHATIF(id), {});
+  if (!fresh()) return;
 
   const topBox = el("div"), err = el("p", {class: "ews-error hidden"});
   const barBox = el("div", {class: "ews-ruler"});
@@ -74,34 +77,46 @@ TABS.ews = async (panel, id) => {
   // returns null there and throws). Rebuilding panelBox is what makes the
   // utilization sparkline's dashed rule follow a dragged high_utilization
   // instead of staying stranded at the value read at first paint.
+  // prob_raw at the server's prob_dp: the tier was decided on the unrounded value,
+  // and dp separates it from both cutoffs, so the line cannot read "0.5073" beside
+  // "t_high 0.5073" under a Medium chip.
+  let bar = null;
   const paint = w => {
     topBox.innerHTML = "";
     topBox.append(tierChip(w.risk_tier),
-      el("p", {class: "ews-prob"}, `p(deterioration) ${fmt.num(w.prob, 4)}`),
+      el("p", {class: "ews-prob"},
+         `p(deterioration) ${fmt.num(w.prob_raw, w.prob_dp)}`),
       bookTierTiles(w.book_tiers));
+    if (bar) bar.setFormat(v => v.toFixed(w.prob_dp));
     countsBox.innerHTML = "";
     countsBox.append(bookTriggerCounts(w.book_trigger_counts));
     panelBox.innerHTML = "";
-    panelBox.append(smallMultiples(e.panel, w.trigger_config));
+    panelBox.append(smallMultiples(e.panel, w.triggers));
     trigBox.innerHTML = "";
     trigBox.append(triggerTable(w.triggers));
   };
   paint(seed);
 
+  const ticket = latest();
   const runWhatif = async patch => {
     const body = {...overrides, ...patch};
+    const ok = ticket();
     try {
       const w = await postJSON(EWS_WHATIF(id), body);
+      if (!ok() || !fresh()) return;   // a newer drag already answered
       overrides = {t_med: w.tiers.t_med, t_high: w.tiers.t_high, ...w.trigger_config};
       err.classList.add("hidden");
       paint(w);
     } catch (ex) {
+      if (!ok() || !fresh()) return;
+      console.error(ex);
       err.textContent = ex.message;
       err.classList.remove("hidden");
     }
   };
 
-  barBox.append(tierBar(seed.prob, seed.tiers, runWhatif));
+  bar = tierBar(seed, runWhatif);
+  barBox.append(bar);
   // sliderPanel only reads/writes the five keys in TRIGGER_SLIDER_DEFS, so
   // passing the wider `overrides` object as its defaults is safe -- it simply
   // ignores t_med/t_high.

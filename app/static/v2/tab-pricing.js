@@ -19,11 +19,12 @@ const SLIDER_DEFS = [
 
 const PRICING_WHATIF = id => `/api/v2/loan/${id}/pricing/whatif`;
 
-TABS.pricing = async (panel, id) => {
+TABS.pricing = async (panel, id, fresh) => {
   // pricing_whatif already returns null for an unbooked id, so the empty-body
   // POST alone answers both "is this booked" and "what are the batch numbers" --
   // no separate GET whose response would be thrown away.
   const seed = await postJSON(PRICING_WHATIF(id), {});
+  if (!fresh()) return;   // another loan or tab was chosen while this loaded
   panel.innerHTML = "";
   if (seed === null) {
     panel.append(el("p", {class: "muted"},
@@ -45,12 +46,17 @@ TABS.pricing = async (panel, id) => {
   };
   paint(seed);
 
+  const ticket = latest();
   const runWhatif = async body => {
+    const ok = ticket();
     try {
       const w = await postJSON(PRICING_WHATIF(id), body);
+      if (!ok() || !fresh()) return;   // a newer tick already answered
       err.classList.add("hidden");
       paint(w);
     } catch (e) {
+      if (!ok() || !fresh()) return;
+      console.error(e);
       err.textContent = e.message;
       err.classList.remove("hidden");
     }

@@ -35,9 +35,24 @@ async function postJSON(url, body) {
 }
 
 const fmt = {
-  money: v => "$" + Math.round(v).toLocaleString(),
+  // Sign placed before the "$" ("−$12,345"), not after it ("$-12,345").
+  money: v => (v < 0 ? "−$" : "$") + Math.round(Math.abs(v)).toLocaleString(),
   pct: (v, d = 1) => (v * 100).toFixed(d) + "%",
   bps: v => Math.round(v).toLocaleString() + " bps",
+  /* Final review I3/T13: formatting at a SERVER-chosen dp, for any number printed
+     beside the threshold it is compared to. pctAt shows a fraction as a percent:
+     dp decimals of the fraction are dp-2 of the percent, floor 2 (the convention
+     the line-increase clears_hurdle clause set). signedBps prints a margin with
+     its sign at the server's dp, which was chosen so a non-zero margin can never
+     read "0 bps". Display polarity only -- no new number is derived. */
+  pctAt: (v, dp) => fmt.pct(v, Math.max(2, dp - 2)),
+  bpsAt: (v, dp) => Number(v).toLocaleString(undefined,
+    {minimumFractionDigits: dp, maximumFractionDigits: dp}) + " bps",
+  signedBps: (v, dp) => (v > 0 ? "+" : v < 0 ? "−" : "") + fmt.bpsAt(Math.abs(v), dp),
+  /* A value and its threshold at one server dp. Both whole -> bare integers;
+     otherwise BOTH get dp decimals, so "1.0000 < 1" can never happen. */
+  pair: (v, t, dp) => (Number.isInteger(v) && Number.isInteger(t))
+    ? [String(v), String(t)] : [Number(v).toFixed(dp), Number(t).toFixed(dp)],
   num: (v, d = 2) => Number(v).toFixed(d),
   /* A feature's raw value for a ledger label. Categoricals pass through; integers
      print bare; floats get `dp` decimals (4 by default). Without this a computed
@@ -64,6 +79,15 @@ function el(tag, attrs = {}, ...kids) {
   }
   for (const kid of kids) n.append(kid?.nodeType ? kid : document.createTextNode(kid));
   return n;
+}
+
+/* latest() -- a request ticket. Each call to the returned function issues a new
+   ticket and returns a check that stays true only until the NEXT ticket is
+   issued. A slower, older response (a what-if tick, a loan switch) checks its
+   ticket before painting, so it can never overwrite a newer one. */
+function latest() {
+  let n = 0;
+  return () => { const mine = ++n; return () => mine === n; };
 }
 
 function debounce(fn, ms) {

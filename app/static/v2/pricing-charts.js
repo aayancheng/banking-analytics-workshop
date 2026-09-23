@@ -72,7 +72,7 @@ function rateLadder(rates, verdict) {
     const x = toX(rates[key]);
     tick(x, 8, 2, "var(--muted)");
     const lab = svgEl("text", {x, y: pad.t + 24, "font-size": 11, "text-anchor": "middle"});
-    lab.textContent = `${label} ${fmt.pct(rates[key], 2)}`;
+    lab.textContent = `${label} ${fmt.pctAt(rates[key], rates.dp)}`;
     s.append(lab);
   }
   const qx = toX(rates.quoted), color = verdict.clears_hurdle ? "var(--ok)" : "var(--bad)";
@@ -80,13 +80,26 @@ function rateLadder(rates, verdict) {
   tick(qx, 16, 3, color);
   const pin = svgEl("text", {x: qx, y: pad.t - 20, "font-size": 12, "text-anchor": "middle",
     "font-weight": "700", fill: color});
-  pin.textContent = `${glyph} quoted ${fmt.pct(rates.quoted, 2)}`;
+  pin.textContent = `${glyph} quoted ${fmt.pctAt(rates.quoted, rates.dp)}`;
   s.append(pin);
   const wrap = el("div", {class: "pr-ladder"});
-  wrap.append(s, el("p", {class: "shortfall"},
-    `${glyph} ${verdict.clears_hurdle ? "clears the hurdle" : "short of the hurdle"} ` +
-    `by ${fmt.bps(verdict.rate_shortfall_bps)}`));
+  wrap.append(s, el("p", {class: "shortfall"}, marginSentence(verdict)));
   return wrap;
+}
+
+/* Final review T13: the words come from the SIGNED rate_margin_bps at the
+   server's margin_dp, never the engine's clamped rate_shortfall (which read
+   "Shortfall 0 bps" on every clearing loan, and "short by 0 bps" on BIZ103012,
+   whose true shortfall is 0.04 bps). The glyph and "clears"/"short" are the
+   module's own clears_hurdle; the sign only picks "above"/"below". */
+function marginSentence(v) {
+  const glyph = v.clears_hurdle ? "✓" : "✗";
+  const head = `${glyph} ${v.clears_hurdle ? "clears" : "short of"} the hurdle`;
+  if (v.margin_tied || v.rate_margin_bps === 0)
+    return `${head} — quoted rate is at the hurdle-clearing rate`;
+  const side = v.rate_margin_bps > 0 ? "above" : "below";
+  return `${head} — quoted rate ${fmt.bpsAt(Math.abs(v.rate_margin_bps), v.margin_dp)} ` +
+    `${side} the hurdle-clearing rate`;
 }
 
 function verdictTiles(v) {
@@ -98,8 +111,11 @@ function verdictTiles(v) {
   const clears = el("span", {class: "chip " + (v.clears_hurdle ? "Approve" : "Decline")},
     v.clears_hurdle ? "✓ clears" : "✗ short");
   const wrap = el("div", {class: "pr-tiles"});
-  wrap.append(mk("ROE at quoted", fmt.pct(v.roe, 2)), mk("ROE hurdle", fmt.pct(v.roe_hurdle, 2)),
-    mk("Clears hurdle", clears), mk("Shortfall", fmt.bps(v.rate_shortfall_bps)));
+  // ROE and hurdle at the server's roe_dp, so BIZ103012 reads 14.997% vs 15.000%
+  // rather than "15.00% · 15.00% · ✗ short". Margin signed, never a clamped 0.
+  wrap.append(mk("ROE at quoted", fmt.pctAt(v.roe, v.roe_dp)),
+    mk("ROE hurdle", fmt.pctAt(v.roe_hurdle, v.roe_dp)), mk("Clears hurdle", clears),
+    mk("Quoted vs hurdle-clearing rate", fmt.signedBps(v.rate_margin_bps, v.margin_dp)));
   return wrap;
 }
 

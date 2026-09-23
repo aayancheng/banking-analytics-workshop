@@ -29,25 +29,42 @@ function axisWithHandles(
   const toX = v => pad.l + (v - min) / (max - min) * innerW;
   const toV = x => Math.min(max, Math.max(min,
                      min + (x - pad.l) / innerW * (max - min)));
+  const values = Object.fromEntries(handles.map(h => [h.key, h.value]));
+  let fmtFn = format;
 
-  for (const b of bands) {
-    s.append(svgEl("rect", {x: toX(b.from), y: pad.t - 10,
-                            width: Math.max(0, toX(b.to) - toX(b.from)),
-                            height: 20, fill: b.fill, opacity: 0.25}));
-  }
+  /* Final review I2: a band edge is a handle KEY (it moves with that handle) or a
+     fixed number. The bands used to be drawn once, so dragging t_low to 0.20 left
+     the green band at the committed cutoff and the pin sat in amber beside a chip
+     that said Approve. Every handle move now re-lays every band. */
+  const edge = e => typeof e === "string" ? values[e] : e;
+  const bandRects = bands.map(b => {
+    const r = svgEl("rect", {y: pad.t - 10, height: 20, fill: b.fill, opacity: 0.25});
+    s.append(r);
+    return {b, r};
+  });
+  const layBands = () => {
+    for (const {b, r} of bandRects) {
+      const x0 = toX(edge(b.from)), x1 = toX(edge(b.to));
+      r.setAttribute("x", Math.min(x0, x1));
+      r.setAttribute("width", Math.max(0, x1 - x0));
+    }
+  };
+  layBands();
   s.append(svgEl("line", {x1: pad.l, x2: width - pad.r, y1: pad.t,
                           y2: pad.t, stroke: "var(--ink)", "stroke-width": 2}));
 
+  const pt = svgEl("text", {x: 0, y: pad.t - 18, "font-size": 12,
+                            "text-anchor": "middle", "font-weight": "600"});
   if (pin !== null) {
     s.append(svgEl("line", {x1: toX(pin), x2: toX(pin), y1: pad.t - 14,
                             y2: pad.t + 14, stroke: "var(--ink)", "stroke-width": 3}));
-    const pt = svgEl("text", {x: toX(pin), y: pad.t - 18, "font-size": 12,
-                              "text-anchor": "middle", "font-weight": "600"});
-    pt.textContent = `${pinLabel} ${format(pin)}`;
+    pt.setAttribute("x", toX(pin));
     s.append(pt);
   }
+  const relabel = [];
+  const labelPin = () => { if (pin !== null) pt.textContent = `${pinLabel} ${fmtFn(pin)}`; };
+  labelPin();
 
-  const values = Object.fromEntries(handles.map(h => [h.key, h.value]));
   for (const h of handles) {
     const g = svgEl("g", {style: "cursor:ew-resize"});
     const tri = svgEl("polygon", {fill: "var(--accent)"});
@@ -57,20 +74,22 @@ function axisWithHandles(
       const x = toX(v);
       tri.setAttribute("points", `${x},${pad.t + 2} ${x - 7},${pad.t + 18} ${x + 7},${pad.t + 18}`);
       txt.setAttribute("x", x);
-      txt.textContent = `${h.label} ${format(v)}`;
+      txt.textContent = `${h.label} ${fmtFn(v)}`;
     };
     place(h.value);
+    relabel.push(() => place(values[h.key]));
     g.append(tri, txt);
 
     let dragging = false;
     const move = ev => {
       if (!dragging) return;
-      const pt = s.createSVGPoint();
-      pt.x = ev.clientX;
-      pt.y = ev.clientY;
-      const v = toV(pt.matrixTransform(s.getScreenCTM().inverse()).x);
+      const p = s.createSVGPoint();
+      p.x = ev.clientX;
+      p.y = ev.clientY;
+      const v = toV(p.matrixTransform(s.getScreenCTM().inverse()).x);
       values[h.key] = v;
       place(v);
+      layBands();
       onChange({...values});
     };
     g.addEventListener("pointerdown", ev => {
@@ -89,5 +108,9 @@ function axisWithHandles(
     });
     s.append(g);
   }
+  /* The server re-chooses the display precision for the cutoffs just dragged
+     (pd_zones.dp / prob_dp); the caller hands the new format here so the pin and
+     both handle labels keep printing distinct numbers. Formatting only. */
+  s.setFormat = fn => { fmtFn = fn; labelPin(); for (const f of relabel) f(); };
   return s;
 }

@@ -21,13 +21,18 @@ function svgRoot(width, height) {
 }
 
 /* A 24-point series. y is scaled to the series' own min/max, so a flat series does
-   not become noise. `threshold` draws a dashed rule in the series' own units. */
-function sparkline(values, {width = 620, height = 68, threshold = null,
+   not become noise. `threshold` draws a dashed rule in the series' own units.
+   `marker` {value, span, label} draws a server-given quantity as a solid bar over
+   the last `span` points -- the number a trigger actually tests, when that is not
+   the last point (HIGH_UTILIZATION tests the 3-month mean) -- and the right-hand
+   label then names it instead of the last month. Drawn, never computed. */
+function sparkline(values, {width = 620, height = 68, threshold = null, marker = null,
                             label = "", format = v => v.toFixed(2)} = {}) {
-  const pad = {l: 8, r: 96, t: 10, b: 10};
+  const pad = {l: 8, r: 150, t: 10, b: 10};
   const s = svgRoot(width, height);
-  const lo = Math.min(...values, threshold === null ? Infinity : threshold);
-  const hi = Math.max(...values, threshold === null ? -Infinity : threshold);
+  const extra = [threshold, marker && marker.value].filter(v => v !== null && v !== undefined);
+  const lo = Math.min(...values, ...extra);
+  const hi = Math.max(...values, ...extra);
   const span = (hi - lo) || 1;
   const x = i => pad.l + i * (width - pad.l - pad.r) / (values.length - 1);
   const y = v => pad.t + (hi - v) * (height - pad.t - pad.b) / span;
@@ -43,9 +48,15 @@ function sparkline(values, {width = 620, height = 68, threshold = null,
     "stroke-linejoin": "round"}));
   s.append(svgEl("circle", {cx: x(values.length - 1), cy: y(values[values.length - 1]),
                             r: 3.5, fill: "var(--accent)"}));
+  if (marker) {
+    s.append(svgEl("line", {x1: x(values.length - marker.span), x2: x(values.length - 1),
+                            y1: y(marker.value), y2: y(marker.value),
+                            stroke: "var(--ink)", "stroke-width": 4}));
+  }
   const t = svgEl("text", {x: width - pad.r + 8, y: height / 2 + 4,
                            "font-size": 13, fill: "var(--ink)"});
-  t.textContent = `${label} ${format(values[values.length - 1])}`;
+  t.textContent = marker ? `${label} ${marker.label}`
+                         : `${label} ${format(values[values.length - 1])}`;
   s.append(t);
   return s;
 }
@@ -80,21 +91,32 @@ function divergingBars(rows, {width = 620, rowHeight = 20,
   return s;
 }
 
-/* Horizontal bars for the three line-increase caps; the binding one is filled. */
-function hbars(rows, {width = 560, rowHeight = 26, labelWidth = 200} = {}) {
+/* Horizontal bars for the three line-increase caps; the binding one is filled.
+   Every bar prints its own amount. A cap at or below zero has no bar to draw, so
+   it SAYS "no headroom" with its amount instead of a zero-width bar labelled
+   "(binds)" (final review I4: 7,069 of 8,336 binding caps are negative). */
+function hbars(rows, {width = 640, rowHeight = 26, labelWidth = 200} = {}) {
   const height = rows.length * rowHeight + 10;
   const s = svgRoot(width, height);
-  const max = Math.max(...rows.map(r => Math.abs(r.amount))) || 1;
+  const barW = width - labelWidth - 190;
+  const max = Math.max(...rows.map(r => Math.max(0, r.amount))) || 1;
   rows.forEach((r, i) => {
     const y = 6 + i * rowHeight;
-    const w = Math.max(0, r.amount) / max * (width - labelWidth - 110);
+    const w = Math.max(0, r.amount) / max * barW;
     s.append(svgEl("rect", {
       x: labelWidth, y, width: w, height: rowHeight - 10, rx: 2,
       fill: r.binding ? "var(--accent)" : "none",
       stroke: "var(--accent)", "stroke-width": 1}));
     const lab = svgEl("text", {x: 0, y: y + rowHeight - 14, "font-size": 12});
-    lab.textContent = r.name.replace(/_/g, " ") + (r.binding ? "  (binds)" : "");
+    const open = r.amount > 0;
+    lab.textContent = r.name.replace(/_/g, " ") +
+      (r.binding ? (open ? "  (binds)" : "  (binds: no headroom)") : "");
     s.append(lab);
+    const amt = svgEl("text", {x: labelWidth + w + 6, y: y + rowHeight - 14,
+                               "font-size": 12, fill: "var(--ink)"});
+    amt.textContent = open ? fmt.money(r.amount)
+      : (r.binding ? `cap ${fmt.money(r.amount)}` : `no headroom (cap ${fmt.money(r.amount)})`);
+    s.append(amt);
   });
   return s;
 }
