@@ -18,12 +18,19 @@
 // (app/v2/display.py), not a hardcoded decimal count. A fixed 6dp (Task 15's first
 // draft, for the documented BIZ101719 near-miss) was only 3.3x from colliding on
 // this data; the server now measures the real margin per clause, per loan.
-// amount_positive and clears_hurdle keep their own units (dollars, a rate) since
-// dp doesn't apply to them the same way -- `tied` still governs their comparator
-// text below.
+// amount_positive stays fmt.money -- safe by construction, amounts move in $1,000
+// steps. clears_hurdle is a fraction shown as a percent, so a FIXED 2dp-of-percent
+// silently discarded the server's `dp` (fix round 3): BIZ103012's incremental ROE
+// 0.14997213 against a 0.15 hurdle gets dp=5 from the server (a real, untied
+// separation) but rendered "15.00% >= 15.00% -- FAIL", the same self-contradiction
+// class as an EWS float-noise row, just introduced back in by the browser this
+// time. A fraction needs (dp - 2) percent decimals to carry the same precision as
+// dp decimals of the fraction; Math.max(2, ...) keeps the floor at today's 2dp so
+// a comfortably-separated loan (the common case, dp = base_dp = 4) still prints
+// plain "16.69%", not needless digits.
 const CLAUSE_FMT = {
   amount_positive: v => fmt.money(v),
-  clears_hurdle: v => fmt.pct(v, 2),
+  clears_hurdle: (v, dp) => fmt.pct(v, Math.max(2, dp - 2)),
 };
 
 function capsChart(caps) {
@@ -54,8 +61,8 @@ function clauseList(eligibility) {
     const comparator = c.tied ? "at threshold" : c.comparator;
     const glyph = c.pass ? "✓ pass" : "✗ fail";
     body.append(el("tr", {}, el("td", {}, c.name.replace(/_/g, " ")),
-      el("td", {}, format(c.value)), el("td", {}, comparator),
-      el("td", {}, format(c.threshold)),
+      el("td", {}, format(c.value, c.dp)), el("td", {}, comparator),
+      el("td", {}, format(c.threshold, c.dp)),
       el("td", {}, el("span", {class: c.pass ? "passed" : "fired"}, glyph))));
   }
   const t = el("table", {class: "rules"});
