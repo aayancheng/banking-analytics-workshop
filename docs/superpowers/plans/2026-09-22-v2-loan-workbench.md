@@ -3111,8 +3111,22 @@ bar configuration) and `tab-ews.js` for orchestration. POST through `util.js`'s
 `postJSON`; do not re-type a fetch helper. Load order: after `pricing-charts.js`, before
 `tab-ews.js`.
 
+**Trigger thresholds are draggable too, not only the tier bar.** The spec requires
+"named triggers ... with draggable thresholds", and `EwsOverrides` has accepted all five
+since Task 9 (`high_utilization`, `rising_utilization`, `dpd_severe`, `deposit_decline`,
+`overdraft_recent`). It is the tab's second teaching moment: moving `high_utilization`
+from 0.90 to 0.10 fires that trigger for 7,538 accounts instead of 628, which shows a
+room exactly how much of a watchlist is a threshold choice rather than a model output.
+
+The slider panel is shared, not copied. `tab-pricing.js`'s `sliders()` is hardcoded to
+`SLIDER_DEFS`; generalise it to `sliderPanel(defs, seed, onChange)` in a new
+`app/static/v2/sliders.js` -- a stateful input widget, so it sits beside
+`axis-handles.js` rather than in the pure `util.js` -- and have BOTH the pricing and EWS
+tabs call it. Load it after `axis-handles.js`.
+
 **Files:**
-- Create: `app/static/v2/tab-ews.js`
+- Create: `app/static/v2/ews-charts.js`, `app/static/v2/tab-ews.js`, `app/static/v2/sliders.js`
+- Modify: `app/static/v2/tab-pricing.js` (use the shared `sliderPanel`)
 - Modify: `app/static/v2/index.html`, `app/static/v2/styles.css`
 
 **Interfaces:**
