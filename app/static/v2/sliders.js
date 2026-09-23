@@ -17,7 +17,11 @@
    the CURRENT value of every key this panel manages (not just the one that
    moved), the same shape the original sliders() sent. */
 function sliderPanel(defs, defaults, onChange) {
-  const values = {...defaults};
+  // Only the keys this panel owns. Seeding from the whole defaults object meant a
+  // panel sharing an override body with another widget (the EWS tier bar) carried
+  // that widget's values frozen at mount time and re-sent them on every change,
+  // silently reverting the other widget's latest drag.
+  const values = Object.fromEntries(defs.map(([key]) => [key, defaults[key]]));
   const inputs = {};
   const wrap = el("div", {class: "sliders"});
   const fire = debounce(() => onChange({...values}), 120);
