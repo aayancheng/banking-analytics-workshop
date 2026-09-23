@@ -1,53 +1,17 @@
 "use strict";
-/* Loan Workbench v2.
+/* Loan Workbench v2 -- the shell (selector, persistent header, tab chrome).
    This file formats and draws. It never calculates a financial number: every value
    on screen came from a server response, because the server calls the same module
-   function the batch pipeline calls. */
+   function the batch pipeline calls. api/fmt/el/remember/recall/debounce come from
+   util.js; svgEl/svgRoot/sparkline/divergingBars/hbars from svg.js;
+   axisWithHandles from axis-handles.js -- load order in index.html puts all three
+   ahead of this file. */
 
 const FACETS = ["decision", "score_band", "industry", "region",
     "booked", "ews_tier", "mispriced", "li_eligible"];
 const TABS = {};   // tab name -> render function, filled by later files/tasks
 
 const state = { loanId: null, tab: "decision", filters: {} };
-
-async function api(path, body) {
-  const opts = body === undefined
-    ? {} : {method: "POST", headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(body)};
-  const r = await fetch(path, opts);
-  if (!r.ok) throw new Error(path + " -> " + r.status);
-  return r.json();
-}
-
-const fmt = {
-  money: v => "$" + Math.round(v).toLocaleString(),
-  pct: (v, d = 1) => (v * 100).toFixed(d) + "%",
-  bps: v => Math.round(v).toLocaleString() + " bps",
-  num: (v, d = 2) => Number(v).toFixed(d),
-};
-
-function el(tag, attrs = {}, ...kids) {
-  const n = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === "class") n.className = v;
-    else if (k === "html") n.innerHTML = v;
-    else n.setAttribute(k, v);
-  }
-  for (const kid of kids) n.append(kid?.nodeType ? kid : document.createTextNode(kid));
-  return n;
-}
-
-/* localStorage throws rather than returning null in restricted contexts, so every
-   access is guarded. Remembered filters are a convenience, never a dependency. */
-function remember(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* fine */ }
-}
-function recall(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw === null ? fallback : JSON.parse(raw);
-  } catch (e) { return fallback; }
-}
 
 async function renderSelector() {
   const facets = await api("/api/v2/filters");
@@ -67,7 +31,9 @@ async function renderSelector() {
       refreshMatches();
     };
     const wrap = el("div");
-    wrap.append(el("label", {}, f.replace(/_/g, " ")), sel);
+    // Programmatic label, not proximity-only: this screen is projected and may
+    // be read by assistive tech.
+    wrap.append(el("label", {for: sel.id}, f.replace(/_/g, " ")), sel);
     box.append(wrap);
   }
   document.getElementById("q").oninput = debounce(refreshMatches, 250);

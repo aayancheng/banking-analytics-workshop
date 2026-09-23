@@ -18,7 +18,9 @@
 <section id="selector">
   <div class="filters" id="filters"></div>
   <div class="pick">
+    <label for="q" class="sr-only">Search by business ID</label>
     <input id="q" placeholder="business_id, e.g. BIZ100002" autocomplete="off">
+    <label for="loanpick" class="sr-only">Matching loans</label>
     <select id="loanpick"><option>Loading…</option></select>
     <span class="count" id="matchcount"></span>
     <button id="clearfilters" type="button">Clear filters</button>
@@ -37,7 +39,9 @@
 <main id="panel" class="hidden"></main>
 <p id="empty" class="muted">Pick a loan to begin.</p>
 
+<script src="/static/v2/util.js"></script>
 <script src="/static/v2/svg.js"></script>
+<script src="/static/v2/axis-handles.js"></script>
 <script src="/static/v2/app.js"></script>
 </body>
 </html>

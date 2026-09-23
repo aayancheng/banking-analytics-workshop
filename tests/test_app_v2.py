@@ -21,6 +21,14 @@ def test_v1_still_works(client):
     assert client.get("/api/dashboard/summary").status_code == 200
 
 
+def test_v2_page_serves_html(client):
+    """The page route lives on a second, prefix-less router (page_router) so it can
+    sit at /v2 rather than under /api/v2 -- nothing else exercises it."""
+    r = client.get("/v2")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+
+
 def test_v2_health(client):
     r = client.get("/api/v2/health")
     assert r.status_code == 200

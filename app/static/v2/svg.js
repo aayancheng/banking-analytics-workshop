@@ -1,7 +1,10 @@
 "use strict";
-/* Inline-SVG primitives for the workbench. No library, no CDN -- the page must work
-   offline in a devcontainer. These draw; they never decide anything. Every value
-   passed in came from a server response. */
+/* Inline-SVG primitives for the workbench: static drawing only. No library, no CDN
+   -- the page must work offline in a devcontainer. These draw; they never decide
+   anything. Every value passed in came from a server response. The one pointer-
+   driven primitive, axisWithHandles, lives in axis-handles.js -- it is stateful
+   and has real interaction math to get right, which is a different kind of file
+   from these. */
 
 const NS = "http://www.w3.org/2000/svg";
 
@@ -93,74 +96,5 @@ function hbars(rows, {width = 560, rowHeight = 26, labelWidth = 200} = {}) {
     lab.textContent = r.name.replace(/_/g, " ") + (r.binding ? "  (binds)" : "");
     s.append(lab);
   });
-  return s;
-}
-
-/* An axis carrying draggable threshold handles and one fixed pin.
-   `handles` is [{key, value, label}]; onChange({key: value, ...}) fires on drag,
-   debounced by the caller. The axis NEVER decides anything -- it reports a number
-   and the server recomputes. */
-function axisWithHandles(
-    {min = 0, max = 1, pin = null, pinLabel = "", handles = [], bands = [],
-     width = 640, height = 76, format = v => v.toFixed(4)}, onChange) {
-  const pad = {l: 20, r: 20, t: 26, b: 22};
-  const s = svgRoot(width, height);
-  const innerW = width - pad.l - pad.r;
-  const toX = v => pad.l + (v - min) / (max - min) * innerW;
-  const toV = x => Math.min(max, Math.max(min,
-                     min + (x - pad.l) / innerW * (max - min)));
-
-  for (const b of bands) {
-    s.append(svgEl("rect", {x: toX(b.from), y: pad.t - 10,
-                            width: Math.max(0, toX(b.to) - toX(b.from)),
-                            height: 20, fill: b.fill, opacity: 0.25}));
-  }
-  s.append(svgEl("line", {x1: pad.l, x2: width - pad.r, y1: pad.t,
-                          y2: pad.t, stroke: "var(--ink)", "stroke-width": 2}));
-
-  if (pin !== null) {
-    s.append(svgEl("line", {x1: toX(pin), x2: toX(pin), y1: pad.t - 14,
-                            y2: pad.t + 14, stroke: "var(--ink)", "stroke-width": 3}));
-    const pt = svgEl("text", {x: toX(pin), y: pad.t - 18, "font-size": 12,
-                              "text-anchor": "middle", "font-weight": "600"});
-    pt.textContent = `${pinLabel} ${format(pin)}`;
-    s.append(pt);
-  }
-
-  const values = Object.fromEntries(handles.map(h => [h.key, h.value]));
-  for (const h of handles) {
-    const g = svgEl("g", {style: "cursor:ew-resize"});
-    const tri = svgEl("polygon", {fill: "var(--accent)"});
-    const txt = svgEl("text", {"font-size": 12, "text-anchor": "middle",
-                               fill: "var(--accent)", y: pad.t + 34});
-    const place = v => {
-      const x = toX(v);
-      tri.setAttribute("points", `${x},${pad.t + 2} ${x - 7},${pad.t + 18} ${x + 7},${pad.t + 18}`);
-      txt.setAttribute("x", x);
-      txt.textContent = `${h.label} ${format(v)}`;
-    };
-    place(h.value);
-    g.append(tri, txt);
-
-    let dragging = false;
-    const move = ev => {
-      if (!dragging) return;
-      const box = s.getBoundingClientRect();
-      const x = (ev.clientX - box.left) / box.width * width;
-      const v = toV(x);
-      values[h.key] = v;
-      place(v);
-      onChange({...values});
-    };
-    g.addEventListener("pointerdown", ev => {
-      dragging = true; g.setPointerCapture(ev.pointerId); ev.preventDefault();
-    });
-    g.addEventListener("pointermove", move);
-    g.addEventListener("pointerup", ev => {
-      dragging = false;
-      try { g.releasePointerCapture(ev.pointerId); } catch (e) { /* already gone */ }
-    });
-    s.append(g);
-  }
   return s;
 }
