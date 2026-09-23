@@ -1,7 +1,7 @@
 "use strict";
 /* Task 12 -- Decision tab: the policy ledger, both model rationales, and a
    draggable PD ruler that re-decides the whole book server-side on every drag.
-   Uses api/fmt/el/debounce (util.js) and divergingBars/axisWithHandles
+   Uses api/fmt/el/debounce/postJSON (util.js) and divergingBars/axisWithHandles
    (svg.js/axis-handles.js). This file formats and draws; every fired/clear state,
    every book-mix count, and the additive-footer numbers come straight from a
    server response -- nothing here compares a value to a threshold. */
@@ -93,29 +93,12 @@ function nearestFlipLine(nf) {
     `${String(nf.threshold)} (gap ${fmt.num(nf.gap, 4)}).`);
 }
 
-/* api() (util.js) discards the response body on a non-2xx status, but an
-   out-of-range or inverted drag must surface the server's own 422 message, not a
-   bare status code or a silent failure. A local fetch that always reads the body
-   keeps that message intact without touching the shared helper every other tab
-   also uses. FastAPI's own field-range 422s carry a list of error objects;
-   InvalidOverride (t_low > t_high, an inverted band) carries a plain string --
-   handle both. */
-async function postWhatif(id, body) {
-  const r = await fetch(`/api/v2/loan/${id}/decision/whatif`, {
-    method: "POST", headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(body)});
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) {
-    const msg = Array.isArray(data.detail)
-      ? data.detail.map(e => e.msg).join("; ") : (data.detail || `request failed (${r.status})`);
-    throw new Error(msg);
-  }
-  return data;
-}
-
 TABS.decision = async (panel, id) => {
   const d = await api(`/api/v2/loan/${id}/decision`);
-  const seed = await postWhatif(id, {});  // empty overrides == the batch pipeline
+  // empty overrides == the batch pipeline. postJSON (util.js) is the shared
+  // what-if POST every tab uses -- it always reads the body so a 422 surfaces
+  // the server's own message instead of a bare status code.
+  const seed = await postJSON(`/api/v2/loan/${id}/decision/whatif`, {});
 
   panel.innerHTML = "";
   const topBox = el("div", {id: "dec-top"});
@@ -142,7 +125,7 @@ TABS.decision = async (panel, id) => {
 
   rulerBox.append(pdRuler(d.pd_zones, async vals => {
     try {
-      const w = await postWhatif(id, vals);
+      const w = await postJSON(`/api/v2/loan/${id}/decision/whatif`, vals);
       err.classList.add("hidden");
       paint(w);
     } catch (e) {

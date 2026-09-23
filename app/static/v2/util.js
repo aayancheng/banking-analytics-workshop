@@ -13,6 +13,27 @@ async function api(path, body) {
   return r.json();
 }
 
+/* postJSON -- the shared what-if POST for every tab. api() above discards the
+   response body on a non-2xx status, which is fine for a GET but would swallow
+   exactly the message a what-if error needs to show: an out-of-range or
+   incoherent override must surface the server's own 422 verbatim, not a bare
+   status code. FastAPI's own field-range 422s carry a list of error objects;
+   an InvalidOverride (e.g. t_low > t_high) carries a plain string -- handle
+   both. Was duplicated per-tab (tab-decision.js's postWhatif, tab-pricing.js's
+   postPricingWhatif, byte-for-byte apart from the URL) until review flagged
+   the duplication; both now call this one copy. */
+async function postJSON(url, body) {
+  const r = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const msg = Array.isArray(data.detail)
+      ? data.detail.map(e => e.msg).join("; ") : (data.detail || `request failed (${r.status})`);
+    throw new Error(msg);
+  }
+  return data;
+}
+
 const fmt = {
   money: v => "$" + Math.round(v).toLocaleString(),
   pct: (v, d = 1) => (v * 100).toFixed(d) + "%",
