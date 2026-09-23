@@ -103,8 +103,13 @@ move (invariant 1). Consequences:
 - `verify.py`'s `check_apps` gains a v2 block guarded by
   `if (ROOT / "app" / "v2").exists()`, so it exercises v2 on `main` and stays silent
   at every tag. The one promise holds unchanged at stage-0..stage-5.
-- The S3 stage-jump command becomes `git checkout main -- app notebooks workshop`.
-  This must be updated everywhere the two-part handoff is printed.
+- The S3 stage-jump must land on **stage-4 or later** before restoring v2:
+  `git checkout stage-4` then `git checkout main -- app notebooks workshop`. Restoring
+  `main`'s `app/` into stage-3 breaks the app, because v2 imports `ews` and
+  `line_increase`, which stage-3 does not contain. (Corrected during Task 16; the
+  original wording here omitted the stage and would have broken the one promise at
+  stage-3.) This must be updated everywhere the two-part handoff is printed, and
+  verified at the tag in a clean clone.
 
 ## API
 

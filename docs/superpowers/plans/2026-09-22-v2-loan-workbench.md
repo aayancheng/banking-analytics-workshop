@@ -3370,6 +3370,28 @@ over-flagging above passed. `tied` must mean "different, but inseparable at 8dp"
 
 ### Task 16: verify.py smoke, Makefile, and documentation
 
+**Correction made before this task ran: the spec's handoff command is unsafe at stage-3.**
+The spec says the S3 stage-jump becomes `git checkout main -- app notebooks workshop`.
+But `app/v2/state.py` imports `ews` and `line_increase` unconditionally, and stage-3
+contains neither (`git ls-tree`: stage-3 has score, adjudication, pricing only; stage-4
+and stage-5 have all five). Restoring `main`'s `app/` into stage-3 would make
+`import ews` fail at boot -- and `verify.py` imports the app, so the one promise would
+break at that tag. This is the `make notebooks` trap in `CLAUDE.md` again: advice that
+works on `main` and fails at the tags.
+
+So this task must **test the handoff at the tags in the clean clone** (a worktree carries
+`main`'s files and cannot see this), and document only what it proves:
+
+- at **stage-3**: `git checkout stage-3 && git checkout main -- app notebooks workshop`,
+  then boot the app and run `verify.py`. Expected to FAIL; record the exact error.
+- at **stage-4** and **stage-5**: the same command, then boot, run `verify.py`, and load
+  `/v2` with each of the four tabs. Record the result -- artifacts at the tag may differ
+  from `main`'s, and `V2State`'s alignment asserts will fire at boot if they do.
+
+The documented S3 handoff is then whatever the tests prove works -- expected
+`git checkout stage-4` then `git checkout main -- app notebooks workshop` -- with the
+stage-3 failure recorded as a gotcha so nobody gives the shorter advice later.
+
 **Files:**
 - Modify: `verify.py` (inside `check_apps`), `Makefile`, `README.md`, `CLAUDE.md`
 
