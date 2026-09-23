@@ -276,3 +276,64 @@ address (invariant 6).
 
 Housekeeping: local-only branches `backup/pre-pii-rewrite` and `archive/yanexercise` (the
 deleted remote branch, SHA `bcb055b`) — delete when no longer wanted.
+
+## v2 loan workbench (added 2026-09-23, task 16 of the v2-loan-workbench plan)
+
+`app/v2/` adds a loan-level "Loan Workbench" at `/v2`, running side by side with the
+existing v1 portfolio portal at `/`. `make run` serves both on port 8100 — no second
+server, no second target. v2 never re-implements a module: every number on screen
+comes from calling the existing module functions (`price_loan`, `policy.decide`,
+`flag_triggers`, `risk_tier`, `recommended_amount`, `incremental_roe`,
+`feature_contributions`) the same way the batch pipeline does. `app/main.py` carries
+the whole integration in four statements (import, one lifespan line, `include_router`,
+the `/static/v2` mount) — invariant 5 (one service per module) applies to v2 exactly
+as it does to v1.
+
+- **`app/v2/` is main-only, like `notebooks/` and `workshop/`.** No stage tag
+  contains it, and tags never move. `verify.py`'s v2 smoke (inside `check_apps`) is
+  guarded on `(ROOT / "app" / "v2").exists()`, so it is silent at every stage tag and
+  only runs where `app/v2` exists. Verified in a clean clone: `stage-0`..`stage-5`
+  untouched all report exactly as they did before v2 existed, and running `verify.py`
+  where `app/v2` is present (on the `v2-loan-workbench` branch, and on `main` once
+  merged) exercises the v2 smoke, which asserts a what-if with an empty override body
+  agrees with the batch `/api/adjudicate` decision.
+- **The stage-3 handoff is unsafe — do not give it.** `app/v2/state.py` imports
+  `ews` and `line_increase` unconditionally, and stage-3 contains neither (it has
+  score, adjudication, pricing only — `git ls-tree` confirms). Restoring v2's `app/`
+  into stage-3 fails at boot, so `verify.py` (which boots the app inside
+  `check_apps`) breaks the one promise at that tag. Verified in a clean clone:
+  ```
+  git checkout -f stage-3
+  git checkout origin/v2-loan-workbench -- app notebooks workshop   # v2 isn't on main yet
+  python verify.py
+  ```
+  fails at the apps check with exactly:
+  `cannot import name 'watchlist' from 'ews.src' (unknown location)`
+  **The safe handoff is stage-4 or later.** Once v2 is merged to `main`, give
+  students `git checkout stage-4` (or `stage-5`) **followed by**
+  `git checkout main -- app notebooks workshop` — the same shape as the existing
+  `workshop`/`notebooks` handoff, just landing one stage later than the S3 spec
+  originally assumed. (Until that merge, the source is `origin/v2-loan-workbench`
+  instead of `main`, as in the command above.) Verified in a clean clone at both
+  stage-4 and stage-5, restoring from `origin/v2-loan-workbench`: `verify.py` passes
+  (`✅ Stage 4/5 verified`), the server then boots cleanly — no `V2State`
+  alignment-assert failure, which is real evidence, since those asserts fire at boot
+  if a tag's committed artifacts differ from `main`'s — `/api/v2/health` answers, and
+  every tab's endpoint (`/api/v2/loan/BIZ100002{,/decision,/pricing,/ews,
+  /line-increase}`) returns 200.
+- **v2's what-if must equal the batch pipeline.** Every slider calls the same
+  module function the batch run calls; `tests/test_app_v2.py` asserts that an empty
+  override body reproduces `/api/adjudicate`, `/api/pricing/<id>` and
+  `/api/ews/<id>` exactly, over 25 loans each, and `verify.py`'s v2 smoke re-asserts
+  the adjudication case on every run. If either fails, the demo is lying — fix the
+  drift, never the test or the smoke check.
+- **No financial arithmetic in the v2 JavaScript.** Every number on screen came from
+  a server response; the browser only formats and draws. A threshold comparison done
+  in JS is a bug even on the loans where it currently agrees with the server.
+
+Sessions 3 and 4 are merging into one new Session 3 (adjudication + pricing + early
+warning, line increase optional); v2 is the demo artifact for it. Curriculum work that
+follows from v2 — stubbing the EWS tab as the S3 lab exercise, preserving the prompt
+that produced v2 in `workshop/prompt-cards/`, and updating every printed stage-jump
+command to the stage-4-or-later form above — is deferred to that session rewrite, not
+this build.

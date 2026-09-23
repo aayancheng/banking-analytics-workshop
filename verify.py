@@ -369,6 +369,20 @@ def check_apps(stage: int = 3):
                 booked_id = client.get("/api/ews/watchlist?n=1").json()[0]["business_id"]
                 c = client.get(f"/api/customer/{booked_id}").json()
                 assert len(c["modules_present"]) == 5, "customer-360 missing modules"
+
+            # v2 workbench lives on main only -- stage tags never move, so this block
+            # is silent at stage-0..stage-5 and only runs where app/v2 exists.
+            if (ROOT / "app" / "v2").exists():
+                v2h = client.get("/api/v2/health").json()
+                assert v2h["applicants"] == len(app.state.profiles), "v2 health wrong"
+                first = client.get("/api/v2/loans?limit=1").json()["loans"][0]
+                bid = first["business_id"]
+                assert client.get(f"/api/v2/loan/{bid}").status_code == 200, \
+                    "v2 loan header broken"
+                wi = client.post(f"/api/v2/loan/{bid}/decision/whatif", json={}).json()
+                batch = client.get(f"/api/adjudicate/{bid}").json()
+                assert wi["decision"] == batch["decision"], \
+                    "v2 what-if disagrees with the batch pipeline"
         committed = json.loads(summary_file.read_text())
         for k in ("n", "share_clears", "mispriced_ead"):
             want, got = committed[k], live[k]

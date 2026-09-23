@@ -131,6 +131,16 @@ would alarm you in production* is itself Session 1 material.
 | `make data` | regenerate the synthetic data + data-quality report (Session 1 lab) |
 | `make run` / `make stop` | start / stop the apps (from stage-3 on) |
 
+`make run` serves two front ends on port 8100:
+
+- **`/`** — the v1 portal: one number per module, portfolio-level.
+- **`/v2`** — the Loan Workbench: pick one loan, then see its decision (with every
+  policy rule and both model rationales), its pricing waterfall, and its 24-month
+  behavioural history. Every parameter on screen is a live control; moving one
+  recomputes through the same module function the batch pipeline calls.
+
+Both are running the same models on the same data. Open them side by side.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Built by [TeamYan](https://teamyan.substack.com) from the
