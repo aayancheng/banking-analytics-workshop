@@ -3025,6 +3025,16 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ### Task 13: Pricing tab UI — waterfall, rate ladder, sliders
 
+**Structure (ruled after review).** Two files, split on the same rendering-vs-interaction
+seam as `svg.js` / `axis-handles.js`: `pricing-charts.js` holds the pure renderers
+(`waterfallTable`, `rateLadder`, `verdictTiles`, `bookStrip` and their constant tables —
+data in, DOM out, no network, no state), and `tab-pricing.js` holds the orchestration
+(`sliders`, `TABS.pricing`). The what-if POST is **not** re-typed per tab: `util.js`
+gains `postJSON(url, body)` carrying the shared fetch + FastAPI `detail` parsing, and
+both `tab-decision.js` and `tab-pricing.js` call it. The tab opens with the what-if POST
+alone — `pricing_whatif` already returns `null` for an unbooked id, so a preceding GET
+would be a discarded round-trip.
+
 **Files:**
 - Create: `app/static/v2/tab-pricing.js`
 - Modify: `app/static/v2/index.html`, `app/static/v2/styles.css`
@@ -3094,6 +3104,12 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ---
 
 ### Task 14: Early-warning tab UI — 24-month small multiples
+
+**Structure — decided up front, not after an overflow.** Follow Task 13's split from
+the start: `ews-charts.js` for the pure renderers (small multiples, trigger table, tier
+bar configuration) and `tab-ews.js` for orchestration. POST through `util.js`'s
+`postJSON`; do not re-type a fetch helper. Load order: after `pricing-charts.js`, before
+`tab-ews.js`.
 
 **Files:**
 - Create: `app/static/v2/tab-ews.js`
@@ -3176,6 +3192,11 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ---
 
 ### Task 15: Line-increase tab UI
+
+**Structure.** This tab is read-only (no what-if endpoint exists for line increase), so
+a single `tab-line-increase.js` is expected to fit under the ceiling. If it does not,
+split on the same rendering-vs-orchestration seam as Tasks 13 and 14. Use `util.js`'s
+`api` for the GET.
 
 **Files:**
 - Create: `app/static/v2/tab-line-increase.js`
