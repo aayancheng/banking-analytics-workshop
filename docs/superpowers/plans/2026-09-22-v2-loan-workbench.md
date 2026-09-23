@@ -2657,10 +2657,28 @@ function start() {
 document.addEventListener("DOMContentLoaded", start);
 ```
 
-- [ ] **Step 5: Write `app/static/v2/svg.js` — the drawing primitives**
+- [ ] **Step 5: Write the shared front-end modules**
 
-Four tabs need the same four shapes. Writing them once here is why Tasks 12–15 are
-composition rather than four reinventions of pointer-drag maths.
+Four files, split by responsibility rather than by line count:
+
+- **`app/static/v2/util.js`** — `api`, `fmt`, `el`, `remember`, `recall`, `debounce`.
+  Page-agnostic helpers with no dependency on this page's DOM ids. Tasks 12–15 all
+  need `api`, `fmt` and `el` for their own panels, so this is a genuinely reusable
+  module, not a fragment.
+- **`app/static/v2/svg.js`** — `svgEl`, `svgRoot`, `sparkline`, `divergingBars`,
+  `hbars`. Pure rendering: given data, draw.
+- **`app/static/v2/axis-handles.js`** — `axisWithHandles` alone. It is stateful and
+  pointer-driven, qualitatively different from the three pure renderers, and it is
+  the one piece with real interaction bugs to get wrong. Isolating it makes the
+  coordinate handling reviewable on its own.
+- **`app/static/v2/app.js`** — `FACETS`, `TABS`, `state`, `renderSelector`,
+  `refreshMatches`, `loadLoan`, `renderHeader`, `selectTab`, `start`. The page shell.
+
+Load order in `index.html`: `util.js`, `svg.js`, `axis-handles.js`, `app.js`, then the
+tab files. Top-level `const` in a classic script is visible to later scripts.
+
+Writing the primitives once is why Tasks 12–15 are composition rather than four
+reinventions of pointer-drag maths.
 
 ```javascript
 "use strict";
@@ -2810,9 +2828,20 @@ function axisWithHandles(
     let dragging = false;
     const move = ev => {
       if (!dragging) return;
-      const box = s.getBoundingClientRect();
-      const x = (ev.clientX - box.left) / box.width * width;
-      const v = toV(x);
+      // Map the pointer through the SVG's own CTM. The naive
+      //   (ev.clientX - box.getBoundingClientRect().left) / box.width * width
+      // assumes the viewBox spans the full rendered box. It does not: svgRoot sets
+      // width:"100%" with a fixed pixel height, so preserveAspectRatio's default
+      // xMidYMid meet letterboxes the content whenever the container is WIDER than
+      // the design width. Measured at 784px rendered against a 640 viewBox: 72px of
+      // letterbox each side and a drag error up to 55px -- 8.6% of the axis -- worst
+      // at the ends where the handles sit, zero at the centre. It is correct only
+      // when the container is narrower than the design width, which is why a small
+      // window hides it and a projector exposes it.
+      const pt = s.createSVGPoint();
+      pt.x = ev.clientX;
+      pt.y = ev.clientY;
+      const v = toV(pt.matrixTransform(s.getScreenCTM().inverse()).x);
       values[h.key] = v;
       place(v);
       onChange({...values});
