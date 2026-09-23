@@ -3229,6 +3229,19 @@ a single `tab-line-increase.js` is expected to fit under the ceiling. If it does
 split on the same rendering-vs-orchestration seam as Tasks 13 and 14. Use `util.js`'s
 `api` for the GET.
 
+**Reuse the pricing waterfall; do not re-type it.** The incremental waterfall carries the
+same eight lines as pricing's, because both come from `pricing.src.engine.profit_waterfall`
+-- so `pricing-charts.js`'s `waterfallTable` is the right renderer. Its sign handling is
+the subtle part: Task 13's first draft used `Math.abs()` and would have shown a loss as a
+profit and a tax rebate as a cost. Two small extensions, not a copy:
+- the incremental lines carry `dollars` only, no `bps` -- omit the bps column when the
+  lines have none (as written it would render `NaN bps`)
+- accept a caption, so it reads "Incremental waterfall" rather than "Profit waterfall"
+
+When no increase is recommended the payload's waterfall is `[]` (incremental EAD is 0):
+say so in words rather than drawing an empty table. Load `tab-line-increase.js` after
+`pricing-charts.js`.
+
 **Files:**
 - Create: `app/static/v2/tab-line-increase.js`
 - Modify: `app/static/v2/index.html`, `app/static/v2/styles.css`
