@@ -46,11 +46,6 @@ async function renderSelector() {
   await refreshMatches();
 }
 
-function debounce(fn, ms) {
-  let t;
-  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
-}
-
 async function refreshMatches() {
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries(state.filters)) if (v) params.set(k, v);
@@ -115,7 +110,15 @@ async function selectTab(name) {
   const panel = document.getElementById("panel");
   if (!TABS[name]) { panel.innerHTML = "<p class='muted'>Not built yet.</p>"; return; }
   panel.innerHTML = "<p class='muted'>Loading…</p>";
-  await TABS[name](panel, state.loanId);
+  // Guarded: an unhandled rejection here (a server hiccup, a 404) used to leave
+  // the panel reading "Loading…" forever -- indistinguishable on stage from a
+  // slow render. A failed render now says so, with the actual error text.
+  try {
+    await TABS[name](panel, state.loanId);
+  } catch (e) {
+    panel.innerHTML = "";
+    panel.append(el("p", {class: "tab-error"}, "Failed to load this tab: " + e.message));
+  }
 }
 
 function start() {

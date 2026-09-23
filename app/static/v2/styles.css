@@ -77,3 +77,19 @@ table.waterfall tr.wf-rule td { border-top:2px solid var(--ink); }
 .sliderrow { display:grid; grid-template-columns:150px 1fr 80px; align-items:center; gap:10px; }
 .sliderrow label { font-size:13px; color:var(--muted); }
 .sliderval { font-size:13px; text-align:right; font-variant-numeric:tabular-nums; }
+.tab-error { color:var(--bad); font-weight:600; margin:16px 24px; }
+
+/* Task 14 -- early-warning tab */
+.chip.Low { background:var(--ok); }
+.chip.Medium { background:var(--warn); }
+.chip.High { background:var(--bad); }
+.ews-ruler { margin:14px 0; }
+.ews-error { color:var(--bad); font-weight:600; margin:8px 0; }
+.ews-prob { font-size:14px; margin:6px 0; }
+.ews-panel { display:flex; flex-direction:column; gap:4px; margin:10px 0; }
+.panel-axis { font-size:12px; text-align:right; margin:0; }
+.ews-caveat { font-size:13px; color:var(--muted); background:var(--bg);
+              border:1px solid var(--line); border-radius:8px; padding:10px 14px;
+              margin:10px 0 20px; }
+.ews-caveat p { margin:4px 0; }
+tr.trig-group td { background:var(--bg); font-weight:600; border-bottom:0; }
