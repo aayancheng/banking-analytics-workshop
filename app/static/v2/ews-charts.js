@@ -1,10 +1,19 @@
 "use strict";
-/* Task 14 -- pure renderers for the Early Warning tab, split from tab-ews.js from
-   the start (Task 13's tab-pricing.js needed a post-hoc split after it overflowed
-   150 lines; this task does the split up front). Data in, DOM out, no network, no
-   state. Uses el/fmt/debounce (util.js), svgEl/svgRoot/sparkline (svg.js) and
-   axisWithHandles (axis-handles.js). Every number drawn here came straight off a
-   server response -- nothing here decides a threshold or a tier. */
+/* Pure renderers for the Early Warning tab, split from tab-ews.js from the
+   start. Data in, DOM out, no network, no state. Uses el/fmt/debounce
+   (util.js), svgEl/svgRoot/sparkline/divergingBars (svg.js) and
+   axisWithHandles (axis-handles.js). Every number drawn here came straight
+   off a server response -- nothing here decides a threshold or a tier.
+
+   Fix round 1: tierChip/bookTierTiles/bookTriggerCounts/caveatBlock/
+   driverBars moved here from tab-ews.js to stay under the line budget --
+   plain-DOM tile builders belong beside the SVG renderers, the split
+   pricing-charts.js already uses for verdictTiles/bookStrip. */
+
+const TIER_GLYPH = {Low: "✓", Medium: "!", High: "✗"};
+// Same order ews.py's _TRIGGER_SPECS uses.
+const TRIGGER_NAMES = ["HIGH_UTILIZATION", "RISING_UTILIZATION", "DELINQUENCY",
+                       "DEPOSIT_DECLINE", "FREQUENT_OVERDRAFTS"];
 
 const PANEL_SERIES = [
   {key: "utilization", label: "Utilization", format: v => fmt.pct(v, 0)},
@@ -15,14 +24,15 @@ const PANEL_SERIES = [
 ];
 
 /* smallMultiples -- five stacked sparklines over the account's real 24-month
-   behaviour (sparkline is svg.js's, used directly per the brief). Only
-   utilization carries a threshold rule: HIGH_UTILIZATION's own committed cutoff,
-   read off the triggers payload rather than hardcoded, so the dashed line always
-   agrees with what the trigger table calls a fire. One caption labels the shared
-   x-axis once, instead of five times. */
-function smallMultiples(panel, triggers) {
-  const hu = triggers.find(t => t.name === "HIGH_UTILIZATION");
-  const threshold = hu ? hu.clauses[0].threshold : null;
+   behaviour. Only utilization carries a threshold rule: HIGH_UTILIZATION's
+   cutoff, read off triggerConfig (a what-if response's `trigger_config`, never
+   hardcoded) so the dashed line agrees with the trigger table. Fix round 1:
+   this used to read the GET's triggers array once and never refresh -- the
+   caller now re-renders this block on every paint() with the latest
+   trigger_config, so dragging high_utilization moves the line with it. One
+   caption labels the shared x-axis once, instead of five times. */
+function smallMultiples(panel, triggerConfig) {
+  const threshold = triggerConfig ? triggerConfig.high_utilization : null;
   const wrap = el("div", {class: "ews-panel"});
   for (const {key, label, format} of PANEL_SERIES) {
     wrap.append(sparkline(panel.series[key], {
@@ -35,14 +45,15 @@ function smallMultiples(panel, triggers) {
 }
 
 /* triggerTable -- one row per CLAUSE under a trigger group-header row, not one
-   row per trigger. DELINQUENCY is a compound OR, and on all 4,225 accounts where
-   it fires, the SECOND clause (dpd_recent > 0) is the one that is true while the
-   first (dpd_max >= 30) reads false -- collapsing to one row, or showing only the
-   first clause, would print "value 2, threshold 30, FIRED": a row that
-   contradicts itself on half the book. The group header's fired glyph comes
-   straight off the payload and is never recomputed from a clause's `met`; `met`
-   only explains which clause caused it. Same fired/passed/na glyph convention as
-   the decision tab's rulesTable. */
+   row per trigger. DELINQUENCY is a compound OR; on all 4,225 accounts where it
+   fires, the SECOND clause (dpd_recent > 0) is true while the first
+   (dpd_max >= 30) reads false -- one row, or the first clause alone, would
+   print "value 2, threshold 30, FIRED": a row that contradicts itself on half
+   the book. The header's fired glyph comes straight off the payload, never
+   recomputed from a clause's `met`; `met` only explains which clause caused
+   it. Same fired/passed/na convention as the decision tab's rulesTable. Fix
+   round 1: value/threshold now go through fmt.feature instead of bare
+   String() -- thresholds are user-dragged now, not just clean constants. */
 function triggerTable(rows) {
   const body = el("tbody");
   for (const t of rows) {
@@ -53,8 +64,8 @@ function triggerTable(rows) {
     for (const c of t.clauses) {
       const status = c.met ? el("span", {class: "fired"}, "✗ met")
                             : el("span", {class: "na"}, "— not met");
-      body.append(el("tr", {}, el("td", {}, c.metric), el("td", {}, String(c.value)),
-        el("td", {}, c.comparator), el("td", {}, String(c.threshold)),
+      body.append(el("tr", {}, el("td", {}, c.metric), el("td", {}, fmt.feature(c.value)),
+        el("td", {}, c.comparator), el("td", {}, fmt.feature(c.threshold)),
         el("td", {}, status)));
     }
   }
@@ -78,4 +89,57 @@ function tierBar(prob, tiers, onChange) {
     handles: [{key: "t_med", value: tiers.t_med, label: "t_med"},
               {key: "t_high", value: tiers.t_high, label: "t_high"}],
   }, debounce(onChange, 120));
+}
+
+// Colour is never the sole carrier of a tier state -- every chip/tile below
+// carries TIER_GLYPH alongside the colour class.
+function tierChip(tier) {
+  return el("span", {class: "chip " + tier}, `${TIER_GLYPH[tier] ?? ""} ${tier}`);
+}
+
+// book_tiers can omit a tier with zero accounts (pandas value_counts drops it --
+// the same trap tab-decision.js's bookMixTiles guards for decisions).
+function bookTierTiles(counts) {
+  const wrap = el("div", {class: "book-mix"});
+  for (const k of ["Low", "Medium", "High"]) {
+    wrap.append(el("div", {class: "tile chip " + k},
+      el("div", {class: "n"}, String(counts[k] ?? 0)),
+      el("div", {class: "k"}, `${TIER_GLYPH[k]} ${k}`)));
+  }
+  return wrap;
+}
+
+// The whole book's fired count per trigger -- the visible payoff of dragging a
+// trigger threshold (high_utilization 0.90 -> 0.10 takes this from 628 to
+// ~7,538), the same role bookTierTiles plays for the tier bar.
+function bookTriggerCounts(counts) {
+  const wrap = el("div", {class: "trigger-counts"});
+  for (const name of TRIGGER_NAMES) {
+    wrap.append(el("span", {class: "trigger-count"},
+      `${name.replace(/_/g, " ")} ${counts[name] ?? 0}`));
+  }
+  return wrap;
+}
+
+// The model's limits as visible body text next to its own output, quoted
+// verbatim from model_caveat -- never recomputed, and left in the metadata's
+// own decimal units (not a percent) so the figures match metadata.json exactly.
+function caveatBlock(c) {
+  const wrap = el("div", {class: "ews-caveat"});
+  wrap.append(
+    el("p", {},
+      `Top-decile capture ${fmt.num(c.top_decile_capture, 4)} held out ` +
+      `(lift ${fmt.num(c.top_decile_lift, 4)}×). AUC ${fmt.num(c.auc, 4)} — ` +
+      `reported, not gated. Base rate ${fmt.num(c.base_rate, 4)}.`),
+    el("p", {}, c.note));
+  return wrap;
+}
+
+// SHAP drivers are adverse-only (top_adverse_shap keeps positive contributions
+// only), so divergingBars always renders them pushing one direction -- reused
+// as-is. No feature "value" here (unlike the decision tab's ledgers), so
+// fmt.feature(undefined) prints blank in that slot: display-only.
+function driverBars(drivers) {
+  if (!drivers.length) return el("p", {class: "muted"}, "No adverse SHAP drivers.");
+  return divergingBars(drivers.map(d => ({feature: d.feature, contribution: d.impact})));
 }

@@ -1,8 +1,10 @@
 "use strict";
 /* Task 13 -- Pricing & Profitability tab: orchestration only. Rendering
    (waterfallTable/rateLadder/verdictTiles/bookStrip) lives in pricing-charts.js,
-   loaded before this file. Uses api/fmt/el/debounce/postJSON (util.js). Formats
-   and draws only -- every number is straight from a server response. */
+   loaded before this file. Uses api/fmt/el/debounce/postJSON (util.js) and
+   sliderPanel (sliders.js, fix round 1 -- generalised out of this file's own
+   sliders() so tab-ews.js's trigger sliders don't re-type the same widget).
+   Formats and draws only -- every number is straight from a server response. */
 
 // [key, label, min, max, step] -- covers each PricingOverrides field's legal
 // range, including the edges the brief tests deliberately (capital_ratio's 0 and
@@ -14,40 +16,6 @@ const SLIDER_DEFS = [
   ["base_margin", "Base margin", 0, 1, 0.001], ["roe_hurdle", "ROE hurdle", 0, 2, 0.01],
   ["fee_rate", "Fee rate", 0, 1, 0.001],
 ];
-
-// Nine inputs that always post together as one overrides body (PricingOverrides
-// wants a complete picture, not a partial diff). Debounced 120ms -- the book
-// recompute itself is ~17ms, so that budget is UI settling, not server latency.
-// reset() restores every input without posting; the caller re-POSTs {} itself.
-function sliders(market, quotedRate, onChange) {
-  const defaults = {quoted_rate: quotedRate, ...market};
-  const values = {...defaults};
-  const inputs = {};
-  const wrap = el("div", {class: "sliders"});
-  const fire = debounce(() => onChange({...values}), 120);
-  for (const [key, label, min, max, step] of SLIDER_DEFS) {
-    const input = el("input", {type: "range", id: "sl_" + key, min: String(min),
-      max: String(max), step: String(step), value: String(defaults[key])});
-    const out = el("span", {class: "sliderval"}, fmt.pct(defaults[key], 2));
-    input.oninput = () => {
-      values[key] = Number(input.value);
-      out.textContent = fmt.pct(values[key], 2);
-      fire();
-    };
-    inputs[key] = {input, out};
-    wrap.append(el("div", {class: "sliderrow"}, el("label", {for: input.id}, label), input, out));
-  }
-  return {
-    node: wrap,
-    reset() {
-      for (const [key] of SLIDER_DEFS) {
-        values[key] = defaults[key];
-        inputs[key].input.value = String(defaults[key]);
-        inputs[key].out.textContent = fmt.pct(defaults[key], 2);
-      }
-    },
-  };
-}
 
 const PRICING_WHATIF = id => `/api/v2/loan/${id}/pricing/whatif`;
 
@@ -88,7 +56,9 @@ TABS.pricing = async (panel, id) => {
     }
   };
 
-  const sl = sliders(seed.market, seed.rates.quoted, runWhatif);
+  // sliderPanel (sliders.js) reads defaults[key] for each SLIDER_DEFS entry --
+  // {quoted_rate, ...market} is the same defaults object sliders() built inline.
+  const sl = sliderPanel(SLIDER_DEFS, {quoted_rate: seed.rates.quoted, ...seed.market}, runWhatif);
   sliderBox.append(sl.node);
   resetBtn.onclick = () => { sl.reset(); runWhatif({}); };
 };

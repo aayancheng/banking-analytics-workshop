@@ -93,3 +93,10 @@ table.waterfall tr.wf-rule td { border-top:2px solid var(--ink); }
               margin:10px 0 20px; }
 .ews-caveat p { margin:4px 0; }
 tr.trig-group td { background:var(--bg); font-weight:600; border-bottom:0; }
+
+/* Fix round 1 -- book-wide trigger fired counts (the payoff of dragging a
+   trigger threshold slider, mirroring .book-mix for the tier bar) */
+.trigger-counts { display:flex; flex-wrap:wrap; gap:10px; margin:8px 0 18px; }
+.trigger-counts .trigger-count { font-size:13px; color:var(--muted);
+  background:var(--bg); border:1px solid var(--line); border-radius:6px;
+  padding:4px 10px; }
