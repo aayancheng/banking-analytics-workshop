@@ -3124,6 +3124,16 @@ The slider panel is shared, not copied. `tab-pricing.js`'s `sliders()` is hardco
 `axis-handles.js` rather than in the pure `util.js` -- and have BOTH the pricing and EWS
 tabs call it. Load it after `axis-handles.js`.
 
+**A panel's state holds only the keys it owns.** Seed it with
+`Object.fromEntries(defs.map(([key]) => [key, defaults[key]]))`, never `{...defaults}`.
+The EWS tab passes one shared override object -- tier cutoffs AND trigger thresholds --
+as `defaults`. Copying it whole froze the tier bar's `t_med`/`t_high` inside the slider
+panel at mount time, and every later trigger-slider move sent them back: drag `t_med` to
+0.365, touch any unrelated slider, and the server was told 0.1649 again. The tiles
+snapped back to the default mix while the tier-bar handle stayed drawn at 0.365 --
+handle and book disagreeing on screen. Verify multi-widget panels by driving the
+widgets in SEQUENCE: one-at-a-time testing cannot see this class of bug.
+
 **Every display of a threshold must follow the slider.** The utilization sparkline
 draws a dashed rule at the `high_utilization` threshold. Once that threshold is
 draggable, the rule must be redrawn from the what-if response's `trigger_config` --
