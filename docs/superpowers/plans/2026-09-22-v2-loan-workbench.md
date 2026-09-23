@@ -934,6 +934,25 @@ from adjudication.src.feature_engineering import ADJ_FEATURE_COLUMNS
 from app.v2 import rules
 
 
+def display_triple(intercept: float, logit: float, dp: int = 4) -> dict:
+    """The three numbers the ledger footer prints, rounded ON THE SERVER so they
+    reconcile on screen.
+
+    Rounding the intercept, the contributions total and the log-odds independently to
+    4dp leaves the printed equation off by one in the last place on 30.5% of loans
+    (measured) -- on a screen whose entire claim is that the contributions ADD UP, a
+    room checking the sum by eye reads that as a bug.
+
+    The browser must not fix that itself. Deriving a displayed number in JS is what
+    this project forbids, because the number can no longer be traced to the server and
+    nothing would catch it drifting. So the server does the reconciliation and hands
+    over three values that print correctly as they are.
+    """
+    a = round(intercept, dp)
+    t = round(logit, dp)
+    return {"intercept": a, "contributions_total": round(t - a, dp), "logit": t, "dp": dp}
+
+
 def _logit(p: float) -> float:
     p = min(max(float(p), 1e-12), 1 - 1e-12)
     return math.log(p / (1 - p))
@@ -969,6 +988,8 @@ def score_ledger(app_state, business_id: str) -> dict:
         "contributions": rows,
         "pd": float(pd_value),
         "logit_pd": _logit(pd_value),
+        "display": display_triple(float(v2.scorecard.estimator_.intercept_[0]),
+                                  _logit(pd_value)),
     }
 
 
@@ -998,7 +1019,8 @@ def shap_ledger(app_state, business_id: str) -> dict:
     rows.sort(key=lambda r: -r["contribution"])
     return {"base_value": float(base), "contributions": rows,
             "pd_model": float(pd_model),
-            "logit_pd_model": _logit(pd_model)}
+            "logit_pd_model": _logit(pd_model),
+            "display": display_triple(float(base), _logit(pd_model))}
 
 
 def decision_detail(app_state, business_id: str) -> dict:
@@ -2517,6 +2539,14 @@ const fmt = {
   pct: (v, d = 1) => (v * 100).toFixed(d) + "%",
   bps: v => Math.round(v).toLocaleString() + " bps",
   num: (v, d = 2) => Number(v).toFixed(d),
+  /* A feature's raw value for a ledger label. Categoricals pass through; integers
+     print bare; floats get 4dp. Without this a computed feature renders at full
+     float width -- `pd_score 0.2219917066245684` on a projected screen. Formatting
+     is the browser's job; calculating is not. */
+  feature: v => {
+    if (typeof v !== "number") return String(v ?? "");
+    return Number.isInteger(v) ? String(v) : v.toFixed(4);
+  },
 };
 
 function el(tag, attrs = {}, ...kids) {
@@ -2750,7 +2780,7 @@ function divergingBars(rows, {width = 620, rowHeight = 20,
                             fill: up ? "var(--bad)" : "var(--ok)"}));
     const lab = svgEl("text", {x: 0, y: yTop + rowHeight - 10, "font-size": 12,
                                fill: "var(--ink)"});
-    lab.textContent = `${r.feature}  ${r.value ?? ""}`;
+    lab.textContent = `${r.feature}  ${fmt.feature(r.value)}`;
     s.append(lab);
     const val = svgEl("text", {x: width - 84, y: yTop + rowHeight - 10,
                                "font-size": 12, fill: "var(--muted)"});
@@ -2847,7 +2877,13 @@ function axisWithHandles(
       onChange({...values});
     };
     g.addEventListener("pointerdown", ev => {
-      dragging = true; g.setPointerCapture(ev.pointerId); ev.preventDefault();
+      dragging = true;
+      // Guarded like releasePointerCapture below: capture can throw (NotFoundError
+      // when no active pointer matches the id), and an uncaught throw here would
+      // surface as a console error during an otherwise working drag. dragging is set
+      // first so the drag still works without capture.
+      try { g.setPointerCapture(ev.pointerId); } catch (e) { /* capture is optional */ }
+      ev.preventDefault();
     });
     g.addEventListener("pointermove", move);
     g.addEventListener("pointerup", ev => {
