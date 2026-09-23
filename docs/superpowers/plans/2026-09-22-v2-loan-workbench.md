@@ -736,7 +736,8 @@ def test_ledger_fired_flags_agree_with_the_module_on_every_applicant(client):
     condition is true but which cannot bite (the loan is already outside the Approve
     zone) is not a rule that fired. BIZ100052 -- v1 reports "rule hits: none" while
     the ledger claimed two. A UI painting `fired` red would have shown two red rows
-    on a decision that came purely from the PD zones."""
+    on a decision that came purely from the PD zones.
+
     Goes through rules.ledger rather than decision_detail: the latter also builds the
     WoE contributions and a per-loan SHAP explanation this test never reads, which
     costs 4.28ms a loan against 0.06ms -- 51s versus 0.7s over 12,000. The sampled
