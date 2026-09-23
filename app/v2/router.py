@@ -6,7 +6,7 @@ empty override body must reproduce the batch numbers exactly.
 """
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 
 from app.v2 import explain, ews, ews_whatif, line_increase, loans, pricing, whatif
@@ -63,11 +63,13 @@ def loan_list(request: Request, decision: str | None = None, score_band: str | N
               industry: str | None = None, region: str | None = None,
               booked: str | None = None, ews_tier: str | None = None,
               mispriced: str | None = None, li_eligible: str | None = None,
-              q: str | None = None, limit: int = 200):
+              q: str | None = None, limit: int = Query(200, ge=1, le=500)):
+    # Validated, not clamped with min(): a negative limit reached pandas' head(-5)
+    # and returned 11,995 rows.
     return loans.search(request.app.state.v2.index, decision=decision,
                         score_band=score_band, industry=industry, region=region,
                         booked=booked, ews_tier=ews_tier, mispriced=mispriced,
-                        li_eligible=li_eligible, q=q, limit=min(limit, 500))
+                        li_eligible=li_eligible, q=q, limit=limit)
 
 
 @router.get("/loan/{business_id}")

@@ -7,6 +7,7 @@ UI renders as "never funded" rather than as an error.
 from __future__ import annotations
 
 from app.v2 import rules
+from app.v2.display import axis_precision
 from app.v2.ledgers import score_ledger, shap_ledger
 
 
@@ -75,20 +76,30 @@ def _zone(pd_value: float, config) -> str:
     return "Refer"
 
 
+def pd_zones(pd_value: float, config) -> dict:
+    """The ADJUDICATION-model PD against the two zone cutoffs, as the ruler draws it.
+    `pd` is unrounded and `dp` separates it from both cutoffs, so the pin can never
+    print the same number as a handle while the zone says otherwise. Shared by the
+    read path and the what-if path, which re-sends it for the cutoffs just dragged."""
+    prec = axis_precision(pd_value, [float(config.t_low), float(config.t_high)])
+    return {"t_low": float(config.t_low), "t_high": float(config.t_high),
+            "pd": float(pd_value), "zone": _zone(pd_value, config),
+            "dp": prec["dp"], "tied": prec["tied"]}
+
+
 def decision_detail(app_state, business_id: str) -> dict:
     p = _row(app_state, business_id)
     s = app_state.scores.loc[business_id]
     d = app_state.decisions.loc[business_id]
     config = app_state.policy_config
     pd_model = float(d["pd"])
-    zone = _zone(pd_model, config)
-    led = rules.ledger(p, s, config, zone)
+    zones = pd_zones(pd_model, config)
+    led = rules.ledger(p, s, config, zones["zone"])
     return {
         "business_id": business_id,
         "decision": str(d["decision"]),
         "rule_hits": list(d["decision_reasons"]),
-        "pd_zones": {"t_low": float(config.t_low), "t_high": float(config.t_high),
-                     "pd": round(pd_model, 6), "zone": zone},
+        "pd_zones": zones,
         "rules": led,
         "score_ledger": score_ledger(app_state, business_id),
         "shap": shap_ledger(app_state, business_id),

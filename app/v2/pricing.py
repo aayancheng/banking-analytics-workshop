@@ -13,6 +13,7 @@ from shared.config import MARKET
 from pricing.src.engine import (
     MarketAssumptions, price_loan, break_even_rate, hurdle_clearing_rate,
 )
+from app.v2.display import display_precision
 from app.v2.explain import _booked_row
 
 _MARKET = MarketAssumptions.from_market(MARKET)
@@ -32,6 +33,18 @@ def price_one(app_state, business_id: str, market: MarketAssumptions,
     rate = float(p["risk_based_rate"]) if quoted_rate is None else float(quoted_rate)
     r = price_loan(pd_=pd_value, ead=ead, quoted_rate=rate, market=market)
     w = r["waterfall_quoted"]
+    hc = r["hurdle_clearing_rate"]
+    # Final review T13: the engine's rate_shortfall is max(0, hc - quoted), so a
+    # clearing loan always read "Shortfall 0 bps" (2,534 of them) and BIZ103012,
+    # short by a true 0.04 bps, read "short by 0 bps". rate_margin_bps is SIGNED
+    # (positive = quoted above the hurdle-clearing rate), computed here without
+    # touching pricing/src/engine.py; rate_shortfall_bps stays for compatibility.
+    margin_bps = (rate - hc) * 10_000
+    # Every comparison this payload prints gets a server-chosen precision (I3):
+    # ROE vs hurdle, quoted vs hurdle-clearing on the ladder, and the margin vs 0
+    # -- the fewest decimals at which a non-zero margin cannot print as "0 bps".
+    roe_prec = display_precision(r["roe_at_quoted"], market.roe_hurdle)
+    margin_prec = display_precision(margin_bps, 0.0, base_dp=0)
     return {
         "business_id": business_id,
         "ead": ead,
@@ -39,8 +52,9 @@ def price_one(app_state, business_id: str, market: MarketAssumptions,
         "rates": {
             "quoted": rate,
             "break_even": break_even_rate(pd_value, ead, market),
-            "hurdle_clearing": r["hurdle_clearing_rate"],
+            "hurdle_clearing": hc,
             "recommended": r["recommended_rate"],
+            "dp": display_precision(rate, hc)["dp"],
         },
         "waterfall": [{"line": k, "dollars": float(w[k]),
                        "bps": float(w[k]) / ead * 10_000} for k in WATERFALL_LINES],
@@ -49,7 +63,10 @@ def price_one(app_state, business_id: str, market: MarketAssumptions,
             "raroc": r["raroc_at_quoted"],
             "clears_hurdle": r["clears_hurdle"],
             "rate_shortfall_bps": r["rate_shortfall"] * 10_000,
+            "rate_margin_bps": margin_bps,
+            "margin_dp": margin_prec["dp"], "margin_tied": margin_prec["tied"],
             "roe_hurdle": market.roe_hurdle,
+            "roe_dp": roe_prec["dp"], "roe_tied": roe_prec["tied"],
         },
         "market": market.to_dict(),
     }

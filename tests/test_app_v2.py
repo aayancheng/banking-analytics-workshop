@@ -8,6 +8,12 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
+# shap fires this once per explained loan; the count scales with the sample size and
+# says nothing about v2. Scoped to this one message so `make test` (student-facing)
+# stays readable while any NEW warning type still shows.
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:LightGBM binary classifier.*list of ndarray:UserWarning")
+
 
 @pytest.fixture(scope="module")
 def client():
@@ -247,13 +253,23 @@ def test_ledger_fired_flags_agree_with_the_module_on_every_applicant(client):
     from app.v2 import explain, rules
     st = client.app.state
     cfg = st.policy_config
+    # Identities, not counts (final review T4): one rule wrongly firing while
+    # another wrongly doesn't passes a count check. policy.decide's own strings.
+    reason = {"dscr_floor": f"dscr<{cfg.dscr_floor}",
+              "public_records_cap": "public_records present",
+              "prior_delinq_cap": f"prior_delinquencies>={cfg.prior_delinq_cap}",
+              "leverage_cap": f"leverage>{cfg.leverage_cap}",
+              "dscr_refer_hi": "thin affordability margin (dscr)",
+              "score_floor": "weak credit score",
+              "req_to_rev_cap": "large request vs revenue"}
     for bid in st.profiles.index:
         p = st.profiles.loc[bid]
         d = st.decisions.loc[bid]
         led = rules.ledger(p, st.scores.loc[bid], cfg,
                            explain._zone(float(d["pd"]), cfg))
         rows = led["knockouts"] + led["refer_overrides"]
-        assert sum(1 for r in rows if r["fired"]) == len(d["decision_reasons"]), (bid, rows)
+        assert sorted(reason[r["rule"]] for r in rows if r["fired"]) == \
+            sorted(d["decision_reasons"]), (bid, rows)
         for r in rows:
             assert not (r["fired"] and not r["applicable"]), (bid, r["rule"])
 

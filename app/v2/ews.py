@@ -15,7 +15,7 @@ the same way this module spells out the batch ones.
 from __future__ import annotations
 
 from shared.config import EWS_TRIGGERS
-from app.v2.display import display_precision
+from app.v2.display import axis_precision, display_precision
 from app.v2.explain import _booked_row
 
 # Each trigger is a LIST of clauses joined by OR, because flag_triggers' DELINQUENCY
@@ -75,6 +75,16 @@ def trigger_rows(feat_row, cfg: dict, fired_names: set[str]) -> list[dict]:
     return rows
 
 
+def prob_display(app_state, business_id: str, tiers: dict) -> dict:
+    """The probability the tier was decided on, with the precision that separates it
+    from both cutoffs. `prob` (4dp, as persisted) put BIZ108170's pin at "0.5073"
+    beside "t_high 0.5073" while its tier read Medium; the pin, the handles and the
+    p(deterioration) line all format at prob_dp instead."""
+    raw = float(app_state.v2.ews_prob_raw.loc[business_id])
+    prec = axis_precision(raw, [tiers["t_med"], tiers["t_high"]])
+    return {"prob_raw": raw, "prob_dp": prec["dp"], "prob_tied": prec["tied"]}
+
+
 def ews_detail(app_state, business_id: str):
     _, booked = _booked_row(app_state, business_id)
     if not booked:
@@ -85,6 +95,7 @@ def ews_detail(app_state, business_id: str):
     return {
         "business_id": business_id,
         "prob": float(e["prob"]),
+        **prob_display(app_state, business_id, meta["tiers"]),
         "risk_tier": str(e["risk_tier"]),
         "tiers": meta["tiers"],
         "triggers": trigger_rows(app_state.v2.ews_feats.loc[business_id],

@@ -9,6 +9,8 @@ pipeline uses; only the presentation is new.
 """
 from __future__ import annotations
 
+from app.v2.display import display_precision
+
 KNOCKOUTS = [
     ("dscr_floor", "DSCR below floor", "dscr", "<", "dscr_floor"),
     ("public_records_cap", "Public records present", "public_records", ">", "public_records_cap"),
@@ -58,10 +60,13 @@ def _rows(specs, values, config, applicable) -> list[dict]:
         threshold = float(getattr(config, config_key))
         value = values[value_key]
         condition_met = bool(_OPS[comparator](value, threshold))
+        # value is rounded at the server-chosen dp (>= 4, never fewer than before),
+        # so a value a hair across its threshold cannot print equal to it.
+        prec = display_precision(value, threshold)
         out.append({
             "rule": rule, "label": label, "value_key": value_key,
             "comparator": comparator, "threshold": threshold,
-            "value": round(value, 4),
+            "value": round(value, prec["dp"]), "dp": prec["dp"], "tied": prec["tied"],
             "condition_met": condition_met,
             "applicable": applicable,
             "fired": bool(condition_met and applicable),
@@ -124,6 +129,10 @@ def nearest_flip(led: dict, pd_value: float, config) -> dict:
             "gap": round(abs(pd_value - t) / (abs(t) or 1.0), 4),
             "at_threshold": False, "currently_firing": None,
         })
+    for c in candidates:
+        # I6: the PD levers carry the unrounded pd_value, which the tab printed
+        # via String() at 16 digits; dp is the server's choice, like every clause.
+        c.update(display_precision(c["value"], c["threshold"]))
     if not candidates:
         return {}
     ranked = sorted(candidates, key=lambda c: c["gap"])

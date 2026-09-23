@@ -15,36 +15,15 @@ explain it, they never decide it, mirroring ews.py's fired/met split for trigger
 """
 from __future__ import annotations
 
-from shared.config import LINE_INCREASE
+from line_increase.src import amount_rules
 from line_increase.src.amount_rules import incremental_roe
 from app.v2.display import display_precision
+from app.v2.li_amounts import amount_steps, caps
 from app.v2.explain import _booked_row
 
 _LI_WATERFALL = ["interest_income", "cost_of_funds", "expected_loss",
                  "operating_cost", "pre_tax_profit", "tax", "net_income",
                  "allocated_equity"]
-
-
-def _caps(current_balance: float, credit_limit: float, annual_revenue: float,
-          cfg: dict = LINE_INCREASE) -> list[dict]:
-    """The three ceilings recommended_amount() takes the min of, each shown so the
-    binding one is visible instead of inferred."""
-    if credit_limit <= 0:
-        return []
-    values = {
-        "headroom_to_target_util": current_balance / cfg["target_util"] - credit_limit,
-        "pct_cap": cfg["pct_cap"] * credit_limit,
-        "revenue_ceiling": cfg["revenue_mult_cap"] * annual_revenue - credit_limit,
-    }
-    # min() over the KEYS, not a value comparison: two caps can tie exactly.
-    # BIZ111364 (balance 10,180 · limit 10,000 · revenue 50,000) gives pct_cap
-    # 0.50*10,000 = 5,000.00 and revenue_ceiling 0.30*50,000-10,000 = 5,000.00 --
-    # an exact float tie, not a rounding artifact. Comparing `v == lowest` marks both
-    # binding, and the tab's whole claim is that ONE cap binds. First key wins, which
-    # is deterministic because `values` is built in a fixed order.
-    binding_key = min(values, key=values.get)
-    return [{"name": k, "amount": round(float(v), 2), "binding": k == binding_key}
-            for k, v in values.items()]
 
 
 def line_increase_detail(app_state, business_id: str):
@@ -73,6 +52,9 @@ def line_increase_detail(app_state, business_id: str):
                         float(li["utilization_onbook"]), float(li["rate"]))
     w = r["waterfall"]
     ead = float(r["incremental_ead"])
+    hurdle = float(amount_rules._MARKET.roe_hurdle)
+    cap_rows = caps(float(li["current_balance"]), float(li["credit_limit"]),
+                    float(app_state.profiles.loc[business_id, "annual_revenue"]))
 
     def _clause(name, value, threshold, comparator, passed):
         # display_precision (app/v2/display.py) picks the fewest decimals that keep
@@ -100,9 +82,13 @@ def line_increase_detail(app_state, business_id: str):
                 pd_exact <= meta["offer_max_pd"]),
         _clause("amount_positive", float(li["recommended_amount"]), 0.0, ">",
                 float(li["recommended_amount"]) > 0),
-        _clause("clears_hurdle", float(r["roe"]), LINE_INCREASE["roe_hurdle"], ">=",
-                r["clears_hurdle"]),
+        # The hurdle incremental_roe's verdict actually tested: its default market,
+        # amount_rules._MARKET (built from MARKET), not LINE_INCREASE["roe_hurdle"]
+        # -- equal today, but a threshold printed from a different source than the
+        # verdict is a disagreement waiting for the first config edit.
+        _clause("clears_hurdle", float(r["roe"]), hurdle, ">=", r["clears_hurdle"]),
     ]
+    roe_prec = display_precision(float(r["roe"]), hurdle)
     return {
         "business_id": business_id,
         "optional_module": True,
@@ -110,14 +96,15 @@ def line_increase_detail(app_state, business_id: str):
         "credit_limit": float(li["credit_limit"]),
         "current_balance": float(li["current_balance"]),
         "utilization_onbook": float(li["utilization_onbook"]),
-        "caps": _caps(float(li["current_balance"]), float(li["credit_limit"]),
-                      float(app_state.profiles.loc[business_id, "annual_revenue"])),
+        "caps": cap_rows,
+        "amount_steps": amount_steps(cap_rows, float(li["recommended_amount"])),
         "recommended_amount": float(li["recommended_amount"]),
         "incremental": {
             "ead": ead,
             "waterfall": ([{"line": k, "dollars": float(w[k])} for k in _LI_WATERFALL]
                           if ead > 0 else []),
             "roe": float(r["roe"]),
+            "roe_hurdle": hurdle, "dp": roe_prec["dp"], "tied": roe_prec["tied"],
             "clears_hurdle": bool(r["clears_hurdle"]),
         },
         "eligibility": {"clauses": clauses,

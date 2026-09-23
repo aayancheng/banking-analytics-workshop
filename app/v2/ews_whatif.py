@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 
 from shared.config import EWS_TRIGGERS
 from app.v2.explain import _booked_row
-from app.v2.ews import trigger_rows
+from app.v2.ews import prob_display, trigger_rows
 from app.v2.whatif import InvalidOverride
 from ews.src.triggers import flag_triggers
 from ews.src.watchlist import risk_tier
@@ -100,6 +100,7 @@ def ews_whatif(app_state, business_id: str, overrides: EwsOverrides):
     return {
         "business_id": business_id,
         "prob": float(ews.loc[business_id, "prob"]),
+        **prob_display(app_state, business_id, tiers),
         "risk_tier": retiered[pos],
         "tiers": tiers,
         "triggers": trigger_rows(feats.loc[business_id], cfg, fired),

@@ -79,14 +79,15 @@ def decision_whatif(app_state, business_id: str, overrides: DecisionOverrides) -
 
     row = redecided.loc[business_id]
     pd_value = float(pd_model[app_state.profiles.index.get_loc(business_id)])
-    zone = explain._zone(pd_value, config)
-    led = rules.ledger(p, s, config, zone)
+    zones = explain.pd_zones(pd_value, config)
+    led = rules.ledger(p, s, config, zones["zone"])
     flipped = int((redecided["decision"].to_numpy()
                    != app_state.decisions["decision"].to_numpy()).sum())
     return {
         "business_id": business_id,
         "decision": str(row["decision"]),
-        "zone": zone,
+        "zone": zones["zone"],
+        "pd_zones": zones,
         "rule_hits": list(row["decision_reasons"]),
         "rules": led,
         "nearest_flip": rules.nearest_flip(led, pd_value, config),
@@ -114,8 +115,9 @@ class PricingOverrides(BaseModel):
 
 
 def _book_under(app_state, market: MarketAssumptions) -> dict:
-    """Re-price the whole booked book under these assumptions. ~8ms for 8,336 loans,
-    so this can run on every slider tick. Uses the same price_loan the batch uses."""
+    """Re-price the whole booked book under these assumptions: ~16.6ms for 8,336
+    loans, ~17ms per slider tick including request overhead (measured 2026-09-23),
+    so it can run on every tick. Uses the same price_loan the batch uses."""
     priced = app_state.priced
     pds = priced["pd"].to_numpy(dtype=float)
     eads = priced["ead"].to_numpy(dtype=float)
