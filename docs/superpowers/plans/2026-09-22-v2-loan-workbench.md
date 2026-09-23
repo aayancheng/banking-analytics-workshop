@@ -737,14 +737,37 @@ def test_ledger_fired_flags_agree_with_the_module_on_every_applicant(client):
     zone) is not a rule that fired. BIZ100052 -- v1 reports "rule hits: none" while
     the ledger claimed two. A UI painting `fired` red would have shown two red rows
     on a decision that came purely from the PD zones."""
-    from app.v2 import explain
+    Goes through rules.ledger rather than decision_detail: the latter also builds the
+    WoE contributions and a per-loan SHAP explanation this test never reads, which
+    costs 4.28ms a loan against 0.06ms -- 51s versus 0.7s over 12,000. The sampled
+    test below then covers the wiring decision_detail adds on top.
+    """
+    from app.v2 import explain, rules
     st = client.app.state
+    cfg = st.policy_config
     for bid in st.profiles.index:
-        d = explain.decision_detail(st, bid)
-        rows = d["rules"]["knockouts"] + d["rules"]["refer_overrides"]
-        assert sum(1 for r in rows if r["fired"]) == len(d["rule_hits"]), (bid, rows)
+        p = st.profiles.loc[bid]
+        d = st.decisions.loc[bid]
+        led = rules.ledger(p, st.scores.loc[bid], cfg,
+                           explain._zone(float(d["pd"]), cfg))
+        rows = led["knockouts"] + led["refer_overrides"]
+        assert sum(1 for r in rows if r["fired"]) == len(d["decision_reasons"]), (bid, rows)
         for r in rows:
             assert not (r["fired"] and not r["applicable"]), (bid, r["rule"])
+
+
+def test_decision_detail_wires_the_same_ledger(client, sample_ids):
+    """The whole-book test above calls rules.ledger directly for speed, so this one
+    covers what decision_detail adds: that it passes the right zone and surfaces the
+    same flags the endpoint's consumers will read."""
+    from app.v2 import explain
+    st = client.app.state
+    for bid in sample_ids:
+        d = explain.decision_detail(st, bid)
+        rows = d["rules"]["knockouts"] + d["rules"]["refer_overrides"]
+        assert sum(1 for r in rows if r["fired"]) == len(d["rule_hits"]), bid
+        assert d["pd_zones"]["zone"] == explain._zone(
+            d["pd_zones"]["pd"], st.policy_config), bid
 
 
 def test_decision_endpoint_matches_the_batch_pipeline(client, sample_ids):
