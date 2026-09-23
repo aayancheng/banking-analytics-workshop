@@ -20,21 +20,33 @@ const LABELS = {interest_income: "Interest income", cost_of_funds: "Cost of fund
 // choice and Math.abs() below are display polarity on a server-given number, the
 // same pattern divergingBars (svg.js) already uses for its bar direction -- not
 // a new financial figure. A rule marks the two subtotals.
-function waterfallTable(lines, ead) {
+//
+// Task 15: the line-increase tab's incremental waterfall shares this exact shape
+// (same eight `line` keys, both come from pricing.src.engine.profit_waterfall)
+// but its rows carry `dollars` only -- no `bps`. `hasBps` detects that up front so
+// the bps column (and `-w.bps`, which would render "NaN bps") is skipped
+// entirely rather than defended row by row. `caption` defaults to this tab's own
+// text so the pricing call site (tab-pricing.js, no caption arg) is unchanged.
+function waterfallTable(lines, ead, caption = "Profit waterfall") {
+  const hasBps = lines.length > 0 && lines[0].bps !== undefined;
   const body = el("tbody");
   for (const w of lines) {
     const cost = COST_LINES.has(w.line);
-    const dEffect = cost ? -w.dollars : w.dollars, bEffect = cost ? -w.bps : w.bps;
+    const dEffect = cost ? -w.dollars : w.dollars;
     const sign = dEffect < 0 ? "− " : "";
-    body.append(el("tr", {class: RULE_BEFORE.has(w.line) ? "wf-rule" : ""},
-      el("td", {}, LABELS[w.line] || w.line),
-      el("td", {}, sign + fmt.money(Math.abs(dEffect))),
-      el("td", {}, sign + fmt.bps(Math.abs(bEffect)))));
+    const cells = [el("td", {}, LABELS[w.line] || w.line),
+                   el("td", {}, sign + fmt.money(Math.abs(dEffect)))];
+    if (hasBps) {
+      const bEffect = cost ? -w.bps : w.bps;
+      cells.push(el("td", {}, sign + fmt.bps(Math.abs(bEffect))));
+    }
+    body.append(el("tr", {class: RULE_BEFORE.has(w.line) ? "wf-rule" : ""}, ...cells));
   }
+  const head = [el("th", {}, "line"), el("th", {}, "dollars")];
+  if (hasBps) head.push(el("th", {}, "bps on EAD"));
   const t = el("table", {class: "waterfall"});
-  t.append(el("caption", {}, `Profit waterfall — EAD ${fmt.money(ead)}`),
-    el("thead", {}, el("tr", {}, el("th", {}, "line"), el("th", {}, "dollars"),
-      el("th", {}, "bps on EAD"))), body);
+  t.append(el("caption", {}, `${caption} — EAD ${fmt.money(ead)}`),
+    el("thead", {}, el("tr", {}, ...head)), body);
   return t;
 }
 

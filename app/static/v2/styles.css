@@ -100,3 +100,12 @@ tr.trig-group td { background:var(--bg); font-weight:600; border-bottom:0; }
 .trigger-counts .trigger-count { font-size:13px; color:var(--muted);
   background:var(--bg); border:1px solid var(--line); border-radius:6px;
   padding:4px 10px; }
+
+/* Task 15 -- line-increase tab: read-only, so the ribbon says "optional"
+   loudly enough that skipping it live reads as deliberate. */
+.li-ribbon { font-size:13px; color:var(--muted); background:var(--bg);
+  border:1px dashed var(--line); border-radius:8px; padding:8px 14px; margin:0 0 14px; }
+.li-caps { margin:10px 0; }
+.li-caption { font-size:13px; margin:6px 0 0; }
+.li-verdict { font-size:14px; font-weight:600; margin:8px 0 0; }
+.li-cohort { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; }
