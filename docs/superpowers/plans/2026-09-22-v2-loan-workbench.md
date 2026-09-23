@@ -3306,6 +3306,61 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ---
 
+
+### Cross-cutting: display-safe precision for every value shown beside a threshold
+
+Added after Task 15's review, which asked whether formatting one clause at 6dp was
+robust. Measuring across every screen found the problem was not local to that tab:
+
+| screen | closest non-equal margin | rows colliding at 4dp |
+|---|---|---|
+| rules ledger (Task 4) | 1.00e-02 | 0 -- inputs are 2dp data; left alone |
+| EWS trigger clauses (Task 8/14) | 5.55e-17 | **3, live** |
+| LI eligibility clauses (Task 10/15) | 1.67e-06 | 0 at 6dp, but only by 3.3x |
+
+`BIZ106189`'s `util_drift` is `0.15000000000000013` against a strict `> 0.15` rule, so
+the committed EWS module fires RISING_UTILIZATION on float noise and the screen read
+`0.15 > 0.15 -- FIRED`. v2 must show what the module decided; it must not print a
+comparison that looks false.
+
+The server chooses the precision, following `display_triple`'s precedent:
+
+```python
+def display_precision(value: float, threshold: float,
+                      base_dp: int = 4, max_dp: int = 8) -> dict:
+    """The fewest decimals at which a value and the threshold it is compared against
+    render DIFFERENTLY, so a clause never prints two equal numbers under a strict
+    comparator.
+
+    A fixed precision chosen in the browser is tuned to today's data and silently
+    breaks on a retrain. `tied` is True when no precision up to max_dp separates them
+    -- genuinely equal, or apart only by floating-point noise -- and the screen then
+    says the value is AT the threshold rather than printing a comparison that reads
+    as false. Whether the rule met is still the module's verdict, never recomputed.
+    """
+    if value == threshold:
+        return {"dp": base_dp, "tied": True}
+    for dp in range(base_dp, max_dp + 1):
+        if round(value, dp) != round(threshold, dp):
+            return {"dp": dp, "tied": False}
+    return {"dp": base_dp, "tied": True}
+```
+
+It lives in `app/v2/display.py` and is attached to every EWS trigger clause and every
+LI eligibility clause. The browser formats `value` and `threshold` at the returned `dp`
+and, when `tied`, renders "at the threshold" instead of the strict comparison. The
+hardcoded `fmt.num(v, 6)` in the LI tab is removed.
+
+**`prob_above_threshold` decides on the raw probability.** `candidates.score_population`
+decides eligibility on the unrounded model probability but persists it rounded to 4dp;
+the clause was testing the rounded one. Cache the raw LI probability on `V2State` (with
+an order-alignment assert, like `ews_feats`) and use it. The Task 10 per-clause test
+compared this clause against the same rounded value it uses -- tautological for this one
+clause -- and must compare against the raw probability instead.
+
+**Tests (whole book, called directly):** for every EWS trigger clause and every LI
+clause, either `tied` is True or `round(value, dp) != round(threshold, dp)`.
+
 ### Task 16: verify.py smoke, Makefile, and documentation
 
 **Files:**
