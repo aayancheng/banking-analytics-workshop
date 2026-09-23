@@ -58,3 +58,22 @@ th:first-child, td:first-child { text-align:left; }
 .tile .n { font-size:22px; font-weight:700; }
 .tile .k { font-size:12px; opacity:.85; }
 .flipcount { font-size:13px; color:var(--muted); margin:2px 0 0; }
+
+/* Task 13 -- pricing tab */
+.pr-tiles { display:flex; gap:10px; margin:10px 0; flex-wrap:wrap; }
+.pr-ladder { margin:14px 0; }
+.pr-ladder .shortfall { font-size:13px; margin:4px 0 0; }
+table.waterfall caption { text-align:left; font-weight:600; caption-side:top; padding:4px 0; }
+table.waterfall tr.wf-rule td { border-top:2px solid var(--ink); }
+.pr-error { color:var(--bad); font-weight:600; margin:8px 0; }
+.pr-book { display:flex; align-items:center; gap:20px; margin:14px 0; padding:10px 16px;
+           background:var(--bg); border:1px solid var(--line); border-radius:8px; }
+.book-share { font-size:32px; font-weight:800; line-height:1; }
+.book-sub { font-size:13px; color:var(--muted); margin-top:2px; }
+.book-mispriced { display:flex; flex-direction:column; align-items:flex-end; margin-left:auto; }
+.book-mispriced .k { font-size:12px; color:var(--muted); }
+.book-mispriced .n { font-size:19px; font-weight:700; }
+.sliders { display:flex; flex-direction:column; gap:8px; margin:10px 0 16px; }
+.sliderrow { display:grid; grid-template-columns:150px 1fr 80px; align-items:center; gap:10px; }
+.sliderrow label { font-size:13px; color:var(--muted); }
+.sliderval { font-size:13px; text-align:right; font-variant-numeric:tabular-nums; }
