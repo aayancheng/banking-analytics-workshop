@@ -297,25 +297,44 @@ as it does to v1.
   where `app/v2` is present (on the `v2-loan-workbench` branch, and on `main` once
   merged) exercises the v2 smoke, which asserts a what-if with an empty override body
   agrees with the batch `/api/adjudicate` decision.
-- **The stage-3 handoff is unsafe — do not give it.** `app/v2/state.py` imports
-  `ews` and `line_increase` unconditionally, and stage-3 contains neither (it has
-  score, adjudication, pricing only — `git ls-tree` confirms). Restoring v2's `app/`
-  into stage-3 fails at boot, so `verify.py` (which boots the app inside
-  `check_apps`) breaks the one promise at that tag. Verified in a clean clone:
+- **The stage-3 handoff is unsafe — do not give it, and the reason is not v2's
+  imports.** `main`'s `app/main.py` is the stage-4+ version of v1: line 26 already
+  reads `from ews.src import watchlist as ews_watchlist`, at module import time,
+  *before* the v2 import on line 28 is ever reached. Stage-3's own `app/main.py` has
+  no such line (`git show stage-3:app/main.py` — it imports only score, adjudication
+  and pricing; no `ews` reference at all). So **restoring `main`'s `app/` into
+  stage-3 was never safe, with or without v2** — `app/v2/state.py` (which separately
+  imports `ews.src.feature_engineering` and `line_increase`) never even gets a
+  chance to fail, because `app/main.py`'s own pre-existing v1 import fails two lines
+  earlier. Do not "fix" this by making v2's imports lazy — that cannot repair a
+  v1-only failure that happens before v2 is reached.
+
+  DO NOT RUN the block below as advice — it is kept only as the clean-clone proof of
+  the failure, on a fresh venv:
   ```
   git checkout -f stage-3
-  git checkout origin/v2-loan-workbench -- app notebooks workshop   # v2 isn't on main yet
+  git checkout origin/v2-loan-workbench -- app notebooks workshop   # pre-merge source
   python verify.py
   ```
   fails at the apps check with exactly:
   `cannot import name 'watchlist' from 'ews.src' (unknown location)`
-  **The safe handoff is stage-4 or later.** Once v2 is merged to `main`, give
-  students `git checkout stage-4` (or `stage-5`) **followed by**
-  `git checkout main -- app notebooks workshop` — the same shape as the existing
-  `workshop`/`notebooks` handoff, just landing one stage later than the S3 spec
-  originally assumed. (Until that merge, the source is `origin/v2-loan-workbench`
-  instead of `main`, as in the command above.) Verified in a clean clone at both
-  stage-4 and stage-5, restoring from `origin/v2-loan-workbench`: `verify.py` passes
+
+  **The safe handoff is stage-4 or later — give one of these two, literally, as a
+  ready-to-run command:**
+
+  Before v2 merges to `main` (today):
+  ```
+  git checkout stage-4
+  git checkout origin/v2-loan-workbench -- app notebooks workshop
+  ```
+
+  After v2 merges to `main`:
+  ```
+  git checkout stage-4
+  git checkout main -- app notebooks workshop
+  ```
+  Both verified in a clean clone at stage-4 and at stage-5, restoring from
+  `origin/v2-loan-workbench` (since v2 isn't on `main` yet): `verify.py` passes
   (`✅ Stage 4/5 verified`), the server then boots cleanly — no `V2State`
   alignment-assert failure, which is real evidence, since those asserts fire at boot
   if a tag's committed artifacts differ from `main`'s — `/api/v2/health` answers, and
@@ -323,10 +342,10 @@ as it does to v1.
   /line-increase}`) returns 200.
 - **v2's what-if must equal the batch pipeline.** Every slider calls the same
   module function the batch run calls; `tests/test_app_v2.py` asserts that an empty
-  override body reproduces `/api/adjudicate`, `/api/pricing/<id>` and
-  `/api/ews/<id>` exactly, over 25 loans each, and `verify.py`'s v2 smoke re-asserts
-  the adjudication case on every run. If either fails, the demo is lying — fix the
-  drift, never the test or the smoke check.
+  override body reproduces `/api/adjudicate` (a 25-loan sample), `/api/pricing/<id>`
+  and `/api/ews/<id>` (the 40-loan `booked_sample_ids` fixture) exactly, and
+  `verify.py`'s v2 smoke re-asserts the adjudication case on every run. If either
+  fails, the demo is lying — fix the drift, never the test or the smoke check.
 - **No financial arithmetic in the v2 JavaScript.** Every number on screen came from
   a server response; the browser only formats and draws. A threshold comparison done
   in JS is a bug even on the loans where it currently agrees with the server.
