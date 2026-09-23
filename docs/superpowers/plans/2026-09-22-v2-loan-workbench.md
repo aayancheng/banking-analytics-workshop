@@ -3339,7 +3339,11 @@ def display_precision(value: float, threshold: float,
     as false. Whether the rule met is still the module's verdict, never recomputed.
     """
     if value == threshold:
-        return {"dp": base_dp, "tied": True}
+        # EXACTLY equal is not a tie in the sense that matters: the plain comparison
+        # already reads correctly ("0 > 0 -> not met", "3 >= 3 -> met"). Marking it
+        # tied relabelled 4,858 honest EWS rows -- 4,111 of them healthy accounts with
+        # zero days past due, suddenly described as "at the threshold" of delinquency.
+        return {"dp": base_dp, "tied": False}
     for dp in range(base_dp, max_dp + 1):
         if round(value, dp) != round(threshold, dp):
             return {"dp": dp, "tied": False}
@@ -3359,7 +3363,10 @@ compared this clause against the same rounded value it uses -- tautological for 
 clause -- and must compare against the raw probability instead.
 
 **Tests (whole book, called directly):** for every EWS trigger clause and every LI
-clause, either `tied` is True or `round(value, dp) != round(threshold, dp)`.
+clause, either `tied` is True or `round(value, dp) != round(threshold, dp)` -- AND a
+clause is `tied` only when its value genuinely DIFFERS from the threshold. The first
+check alone is satisfied trivially by marking every exact match tied, which is how the
+over-flagging above passed. `tied` must mean "different, but inseparable at 8dp".
 
 ### Task 16: verify.py smoke, Makefile, and documentation
 
