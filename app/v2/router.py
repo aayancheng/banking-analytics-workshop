@@ -4,11 +4,25 @@ Read endpoints assemble one loan's explanation on demand. What-if endpoints take
 overrides body and call the same module function the batch pipeline calls, so an
 empty override body must reproduce the batch numbers exactly.
 """
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse
 
 from app.v2 import explain, ews, ews_whatif, line_increase, loans, pricing, whatif
 
 router = APIRouter(prefix="/api/v2", tags=["v2"])
+
+# A second, prefix-less router for the page itself: include_router applies the
+# parent's prefix, so /v2 cannot hang off the /api/v2 router above.
+_STATIC = Path(__file__).resolve().parent.parent / "static" / "v2"
+
+page_router = APIRouter(tags=["v2"])
+
+
+@page_router.get("/v2", include_in_schema=False)
+def v2_page():
+    return FileResponse(_STATIC / "index.html")
 
 
 def _guard(fn, app_state, business_id, *rest):

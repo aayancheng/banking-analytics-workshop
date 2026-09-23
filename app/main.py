@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Banking Analytics Workshop — decision platform", lifespan=lifespan)
-app.include_router(v2_router.router)
+for r in (v2_router.router, v2_router.page_router): app.include_router(r)
 
 
 @app.get("/health")

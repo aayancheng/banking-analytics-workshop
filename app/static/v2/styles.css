@@ -1,0 +1,43 @@
+:root {
+  --ink:#1a2332; --line:#d8dee9; --ok:#1a7f4b; --warn:#b7791f;
+  --bad:#b3372e; --accent:#245bb2; --bg:#f6f8fb; --panel:#fff; --muted:#5b6572;
+}
+* { box-sizing:border-box; }
+body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink);
+       margin:0; background:var(--bg); font-size:16px; }
+header { background:var(--ink); color:#fff; padding:14px 24px;
+         display:flex; justify-content:space-between; align-items:center; }
+header h1 { font-size:20px; margin:0; font-weight:600; }
+header p { margin:2px 0 0; font-size:13px; opacity:.75; }
+.badge { background:var(--accent); border-radius:4px; padding:1px 7px; font-size:13px; }
+.v1link { color:#cfe0ff; font-size:14px; text-decoration:none; }
+section, main { background:var(--panel); border:1px solid var(--line);
+                border-radius:8px; margin:16px 24px; padding:16px 20px; }
+.filters { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+.filters label { font-size:12px; color:var(--muted); display:block; }
+select, input { padding:7px 9px; border:1px solid var(--line);
+                border-radius:6px; font-size:15px; background:#fff; color:var(--ink); }
+#loanpick { min-width:280px; }
+.count { font-size:13px; color:var(--muted); }
+button { padding:7px 13px; border:0; border-radius:6px; background:var(--accent);
+         color:#fff; font-size:14px; cursor:pointer; }
+button:hover { filter:brightness(1.1); }
+nav#tabs { display:flex; gap:6px; margin:0 24px; padding:0; border:0; background:none; }
+nav#tabs button { background:#e7ecf4; color:var(--ink); border-radius:8px 8px 0 0; }
+nav#tabs button.active { background:var(--panel); font-weight:600;
+                         border:1px solid var(--line); border-bottom-color:var(--panel); }
+.opt { font-size:11px; opacity:.7; }
+.hidden { display:none; }
+.muted { color:var(--muted); margin:16px 24px; }
+.hdr-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+.hdr-grid .lbl { font-size:12px; color:var(--muted); }
+.hdr-grid .val { font-size:17px; font-weight:600; }
+.chip { display:inline-block; padding:3px 12px; border-radius:12px;
+        font-weight:700; font-size:16px; color:#fff; }
+.chip.Approve { background:var(--ok); } .chip.Refer { background:var(--warn); }
+.chip.Decline { background:var(--bad); }
+table { border-collapse:collapse; font-size:14px; width:100%; margin-top:10px; }
+td, th { border:1px solid var(--line); padding:5px 10px; text-align:right; }
+th:first-child, td:first-child { text-align:left; }
+.fired { color:var(--bad); font-weight:600; }
+.passed { color:var(--ok); }
