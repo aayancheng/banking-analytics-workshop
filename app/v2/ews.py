@@ -15,6 +15,7 @@ the same way this module spells out the batch ones.
 from __future__ import annotations
 
 from shared.config import EWS_TRIGGERS
+from app.v2.display import display_precision
 from app.v2.explain import _booked_row
 
 # Each trigger is a LIST of clauses joined by OR, because flag_triggers' DELINQUENCY
@@ -57,9 +58,16 @@ def trigger_rows(feat_row, cfg: dict, fired_names: set[str]) -> list[dict]:
         for metric, comparator, source in clauses:
             threshold = float(cfg[source]) if isinstance(source, str) else float(source)
             value = float(feat_row.get(metric, 0.0))
+            # value goes out UNROUNDED -- rounding it here (the old behaviour) is what
+            # hid BIZ106189's util_drift 0.15000000000000013 behind a clean "0.15",
+            # making a float-noise fire look like a strict-inequality contradiction.
+            # display_precision (app/v2/display.py) picks the browser's decimals per
+            # clause; `met` is computed from the unrounded value either way, never
+            # from the rounded display copy this used to be.
+            prec = display_precision(value, threshold)
             spelled.append({
                 "metric": metric, "comparator": comparator, "threshold": threshold,
-                "value": round(value, 4),
+                "value": value, "dp": prec["dp"], "tied": prec["tied"],
                 "met": bool(_CLAUSE_OPS[comparator](value, threshold)),
             })
         rows.append({"name": name, "join": "OR", "clauses": spelled,

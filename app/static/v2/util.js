@@ -40,12 +40,18 @@ const fmt = {
   bps: v => Math.round(v).toLocaleString() + " bps",
   num: (v, d = 2) => Number(v).toFixed(d),
   /* A feature's raw value for a ledger label. Categoricals pass through; integers
-     print bare; floats get 4dp. Without this a computed feature renders at full
-     float width -- `pd_score 0.2219917066245684` on a projected screen. Formatting
-     is the browser's job; calculating is not. */
-  feature: v => {
+     print bare; floats get `dp` decimals (4 by default). Without this a computed
+     feature renders at full float width -- `pd_score 0.2219917066245684` on a
+     projected screen. Formatting is the browser's job; calculating is not.
+
+     Fix round 1 (display-precision review): `dp` is now a parameter, not a fixed
+     4, because a fixed browser-side precision is tuned to today's data and breaks
+     silently on a retrain -- the same reasoning that moved this choice server-side
+     (app/v2/display.py::display_precision) for every value shown beside a
+     threshold. Callers that don't pass one keep the old default. */
+  feature: (v, dp = 4) => {
     if (typeof v !== "number") return String(v ?? "");
-    return Number.isInteger(v) ? String(v) : v.toFixed(4);
+    return Number.isInteger(v) ? String(v) : v.toFixed(dp);
   },
 };
 

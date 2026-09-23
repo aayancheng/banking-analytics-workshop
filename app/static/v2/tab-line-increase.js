@@ -13,16 +13,18 @@
    gap visible instead of a footnote. Every number on screen is quoted straight
    off the response; nothing here computes a financial figure. */
 
+// prob_above_threshold and pd_within_appetite are plain probability/PD figures --
+// formatted via fmt.feature at the clause's own server-chosen `dp`
+// (app/v2/display.py), not a hardcoded decimal count. A fixed 6dp (Task 15's first
+// draft, for the documented BIZ101719 near-miss) was only 3.3x from colliding on
+// this data; the server now measures the real margin per clause, per loan.
+// amount_positive and clears_hurdle keep their own units (dollars, a rate) since
+// dp doesn't apply to them the same way -- `tied` still governs their comparator
+// text below.
 const CLAUSE_FMT = {
-  // pd_within_appetite needs enough precision to show the documented near-miss:
-  // BIZ101719's exact pd 0.0741049689 reads as FAIL against cap 0.0741 -- a 4dp
-  // rounding would make the two look tied instead of showing why it fails.
-  pd_within_appetite: v => fmt.num(v, 6),
-  prob_above_threshold: v => fmt.num(v, 4),
   amount_positive: v => fmt.money(v),
   clears_hurdle: v => fmt.pct(v, 2),
 };
-const CLAUSE_THRESH_FMT = {...CLAUSE_FMT, amount_positive: v => fmt.money(v)};
 
 function capsChart(caps) {
   const wrap = el("div", {class: "li-caps"});
@@ -41,15 +43,19 @@ function capsChart(caps) {
 // -- rendered faithfully, never recomputed. The footer's verdict is
 // `eligibility.eligible` itself: `eligible == all(clause.pass)` is necessary but
 // not sufficient (a wrong clause can still land on the right verdict), so the
-// footer never derives yes/no from the rows above it.
+// footer never derives yes/no from the rows above it. When `c.tied` (server-side,
+// app/v2/display.py), the comparator column says the value is at the threshold
+// instead of repeating a symbol that would print two equal numbers -- e.g.
+// BIZ101719's amount_positive, $0 against a $0 threshold, exactly.
 function clauseList(eligibility) {
   const body = el("tbody");
   for (const c of eligibility.clauses) {
+    const format = CLAUSE_FMT[c.name] || (v => fmt.feature(v, c.dp));
+    const comparator = c.tied ? "at threshold" : c.comparator;
     const glyph = c.pass ? "✓ pass" : "✗ fail";
     body.append(el("tr", {}, el("td", {}, c.name.replace(/_/g, " ")),
-      el("td", {}, (CLAUSE_FMT[c.name] || fmt.feature)(c.value)),
-      el("td", {}, c.comparator),
-      el("td", {}, (CLAUSE_THRESH_FMT[c.name] || fmt.feature)(c.threshold)),
+      el("td", {}, format(c.value)), el("td", {}, comparator),
+      el("td", {}, format(c.threshold)),
       el("td", {}, el("span", {class: c.pass ? "passed" : "fired"}, glyph))));
   }
   const t = el("table", {class: "rules"});

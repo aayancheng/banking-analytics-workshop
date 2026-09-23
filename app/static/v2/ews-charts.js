@@ -51,9 +51,13 @@ function smallMultiples(panel, triggerConfig) {
    print "value 2, threshold 30, FIRED": a row that contradicts itself on half
    the book. The header's fired glyph comes straight off the payload, never
    recomputed from a clause's `met`; `met` only explains which clause caused
-   it. Same fired/passed/na convention as the decision tab's rulesTable. Fix
-   round 1: value/threshold now go through fmt.feature instead of bare
-   String() -- thresholds are user-dragged now, not just clean constants. */
+   it. Same fired/passed/na convention as the decision tab's rulesTable.
+   value/threshold format at the clause's own server-chosen `dp`
+   (app/v2/display.py), not a fixed decimal count -- BIZ106189's util_drift
+   0.15000000000000013 against a committed 0.15 both round to "0.15" at 4dp,
+   so a FIRED row read "0.15 > 0.15". When `tied` (nothing up to 8dp
+   separates them), the comparator column says so instead. met/fired stay
+   the module's own verdict, unchanged. */
 function triggerTable(rows) {
   const body = el("tbody");
   for (const t of rows) {
@@ -64,8 +68,10 @@ function triggerTable(rows) {
     for (const c of t.clauses) {
       const status = c.met ? el("span", {class: "fired"}, "✗ met")
                             : el("span", {class: "na"}, "— not met");
-      body.append(el("tr", {}, el("td", {}, c.metric), el("td", {}, fmt.feature(c.value)),
-        el("td", {}, c.comparator), el("td", {}, fmt.feature(c.threshold)),
+      const comparator = c.tied ? "at threshold" : c.comparator;
+      body.append(el("tr", {}, el("td", {}, c.metric),
+        el("td", {}, fmt.feature(c.value, c.dp)), el("td", {}, comparator),
+        el("td", {}, fmt.feature(c.threshold, c.dp)),
         el("td", {}, status)));
     }
   }

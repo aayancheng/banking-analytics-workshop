@@ -31,6 +31,9 @@ from adjudication.src.feature_engineering import (
 )
 from adjudication.src.policy import PolicyConfig
 from ews.src.feature_engineering import compute_ews_features
+from line_increase.src.feature_engineering import (
+    LI_FEATURE_COLUMNS, compute_line_increase_features,
+)
 from app.v2 import loans
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -45,6 +48,7 @@ class V2State:
     panel: pd.DataFrame
     index: pd.DataFrame
     ews_feats: pd.DataFrame
+    li_prob_raw: pd.Series
 
 
 def build_state(app_state) -> V2State:
@@ -59,7 +63,8 @@ def build_state(app_state) -> V2State:
     index = loans.build_index(app_state)
     app_state.policy_config = PolicyConfig.from_dict(
         json.loads((ROOT / "adjudication" / "models" / "policy_config.json").read_text()))
-    ews_feats = compute_ews_features(pd.read_parquet(RAW / "portfolio.parquet"))
+    portfolio = pd.read_parquet(RAW / "portfolio.parquet")
+    ews_feats = compute_ews_features(portfolio)
     ews_feats = ews_feats.set_index(ews_feats["business_id"].astype(str))
     # ews_whatif re-tiers positionally against app_state.ews, so the two frames must
     # stay in the same ORDER, not merely hold the same ids. They do today because both
@@ -68,4 +73,27 @@ def build_state(app_state) -> V2State:
     assert ews_feats.index.equals(app_state.ews.index), (
         "ews_feats and app.state.ews are misaligned; v2 would report the wrong "
         "loan's risk tier")
-    return V2State(scorecard, score_X, adj_X, adj_explainer, panel, index, ews_feats)
+
+    # Fix round 1 (display-precision review): candidates.score_population decides
+    # `eligible` on the model's UNROUNDED probability but persists `prob` rounded to
+    # 4dp; app/v2/line_increase.py's prob_above_threshold clause was reading that
+    # rounded column, so a screen could show PASS/FAIL that disagreed with the
+    # verdict it was explaining. Recomputed here the same way candidates.py does --
+    # same model, same feature function, same portfolio row order -- rather than
+    # exposing an internal of that module. `portfolio` is the exact frame
+    # compute_line_increase_features expects (candidates.py reads it fresh too), so
+    # this reuses the read already done for ews_feats instead of a second I/O pass.
+    li_model = joblib.load(ROOT / "line_increase" / "models" / "line_increase_model.pkl")
+    li_X = compute_line_increase_features(portfolio)
+    li_prob_raw = pd.Series(
+        li_model.predict_proba(li_X[LI_FEATURE_COLUMNS])[:, 1],
+        index=li_X["business_id"].astype(str), name="prob_raw")
+    # Same order-alignment risk as ews_feats above: nothing but this assert stops a
+    # future reorder from silently attaching one loan's raw probability to another's
+    # eligibility clause.
+    assert li_prob_raw.index.equals(app_state.li.index), (
+        "li_prob_raw and app_state.li are misaligned; v2 would report the wrong "
+        "loan's raw probability")
+
+    return V2State(scorecard, score_X, adj_X, adj_explainer, panel, index, ews_feats,
+                   li_prob_raw)

@@ -28,6 +28,9 @@ const LABELS = {interest_income: "Interest income", cost_of_funds: "Cost of fund
 // entirely rather than defended row by row. `caption` defaults to this tab's own
 // text so the pricing call site (tab-pricing.js, no caption arg) is unchanged.
 function waterfallTable(lines, ead, caption = "Profit waterfall") {
+  // Checks lines[0] only -- assumes a homogeneous set (every line carries `bps`
+  // or none do), true of both callers today (profit_waterfall's eight lines,
+  // always uniform).
   const hasBps = lines.length > 0 && lines[0].bps !== undefined;
   const body = el("tbody");
   for (const w of lines) {

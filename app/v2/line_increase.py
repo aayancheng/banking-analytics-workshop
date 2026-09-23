@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from shared.config import LINE_INCREASE
 from line_increase.src.amount_rules import incremental_roe
+from app.v2.display import display_precision
 from app.v2.explain import _booked_row
 
 _LI_WATERFALL = ["interest_income", "cost_of_funds", "expected_loss",
@@ -61,15 +62,33 @@ def line_increase_detail(app_state, business_id: str):
     # value, and reusing it as an input is how a screen quietly stops matching the
     # pipeline it claims to mirror.
     pd_exact = float(app_state.scores.loc[business_id, "pd"])
+    # Fix round 1 (display-precision review): candidates.score_population decides
+    # eligibility on the model's UNROUNDED probability but persists `prob` rounded to
+    # 4dp -- reading that column here made this clause disagree with the verdict it
+    # exists to explain, the same defect pd_within_appetite already had for the same
+    # reason. app_state.v2.li_prob_raw (app/v2/state.py) is that unrounded value,
+    # computed the same way candidates.py computes it.
+    prob_raw = float(app_state.v2.li_prob_raw.loc[business_id])
     r = incremental_roe(pd_exact, float(li["recommended_amount"]),
                         float(li["utilization_onbook"]), float(li["rate"]))
     w = r["waterfall"]
     ead = float(r["incremental_ead"])
+
+    def _clause(name, value, threshold, comparator, passed):
+        # display_precision (app/v2/display.py) picks the fewest decimals that keep
+        # `value` and `threshold` from printing identically next to a strict
+        # comparator -- the fix for the same class of defect EWS's RISING_UTILIZATION
+        # had (a fired trigger reading "0.15 > 0.15"). `pass` is always the argument
+        # passed in, never derived from the precision it returns.
+        prec = display_precision(value, threshold)
+        return {"name": name, "value": value, "threshold": threshold,
+                "comparator": comparator, "pass": bool(passed),
+                "dp": prec["dp"], "tied": prec["tied"]}
+
     clauses = [
-        {"name": "prob_above_threshold", "value": float(li["prob"]),
-         "threshold": meta["offer_threshold"], "comparator": ">=",
-         "pass": bool(float(li["prob"]) >= meta["offer_threshold"])},
-        # Unrounded, for the same reason as the ROE above: candidates tests the
+        _clause("prob_above_threshold", prob_raw, meta["offer_threshold"], ">=",
+                prob_raw >= meta["offer_threshold"]),
+        # Unrounded, for the same reason as prob above: candidates tests the
         # unrounded pd_score against this cap, so using the persisted 4dp value makes
         # the clause disagree with the module. On BIZ101719 (exact 0.0741049689, cap
         # 0.0741) the rounded value reads as PASS while the batch excluded the loan
@@ -77,15 +96,12 @@ def line_increase_detail(app_state, business_id: str):
         # because two other clauses also fail, so the verdict stays right while the
         # REASON is wrong. A tab whose whole job is to say which clause stopped the
         # offer must not name the wrong one.
-        {"name": "pd_within_appetite", "value": pd_exact,
-         "threshold": meta["offer_max_pd"], "comparator": "<=",
-         "pass": bool(pd_exact <= meta["offer_max_pd"])},
-        {"name": "amount_positive", "value": float(li["recommended_amount"]),
-         "threshold": 0.0, "comparator": ">",
-         "pass": bool(float(li["recommended_amount"]) > 0)},
-        {"name": "clears_hurdle", "value": float(r["roe"]),
-         "threshold": LINE_INCREASE["roe_hurdle"], "comparator": ">=",
-         "pass": bool(r["clears_hurdle"])},
+        _clause("pd_within_appetite", pd_exact, meta["offer_max_pd"], "<=",
+                pd_exact <= meta["offer_max_pd"]),
+        _clause("amount_positive", float(li["recommended_amount"]), 0.0, ">",
+                float(li["recommended_amount"]) > 0),
+        _clause("clears_hurdle", float(r["roe"]), LINE_INCREASE["roe_hurdle"], ">=",
+                r["clears_hurdle"]),
     ]
     return {
         "business_id": business_id,

@@ -655,7 +655,14 @@ def test_every_clause_agrees_with_the_module_that_computed_it(client):
     pd_within_appetite clause read PASS from the rounded pd while candidates had
     excluded the loan for exactly that reason, and the test stayed green because two
     other clauses also failed. The verdict was right and the REASON was wrong, which
-    on a reason-code screen is the defect that matters."""
+    on a reason-code screen is the defect that matters.
+
+    Fix round 1: prob_above_threshold now compares against `st.v2.li_prob_raw`, not
+    `st.li.loc[bid, "prob"]`. The old assertion compared the clause to the exact same
+    rounded column the clause itself read -- tautological for that one clause, unable
+    to fail no matter what the clause did. candidates.score_population decides
+    eligibility on the unrounded probability, so the raw value is the only
+    independent source of truth for what this clause should say."""
     from app.v2 import line_increase as li_mod
     st = client.app.state
     meta = st.li_meta
@@ -665,7 +672,7 @@ def test_every_clause_agrees_with_the_module_that_computed_it(client):
         exact_pd = float(st.scores.loc[bid, "pd"])
         assert by["pd_within_appetite"]["pass"] == (exact_pd <= meta["offer_max_pd"]), bid
         assert by["prob_above_threshold"]["pass"] == (
-            float(st.li.loc[bid, "prob"]) >= meta["offer_threshold"]), bid
+            float(st.v2.li_prob_raw.loc[bid]) >= meta["offer_threshold"]), bid
         assert by["amount_positive"]["pass"] == (
             float(st.li.loc[bid, "recommended_amount"]) > 0), bid
 
@@ -698,3 +705,48 @@ def test_line_increase_is_null_for_an_unbooked_applicant(client):
 def test_line_increase_404s_for_an_unknown_business_id(client):
     r = client.get("/api/v2/loan/BIZ999999/line-increase")
     assert r.status_code == 404
+
+
+def test_ews_clause_precision_never_prints_two_equal_numbers(client):
+    """Whole book, called directly: for every EWS trigger clause, either
+    `display_precision` reports `tied` (the value is at the threshold -- exactly, or
+    separated only by float noise) or the `dp` it chose genuinely makes value and
+    threshold print differently when both are rounded to it. A row that fails this
+    prints two equal-looking numbers next to a strict comparator -- what let
+    BIZ106189 fire RISING_UTILIZATION on float noise (util_drift
+    0.15000000000000013 against a committed 0.15) and read "0.15 > 0.15 -- FIRED",
+    and what let BIZ102054's real 3e-5 near miss on DEPOSIT_DECLINE (0.2999701
+    against 0.30) hide behind "0.3 > 0.3 -- not met". Confirmed by hand that this
+    test fails before app/v2/display.py existed, catching exactly BIZ102054 and
+    BIZ106189 (plus BIZ108823, float noise on the same clause as BIZ106189)."""
+    from app.v2 import ews as ews_mod
+    from shared.config import EWS_TRIGGERS
+    st = client.app.state
+    bad = []
+    for bid in st.ews.index:
+        rows = ews_mod.trigger_rows(st.v2.ews_feats.loc[bid], EWS_TRIGGERS,
+                                    set(st.ews.loc[bid, "triggers"]))
+        for t in rows:
+            for c in t["clauses"]:
+                ok = c["tied"] or round(c["value"], c["dp"]) != round(c["threshold"], c["dp"])
+                if not ok:
+                    bad.append((bid, t["name"], c["metric"]))
+    assert not bad, bad
+
+
+def test_li_clause_precision_never_prints_two_equal_numbers(client):
+    """Whole book, called directly: same guarantee as the EWS test above, for the
+    four LI eligibility clauses. Task 15's original pd_within_appetite formatting
+    (a hardcoded 6dp) was safe only by a 3.3x margin -- data-dependent, not a
+    guarantee -- so this checks the server-chosen `dp` actually holds on every
+    clause, not a fixed decimal count picked because it happened to work today."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    bad = []
+    for bid in st.li.index:
+        e = li_mod.line_increase_detail(st, bid)["eligibility"]
+        for c in e["clauses"]:
+            ok = c["tied"] or round(c["value"], c["dp"]) != round(c["threshold"], c["dp"])
+            if not ok:
+                bad.append((bid, c["name"]))
+    assert not bad, bad
