@@ -206,6 +206,25 @@ def test_nearest_flip_can_rank_a_zero_threshold_rule(client):
     assert nf["lever"] == nf["candidates"][0]["lever"]
 
 
+def test_ledger_fired_flags_agree_with_the_module_on_every_applicant(client):
+    """`fired` must mean "this rule contributed", the same as everywhere else.
+
+    Whole book. Computing it from the comparator alone disagreed with
+    policy.decide's own rule_hits on 43.4% of applicants: a refer override whose
+    condition is true but which cannot bite (the loan is already outside the Approve
+    zone) is not a rule that fired. BIZ100052 -- v1 reports "rule hits: none" while
+    the ledger claimed two. A UI painting `fired` red would have shown two red rows
+    on a decision that came purely from the PD zones."""
+    from app.v2 import explain
+    st = client.app.state
+    for bid in st.profiles.index:
+        d = explain.decision_detail(st, bid)
+        rows = d["rules"]["knockouts"] + d["rules"]["refer_overrides"]
+        assert sum(1 for r in rows if r["fired"]) == len(d["rule_hits"]), (bid, rows)
+        for r in rows:
+            assert not (r["fired"] and not r["applicable"]), (bid, r["rule"])
+
+
 def test_decision_endpoint_matches_the_batch_pipeline(client, sample_ids):
     """v2's DECISION endpoint -- not just the header -- must agree with what v1
     already decided, and must report the same reasons."""

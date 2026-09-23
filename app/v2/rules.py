@@ -39,16 +39,32 @@ def loan_values(profile_row, score_row) -> dict:
 
 
 def _rows(specs, values, config, applicable) -> list[dict]:
+    """Three distinct facts per rule, because conflating them makes the screen lie.
+
+      condition_met -- the comparator is true for this loan
+      applicable    -- this rule can bite this loan at all
+      fired         -- it actually contributed to the decision (both of the above)
+
+    A refer override only downgrades a loan the PD zones would have APPROVED. On a
+    loan already in the Refer zone its comparator can be true while it changed
+    nothing. Reporting that as `fired` disagreed with policy.decide's own rule_hits
+    on 43.4% of applicants -- BIZ100052 is the case: v1 says "rule hits: none" while
+    the ledger claimed two fired. `fired` means "this rule contributed" everywhere
+    else in this codebase (Task 8 fixed the identical confusion for EWS triggers), so
+    it has to mean that here too.
+    """
     out = []
     for rule, label, value_key, comparator, config_key in specs:
         threshold = float(getattr(config, config_key))
         value = values[value_key]
+        condition_met = bool(_OPS[comparator](value, threshold))
         out.append({
             "rule": rule, "label": label, "value_key": value_key,
             "comparator": comparator, "threshold": threshold,
             "value": round(value, 4),
-            "fired": bool(_OPS[comparator](value, threshold)),
+            "condition_met": condition_met,
             "applicable": applicable,
+            "fired": bool(condition_met and applicable),
         })
     return out
 
@@ -61,7 +77,10 @@ def ledger(profile_row, score_row, config, decision_zone: str) -> dict:
     refer = _rows(REFER_OVERRIDES, values, config, applicable=decision_zone == "Approve")
     for r in refer:
         if r["rule"] == "dscr_refer_hi":
-            r["fired"] = bool(r["fired"] and values["dscr"] >= float(config.dscr_floor))
+            # the band is two-sided: below the floor the knockout already fired
+            r["condition_met"] = bool(r["condition_met"]
+                                      and values["dscr"] >= float(config.dscr_floor))
+            r["fired"] = bool(r["condition_met"] and r["applicable"])
             r["label"] = (f"Thin affordability margin "
                           f"({config.dscr_floor} <= DSCR < {config.dscr_refer_hi})")
     return {
