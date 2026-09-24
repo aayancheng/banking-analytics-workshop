@@ -37,7 +37,16 @@ question, applies a different policy or economic constraint, and requires differ
       tag. The combined session needs monitoring and line-increase outputs that do not exist
       at the old S3 checkpoint.
 - [ ] Run `make stop && python verify.py`; leave the green result available in a terminal tab.
-- [ ] Run `make run` and confirm the portal opens at `http://localhost:8100`.
+- [ ] Run `make run` and confirm **both** portals open: v1 at `http://localhost:8100` and
+      v2 at `http://localhost:8100/v2`. Keep them in two browser tabs, v1 first.
+- [ ] Participants cloned before tonight's material existed. Paste the update into chat at
+      0:00, before `python verify.py`:
+      `git stash -u && git checkout main && git pull`. Anyone who insists on a stage tag
+      uses `git checkout stage-4 && git checkout main -- app notebooks workshop`, never
+      `stage-3` (its `app/` cannot load `main`'s portal).
+- [ ] In v2, type each demo loan into the ID box once so you know it loads: `BIZ100000`,
+      `BIZ100003`, `BIZ100008`, `BIZ103012`, `BIZ106189`, `BIZ100132`, `BIZ100024`,
+      `BIZ100375`. v2 has no deep links; the ID box is the fastest route on screen.
 - [ ] Open `workshop/slides/S3_4.html` in a browser and confirm no overflow warning appears.
 - [ ] Open the combined notebook in a second window, already executed end to end.
 - [ ] In the notebook, bookmark or note the locations of `## 1. Adjudication`,
@@ -49,6 +58,10 @@ question, applies a different policy or economic constraint, and requires differ
       **select up to two** responses.
 - [ ] Rehearse the four slide-to-notebook switches below. Share one application window rather
       than the entire desktop so the change of context is obvious.
+- [ ] Rehearse each v2 drag once (cards A–D below), then reset it: **click the tab's own
+      name** to reload it at the committed values (Pricing also has a *Reset to book
+      assumptions* button). A what-if is recomputed on the server and never written to disk,
+      so nothing needs restoring.
 - [ ] Pre-run all four training commands. During the lab, rerun only the commands needed for
       the two winning demos; if a command is slow, use the executed notebook output.
 
@@ -80,7 +93,7 @@ participants can reorient.
 | **0:39–0:44** | **RETURN → SLIDES** | Line increases | Walk the four conjunctive gates and the amount cap. Emphasize that all gates must pass; a strong candidate score cannot rescue weak PD or economics. |
 | **0:44–0:47** | **SWITCH → NOTEBOOK §4** | Show an actual offer decision | Display the exact thresholds, then move to “One account, four decisions.” Trace one row from adjudication through the line-increase verdict. |
 | **0:47–0:50** | **RETURN → SLIDES** | Lab handoff · **Poll C** | Launch the application-interest poll. Share results. Announce the top two and write their order in chat: highest interest first, second-highest next. |
-| **0:50–1:05** | Notebook / portal / terminal | Guided demo 1 | Run the highest-interest exercise using the 15-minute card below. Participants may follow, but the facilitator owns the screen and clock. |
+| **0:50–1:05** | Notebook / portal / terminal | Guided demo 1 | Open with the 60-second **v1 → v2** contrast below, then run the highest-interest exercise using the 15-minute card. Participants may follow, but the facilitator owns the screen and clock. |
 | **1:05–1:20** | Notebook / portal / terminal | Guided demo 2 | Run the second-highest exercise. Stop at 1:20 even if discussion is lively; paste the remaining prompts into chat as follow-up. |
 | **1:20–1:27** | Notebook final table | Lifecycle debrief | Compare the two demos: model signal, business rule, evidence, action. Ask two participants which decision they would defend and what they would show first. |
 | **1:27–1:30** | Terminal, then poll | Checkpoint + **Poll D** | `python verify.py`; assign the short decision memo; launch the exit pulse at 1:29 and do not share it on screen. |
@@ -161,7 +174,28 @@ Say this explicitly:
 
 ---
 
+## v1 → v2: the 60-second contrast (start of guided demo 1)
+
+Take this from demo 1's three-minute orient; do not add time for it.
+
+1. **v1 tab** (`http://localhost:8100`): one page of portfolio tables. Ask: *"Which loan
+   would you open to explain a Decline to a customer?"* v1 cannot answer that.
+2. **v2 tab** (`/v2`): choose **Mispriced = yes · Score band = D · Industry = Retail ·
+   EWS tier = High**. Four clicks, **20 loans**. Open one; show the four tabs.
+3. Say what changed and what did not:
+
+> "An AI agent built v2 from one prompt, in a review loop, and nothing it shows is new
+> arithmetic. Every tab calls the same module function as the batch run, and with the
+> sliders untouched a what-if reproduces the batch result exactly. The agent changed how we
+> *read* the platform, not what the platform decides."
+
+v2 walks one loan at a time: decision, price, early warning, line increase. That is the
+notebook's *One account, four decisions* table, made clickable.
+
 ## The four 15-minute guided-demo cards
+
+In each card, **"v2"** means `http://localhost:8100/v2` with the named loan typed into the
+ID box. Where a card drags a slider or cutoff, reset it by clicking the tab's name again.
 
 Use only the two selected by Poll C. Each card is intentionally complete on its own.
 
@@ -169,11 +203,22 @@ Use only the two selected by Poll C. Each card is intentionally complete on its 
 
 **0:00–0:03 · orient.** Open notebook §1 and restate the decision order.
 
-**0:03–0:10 · inspect.** In the portal, read one Approve, one Refer, and one Decline trail.
-For each, ask: *model or rule?* Point out a hard knockout and a refer override.
+**0:03–0:10 · inspect.** v2 **Decision** tab. Each tab lists every rule, including the
+ones that did not fire, with value against threshold. For each loan, ask: *model or rule?*
+
+- `BIZ100000` — **Approve**. PD in the Approve zone and no rule fires: the model decided.
+- `BIZ100003` — **Refer**. PD in the Approve zone, but the thin-DSCR refer override fires.
+- `BIZ100008` — **Decline**. PD also in the Approve zone, yet the DSCR-floor knockout
+  fires. This is Poll A's scenario, live: a low PD does not survive a hard rule.
 
 **0:10–0:15 · decide.** Show the reference mix—Approve **30.8%**, Refer **36.8%**, Decline
-**32.4%**—and ask what would change if a PD cutoff moved versus a hard rule changed.
+**32.4%**—then **drag `t_low` to zero** in v2 and watch the book mix: all **3,760**
+Approves become Refers, while Declines hold at **4,011**. Moving a PD cutoff shifts the zones;
+a hard rule's count moves only when you move the rule. Ask which change a credit committee
+should sign off.
+
+The deck's mix is the model's **held-out 2,400**; v2 shows **all 12,000** applicants
+(Approve 3,760 · Refer 4,229 · Decline 4,011). Both are right. Name the population.
 
 Optional command if artifacts are missing:
 
@@ -192,6 +237,13 @@ column before revealing the notebook’s result.
 **10.9%** median ROE, and **$1.28B** mispriced exposure. Ask which segment should receive the
 first repricing call and why.
 
+v2 **Pricing & Profitability** tab: the full waterfall in dollars and bps. Two beats:
+
+- `BIZ103012` — ROE **14.997%** against a **15%** hurdle: it fails by **0.04 bps**. A
+  hurdle is a line, and this loan is on the wrong side of it.
+- **Drag LGD from 0.45 to 0.90** and watch the book strip: the share clearing the hurdle
+  falls from **30.4% to 4.7%**. Ask: *whose assumption is LGD, and who signs it off?*
+
 Optional command:
 
 ```bash
@@ -208,6 +260,13 @@ held-out split.
 
 **0:10–0:15 · decide.** Open the top-10 watchlist. Ask why named triggers must accompany the
 probability for relationship managers and validators.
+
+v2 **Early Warning** tab: the account's 24-month history, the probability against the tier
+cutoffs, and every trigger broken into its clauses. Show `BIZ106189`:
+`RISING_UTILIZATION` fires because utilization drift is **0.15000000000000013**, just over
+**0.15**. That is floating-point noise, not a business event, and it is in the committed
+module. Ask: *would a validator catch this from the watchlist alone?* Drag a tier cutoff
+to show the High-tier count move.
 
 Optional commands:
 
@@ -226,6 +285,17 @@ name the controlling failed gate; do not average the conditions together.
 **0:10–0:15 · decide.** Compare the offered cohort with the book: PD **0.036 vs 0.117**,
 utilization **0.837 vs 0.471**, and incremental ROE **0.215**. Ask whether 95 offers from
 8,336 accounts is excessive restraint or disciplined growth.
+
+v2 **Line Increase** tab: the four gates as clauses, in the order the module tests them,
+and the three amount caps with the binding one marked.
+
+- `BIZ100132` — an offer: all four gates pass, **$71,000**.
+- `BIZ100024` — a **$2,000** recommended amount that is *not* an offer: the candidate
+  probability and incremental-ROE gates fail. **1,243** accounts have a positive amount;
+  **95** are offers.
+- `BIZ100375` — the cap is exactly **$54,500** and the amount is **$54,000**. Python's
+  `round()` sends an exact half to the even thousand, and the caption says so. Ask:
+  *is that the policy, or an accident of the language?*
 
 Optional command:
 
@@ -265,7 +335,8 @@ The point is continuity: one account can receive a sensible “yes” at one sta
    correct notebook section without visible searching.
 2. **Poll C tally and announcement.** Practice turning the result into a demo order in under
    one minute, including the tie procedure.
-3. **Both 15-minute hard stops.** Rehearse all four demo cards once so any pair can win.
+3. **Both 15-minute hard stops.** Rehearse all four demo cards once so any pair can win,
+   including each v2 drag and the reset after it.
 
 ## Have answers ready
 
@@ -278,6 +349,12 @@ The point is continuity: one account can receive a sensible “yes” at one sta
   the recommendation adds the reference margin cushion.
 - **“Is 0.662 AUC weak?”** Not by itself. Compare the model with the data ceiling, PR-AUC base
   rate, and operational capture gate. The watchlist clears the workshop’s honest gate.
+- **“Why does v2 show a different decision mix from the deck?”** Different population.
+  The deck quotes the model's held-out 2,400 (30.8 / 36.8 / 32.4%); v2 shows all 12,000
+  applicants (31.3 / 35.2 / 33.4%).
+- **“Did the AI agent change the models?”** No. v2 calls each module's own function; the
+  batch artifacts are untouched, and tests check that an untouched what-if reproduces the
+  batch run exactly. The agent's contribution is the reading layer.
 - **“Why can a good account fail a line-increase offer?”** The offer is conjunctive. Candidate
   appetite, origination PD, a positive amount, and incremental ROE must all pass.
 
