@@ -88,7 +88,7 @@ def test_amount_steps_lead_to_the_batch_amount_on_every_account(client):
     from app.v2 import line_increase as li_mod
     from line_increase.src.amount_rules import recommended_amount
     st = client.app.state
-    negative = zero = rounds_to_zero = above_cap = 0
+    negative = zero = rounds_to_zero = above_cap = halves = halves_down = 0
     for bid in st.li.index:
         d = li_mod.line_increase_detail(st, bid)
         steps, row = d["amount_steps"], st.li.loc[bid]
@@ -108,13 +108,24 @@ def test_amount_steps_lead_to_the_batch_amount_on_every_account(client):
             assert steps["recommended"] == 0 == steps["floored_at_zero"], bid
         else:
             assert steps["floored_at_zero"] == steps["min_cap"] > 0, bid
-            assert abs(steps["recommended"] - steps["floored_at_zero"]) <= \
-                steps["round_to"] / 2, bid
+            gap = abs(steps["recommended"] - steps["floored_at_zero"])
+            # half_to_even is the only case the caption qualifies, so it must be
+            # exactly the case where the gap is a half and the result an even multiple.
+            if steps["half_to_even"]:
+                assert gap == steps["round_to"] / 2, bid
+                assert (steps["recommended"] / steps["round_to"]) % 2 == 0, bid
+                halves += 1
+                halves_down += steps["recommended"] < steps["floored_at_zero"]
+            else:
+                assert gap < steps["round_to"] / 2, bid
             above_cap += steps["recommended"] > steps["min_cap"]
             rounds_to_zero += steps["recommended"] == 0
     # The review's measured counts: 7,069 negative binding caps (plus BIZ103373's
     # exact $0), 579 rounded ABOVE their cap, 23 positive caps under $500 -> $0.
     assert (negative, zero, above_cap, rounds_to_zero) == (7069, 1, 579, 23)
+    assert halves == 82 and 0 < halves_down < halves
+    s = client.get("/api/v2/loan/BIZ100375/line-increase").json()["amount_steps"]
+    assert s["half_to_even"] and s["floored_at_zero"] == 54500 and s["recommended"] == 54000
     s = client.get("/api/v2/loan/BIZ100084/line-increase").json()["amount_steps"]
     assert round(s["min_cap"]) == 14554 and s["recommended"] == 15000
 

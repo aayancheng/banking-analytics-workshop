@@ -53,7 +53,9 @@ function capsChart(caps, steps) {
       `${fmt.money(steps.recommended)}.`
     : `Lowest cap: ${name}, ${fmt.money(steps.min_cap)} → floored at $0: ` +
       `${fmt.money(steps.floored_at_zero)} → rounded to the nearest ` +
-      `${fmt.money(steps.round_to)} → recommended ${fmt.money(steps.recommended)}.`;
+      `${fmt.money(steps.round_to)}` +
+      (steps.half_to_even ? " (an exact half rounds to the even multiple)" : "") +
+      ` → recommended ${fmt.money(steps.recommended)}.`;
   wrap.append(hbars(caps), el("p", {class: "li-caption"}, words));
   return wrap;
 }

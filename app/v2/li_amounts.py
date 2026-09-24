@@ -49,11 +49,18 @@ def amount_steps(cap_rows: list[dict], recommended: float,
         return None
     binding = next(c for c in cap_rows if c["binding"])
     min_cap = float(binding["amount"])
+    floored, rnd = max(0.0, min_cap), float(cfg["round_to"])
     return {
         "binding": binding["name"],
         "min_cap": min_cap,
         "no_headroom": min_cap <= 0,
-        "floored_at_zero": max(0.0, min_cap),
-        "round_to": float(cfg["round_to"]),
+        "floored_at_zero": floored,
+        "round_to": rnd,
+        # recommended_amount() rounds with Python's round(), which sends an exact
+        # half to the EVEN multiple: 54,500 -> 54,000 but 53,500 -> 54,000. On the
+        # 82 accounts whose floored cap is an exact half of round_to, "rounded to the
+        # nearest $1,000" alone reads as an arithmetic slip on the ones that go down
+        # (BIZ100375: $54,500 -> $54,000), so the caption names the rule.
+        "half_to_even": (floored / rnd) % 1 == 0.5,
         "recommended": float(recommended),
     }
