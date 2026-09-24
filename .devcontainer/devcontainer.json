@@ -11,7 +11,14 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": ["ms-python.python"],
+      "extensions": [
+        "ms-python.python",
+        // Renders ```mermaid fenced blocks in notebook markdown cells (the S3_4
+        // notebook's four flowcharts). VS Code 1.121+ (May 2026) does this natively,
+        // but a Codespace's web client can lag that; this extension covers the gap
+        // on any version and is a no-op once native support is active.
+        "bierner.markdown-mermaid"
+      ],
       "settings": {
         "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
       }

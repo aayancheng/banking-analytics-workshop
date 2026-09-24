@@ -145,6 +145,16 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   top-left** — wrap anything positioned elsewhere. **`npx hyperframes lint` on a missing path
   reports 0 findings.** The recordings folder is gitignored because the transcript names people;
   the cut lists' `note` fields must not.
+- **A notebook's mermaid diagrams need a VS Code extension, not a pip package.** The
+  ```mermaid fenced blocks in `03_04_adjudication_pricing_monitoring.ipynb`'s markdown
+  cells render in a local VS Code because mermaid support (native since VS Code 1.121,
+  May 2026, or `bierner.markdown-mermaid` before that) is already installed there from
+  other projects. A fresh Codespace only gets what `.devcontainer/devcontainer.json`
+  declares, which was `ms-python.python` alone — so the same diagram showed as a plain
+  fenced code block. Fixed by adding `bierner.markdown-mermaid` to the devcontainer's
+  extension list; it is a no-op once VS Code's native support is active, so it does not
+  need removing later. **Requires a Codespace rebuild** ("Codespaces: Rebuild Container")
+  to take effect on an already-created Codespace — reloading the window is not enough.
 
 ## The DGP, in numbers
 
