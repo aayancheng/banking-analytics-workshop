@@ -25,6 +25,7 @@ from adjudication.src.policy import PolicyConfig, decide
 from pricing.src.portfolio import price_population, portfolio_summary
 from ews.src import watchlist as ews_watchlist
 from line_increase.src import candidates as li_candidates
+from app.v2 import state as v2_state, router as v2_router
 
 ROOT = Path(__file__).resolve().parent.parent
 ADJ_MODELS = ROOT / "adjudication" / "models"
@@ -64,10 +65,12 @@ async def lifespan(app: FastAPI):
         (ROOT / "line_increase" / "models" / "metadata.json").read_text())
     app.state.ews_meta = json.loads(
         (ROOT / "ews" / "models" / "metadata.json").read_text())
+    app.state.v2 = v2_state.build_state(app.state)
     yield
 
 
 app = FastAPI(title="Banking Analytics Workshop — decision platform", lifespan=lifespan)
+for r in (v2_router.router, v2_router.page_router): app.include_router(r)
 
 
 @app.get("/health")
@@ -263,3 +266,4 @@ def index():
 
 
 app.mount("/static", StaticFiles(directory=ROOT / "app" / "static"), name="static")
+app.mount("/static/v2", StaticFiles(directory=ROOT / "app" / "static" / "v2"), name="static_v2")

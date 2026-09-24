@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loan Workbench — Banking Analytics Workshop</title>
+<link rel="stylesheet" href="/static/v2/styles.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>Loan Workbench <span class="badge">v2</span></h1>
+    <p>One loan, every ingredient — decision, price, and early warning.</p>
+  </div>
+  <a class="v1link" href="/">← v1 portal</a>
+</header>
+
+<section id="selector">
+  <div class="filters" id="filters"></div>
+  <div class="pick">
+    <label for="q" class="sr-only">Search by business ID</label>
+    <input id="q" placeholder="business_id, e.g. BIZ100002" autocomplete="off">
+    <label for="loanpick" class="sr-only">Matching loans</label>
+    <select id="loanpick"><option>Loading…</option></select>
+    <span class="count" id="matchcount"></span>
+    <button id="clearfilters" type="button">Clear filters</button>
+  </div>
+</section>
+
+<section id="loanheader" class="hidden"></section>
+
+<nav id="tabs" class="hidden">
+  <button data-tab="decision" class="active">Decision</button>
+  <button data-tab="pricing">Pricing &amp; Profitability</button>
+  <button data-tab="ews">Early Warning</button>
+  <button data-tab="line_increase">Line Increase <span class="opt">optional</span></button>
+</nav>
+
+<main id="panel" class="hidden"></main>
+<p id="empty" class="muted">Pick a loan to begin.</p>
+
+<script src="/static/v2/util.js"></script>
+<script src="/static/v2/svg.js"></script>
+<script src="/static/v2/axis-handles.js"></script>
+<script src="/static/v2/sliders.js"></script>
+<script src="/static/v2/app.js"></script>
+<script src="/static/v2/decision-charts.js"></script>
+<script src="/static/v2/tab-decision.js"></script>
+<script src="/static/v2/pricing-charts.js"></script>
+<script src="/static/v2/tab-pricing.js"></script>
+<script src="/static/v2/ews-charts.js"></script>
+<script src="/static/v2/ews-tiles.js"></script>
+<script src="/static/v2/tab-ews.js"></script>
+<script src="/static/v2/tab-line-increase.js"></script>
+</body>
+</html>

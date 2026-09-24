@@ -42,6 +42,7 @@ test:
 # "address already in use" — which is exactly what happens when you re-run it during
 # a demo. Freeing the port first is always what you meant.
 run: stop
+	@echo "v1 portal → http://localhost:8100/     v2 workbench → http://localhost:8100/v2"
 	$(PY) -m uvicorn app.main:app --port 8100
 
 stop:

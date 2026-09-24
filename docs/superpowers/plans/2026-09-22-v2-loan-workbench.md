@@ -221,8 +221,11 @@ Expected: both PASS.
 Run: `PYTHONPATH=. .venv/bin/python verify.py | tail -3`
 Expected: the same result as before this task — no new failures.
 
-Run: `git diff --stat app/main.py`
-Expected: `4 insertions(+)`, 0 deletions. If deletions appear, v1 was modified — revert and redo.
+Run: `git diff --stat HEAD -- app/main.py`
+Expected: `4 insertions(+)`, 0 deletions. Diff against `HEAD` explicitly — bare
+`git diff` compares the working tree to the index, so once anything is staged or
+committed it prints nothing and this check passes no matter what you changed.
+If deletions appear, v1 was modified — revert and redo.
 
 - [ ] **Step 9: Commit**
 
@@ -260,6 +263,22 @@ def test_facets_cover_every_filter(client):
     assert {o["value"] for o in f["decision"]} == {"Approve", "Refer", "Decline"}
     assert {o["value"] for o in f["score_band"]} == {"AAA", "A", "B", "C", "D"}
     assert sum(o["count"] for o in f["decision"]) == 12000
+    # On-book facets are scoped to the booked population, not the applicant one.
+    for on_book in ("mispriced", "ews_tier", "li_eligible"):
+        assert sum(o["count"] for o in f[on_book]) == 8336, on_book
+
+
+def test_on_book_filters_return_the_count_their_facet_advertises(client):
+    """The bug this guards: coercing the unbooked null to False made
+    mispriced=false return 6,198 while its own facet said 2,534."""
+    f = client.get("/api/v2/filters").json()
+    for facet, values in (("mispriced", (True, False)), ("li_eligible", (True, False))):
+        advertised = {str(o["value"]).lower(): o["count"] for o in f[facet]}
+        for v in values:
+            got = client.get("/api/v2/loans",
+                             params={facet: str(v).lower()}).json()["total"]
+            assert got == advertised[str(v).lower()], f"{facet}={v}"
+        assert sum(advertised.values()) == 8336, facet
 
 
 def test_search_unfiltered_reports_true_total_and_caps_the_list(client):
@@ -372,7 +391,14 @@ def search(index: pd.DataFrame, *, decision=None, score_band=None, industry=None
                      ("li_eligible", li_eligible)):
         b = _as_bool(val)
         if b is not None:
-            m &= index[col].fillna(False).astype(bool) == b
+            # NOT fillna(False): an unbooked applicant was never priced and is
+            # neither mispriced nor correctly priced. Coercing that null to False
+            # would make `mispriced=false` partition all 12,000 applicants while the
+            # facet endpoint reports it over the 8,336 booked -- the dropdown would
+            # read "False (2,534)" and return 6,198. A filter must return the count
+            # its own facet advertises.
+            vals = index[col]
+            m &= vals.notna() & (vals.fillna(False).astype(bool) == b)
     if q:
         m &= index.index.str.contains(str(q).strip(), case=False, regex=False)
 
@@ -501,8 +527,23 @@ UI renders as "never funded" rather than as an error.
 from __future__ import annotations
 
 
+class UnknownLoan(KeyError):
+    """The business_id is not in the population.
+
+    A dedicated type, rather than a bare KeyError, because the router turns this into
+    a 404. Every other KeyError raised inside a detail function -- a renamed column, a
+    typo in a metadata path -- is a bug and must surface as a 500 with a traceback, not
+    as "unknown business_id" for a loan the user can see in the dropdown.
+    """
+
+
 def _row(app_state, business_id: str):
-    return app_state.profiles.loc[business_id]   # raises KeyError if unknown
+    """The profile row, or UnknownLoan. Every entry point looks a loan up through
+    this, which is what makes the narrow catch in the router safe."""
+    try:
+        return app_state.profiles.loc[business_id]
+    except KeyError:
+        raise UnknownLoan(business_id) from None
 
 
 def header(app_state, business_id: str) -> dict:
@@ -544,11 +585,18 @@ from app.v2 import explain, loans
 
 def _guard(fn, app_state, business_id, *rest):
     """Every loan endpoint turns an unknown id into a 404 the same way. The extra
-    args carry a what-if overrides body once Task 5 adds one."""
+    args carry a what-if overrides body once Task 5 adds one.
+
+    Catches only UnknownLoan, never bare KeyError: a KeyError from anywhere else in a
+    detail function is a bug and must reach the client as a 500 with a traceback.
+    Reporting it as 404 would tell the demo audience a loan does not exist while it
+    sits in the dropdown in front of them."""
     try:
         return fn(app_state, business_id, *rest)
-    except KeyError:
+    except explain.UnknownLoan:
         raise HTTPException(404, f"unknown business_id {business_id}")
+    except whatif.InvalidOverride as e:
+        raise HTTPException(422, str(e))
 
 
 @router.get("/loan/{business_id}")
@@ -581,8 +629,16 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 4: Decision tab read path
 
 **Files:**
-- Create: `app/v2/rules.py`
+- Create: `app/v2/rules.py`, `app/v2/ledgers.py`
 - Modify: `app/v2/explain.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+
+**File structure note.** `score_ledger`, `shap_ledger` and their helpers (`_logit`,
+`_jsonable_value`) live in `app/v2/ledgers.py`, not in `explain.py`. They are a
+self-contained "model rationale" concern, unrelated to `explain.py`'s orchestration
+role, and `explain.py` is already at its ceiling with three more detail functions still
+to come (Tasks 6, 8, 10). This establishes the pattern those tasks follow: one module
+per concern, and `explain.py`'s `*_detail()` functions call into them — exactly as
+`decision_detail()` already delegates to `rules.ledger()` instead of inlining policy.
 
 **Interfaces:**
 - Produces: `rules.ledger(profile_row, score_row, config) -> dict` with `knockouts` and `refer_overrides` lists of `{rule, label, threshold, value, comparator, fired, applicable}`, and `nearest_flip(ledger, pd_value, config) -> dict`. `explain.decision_detail(app_state, business_id) -> dict` with `pd_zones`, `rules`, `score_ledger`, `shap`, `nearest_flip`.
@@ -609,32 +665,120 @@ def test_pd_zones_match_the_committed_policy(client):
     assert d["pd_zones"]["zone"] in ("Approve", "Refer", "Decline")
 
 
-def test_score_ledger_is_exactly_additive(client):
+@pytest.fixture(scope="module")
+def sample_ids(client):
+    """A numeric identity asserted on ONE hardcoded loan passes by luck. BIZ100002's
+    SHAP gap happens to be exactly 0.0 and its PD sits nowhere near the tails, which
+    is why a single-loan version of these tests stayed green while 62 of 120 loans
+    breached the tolerance. Always sample."""
+    return [l["business_id"] for l in
+            client.get("/api/v2/loans", params={"limit": 40}).json()["loans"]]
+
+
+def test_score_ledger_is_exactly_additive(client, sample_ids):
     """intercept + sum(WoE x beta) == logit(pd). This identity is the whole reason a
-    scorecard is explainable, and the screen claims it -- so assert it."""
+    scorecard is explainable, and the screen claims it -- so assert it, on many loans."""
     import math
-    d = client.get("/api/v2/loan/BIZ100002/decision").json()
-    led = d["score_ledger"]
-    total = led["intercept"] + sum(c["contribution"] for c in led["contributions"])
-    assert len(led["contributions"]) == 15
-    assert total == pytest.approx(led["logit_pd"], abs=1e-9)
-    assert led["logit_pd"] == pytest.approx(
-        math.log(led["pd"] / (1 - led["pd"])), abs=1e-6)
+    for bid in sample_ids:
+        led = client.get(f"/api/v2/loan/{bid}/decision").json()["score_ledger"]
+        total = led["intercept"] + sum(c["contribution"] for c in led["contributions"])
+        assert len(led["contributions"]) == 15, bid
+        assert total == pytest.approx(led["logit_pd"], abs=1e-9), bid
+        assert led["logit_pd"] == pytest.approx(
+            math.log(led["pd"] / (1 - led["pd"])), abs=1e-6), bid
 
 
-def test_shap_is_exactly_additive(client):
-    d = client.get("/api/v2/loan/BIZ100002/decision").json()
-    sh = d["shap"]
-    total = sh["base_value"] + sum(c["contribution"] for c in sh["contributions"])
-    assert len(sh["contributions"]) == 21
-    assert total == pytest.approx(sh["logit_pd_model"], abs=1e-6)
+def test_shap_is_exactly_additive(client, sample_ids):
+    for bid in sample_ids:
+        sh = client.get(f"/api/v2/loan/{bid}/decision").json()["shap"]
+        total = sh["base_value"] + sum(c["contribution"] for c in sh["contributions"])
+        assert len(sh["contributions"]) == 21, bid
+        assert total == pytest.approx(sh["logit_pd_model"], abs=1e-6), bid
 
 
-def test_decision_matches_the_batch_pipeline(client):
-    """v2's decision detail must agree with what v1 already decided."""
-    v1 = client.get("/api/adjudicate/BIZ100002").json()
-    v2 = client.get("/api/v2/loan/BIZ100002").json()
-    assert v1["decision"] == v2["decision"]
+def test_ledger_identities_hold_at_the_pd_extremes(client):
+    """The tails are where rounding a PD before recomputing its logit does the most
+    damage -- 5.85e-4 on the lowest-PD applicant, 585x the tolerance.
+
+    The IDs are hardcoded because they ARE the measured extremes: BIZ101650 has the
+    population's minimum modelled PD (0.000419) and BIZ111827 its maximum (0.991464).
+    Do not swap these for the first and last rows of /api/v2/loans -- that endpoint
+    sorts by business_id and does not even return pd, so it would silently test two
+    ordinary mid-book loans while claiming to test the tails.
+    """
+    import math
+    for bid in ("BIZ101650", "BIZ111827"):
+        led = client.get(f"/api/v2/loan/{bid}/decision").json()["score_ledger"]
+        assert led["logit_pd"] == pytest.approx(
+            math.log(led["pd"] / (1 - led["pd"])), abs=1e-6), bid
+
+
+def test_nearest_flip_can_rank_a_zero_threshold_rule(client):
+    """public_records_cap is committed at 0 and 11,041 of 12,000 applicants sit exactly
+    on it. An earlier version skipped every zero threshold, so the tightest margin a
+    rule can have was invisible on 92% of the book."""
+    nf = client.get("/api/v2/loan/BIZ100002/decision").json()["nearest_flip"]
+    levers = {c["lever"] for c in nf["candidates"]}
+    assert "public_records_cap" in levers
+    pr = next(c for c in nf["candidates"] if c["lever"] == "public_records_cap")
+    assert pr["at_threshold"] is True          # value 0, cap 0
+    assert pr["distance_to_cross"] == 1.0      # one whole record, not zero
+    gaps = [c["gap"] for c in nf["candidates"]]
+    assert gaps == sorted(gaps)                 # candidates come back ranked
+    assert nf["lever"] == nf["candidates"][0]["lever"]
+
+
+def test_ledger_fired_flags_agree_with_the_module_on_every_applicant(client):
+    """`fired` must mean "this rule contributed", the same as everywhere else.
+
+    Whole book. Computing it from the comparator alone disagreed with
+    policy.decide's own rule_hits on 43.4% of applicants: a refer override whose
+    condition is true but which cannot bite (the loan is already outside the Approve
+    zone) is not a rule that fired. BIZ100052 -- v1 reports "rule hits: none" while
+    the ledger claimed two. A UI painting `fired` red would have shown two red rows
+    on a decision that came purely from the PD zones.
+
+    Goes through rules.ledger rather than decision_detail: the latter also builds the
+    WoE contributions and a per-loan SHAP explanation this test never reads, which
+    costs 4.28ms a loan against 0.06ms -- 51s versus 0.7s over 12,000. The sampled
+    test below then covers the wiring decision_detail adds on top.
+    """
+    from app.v2 import explain, rules
+    st = client.app.state
+    cfg = st.policy_config
+    for bid in st.profiles.index:
+        p = st.profiles.loc[bid]
+        d = st.decisions.loc[bid]
+        led = rules.ledger(p, st.scores.loc[bid], cfg,
+                           explain._zone(float(d["pd"]), cfg))
+        rows = led["knockouts"] + led["refer_overrides"]
+        assert sum(1 for r in rows if r["fired"]) == len(d["decision_reasons"]), (bid, rows)
+        for r in rows:
+            assert not (r["fired"] and not r["applicable"]), (bid, r["rule"])
+
+
+def test_decision_detail_wires_the_same_ledger(client, sample_ids):
+    """The whole-book test above calls rules.ledger directly for speed, so this one
+    covers what decision_detail adds: that it passes the right zone and surfaces the
+    same flags the endpoint's consumers will read."""
+    from app.v2 import explain
+    st = client.app.state
+    for bid in sample_ids:
+        d = explain.decision_detail(st, bid)
+        rows = d["rules"]["knockouts"] + d["rules"]["refer_overrides"]
+        assert sum(1 for r in rows if r["fired"]) == len(d["rule_hits"]), bid
+        assert d["pd_zones"]["zone"] == explain._zone(
+            d["pd_zones"]["pd"], st.policy_config), bid
+
+
+def test_decision_endpoint_matches_the_batch_pipeline(client, sample_ids):
+    """v2's DECISION endpoint -- not just the header -- must agree with what v1
+    already decided, and must report the same reasons."""
+    for bid in sample_ids:
+        v1 = client.get(f"/api/adjudicate/{bid}").json()
+        v2 = client.get(f"/api/v2/loan/{bid}/decision").json()
+        assert v1["decision"] == v2["decision"], bid
+        assert sorted(v1["rule_hits"]) == sorted(v2["rule_hits"]), bid
 ```
 
 - [ ] **Step 2: Run and watch them fail**
@@ -686,16 +830,32 @@ def loan_values(profile_row, score_row) -> dict:
 
 
 def _rows(specs, values, config, applicable) -> list[dict]:
+    """Three distinct facts per rule, because conflating them makes the screen lie.
+
+      condition_met -- the comparator is true for this loan
+      applicable    -- this rule can bite this loan at all
+      fired         -- it actually contributed to the decision (both of the above)
+
+    A refer override only downgrades a loan the PD zones would have APPROVED. On a
+    loan already in the Refer zone its comparator can be true while it changed
+    nothing. Reporting that as `fired` disagreed with policy.decide's own rule_hits
+    on 43.4% of applicants -- BIZ100052 is the case: v1 says "rule hits: none" while
+    the ledger claimed two fired. `fired` means "this rule contributed" everywhere
+    else in this codebase (Task 8 fixed the identical confusion for EWS triggers), so
+    it has to mean that here too.
+    """
     out = []
     for rule, label, value_key, comparator, config_key in specs:
         threshold = float(getattr(config, config_key))
         value = values[value_key]
+        condition_met = bool(_OPS[comparator](value, threshold))
         out.append({
             "rule": rule, "label": label, "value_key": value_key,
             "comparator": comparator, "threshold": threshold,
             "value": round(value, 4),
-            "fired": bool(_OPS[comparator](value, threshold)),
+            "condition_met": condition_met,
             "applicable": applicable,
+            "fired": bool(condition_met and applicable),
         })
     return out
 
@@ -708,7 +868,10 @@ def ledger(profile_row, score_row, config, decision_zone: str) -> dict:
     refer = _rows(REFER_OVERRIDES, values, config, applicable=decision_zone == "Approve")
     for r in refer:
         if r["rule"] == "dscr_refer_hi":
-            r["fired"] = bool(r["fired"] and values["dscr"] >= float(config.dscr_floor))
+            # the band is two-sided: below the floor the knockout already fired
+            r["condition_met"] = bool(r["condition_met"]
+                                      and values["dscr"] >= float(config.dscr_floor))
+            r["fired"] = bool(r["condition_met"] and r["applicable"])
             r["label"] = (f"Thin affordability margin "
                           f"({config.dscr_floor} <= DSCR < {config.dscr_refer_hi})")
     return {
@@ -718,26 +881,44 @@ def ledger(profile_row, score_row, config, decision_zone: str) -> dict:
 
 
 def nearest_flip(led: dict, pd_value: float, config) -> dict:
-    """Which single lever is closest to changing this decision, in relative terms.
+    """Which single lever is closest to changing this decision.
 
-    Relative distance so thresholds on different scales compare: a DSCR 0.05 from
-    its floor and a score 30 points from its floor are both ~5%.
+    Ranked by distance-to-cross divided by the rule's own scale, so thresholds on
+    different scales compare. Distance-to-cross is how far this loan's value must move
+    to trip the rule -- for an integer count rule with a `>` comparator sitting exactly
+    on its cap, that is one whole record, not zero.
+
+    A threshold of exactly 0 has no meaningful relative scale, so it falls back to unit
+    scale. It is NEVER dropped. An earlier version skipped every zero threshold, which
+    silently made `public_records_cap` unrankable on 11,041 of the 12,000 applicants --
+    every loan sitting exactly on the cap, which is the tightest margin a rule can have.
     """
+    INTEGER_COUNT_RULES = {"public_records_cap"}
     candidates = []
     for r in led["knockouts"] + led["refer_overrides"]:
-        if not r["applicable"] or r["threshold"] == 0:
+        if not r["applicable"]:
             continue
-        gap = abs(r["value"] - r["threshold"]) / max(abs(r["threshold"]), 1e-9)
-        candidates.append({"lever": r["rule"], "label": r["label"],
-                           "value": r["value"], "threshold": r["threshold"],
-                           "relative_gap": round(gap, 4),
-                           "currently_firing": r["fired"]})
+        distance = abs(r["value"] - r["threshold"])
+        if r["rule"] in INTEGER_COUNT_RULES and r["comparator"] == ">" and not r["fired"]:
+            distance = max(distance, 1.0)   # only trips at the next whole record
+        scale = abs(r["threshold"]) or 1.0
+        candidates.append({
+            "lever": r["rule"], "label": r["label"], "value": r["value"],
+            "threshold": r["threshold"], "distance_to_cross": round(distance, 4),
+            "gap": round(distance / scale, 4), "at_threshold": r["value"] == r["threshold"],
+            "currently_firing": r["fired"],
+        })
     for name, t in (("t_low", float(config.t_low)), ("t_high", float(config.t_high))):
-        gap = abs(pd_value - t) / max(t, 1e-9)
-        candidates.append({"lever": name, "label": f"PD zone cutoff {name}",
-                           "value": round(pd_value, 4), "threshold": t,
-                           "relative_gap": round(gap, 4), "currently_firing": None})
-    return min(candidates, key=lambda c: c["relative_gap"]) if candidates else {}
+        candidates.append({
+            "lever": name, "label": f"PD zone cutoff {name}", "value": pd_value,
+            "threshold": t, "distance_to_cross": round(abs(pd_value - t), 6),
+            "gap": round(abs(pd_value - t) / (abs(t) or 1.0), 4),
+            "at_threshold": False, "currently_firing": None,
+        })
+    if not candidates:
+        return {}
+    ranked = sorted(candidates, key=lambda c: c["gap"])
+    return {**ranked[0], "candidates": ranked}
 ```
 
 - [ ] **Step 4: Add `decision_detail` to `app/v2/explain.py`**
@@ -751,6 +932,25 @@ from score.src.reason_codes import feature_contributions
 from score.src.feature_engineering import FEATURE_COLUMNS
 from adjudication.src.feature_engineering import ADJ_FEATURE_COLUMNS
 from app.v2 import rules
+
+
+def display_triple(intercept: float, logit: float, dp: int = 4) -> dict:
+    """The three numbers the ledger footer prints, rounded ON THE SERVER so they
+    reconcile on screen.
+
+    Rounding the intercept, the contributions total and the log-odds independently to
+    4dp leaves the printed equation off by one in the last place on 30.5% of loans
+    (measured) -- on a screen whose entire claim is that the contributions ADD UP, a
+    room checking the sum by eye reads that as a bug.
+
+    The browser must not fix that itself. Deriving a displayed number in JS is what
+    this project forbids, because the number can no longer be traced to the server and
+    nothing would catch it drifting. So the server does the reconciliation and hands
+    over three values that print correctly as they are.
+    """
+    a = round(intercept, dp)
+    t = round(logit, dp)
+    return {"intercept": a, "contributions_total": round(t - a, dp), "logit": t, "dp": dp}
 
 
 def _logit(p: float) -> float:
@@ -773,16 +973,23 @@ def score_ledger(app_state, business_id: str) -> dict:
     contrib = feature_contributions(v2.scorecard, X).iloc[0]
     raw = app_state.profiles.loc[business_id]
     pd_value = float(app_state.scores.loc[business_id, "pd"])
+    # NOTHING here is rounded. Rounding 15 addends to 6dp and then summing them
+    # breaks the identity by ~1e-6, and rounding `pd` breaks the logit recomputation
+    # by up to 5.85e-4 near the tails, where d(logit)/d(pd) blows up. Rounding is a
+    # DISPLAY concern and the browser already owns display -- it formats and draws but
+    # never calculates.
     rows = [{"feature": str(f),
-             "contribution": round(float(contrib[f]), 6),
+             "contribution": float(contrib[f]),
              "value": _jsonable_value(raw.get(f, X.iloc[0].get(f)))}
             for f in FEATURE_COLUMNS]
     rows.sort(key=lambda r: -r["contribution"])
     return {
-        "intercept": round(float(v2.scorecard.estimator_.intercept_[0]), 6),
+        "intercept": float(v2.scorecard.estimator_.intercept_[0]),
         "contributions": rows,
-        "pd": round(pd_value, 6),
-        "logit_pd": round(_logit(pd_value), 6),
+        "pd": float(pd_value),
+        "logit_pd": _logit(pd_value),
+        "display": display_triple(float(v2.scorecard.estimator_.intercept_[0]),
+                                  _logit(pd_value)),
     }
 
 
@@ -804,13 +1011,16 @@ def shap_ledger(app_state, business_id: str) -> dict:
     base = v2.adj_explainer.expected_value
     base = float(np.ravel(base)[-1]) if np.ndim(base) > 0 else float(base)
     pd_model = float(app_state.decisions.loc[business_id, "pd"])
-    rows = [{"feature": str(f), "contribution": round(float(c), 6),
+    # Unrounded, for the same reason as score_ledger: 21 addends rounded to 6dp and
+    # then summed breach the 1e-6 identity on 62 of 120 sampled loans (worst 3.0e-6).
+    rows = [{"feature": str(f), "contribution": float(c),
              "value": _jsonable_value(X.iloc[0][f])}
             for f, c in zip(ADJ_FEATURE_COLUMNS, sv)]
     rows.sort(key=lambda r: -r["contribution"])
-    return {"base_value": round(base, 6), "contributions": rows,
-            "pd_model": round(pd_model, 6),
-            "logit_pd_model": round(_logit(pd_model), 6)}
+    return {"base_value": float(base), "contributions": rows,
+            "pd_model": float(pd_model),
+            "logit_pd_model": _logit(pd_model),
+            "display": display_triple(float(base), _logit(pd_model))}
 
 
 def decision_detail(app_state, business_id: str) -> dict:
@@ -922,6 +1132,26 @@ def test_whatif_rejects_out_of_range_overrides(client):
                        json={"t_low": 1.5}).status_code == 422
     assert client.post("/api/v2/loan/BIZ100002/decision/whatif",
                        json={"dscr_floor": -1}).status_code == 422
+
+
+def test_whatif_rejects_an_inverted_pd_band(client):
+    """Per-field bounds are not enough. t_low=0.9 is in range on its own, but merged
+    with the committed t_high of 0.4943 it inverts the band: decide() tests
+    `pd <= t_low` first, so the Refer zone vanishes and 643 loans change decision
+    while the response still looks like an ordinary book."""
+    r = client.post("/api/v2/loan/BIZ100002/decision/whatif", json={"t_low": 0.9})
+    assert r.status_code == 422, r.json()
+    assert "t_high" in r.json()["detail"]
+    # Explicitly-paired values that are coherent must still be accepted.
+    ok = client.post("/api/v2/loan/BIZ100002/decision/whatif",
+                     json={"t_low": 0.20, "t_high": 0.60})
+    assert ok.status_code == 200
+    assert sum(ok.json()["book_mix"].values()) == 12000
+
+
+def test_whatif_rejects_an_inverted_dscr_band(client):
+    r = client.post("/api/v2/loan/BIZ100002/decision/whatif", json={"dscr_floor": 5.0})
+    assert r.status_code == 422, r.json()
 ```
 
 - [ ] **Step 2: Run and watch them fail**
@@ -944,6 +1174,11 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from adjudication.src.policy import PolicyConfig, decide
+
+
+class InvalidOverride(ValueError):
+    """A combination of overrides that is individually in range but jointly
+    incoherent. The router turns this into a 422, never a 200 with a wrong number."""
 from adjudication.src.feature_engineering import ADJ_FEATURE_COLUMNS
 
 
@@ -959,8 +1194,26 @@ class DecisionOverrides(BaseModel):
     score_floor: float | None = Field(default=None, ge=300, le=850)
 
     def apply_to(self, config: PolicyConfig) -> PolicyConfig:
+        """Merge overrides onto the committed config, then check the pair-wise
+        constraints Pydantic cannot see.
+
+        Per-field bounds are not enough: `{"t_low": 0.9}` is in range on its own, but
+        merged with the committed t_high of 0.4943 it inverts the PD band. decide()
+        tests `pd <= t_low` first, so the Refer zone silently disappears and the book
+        mix comes back plausible-looking and wrong. The whole point of rejecting an
+        out-of-range slider is to refuse numbers that look real and are not, so the
+        same rule has to cover the combination, not just each field alone.
+        """
         d = config.to_dict()
         d.update({k: v for k, v in self.model_dump().items() if v is not None})
+        if d["t_low"] > d["t_high"]:
+            raise InvalidOverride(
+                f"t_low ({d['t_low']:.4f}) must not exceed t_high ({d['t_high']:.4f}): "
+                "an inverted PD band erases the Refer zone")
+        if d["dscr_floor"] > d["dscr_refer_hi"]:
+            raise InvalidOverride(
+                f"dscr_floor ({d['dscr_floor']}) must not exceed dscr_refer_hi "
+                f"({d['dscr_refer_hi']}): the refer band would be empty")
         return PolicyConfig.from_dict(d)
 
 
@@ -1071,10 +1324,29 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 6: Pricing tab read path
 
 **Files:**
+- Create: `app/v2/pricing.py`
 - Modify: `app/v2/explain.py`, `app/v2/router.py`, `tests/test_app_v2.py`
 
+**File structure.** `price_one` and `pricing_detail` live in `app/v2/pricing.py`,
+following the pattern Task 4 set with `ledgers.py`: one module per concern. `explain.py`
+keeps the shared primitives (`UnknownLoan`, `_row`, `_booked_row`, `header`) and
+`decision_detail`. Tasks 8 and 10 follow with `ews.py` and `line_increase.py`. Without
+this, `explain.py` would take three more detail functions and land near 300 lines.
+
+**Add `_booked_row` to `explain.py`** — Tasks 8 and 10 reuse it rather than repeating
+the fetch-row / check-booked / return-None dance a third and fourth time:
+
+```python
+def _booked_row(app_state, business_id: str):
+    """(profile_row, booked). Unknown id raises UnknownLoan so the router answers 404;
+    an applicant that was never funded returns booked=False, which every on-book detail
+    function turns into a null payload rather than an error."""
+    p = _row(app_state, business_id)
+    return p, bool(p["booked"])
+```
+
 **Interfaces:**
-- Produces: `explain.pricing_detail(app_state, business_id) -> dict | None` with `ead`, `pd`, `rates{quoted,break_even,hurdle_clearing,recommended}`, `waterfall[]` (each line as `{line, dollars, bps}`), `verdict{roe,raroc,clears_hurdle,rate_shortfall_bps,roe_hurdle}`, `market`.
+- Produces: `pricing.pricing_detail(app_state, business_id) -> dict | None` with `ead`, `pd`, `rates{quoted,break_even,hurdle_clearing,recommended}`, `waterfall[]` (each line as `{line, dollars, bps}`), `verdict{roe,raroc,clears_hurdle,rate_shortfall_bps,roe_hurdle}`, `market`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1118,7 +1390,7 @@ def test_pricing_is_null_for_an_unbooked_applicant(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k pricing or ladder`
 Expected: FAIL with 404.
 
-- [ ] **Step 3: Add `pricing_detail` to `app/v2/explain.py`**
+- [ ] **Step 3: Write `app/v2/pricing.py`** (`price_one` + `pricing_detail`; see the file-structure note above — these do NOT go in `explain.py`)
 
 ```python
 from shared.config import MARKET
@@ -1178,7 +1450,7 @@ def pricing_detail(app_state, business_id: str):
 ```python
 @router.get("/loan/{business_id}/pricing")
 def loan_pricing(request: Request, business_id: str):
-    return _guard(explain.pricing_detail, request.app.state, business_id)
+    return _guard(pricing.pricing_detail, request.app.state, business_id)
 ```
 
 - [ ] **Step 5: Run the tests**
@@ -1229,10 +1501,16 @@ def test_pricing_whatif_with_no_overrides_reproduces_the_batch_pipeline(client):
 
 
 def test_pricing_whatif_book_matches_the_committed_summary(client):
+    """All four fields, not just the two that are easiest to compare. n_clears and
+    mispriced_ead currently match exactly, and nothing would catch a regression in
+    either -- an off-by-one in _book_under's clears mask would move both and leave
+    n and share_clears looking fine."""
     summary = client.get("/api/pricing/summary").json()
-    live = client.post("/api/v2/loan/BIZ100002/pricing/whatif", json={}).json()
-    assert live["book"]["n"] == summary["n"]
-    assert live["book"]["share_clears"] == pytest.approx(summary["share_clears"], abs=1e-4)
+    live = client.post("/api/v2/loan/BIZ100002/pricing/whatif", json={}).json()["book"]
+    assert live["n"] == summary["n"]
+    assert live["n_clears"] == summary["n_clears"]
+    assert live["share_clears"] == pytest.approx(summary["share_clears"], abs=1e-4)
+    assert live["mispriced_ead"] == pytest.approx(summary["mispriced_ead"], rel=1e-9)
 
 
 def test_raising_lgd_hurts_the_book(client):
@@ -1263,7 +1541,7 @@ def test_pricing_whatif_rejects_out_of_range(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k "pricing_whatif or lgd or quoted_rate"`
 Expected: FAIL with 405/404.
 
-- [ ] **Step 3: Add to `app/v2/whatif.py`**
+- [ ] **Step 3: Write `app/v2/ews_whatif.py`**
 
 ```python
 import numpy as np
@@ -1311,12 +1589,15 @@ def _book_under(app_state, market: MarketAssumptions) -> dict:
 
 
 def pricing_whatif(app_state, business_id: str, overrides: PricingOverrides):
-    from app.v2 import explain
+    from app.v2 import explain, pricing
 
-    if not bool(app_state.profiles.loc[business_id, "booked"]):
+    # via _row(), so an unknown id raises UnknownLoan and the router answers 404.
+    # price_one does a raw .loc[] and would raise a bare KeyError, which _guard
+    # deliberately does not catch -- so the lookup MUST happen first.
+    if not bool(explain._row(app_state, business_id)["booked"]):
         return None
     market = overrides.market()
-    out = explain.price_one(app_state, business_id, market, overrides.quoted_rate)
+    out = pricing.price_one(app_state, business_id, market, overrides.quoted_rate)
     out["book"] = _book_under(app_state, market)
     return out
 ```
@@ -1375,10 +1656,11 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 8: Early-warning tab read path
 
 **Files:**
-- Modify: `app/v2/explain.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+- Create: `app/v2/ews.py`
+- Modify: `app/v2/router.py`, `tests/test_app_v2.py`
 
 **Interfaces:**
-- Produces: `explain.ews_detail(app_state, business_id) -> dict | None` with `prob`, `risk_tier`, `tiers`, `triggers[]` (`{name, threshold, value, fired}`), `panel{months[], series{utilization,balance,deposit_inflow,days_past_due,overdraft_count}}`, `drivers[]`, `model_caveat`.
+- Produces: `ews.ews_detail(app_state, business_id) -> dict | None` with `prob`, `risk_tier`, `tiers`, `triggers[]` (`{name, threshold, value, fired}`), `panel{months[], series{utilization,balance,deposit_inflow,days_past_due,overdraft_count}}`, `drivers[]`, `model_caveat`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1400,8 +1682,33 @@ def test_ews_triggers_show_thresholds_and_values_not_just_names(client):
     e = client.get("/api/v2/loan/BIZ100002/ews").json()
     assert [t["name"] for t in e["triggers"]] == TRIGGER_NAMES
     hu = next(t for t in e["triggers"] if t["name"] == "HIGH_UTILIZATION")
-    assert hu["threshold"] == 0.90
+    assert hu["clauses"][0]["threshold"] == 0.90
     assert isinstance(hu["fired"], bool)
+    delinq = next(t for t in e["triggers"] if t["name"] == "DELINQUENCY")
+    assert [c["metric"] for c in delinq["clauses"]] == ["dpd_max", "dpd_recent"]
+
+
+def test_every_fired_trigger_can_explain_itself(client):
+    """`fired` is the module's verdict; `met` on each clause is the explanation the
+    screen shows. If they ever disagree the screen contradicts itself.
+
+    This is not hypothetical. Representing DELINQUENCY as its dpd_max clause alone
+    made all 4,225 fired accounts -- 50.7% of the book -- render as
+    "value 2, threshold 30, FIRED", because every one of them trips the
+    `dpd_recent > 0` clause instead. A banker who sees that stops believing every
+    other number on the screen.
+
+    WHOLE BOOK, not a sample, and called directly rather than over HTTP. A
+    self-consistency check is only worth having if it covers the rare states, and
+    8,336 accounts x 5 triggers costs 0.5s this way."""
+    from shared.config import EWS_TRIGGERS
+    from app.v2 import ews as ews_mod
+    st = client.app.state
+    for bid in st.ews.index:
+        rows = ews_mod.trigger_rows(st.v2.ews_feats.loc[bid], EWS_TRIGGERS,
+                                    set(st.ews.loc[bid, "triggers"]))
+        for t in rows:
+            assert t["fired"] == any(c["met"] for c in t["clauses"]), (bid, t["name"])
 
 
 def test_ews_fired_triggers_match_the_batch_watchlist(client):
@@ -1430,34 +1737,58 @@ def test_ews_is_null_for_an_unbooked_applicant(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k ews`
 Expected: FAIL with 404.
 
-- [ ] **Step 3: Add `ews_detail` to `app/v2/explain.py`**
+- [ ] **Step 3: Write `app/v2/ews.py`** (`_trigger_rows` + `ews_detail`; one module per concern, as Tasks 4 and 6 established — these do NOT go in `explain.py`)
 
 ```python
 from shared.config import EWS_TRIGGERS
 
+# Each trigger is a LIST of clauses joined by OR, because flag_triggers' DELINQUENCY
+# rule is compound: (dpd_max >= dpd_severe) | (dpd_recent > 0). Representing it as the
+# single dpd_max clause made the screen contradict itself on every account where it
+# fires -- all 4,225 of them (50.7% of the book) trip the recent clause with dpd_max
+# below 30, so the row read "value 2, threshold 30, FIRED". A threshold source is a
+# config key, or a literal number where the rule has one (dpd_recent > 0).
 _TRIGGER_SPECS = [
-    ("HIGH_UTILIZATION", "util_recent", ">", "high_utilization"),
-    ("RISING_UTILIZATION", "util_drift", ">", "rising_utilization"),
-    ("DELINQUENCY", "dpd_max", ">=", "dpd_severe"),
-    ("DEPOSIT_DECLINE", "deposit_decline_pct", ">", "deposit_decline"),
-    ("FREQUENT_OVERDRAFTS", "overdraft_recent", ">=", "overdraft_recent"),
+    ("HIGH_UTILIZATION",    [("util_recent", ">", "high_utilization")]),
+    ("RISING_UTILIZATION",  [("util_drift", ">", "rising_utilization")]),
+    ("DELINQUENCY",         [("dpd_max", ">=", "dpd_severe"),
+                             ("dpd_recent", ">", 0)]),
+    ("DEPOSIT_DECLINE",     [("deposit_decline_pct", ">", "deposit_decline")]),
+    ("FREQUENT_OVERDRAFTS", [("overdraft_recent", ">=", "overdraft_recent")]),
 ]
+
+_CLAUSE_OPS = {">": lambda a, b: a > b, ">=": lambda a, b: a >= b}
 
 _PANEL_SERIES = ["utilization", "balance", "deposit_inflow",
                  "days_past_due", "overdraft_count"]
 
 
-def _trigger_rows(ews_row, cfg: dict, fired_names: set[str]) -> list[dict]:
-    """Threshold and value for every trigger, with fired taken from flag_triggers --
-    never recomputed here, so this screen cannot disagree with the module."""
+def _trigger_rows(feat_row, cfg: dict, fired_names: set[str]) -> list[dict]:
+    """Every trigger's clauses with their thresholds and this account's values, and
+    `fired` taken from flag_triggers -- never recomputed here.
+
+    `fired` is the module's verdict. `met` on each clause is display metadata that
+    EXPLAINS that verdict. They must always agree (a fired trigger has at least one
+    met clause); a test asserts it across the whole book, because a screen showing
+    "value 2, threshold 30, FIRED" destroys trust in every other number on it.
+
+    feat_row comes from the EWS FEATURE frame, not the scored watchlist row: the
+    watchlist carries only KEY_METRICS, which excludes dpd_recent, so reading clause
+    values off it would silently show 0.0 for the clause that actually fired.
+    """
     rows = []
-    for name, value_key, comparator, cfg_key in _TRIGGER_SPECS:
-        rows.append({
-            "name": name, "value_key": value_key, "comparator": comparator,
-            "threshold": float(cfg[cfg_key]),
-            "value": round(float(ews_row.get(value_key, 0.0)), 4),
-            "fired": name in fired_names,
-        })
+    for name, clauses in _TRIGGER_SPECS:
+        spelled = []
+        for metric, comparator, source in clauses:
+            threshold = float(cfg[source]) if isinstance(source, str) else float(source)
+            value = float(feat_row.get(metric, 0.0))
+            spelled.append({
+                "metric": metric, "comparator": comparator, "threshold": threshold,
+                "value": round(value, 4),
+                "met": bool(_CLAUSE_OPS[comparator](value, threshold)),
+            })
+        rows.append({"name": name, "join": "OR", "clauses": spelled,
+                     "fired": name in fired_names})
     return rows
 
 
@@ -1473,7 +1804,8 @@ def ews_detail(app_state, business_id: str):
         "prob": float(e["prob"]),
         "risk_tier": str(e["risk_tier"]),
         "tiers": meta["tiers"],
-        "triggers": _trigger_rows(e, EWS_TRIGGERS, set(e["triggers"])),
+        "triggers": _trigger_rows(app_state.v2.ews_feats.loc[business_id],
+                                  EWS_TRIGGERS, set(e["triggers"])),
         "panel": {
             "months": [int(m) for m in panel["month_index"]],
             "series": {c: [float(v) for v in panel[c]] for c in _PANEL_SERIES},
@@ -1508,7 +1840,7 @@ Expected: `['util_recent', 'util_drift', 'dpd_max', 'deposit_decline_pct', 'over
 ```python
 @router.get("/loan/{business_id}/ews")
 def loan_ews(request: Request, business_id: str):
-    return _guard(explain.ews_detail, request.app.state, business_id)
+    return _guard(ews.ews_detail, request.app.state, business_id)
 ```
 
 - [ ] **Step 5: Run the tests**
@@ -1538,10 +1870,29 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 9: Early-warning what-if
 
 **Files:**
-- Modify: `app/v2/whatif.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+- Create: `app/v2/ews_whatif.py`
+- Modify: `app/v2/ews.py` (promote one helper), `app/v2/router.py`, `tests/test_app_v2.py`
+
+**Where this code goes.** `EwsOverrides` and `ews_whatif` go in a new
+`app/v2/ews_whatif.py`. They cannot go in `whatif.py` (145 of ~150 lines after Task 7),
+and putting them in `ews.py` pushes that file to 181 — over the ceiling, which was
+tried and rejected. The new module imports `InvalidOverride` from `app.v2.whatif` and
+`trigger_rows` from `app.v2.ews`; `_guard` already turns `InvalidOverride` into a 422,
+so no new routing is needed.
+
+`ews.py` renames `_trigger_rows` to **`trigger_rows`** — it is now a genuine public
+interface consumed by another module, and the leading underscore would misdescribe it.
+`_TRIGGER_SPECS` and `_CLAUSE_OPS` stay private; only `trigger_rows` crosses the
+boundary.
+
+**The cross-field trap applies here too.** Task 5 found that per-field Pydantic bounds
+let `{"t_low": 0.9}` through, because it is only incoherent once merged with the
+committed `t_high`. `EwsOverrides` has the same shape: `t_med > t_high` empties the
+Medium tier entirely. Validate the **merged** tiers in `tiers()` and raise
+`InvalidOverride`, exactly as `DecisionOverrides.apply_to` does.
 
 **Interfaces:**
-- Produces: `whatif.EwsOverrides` (Pydantic, bounded); `whatif.ews_whatif(app_state, business_id, overrides) -> dict | None` with `risk_tier`, `triggers[]`, `book_tiers{High,Medium,Low}`, `tiers`, `trigger_config`.
+- Produces: `ews_whatif.EwsOverrides` (Pydantic, bounded); `ews_whatif.ews_whatif(app_state, business_id, overrides) -> dict | None` with `risk_tier`, `triggers[]`, `book_tiers{High,Medium,Low}`, `tiers`, `trigger_config`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1589,7 +1940,7 @@ def test_ews_whatif_rejects_out_of_range(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k "ews_whatif or cutoff or trigger_threshold"`
 Expected: FAIL with 405/404.
 
-- [ ] **Step 3: Add to `app/v2/whatif.py`**
+- [ ] **Step 3: Write `app/v2/ews_whatif.py`**
 
 ```python
 from shared.config import EWS_TRIGGERS
@@ -1624,13 +1975,24 @@ class EwsOverrides(BaseModel):
 def ews_whatif(app_state, business_id: str, overrides: EwsOverrides):
     from app.v2 import explain
 
-    if not bool(app_state.profiles.loc[business_id, "booked"]):
+    # via _row(), so an unknown id raises UnknownLoan and the router answers 404
+    if not bool(explain._row(app_state, business_id)["booked"]):
         return None
     ews = app_state.ews
     tiers = overrides.tiers(app_state.ews_meta["tiers"])
     cfg = overrides.trigger_cfg()
 
-    retiered = [risk_tier(p, tiers) for p in ews["prob"].to_numpy(dtype=float)]
+    # score_population() derives risk_tier from the model's UNROUNDED probability but
+    # persists prob rounded to 4dp. Two accounts (BIZ103657 0.16486203 -> 0.1649 and
+    # BIZ108170 0.50725440 -> 0.5073) round exactly ONTO a cutoff, and risk_tier uses
+    # >=, so re-deriving from the stored number flips both. With no tier override the
+    # batch's own column is therefore the authority; risk_tier() is only re-run when
+    # the caller actually moved a cutoff, which is the one case where the committed
+    # column cannot answer. The residual 2-in-8,336 imprecision under an override is
+    # inherent to the artifact, not introduced here.
+    overrode = overrides.t_high is not None or overrides.t_med is not None
+    retiered = ([risk_tier(p, tiers) for p in ews["prob"].to_numpy(dtype=float)]
+                if overrode else list(ews["risk_tier"]))
     refired = flag_triggers(ews, cfg)
 
     pos = ews.index.get_loc(business_id)
@@ -1649,7 +2011,7 @@ def ews_whatif(app_state, business_id: str, overrides: EwsOverrides):
         "prob": float(ews.loc[business_id, "prob"]),
         "risk_tier": retiered[pos],
         "tiers": tiers,
-        "triggers": explain._trigger_rows(ews.loc[business_id], cfg, fired),
+        "triggers": ews._trigger_rows(ews.loc[business_id], cfg, fired),
         "trigger_config": cfg,
         "book_tiers": book_tiers,
         "book_trigger_counts": dict(sorted(counts.items(), key=lambda kv: -kv[1])),
@@ -1669,10 +2031,20 @@ Run:
 ```bash
 PYTHONPATH=. .venv/bin/python - <<'EOF'
 import warnings; warnings.filterwarnings("ignore")
+import pandas as pd
+from shared.config import RAW
 from ews.src.watchlist import score_population
+from ews.src.feature_engineering import compute_ews_features
 from ews.src.triggers import flag_triggers
+
+# Probe the frame ews_whatif ACTUALLY passes -- the cached EWS feature frame, which
+# carries dpd_recent. Running this against score_population()'s output instead gives
+# 4111/8336, because the watchlist row only carries KEY_METRICS and flag_triggers
+# then reads dpd_recent as 0.0. That is the frame's limitation, not a regression.
 ews = score_population()
-refired = flag_triggers(ews)
+feats = compute_ews_features(pd.read_parquet(RAW / "portfolio.parquet"))
+feats.index = feats["business_id"].astype(str)
+refired = flag_triggers(feats.loc[ews.index])
 same = sum(sorted(a) == sorted(b) for a, b in zip(ews["triggers"], refired))
 print(f"rows whose triggers reproduce exactly: {same} / {len(ews)}")
 EOF
@@ -1685,6 +2057,13 @@ caching the EWS feature frame on `V2State` in `build_state`:
     from ews.src.feature_engineering import compute_ews_features
     ews_feats = compute_ews_features(pd.read_parquet(RAW / "portfolio.parquet"))
     ews_feats.index = ews_feats["business_id"].astype(str)
+    # ews_whatif re-tiers positionally against app_state.ews, so the two frames must
+    # stay in the same ORDER, not merely hold the same ids. They do today because both
+    # derive from this one call, but nothing else enforces it and a silent reorder
+    # would return another loan's tier under the right business_id.
+    assert ews_feats.index.equals(app_state.ews.index), (
+        "ews_feats and app.state.ews are misaligned; v2 would report the wrong "
+        "loan's risk tier")
 ```
 
 add `ews_feats: pd.DataFrame` to `V2State`, and pass `app_state.v2.ews_feats` to
@@ -1725,10 +2104,11 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 10: Line-increase tab read path
 
 **Files:**
-- Modify: `app/v2/explain.py`, `app/v2/router.py`, `tests/test_app_v2.py`
+- Create: `app/v2/line_increase.py`
+- Modify: `app/v2/router.py`, `tests/test_app_v2.py`
 
 **Interfaces:**
-- Produces: `explain.line_increase_detail(app_state, business_id) -> dict | None` with `prob`, `caps[]` (`{name, amount, binding}`), `recommended_amount`, `incremental{ead, waterfall[], roe, clears_hurdle}`, `eligibility{clauses[], eligible}`.
+- Produces: `line_increase.line_increase_detail(app_state, business_id) -> dict | None` with `prob`, `caps[]` (`{name, amount, binding}`), `recommended_amount`, `incremental{ead, waterfall[], roe, clears_hurdle}`, `eligibility{clauses[], eligible}`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1742,6 +2122,36 @@ def test_line_increase_shows_which_cap_binds(client):
     assert len(binding) == 1
 
 
+def test_exactly_one_cap_binds_on_every_booked_account(client):
+    """Whole book. Two caps can tie exactly -- BIZ111364's pct_cap and
+    revenue_ceiling are both 5,000.00 -- and a single-loan test cannot see it. Same
+    shape as every other defect this file has produced: a silent contract violation
+    on one rare row."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    for bid in st.li.index:
+        caps = li_mod.line_increase_detail(st, bid)["caps"]
+        if not caps:                      # credit_limit <= 0 returns no caps
+            continue
+        assert sum(1 for c in caps if c["binding"]) == 1, (bid, caps)
+
+
+def test_eligibility_explains_itself_on_every_booked_account(client):
+    """`eligible` is candidates()' verdict; the clauses explain it. They must agree.
+
+    WHOLE BOOK, not a sample. The 40-loan `booked_sample_ids` fixture contains ZERO
+    eligible accounts and only 2 with a positive recommended amount, so a sampled
+    version of this test is structurally blind to the exact states it exists to
+    check -- a comparator flip on one clause surfaces on 57 of 8,336 rows and the
+    sample misses all of them. Called directly rather than over HTTP, all 8,336
+    cost 0.6s."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    for bid in st.li.index:
+        e = li_mod.line_increase_detail(st, bid)["eligibility"]
+        assert e["eligible"] == all(c["pass"] for c in e["clauses"]), (bid, e)
+
+
 def test_eligibility_is_four_clauses_not_one_number(client):
     """The documented trap: 95 accounts are eligible, 1,243 have a positive
     recommended amount. Showing the clauses is what makes the gap legible."""
@@ -1753,12 +2163,57 @@ def test_eligibility_is_four_clauses_not_one_number(client):
         c["pass"] for c in li["eligibility"]["clauses"])
 
 
-def test_line_increase_matches_the_batch_pipeline(client):
-    v1 = client.get("/api/line-increase/BIZ100002").json()
-    v2 = client.get("/api/v2/loan/BIZ100002/line-increase").json()
-    assert v2["recommended_amount"] == pytest.approx(v1["recommended_amount"], abs=1e-6)
-    assert v2["eligibility"]["eligible"] == v1["eligible"]
-    assert v2["incremental"]["roe"] == pytest.approx(v1["incremental_roe"], abs=1e-4)
+def test_line_increase_matches_the_batch_pipeline(client, booked_sample_ids):
+    """Tolerance 6e-5, not 1e-4: the batch rounds incremental_roe to 4dp, so half an
+    ulp (5e-5) is the tightest honest bound and anything looser stops catching the
+    real failure -- recomputing ROE from the PERSISTED 4dp pd instead of the unrounded
+    scorecard pd, which differs by up to 1.4e-4.
+
+    clears_hurdle is compared exactly, because that is where the difference bites: on
+    one of the 1,243 loans with a positive amount the rounded pd flips it, and it is
+    the fourth eligibility clause."""
+    for bid in booked_sample_ids:
+        v1 = client.get(f"/api/line-increase/{bid}").json()
+        v2 = client.get(f"/api/v2/loan/{bid}/line-increase").json()
+        assert v2["recommended_amount"] == pytest.approx(v1["recommended_amount"], abs=1e-6), bid
+        assert v2["eligibility"]["eligible"] == v1["eligible"], bid
+        assert v2["incremental"]["clears_hurdle"] == v1["clears_hurdle"], bid
+        assert v2["incremental"]["roe"] == pytest.approx(v1["incremental_roe"], abs=6e-5), bid
+
+
+def test_every_clause_agrees_with_the_module_that_computed_it(client):
+    """Whole book, clause by clause -- not just the verdict.
+
+    `eligible == all(pass)` is necessary but NOT sufficient: on BIZ101719 the
+    pd_within_appetite clause read PASS from the rounded pd while candidates had
+    excluded the loan for exactly that reason, and the test stayed green because two
+    other clauses also failed. The verdict was right and the REASON was wrong, which
+    on a reason-code screen is the defect that matters."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    meta = st.li_meta
+    for bid in st.li.index:
+        e = li_mod.line_increase_detail(st, bid)["eligibility"]
+        by = {c["name"]: c for c in e["clauses"]}
+        exact_pd = float(st.scores.loc[bid, "pd"])
+        assert by["pd_within_appetite"]["pass"] == (exact_pd <= meta["offer_max_pd"]), bid
+        assert by["prob_above_threshold"]["pass"] == (
+            float(st.li.loc[bid, "prob"]) >= meta["offer_threshold"]), bid
+        assert by["amount_positive"]["pass"] == (
+            float(st.li.loc[bid, "recommended_amount"]) > 0), bid
+
+
+def test_clears_hurdle_matches_the_batch_on_every_loan_with_an_amount(client):
+    """Whole book. The flip this guards happens on exactly ONE of 1,243 loans, so a
+    40-loan sample cannot see it -- the same blindness that let the eligibility
+    comparator bug through."""
+    from app.v2 import line_increase as li_mod
+    st = client.app.state
+    for bid in st.li.index:
+        if float(st.li.loc[bid, "recommended_amount"]) <= 0:
+            continue
+        v2 = li_mod.line_increase_detail(st, bid)
+        assert v2["incremental"]["clears_hurdle"] == bool(st.li.loc[bid, "clears_hurdle"]), bid
 
 
 def test_eligible_count_is_95_not_the_positive_amount_count(client):
@@ -1778,7 +2233,7 @@ def test_line_increase_is_null_for_an_unbooked_applicant(client):
 Run: `PYTHONPATH=. .venv/bin/python -m pytest tests/test_app_v2.py -v -k "line_increase or eligib or cap"`
 Expected: FAIL with 404.
 
-- [ ] **Step 3: Add `line_increase_detail` to `app/v2/explain.py`**
+- [ ] **Step 3: Write `app/v2/line_increase.py`** (`_caps` + `line_increase_detail`; one module per concern — these do NOT go in `explain.py`)
 
 ```python
 from shared.config import LINE_INCREASE
@@ -1800,8 +2255,14 @@ def _caps(current_balance: float, credit_limit: float, annual_revenue: float,
         "pct_cap": cfg["pct_cap"] * credit_limit,
         "revenue_ceiling": cfg["revenue_mult_cap"] * annual_revenue - credit_limit,
     }
-    lowest = min(values.values())
-    return [{"name": k, "amount": round(float(v), 2), "binding": v == lowest}
+    # min() over the KEYS, not a value comparison: two caps can tie exactly.
+    # BIZ111364 (balance 10,180 · limit 10,000 · revenue 50,000) gives pct_cap
+    # 0.50*10,000 = 5,000.00 and revenue_ceiling 0.30*50,000-10,000 = 5,000.00 --
+    # an exact float tie, not a rounding artifact. Comparing `v == lowest` marks both
+    # binding, and the tab's whole claim is that ONE cap binds. First key wins, which
+    # is deterministic because `values` is built in a fixed order.
+    binding_key = min(values, key=values.get)
+    return [{"name": k, "amount": round(float(v), 2), "binding": k == binding_key}
             for k, v in values.items()]
 
 
@@ -1811,7 +2272,16 @@ def line_increase_detail(app_state, business_id: str):
         return None
     li = app_state.li.loc[business_id]
     meta = app_state.li_meta
-    r = incremental_roe(float(li["pd"]), float(li["recommended_amount"]),
+    # The UNROUNDED scorecard PD, not li["pd"]. candidates.score_population computes
+    # the incremental ROE from the unrounded pd_score but persists `pd` rounded to
+    # 4dp, so recomputing from the stored column silently disagrees with the batch by
+    # up to 1.4e-4 -- and on one of the 1,243 loans with a positive amount that is
+    # enough to flip clears_hurdle, which is the fourth eligibility clause. Same
+    # family as the EWS tier-rounding defect: the persisted number is a display
+    # value, and reusing it as an input is how a screen quietly stops matching the
+    # pipeline it claims to mirror.
+    pd_exact = float(app_state.scores.loc[business_id, "pd"])
+    r = incremental_roe(pd_exact, float(li["recommended_amount"]),
                         float(li["utilization_onbook"]), float(li["rate"]))
     w = r["waterfall"]
     ead = float(r["incremental_ead"])
@@ -1819,9 +2289,17 @@ def line_increase_detail(app_state, business_id: str):
         {"name": "prob_above_threshold", "value": float(li["prob"]),
          "threshold": meta["offer_threshold"], "comparator": ">=",
          "pass": bool(float(li["prob"]) >= meta["offer_threshold"])},
-        {"name": "pd_within_appetite", "value": float(li["pd"]),
+        # Unrounded, for the same reason as the ROE above: candidates tests the
+        # unrounded pd_score against this cap, so using the persisted 4dp value makes
+        # the clause disagree with the module. On BIZ101719 (exact 0.0741049689, cap
+        # 0.0741) the rounded value reads as PASS while the batch excluded the loan
+        # for precisely this reason -- and `eligible == all(pass)` cannot catch it,
+        # because two other clauses also fail, so the verdict stays right while the
+        # REASON is wrong. A tab whose whole job is to say which clause stopped the
+        # offer must not name the wrong one.
+        {"name": "pd_within_appetite", "value": pd_exact,
          "threshold": meta["offer_max_pd"], "comparator": "<=",
-         "pass": bool(float(li["pd"]) <= meta["offer_max_pd"])},
+         "pass": bool(pd_exact <= meta["offer_max_pd"])},
         {"name": "amount_positive", "value": float(li["recommended_amount"]),
          "threshold": 0.0, "comparator": ">",
          "pass": bool(float(li["recommended_amount"]) > 0)},
@@ -1859,7 +2337,7 @@ def line_increase_detail(app_state, business_id: str):
 ```python
 @router.get("/loan/{business_id}/line-increase")
 def loan_line_increase(request: Request, business_id: str):
-    return _guard(explain.line_increase_detail, request.app.state, business_id)
+    return _guard(line_increase.line_increase_detail, request.app.state, business_id)
 ```
 
 - [ ] **Step 5: Run the tests**
@@ -2061,6 +2539,14 @@ const fmt = {
   pct: (v, d = 1) => (v * 100).toFixed(d) + "%",
   bps: v => Math.round(v).toLocaleString() + " bps",
   num: (v, d = 2) => Number(v).toFixed(d),
+  /* A feature's raw value for a ledger label. Categoricals pass through; integers
+     print bare; floats get 4dp. Without this a computed feature renders at full
+     float width -- `pd_score 0.2219917066245684` on a projected screen. Formatting
+     is the browser's job; calculating is not. */
+  feature: v => {
+    if (typeof v !== "number") return String(v ?? "");
+    return Number.isInteger(v) ? String(v) : v.toFixed(4);
+  },
 };
 
 function el(tag, attrs = {}, ...kids) {
@@ -2201,10 +2687,28 @@ function start() {
 document.addEventListener("DOMContentLoaded", start);
 ```
 
-- [ ] **Step 5: Write `app/static/v2/svg.js` — the drawing primitives**
+- [ ] **Step 5: Write the shared front-end modules**
 
-Four tabs need the same four shapes. Writing them once here is why Tasks 12–15 are
-composition rather than four reinventions of pointer-drag maths.
+Four files, split by responsibility rather than by line count:
+
+- **`app/static/v2/util.js`** — `api`, `fmt`, `el`, `remember`, `recall`, `debounce`.
+  Page-agnostic helpers with no dependency on this page's DOM ids. Tasks 12–15 all
+  need `api`, `fmt` and `el` for their own panels, so this is a genuinely reusable
+  module, not a fragment.
+- **`app/static/v2/svg.js`** — `svgEl`, `svgRoot`, `sparkline`, `divergingBars`,
+  `hbars`. Pure rendering: given data, draw.
+- **`app/static/v2/axis-handles.js`** — `axisWithHandles` alone. It is stateful and
+  pointer-driven, qualitatively different from the three pure renderers, and it is
+  the one piece with real interaction bugs to get wrong. Isolating it makes the
+  coordinate handling reviewable on its own.
+- **`app/static/v2/app.js`** — `FACETS`, `TABS`, `state`, `renderSelector`,
+  `refreshMatches`, `loadLoan`, `renderHeader`, `selectTab`, `start`. The page shell.
+
+Load order in `index.html`: `util.js`, `svg.js`, `axis-handles.js`, `app.js`, then the
+tab files. Top-level `const` in a classic script is visible to later scripts.
+
+Writing the primitives once is why Tasks 12–15 are composition rather than four
+reinventions of pointer-drag maths.
 
 ```javascript
 "use strict";
@@ -2276,7 +2780,7 @@ function divergingBars(rows, {width = 620, rowHeight = 20,
                             fill: up ? "var(--bad)" : "var(--ok)"}));
     const lab = svgEl("text", {x: 0, y: yTop + rowHeight - 10, "font-size": 12,
                                fill: "var(--ink)"});
-    lab.textContent = `${r.feature}  ${r.value ?? ""}`;
+    lab.textContent = `${r.feature}  ${fmt.feature(r.value)}`;
     s.append(lab);
     const val = svgEl("text", {x: width - 84, y: yTop + rowHeight - 10,
                                "font-size": 12, fill: "var(--muted)"});
@@ -2354,15 +2858,32 @@ function axisWithHandles(
     let dragging = false;
     const move = ev => {
       if (!dragging) return;
-      const box = s.getBoundingClientRect();
-      const x = (ev.clientX - box.left) / box.width * width;
-      const v = toV(x);
+      // Map the pointer through the SVG's own CTM. The naive
+      //   (ev.clientX - box.getBoundingClientRect().left) / box.width * width
+      // assumes the viewBox spans the full rendered box. It does not: svgRoot sets
+      // width:"100%" with a fixed pixel height, so preserveAspectRatio's default
+      // xMidYMid meet letterboxes the content whenever the container is WIDER than
+      // the design width. Measured at 784px rendered against a 640 viewBox: 72px of
+      // letterbox each side and a drag error up to 55px -- 8.6% of the axis -- worst
+      // at the ends where the handles sit, zero at the centre. It is correct only
+      // when the container is narrower than the design width, which is why a small
+      // window hides it and a projector exposes it.
+      const pt = s.createSVGPoint();
+      pt.x = ev.clientX;
+      pt.y = ev.clientY;
+      const v = toV(pt.matrixTransform(s.getScreenCTM().inverse()).x);
       values[h.key] = v;
       place(v);
       onChange({...values});
     };
     g.addEventListener("pointerdown", ev => {
-      dragging = true; g.setPointerCapture(ev.pointerId); ev.preventDefault();
+      dragging = true;
+      // Guarded like releasePointerCapture below: capture can throw (NotFoundError
+      // when no active pointer matches the id), and an uncaught throw here would
+      // surface as a console error during an otherwise working drag. dragging is set
+      // first so the drag still works without capture.
+      try { g.setPointerCapture(ev.pointerId); } catch (e) { /* capture is optional */ }
+      ev.preventDefault();
     });
     g.addEventListener("pointermove", move);
     g.addEventListener("pointerup", ev => {
@@ -2435,7 +2956,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 Compose the `svg.js` primitives. Write these four pieces in order, each small:
 
-1. `rulesTable(rows, caption)` — a table with columns rule / this loan / comparator / threshold / status, where status is `✗ fired` in `.fired` or `✓ clear` in `.passed`. Rows with `applicable: false` get a `— n/a` status so the audience sees the rule exists but does not bite.
+1. `rulesTable(rows, caption)` — columns rule / this loan / comparator / threshold / status. Status renders the three flags **distinctly**, because collapsing them is what made the payload lie: `fired` → `✗ fired` in `.fired`; `applicable` but not met → `✓ clear` in `.passed`; **not applicable** → `— n/a (zone)` in muted text, with the row's `condition_met` shown as a quiet parenthetical when it is true, e.g. `— n/a (condition true, but the PD zones already decided)`. Never paint a non-applicable row red: on 43.4% of applicants its condition is true while it changed nothing.
 2. `ledgerBars(ledger)` — `divergingBars(ledger.contributions)` plus a footer line reading `intercept {x} + contributions {y} = log-odds {z}`, every one of those three numbers taken **from the response**. Do not sum the contributions in JS: the server already did, and a JS sum that drifts would be invisible.
 3. `pdRuler(zones, onChange)` — `axisWithHandles` configured for PD:
 
@@ -2503,6 +3024,16 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ---
 
 ### Task 13: Pricing tab UI — waterfall, rate ladder, sliders
+
+**Structure (ruled after review).** Two files, split on the same rendering-vs-interaction
+seam as `svg.js` / `axis-handles.js`: `pricing-charts.js` holds the pure renderers
+(`waterfallTable`, `rateLadder`, `verdictTiles`, `bookStrip` and their constant tables —
+data in, DOM out, no network, no state), and `tab-pricing.js` holds the orchestration
+(`sliders`, `TABS.pricing`). The what-if POST is **not** re-typed per tab: `util.js`
+gains `postJSON(url, body)` carrying the shared fetch + FastAPI `detail` parsing, and
+both `tab-decision.js` and `tab-pricing.js` call it. The tab opens with the what-if POST
+alone — `pricing_whatif` already returns `null` for an unbooked id, so a preceding GET
+would be a discarded round-trip.
 
 **Files:**
 - Create: `app/static/v2/tab-pricing.js`
@@ -2574,8 +3105,45 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ### Task 14: Early-warning tab UI — 24-month small multiples
 
+**Structure — decided up front, not after an overflow.** Follow Task 13's split from
+the start: `ews-charts.js` for the pure renderers (small multiples, trigger table, tier
+bar configuration) and `tab-ews.js` for orchestration. POST through `util.js`'s
+`postJSON`; do not re-type a fetch helper. Load order: after `pricing-charts.js`, before
+`tab-ews.js`.
+
+**Trigger thresholds are draggable too, not only the tier bar.** The spec requires
+"named triggers ... with draggable thresholds", and `EwsOverrides` has accepted all five
+since Task 9 (`high_utilization`, `rising_utilization`, `dpd_severe`, `deposit_decline`,
+`overdraft_recent`). It is the tab's second teaching moment: moving `high_utilization`
+from 0.90 to 0.10 fires that trigger for 7,538 accounts instead of 628, which shows a
+room exactly how much of a watchlist is a threshold choice rather than a model output.
+
+The slider panel is shared, not copied. `tab-pricing.js`'s `sliders()` is hardcoded to
+`SLIDER_DEFS`; generalise it to `sliderPanel(defs, seed, onChange)` in a new
+`app/static/v2/sliders.js` -- a stateful input widget, so it sits beside
+`axis-handles.js` rather than in the pure `util.js` -- and have BOTH the pricing and EWS
+tabs call it. Load it after `axis-handles.js`.
+
+**A panel's state holds only the keys it owns.** Seed it with
+`Object.fromEntries(defs.map(([key]) => [key, defaults[key]]))`, never `{...defaults}`.
+The EWS tab passes one shared override object -- tier cutoffs AND trigger thresholds --
+as `defaults`. Copying it whole froze the tier bar's `t_med`/`t_high` inside the slider
+panel at mount time, and every later trigger-slider move sent them back: drag `t_med` to
+0.365, touch any unrelated slider, and the server was told 0.1649 again. The tiles
+snapped back to the default mix while the tier-bar handle stayed drawn at 0.365 --
+handle and book disagreeing on screen. Verify multi-widget panels by driving the
+widgets in SEQUENCE: one-at-a-time testing cannot see this class of bug.
+
+**Every display of a threshold must follow the slider.** The utilization sparkline
+draws a dashed rule at the `high_utilization` threshold. Once that threshold is
+draggable, the rule must be redrawn from the what-if response's `trigger_config` --
+otherwise dragging `high_utilization` to 0.50 leaves the chart's line at 0.90, and the
+chart contradicts the slider beside it. That is the same self-contradiction this branch
+has fixed four times; do not ship a fifth.
+
 **Files:**
-- Create: `app/static/v2/tab-ews.js`
+- Create: `app/static/v2/ews-charts.js`, `app/static/v2/tab-ews.js`, `app/static/v2/sliders.js`
+- Modify: `app/static/v2/tab-pricing.js` (use the shared `sliderPanel`)
 - Modify: `app/static/v2/index.html`, `app/static/v2/styles.css`
 
 **Interfaces:**
@@ -2656,6 +3224,24 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ### Task 15: Line-increase tab UI
 
+**Structure.** This tab is read-only (no what-if endpoint exists for line increase), so
+a single `tab-line-increase.js` is expected to fit under the ceiling. If it does not,
+split on the same rendering-vs-orchestration seam as Tasks 13 and 14. Use `util.js`'s
+`api` for the GET.
+
+**Reuse the pricing waterfall; do not re-type it.** The incremental waterfall carries the
+same eight lines as pricing's, because both come from `pricing.src.engine.profit_waterfall`
+-- so `pricing-charts.js`'s `waterfallTable` is the right renderer. Its sign handling is
+the subtle part: Task 13's first draft used `Math.abs()` and would have shown a loss as a
+profit and a tax rebate as a cost. Two small extensions, not a copy:
+- the incremental lines carry `dollars` only, no `bps` -- omit the bps column when the
+  lines have none (as written it would render `NaN bps`)
+- accept a caption, so it reads "Incremental waterfall" rather than "Profit waterfall"
+
+When no increase is recommended the payload's waterfall is `[]` (incremental EAD is 0):
+say so in words rather than drawing an empty table. Load `tab-line-increase.js` after
+`pricing-charts.js`.
+
 **Files:**
 - Create: `app/static/v2/tab-line-increase.js`
 - Modify: `app/static/v2/index.html`, `app/static/v2/styles.css`
@@ -2720,7 +3306,91 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ---
 
+
+### Cross-cutting: display-safe precision for every value shown beside a threshold
+
+Added after Task 15's review, which asked whether formatting one clause at 6dp was
+robust. Measuring across every screen found the problem was not local to that tab:
+
+| screen | closest non-equal margin | rows colliding at 4dp |
+|---|---|---|
+| rules ledger (Task 4) | 1.00e-02 | 0 -- inputs are 2dp data; left alone |
+| EWS trigger clauses (Task 8/14) | 5.55e-17 | **3, live** |
+| LI eligibility clauses (Task 10/15) | 1.67e-06 | 0 at 6dp, but only by 3.3x |
+
+`BIZ106189`'s `util_drift` is `0.15000000000000013` against a strict `> 0.15` rule, so
+the committed EWS module fires RISING_UTILIZATION on float noise and the screen read
+`0.15 > 0.15 -- FIRED`. v2 must show what the module decided; it must not print a
+comparison that looks false.
+
+The server chooses the precision, following `display_triple`'s precedent:
+
+```python
+def display_precision(value: float, threshold: float,
+                      base_dp: int = 4, max_dp: int = 8) -> dict:
+    """The fewest decimals at which a value and the threshold it is compared against
+    render DIFFERENTLY, so a clause never prints two equal numbers under a strict
+    comparator.
+
+    A fixed precision chosen in the browser is tuned to today's data and silently
+    breaks on a retrain. `tied` is True when no precision up to max_dp separates them
+    -- genuinely equal, or apart only by floating-point noise -- and the screen then
+    says the value is AT the threshold rather than printing a comparison that reads
+    as false. Whether the rule met is still the module's verdict, never recomputed.
+    """
+    if value == threshold:
+        # EXACTLY equal is not a tie in the sense that matters: the plain comparison
+        # already reads correctly ("0 > 0 -> not met", "3 >= 3 -> met"). Marking it
+        # tied relabelled 4,858 honest EWS rows -- 4,111 of them healthy accounts with
+        # zero days past due, suddenly described as "at the threshold" of delinquency.
+        return {"dp": base_dp, "tied": False}
+    for dp in range(base_dp, max_dp + 1):
+        if round(value, dp) != round(threshold, dp):
+            return {"dp": dp, "tied": False}
+    return {"dp": base_dp, "tied": True}
+```
+
+It lives in `app/v2/display.py` and is attached to every EWS trigger clause and every
+LI eligibility clause. The browser formats `value` and `threshold` at the returned `dp`
+and, when `tied`, renders "at the threshold" instead of the strict comparison. The
+hardcoded `fmt.num(v, 6)` in the LI tab is removed.
+
+**`prob_above_threshold` decides on the raw probability.** `candidates.score_population`
+decides eligibility on the unrounded model probability but persists it rounded to 4dp;
+the clause was testing the rounded one. Cache the raw LI probability on `V2State` (with
+an order-alignment assert, like `ews_feats`) and use it. The Task 10 per-clause test
+compared this clause against the same rounded value it uses -- tautological for this one
+clause -- and must compare against the raw probability instead.
+
+**Tests (whole book, called directly):** for every EWS trigger clause and every LI
+clause, either `tied` is True or `round(value, dp) != round(threshold, dp)` -- AND a
+clause is `tied` only when its value genuinely DIFFERS from the threshold. The first
+check alone is satisfied trivially by marking every exact match tied, which is how the
+over-flagging above passed. `tied` must mean "different, but inseparable at 8dp".
+
 ### Task 16: verify.py smoke, Makefile, and documentation
+
+**Correction made before this task ran: the spec's handoff command is unsafe at stage-3.**
+The spec says the S3 stage-jump becomes `git checkout main -- app notebooks workshop`.
+But `app/v2/state.py` imports `ews` and `line_increase` unconditionally, and stage-3
+contains neither (`git ls-tree`: stage-3 has score, adjudication, pricing only; stage-4
+and stage-5 have all five). Restoring `main`'s `app/` into stage-3 would make
+`import ews` fail at boot -- and `verify.py` imports the app, so the one promise would
+break at that tag. This is the `make notebooks` trap in `CLAUDE.md` again: advice that
+works on `main` and fails at the tags.
+
+So this task must **test the handoff at the tags in the clean clone** (a worktree carries
+`main`'s files and cannot see this), and document only what it proves:
+
+- at **stage-3**: `git checkout stage-3 && git checkout main -- app notebooks workshop`,
+  then boot the app and run `verify.py`. Expected to FAIL; record the exact error.
+- at **stage-4** and **stage-5**: the same command, then boot, run `verify.py`, and load
+  `/v2` with each of the four tabs. Record the result -- artifacts at the tag may differ
+  from `main`'s, and `V2State`'s alignment asserts will fire at boot if they do.
+
+The documented S3 handoff is then whatever the tests prove works -- expected
+`git checkout stage-4` then `git checkout main -- app notebooks workshop` -- with the
+stage-3 failure recorded as a gotcha so nobody gives the shorter advice later.
 
 **Files:**
 - Modify: `verify.py` (inside `check_apps`), `Makefile`, `README.md`, `CLAUDE.md`
@@ -2759,8 +3429,14 @@ Expected: passes, same as before.
 Then prove the guard holds where `app/v2` is absent, in a clean clone at a tag —
 a worktree is not good enough, it carries `main`'s files:
 
+Clone the **main repository path**, not this worktree: a worktree's `.git` is a file
+and its HEAD is the feature branch, so `git clone .` here would sweep the wrong tree
+and leave the stage-tag guarantee unverified.
+
 ```bash
-rm -rf /tmp/v2sweep && git clone . /tmp/v2sweep && cd /tmp/v2sweep
+rm -rf /tmp/v2sweep
+git clone "$(git rev-parse --path-format=absolute --git-common-dir | sed 's;/\.git$;;')" /tmp/v2sweep
+cd /tmp/v2sweep
 python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt
 for t in stage-3 stage-4 stage-5; do
   git checkout -q $t && echo -n "$t: " && .venv/bin/python verify.py | tail -1
@@ -2826,11 +3502,14 @@ v2 is the demo artifact for it.
 ```bash
 PYTHONPATH=. .venv/bin/python -m pytest -q tests
 PYTHONPATH=. .venv/bin/python verify.py | tail -2
-git diff --stat app/main.py
+git diff --stat $(git merge-base main HEAD) HEAD -- app/main.py
 ```
 
-Expected: all tests pass; verify.py unchanged from baseline; `app/main.py` still
-shows 4 insertions and 0 deletions across the whole branch.
+Expected: all tests pass; `verify.py` reports `Stage 5 verified` exactly as the
+pre-v2 baseline did; `app/main.py` shows 4 insertions and 0 deletions **across the
+whole branch**. The explicit merge-base range matters: bare `git diff` compares the
+working tree to the index and prints nothing once the work is committed, so it would
+pass however badly v1 had been mangled.
 
 - [ ] **Step 7: Commit**
 

@@ -1,0 +1,111 @@
+:root {
+  --ink:#1a2332; --line:#d8dee9; --ok:#1a7f4b; --warn:#b7791f;
+  --bad:#b3372e; --accent:#245bb2; --bg:#f6f8fb; --panel:#fff; --muted:#5b6572;
+}
+* { box-sizing:border-box; }
+body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink);
+       margin:0; background:var(--bg); font-size:16px; }
+header { background:var(--ink); color:#fff; padding:14px 24px;
+         display:flex; justify-content:space-between; align-items:center; }
+header h1 { font-size:20px; margin:0; font-weight:600; }
+header p { margin:2px 0 0; font-size:13px; opacity:.75; }
+.badge { background:var(--accent); border-radius:4px; padding:1px 7px; font-size:13px; }
+.v1link { color:#cfe0ff; font-size:14px; text-decoration:none; }
+section, main { background:var(--panel); border:1px solid var(--line);
+                border-radius:8px; margin:16px 24px; padding:16px 20px; }
+.filters { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+.filters label { font-size:12px; color:var(--muted); display:block; }
+select, input { padding:7px 9px; border:1px solid var(--line);
+                border-radius:6px; font-size:15px; background:#fff; color:var(--ink); }
+#loanpick { min-width:280px; }
+.count { font-size:13px; color:var(--muted); }
+button { padding:7px 13px; border:0; border-radius:6px; background:var(--accent);
+         color:#fff; font-size:14px; cursor:pointer; }
+button:hover { filter:brightness(1.1); }
+nav#tabs { display:flex; gap:6px; margin:0 24px; padding:0; border:0; background:none; }
+nav#tabs button { background:#e7ecf4; color:var(--ink); border-radius:8px 8px 0 0; }
+nav#tabs button.active { background:var(--panel); font-weight:600;
+                         border:1px solid var(--line); border-bottom-color:var(--panel); }
+.opt { font-size:11px; opacity:.7; }
+.hidden { display:none; }
+/* Visually hidden but present for assistive tech -- the #q/#loanpick labels are
+   redundant with visible cues (placeholder, adjacent select) for sighted users on
+   a projected screen, but proximity alone doesn't reach a screen reader. */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+           overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.muted { color:var(--muted); margin:16px 24px; }
+.hdr-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+.hdr-grid .lbl { font-size:12px; color:var(--muted); }
+.hdr-grid .val { font-size:17px; font-weight:600; }
+.chip { display:inline-block; padding:3px 12px; border-radius:12px;
+        font-weight:700; font-size:16px; color:#fff; }
+.chip.Approve { background:var(--ok); } .chip.Refer { background:var(--warn); }
+.chip.Decline { background:var(--bad); }
+table { border-collapse:collapse; font-size:14px; width:100%; margin-top:10px; }
+td, th { border:1px solid var(--line); padding:5px 10px; text-align:right; }
+th:first-child, td:first-child { text-align:left; }
+.fired { color:var(--bad); font-weight:600; }
+.passed { color:var(--ok); }
+.na { color:var(--muted); }
+.rules caption { text-align:left; font-weight:600; caption-side:top; padding:4px 0; }
+.ledger-footer { font-size:13px; color:var(--muted); margin-top:6px; }
+.dec-error { color:var(--bad); font-weight:600; margin:8px 0; }
+.dec-ruler { margin:14px 0; }
+.nearest-flip { font-size:13px; margin-top:6px; }
+.book-mix { display:flex; gap:10px; margin:10px 0; }
+.tile { display:inline-flex; flex-direction:column; align-items:center;
+        padding:8px 16px; border-radius:8px; }
+.tile .n { font-size:22px; font-weight:700; }
+.tile .k { font-size:12px; opacity:.85; }
+.flipcount { font-size:13px; color:var(--muted); margin:2px 0 0; }
+
+/* Task 13 -- pricing tab */
+.pr-tiles { display:flex; gap:10px; margin:10px 0; flex-wrap:wrap; }
+.pr-ladder { margin:14px 0; }
+.pr-ladder .shortfall { font-size:13px; margin:4px 0 0; }
+table.waterfall caption { text-align:left; font-weight:600; caption-side:top; padding:4px 0; }
+table.waterfall tr.wf-rule td { border-top:2px solid var(--ink); }
+.pr-error { color:var(--bad); font-weight:600; margin:8px 0; }
+.pr-book { display:flex; align-items:center; gap:20px; margin:14px 0; padding:10px 16px;
+           background:var(--bg); border:1px solid var(--line); border-radius:8px; }
+.book-share { font-size:32px; font-weight:800; line-height:1; }
+.book-sub { font-size:13px; color:var(--muted); margin-top:2px; }
+.book-mispriced { display:flex; flex-direction:column; align-items:flex-end; margin-left:auto; }
+.book-mispriced .k { font-size:12px; color:var(--muted); }
+.book-mispriced .n { font-size:19px; font-weight:700; }
+.sliders { display:flex; flex-direction:column; gap:8px; margin:10px 0 16px; }
+.sliderrow { display:grid; grid-template-columns:150px 1fr 80px; align-items:center; gap:10px; }
+.sliderrow label { font-size:13px; color:var(--muted); }
+.sliderval { font-size:13px; text-align:right; font-variant-numeric:tabular-nums; }
+.tab-error { color:var(--bad); font-weight:600; margin:16px 24px; }
+
+/* Task 14 -- early-warning tab */
+.chip.Low { background:var(--ok); }
+.chip.Medium { background:var(--warn); }
+.chip.High { background:var(--bad); }
+.ews-ruler { margin:14px 0; }
+.ews-error { color:var(--bad); font-weight:600; margin:8px 0; }
+.ews-prob { font-size:14px; margin:6px 0; }
+.ews-panel { display:flex; flex-direction:column; gap:4px; margin:10px 0; }
+.panel-axis { font-size:12px; text-align:right; margin:0; }
+.ews-caveat { font-size:13px; color:var(--muted); background:var(--bg);
+              border:1px solid var(--line); border-radius:8px; padding:10px 14px;
+              margin:10px 0 20px; }
+.ews-caveat p { margin:4px 0; }
+tr.trig-group td { background:var(--bg); font-weight:600; border-bottom:0; }
+
+/* Fix round 1 -- book-wide trigger fired counts (the payoff of dragging a
+   trigger threshold slider, mirroring .book-mix for the tier bar) */
+.trigger-counts { display:flex; flex-wrap:wrap; gap:10px; margin:8px 0 18px; }
+.trigger-counts .trigger-count { font-size:13px; color:var(--muted);
+  background:var(--bg); border:1px solid var(--line); border-radius:6px;
+  padding:4px 10px; }
+
+/* Task 15 -- line-increase tab: read-only, so the ribbon says "optional"
+   loudly enough that skipping it live reads as deliberate. */
+.li-ribbon { font-size:13px; color:var(--muted); background:var(--bg);
+  border:1px dashed var(--line); border-radius:8px; padding:8px 14px; margin:0 0 14px; }
+.li-caps { margin:10px 0; }
+.li-caption { font-size:13px; margin:6px 0 0; }
+.li-verdict { font-size:14px; font-weight:600; margin:8px 0 0; }
+.li-cohort { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; }

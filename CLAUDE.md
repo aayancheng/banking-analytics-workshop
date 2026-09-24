@@ -291,3 +291,97 @@ address (invariant 6).
 
 Housekeeping: local-only branches `backup/pre-pii-rewrite` and `archive/yanexercise` (the
 deleted remote branch, SHA `bcb055b`) — delete when no longer wanted.
+
+## v2 loan workbench (added 2026-09-23, task 16 of the v2-loan-workbench plan)
+
+`app/v2/` adds a loan-level "Loan Workbench" at `/v2`, running side by side with the
+existing v1 portfolio portal at `/`. `make run` serves both on port 8100 — no second
+server, no second target. v2 never re-implements a module: every number on screen
+comes from calling the existing module functions (`price_loan`, `policy.decide`,
+`flag_triggers`, `risk_tier`, `recommended_amount`, `incremental_roe`,
+`feature_contributions`) the same way the batch pipeline does. `app/main.py` carries
+the whole integration in four statements (import, one lifespan line, `include_router`,
+the `/static/v2` mount) — invariant 5 (one service per module) applies to v2 exactly
+as it does to v1.
+
+- **`app/v2/` is main-only, like `notebooks/` and `workshop/`.** No stage tag
+  contains it, and tags never move. `verify.py`'s v2 smoke (inside `check_apps`) is
+  guarded on `(ROOT / "app" / "v2").exists()`, so it is silent at every stage tag and
+  only runs where `app/v2` exists. Verified in a clean clone: `stage-0`..`stage-5`
+  untouched all report exactly as they did before v2 existed, and running `verify.py`
+  where `app/v2` is present (on the `v2-loan-workbench` branch, and on `main` once
+  merged) exercises the v2 smoke, which asserts a what-if with an empty override body
+  agrees with the batch `/api/adjudicate` decision.
+- **The stage-3 handoff is unsafe — do not give it, and the reason is not v2's
+  imports.** `main`'s `app/main.py` is the stage-4+ version of v1: line 26 already
+  reads `from ews.src import watchlist as ews_watchlist`, at module import time,
+  *before* the v2 import on line 28 is ever reached. Stage-3's own `app/main.py` has
+  no such line (`git show stage-3:app/main.py` — it imports only score, adjudication
+  and pricing; no `ews` reference at all). So **restoring `main`'s `app/` into
+  stage-3 was never safe, with or without v2** — `app/v2/state.py` (which separately
+  imports `ews.src.feature_engineering` and `line_increase`) never even gets a
+  chance to fail, because `app/main.py`'s own pre-existing v1 import fails two lines
+  earlier. Do not "fix" this by making v2's imports lazy — that cannot repair a
+  v1-only failure that happens before v2 is reached.
+
+  DO NOT RUN the block below as advice — it is kept only as the clean-clone proof of
+  the failure, on a fresh venv:
+  ```
+  git checkout -f stage-3
+  git checkout origin/v2-loan-workbench -- app notebooks workshop   # pre-merge source
+  python verify.py
+  ```
+  fails at the apps check with exactly:
+  `cannot import name 'watchlist' from 'ews.src' (unknown location)`
+
+  **The safe handoff is stage-4 or later — give one of these two, literally, as a
+  ready-to-run command:**
+
+  Before v2 merges to `main` (today):
+  ```
+  git checkout stage-4
+  git checkout origin/v2-loan-workbench -- app notebooks workshop
+  ```
+
+  After v2 merges to `main`:
+  ```
+  git checkout stage-4
+  git checkout main -- app notebooks workshop
+  ```
+  Both verified in a clean clone at stage-4 and at stage-5, restoring from
+  `origin/v2-loan-workbench` (since v2 isn't on `main` yet): `verify.py` passes
+  (`✅ Stage 4/5 verified`), the server then boots cleanly — no `V2State`
+  alignment-assert failure, which is real evidence, since those asserts fire at boot
+  if a tag's committed artifacts differ from `main`'s — `/api/v2/health` answers, and
+  every tab's endpoint (`/api/v2/loan/BIZ100002{,/decision,/pricing,/ews,
+  /line-increase}`) returns 200.
+- **v2's what-if must equal the batch pipeline — for the bodies the UI SENDS,
+  not only `{}`.** Every slider calls the same module function the batch run calls.
+  After the first interaction the browser always posts explicit values (the EWS tab
+  sends both cutoffs and all five trigger thresholds on every drag), and that path
+  hid the final review's Critical: explicit committed cutoffs re-tiered the book from
+  the 4dp-rounded prob (BIZ108170 Medium -> High). `tests/test_app_v2.py` pins the
+  empty body against `/api/adjudicate`, `/api/pricing/<id>` and `/api/ews/<id>`;
+  `tests/test_app_v2_ui_bodies.py` pins the explicit committed bodies — every one of
+  the 8,336 EWS tiers, `flipped_count == 0` over 12,000 decisions, the full pricing
+  payload. `verify.py`'s v2 smoke re-asserts the adjudication case on every run. If
+  any fails, the demo is lying — fix the drift, never the test or the smoke check.
+  Never re-derive a verdict from a rounded persisted column (`prob`, `pd`): v2 caches
+  the unrounded values (`V2State.ews_prob_raw`, `li_prob_raw`) with alignment asserts.
+- **Every number printed beside a threshold carries a server-chosen `dp`**
+  (`app/v2/display.py`); `tests/test_app_v2_display.py` formats as the browser does
+  and demands distinct strings over the whole book.
+- **The JS display layer has no automated regression coverage, by design** — there
+  is no JS test runner (no new dependency). The rendered-string checks behind each
+  UI fix were one-off browser scripts; re-run them by hand in a browser after any
+  change to `app/static/v2/`.
+- **No financial arithmetic in the v2 JavaScript.** Every number on screen came from
+  a server response; the browser only formats and draws. A threshold comparison done
+  in JS is a bug even on the loans where it currently agrees with the server.
+
+Sessions 3 and 4 are merging into one new Session 3 (adjudication + pricing + early
+warning, line increase optional); v2 is the demo artifact for it. Curriculum work that
+follows from v2 — stubbing the EWS tab as the S3 lab exercise, preserving the prompt
+that produced v2 in `workshop/prompt-cards/`, and updating every printed stage-jump
+command to the stage-4-or-later form above — is deferred to that session rewrite, not
+this build.

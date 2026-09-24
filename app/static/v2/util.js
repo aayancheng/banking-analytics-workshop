@@ -1,0 +1,108 @@
+"use strict";
+/* Page-agnostic helpers shared by the shell and every tab (Tasks 12-15): a fetch
+   wrapper, number formatting, a tiny DOM builder, debounce, and guarded
+   localStorage access. Nothing here decides anything or touches a number the
+   server didn't already compute. */
+
+async function api(path, body) {
+  const opts = body === undefined
+    ? {} : {method: "POST", headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(body)};
+  const r = await fetch(path, opts);
+  if (!r.ok) throw new Error(path + " -> " + r.status);
+  return r.json();
+}
+
+/* postJSON -- the shared what-if POST for every tab. api() above discards the
+   response body on a non-2xx status, which is fine for a GET but would swallow
+   exactly the message a what-if error needs to show: an out-of-range or
+   incoherent override must surface the server's own 422 verbatim, not a bare
+   status code. FastAPI's own field-range 422s carry a list of error objects;
+   an InvalidOverride (e.g. t_low > t_high) carries a plain string -- handle
+   both. Was duplicated per-tab (tab-decision.js's postWhatif, tab-pricing.js's
+   postPricingWhatif, byte-for-byte apart from the URL) until review flagged
+   the duplication; both now call this one copy. */
+async function postJSON(url, body) {
+  const r = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const msg = Array.isArray(data.detail)
+      ? data.detail.map(e => e.msg).join("; ") : (data.detail || `request failed (${r.status})`);
+    throw new Error(msg);
+  }
+  return data;
+}
+
+const fmt = {
+  // Sign placed before the "$" ("−$12,345"), not after it ("$-12,345").
+  money: v => (v < 0 ? "−$" : "$") + Math.round(Math.abs(v)).toLocaleString(),
+  pct: (v, d = 1) => (v * 100).toFixed(d) + "%",
+  bps: v => Math.round(v).toLocaleString() + " bps",
+  /* Final review I3/T13: formatting at a SERVER-chosen dp, for any number printed
+     beside the threshold it is compared to. pctAt shows a fraction as a percent:
+     dp decimals of the fraction are dp-2 of the percent, floor 2 (the convention
+     the line-increase clears_hurdle clause set). signedBps prints a margin with
+     its sign at the server's dp, which was chosen so a non-zero margin can never
+     read "0 bps". Display polarity only -- no new number is derived. */
+  pctAt: (v, dp) => fmt.pct(v, Math.max(2, dp - 2)),
+  bpsAt: (v, dp) => Number(v).toLocaleString(undefined,
+    {minimumFractionDigits: dp, maximumFractionDigits: dp}) + " bps",
+  signedBps: (v, dp) => (v > 0 ? "+" : v < 0 ? "−" : "") + fmt.bpsAt(Math.abs(v), dp),
+  /* A value and its threshold at one server dp. Both whole -> bare integers;
+     otherwise BOTH get dp decimals, so "1.0000 < 1" can never happen. */
+  pair: (v, t, dp) => (Number.isInteger(v) && Number.isInteger(t))
+    ? [String(v), String(t)] : [Number(v).toFixed(dp), Number(t).toFixed(dp)],
+  num: (v, d = 2) => Number(v).toFixed(d),
+  /* A feature's raw value for a ledger label. Categoricals pass through; integers
+     print bare; floats get `dp` decimals (4 by default). Without this a computed
+     feature renders at full float width -- `pd_score 0.2219917066245684` on a
+     projected screen. Formatting is the browser's job; calculating is not.
+
+     Fix round 1 (display-precision review): `dp` is now a parameter, not a fixed
+     4, because a fixed browser-side precision is tuned to today's data and breaks
+     silently on a retrain -- the same reasoning that moved this choice server-side
+     (app/v2/display.py::display_precision) for every value shown beside a
+     threshold. Callers that don't pass one keep the old default. */
+  feature: (v, dp = 4) => {
+    if (typeof v !== "number") return String(v ?? "");
+    return Number.isInteger(v) ? String(v) : v.toFixed(dp);
+  },
+};
+
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v;
+    else if (k === "html") n.innerHTML = v;
+    else n.setAttribute(k, v);
+  }
+  for (const kid of kids) n.append(kid?.nodeType ? kid : document.createTextNode(kid));
+  return n;
+}
+
+/* latest() -- a request ticket. Each call to the returned function issues a new
+   ticket and returns a check that stays true only until the NEXT ticket is
+   issued. A slower, older response (a what-if tick, a loan switch) checks its
+   ticket before painting, so it can never overwrite a newer one. */
+function latest() {
+  let n = 0;
+  return () => { const mine = ++n; return () => mine === n; };
+}
+
+function debounce(fn, ms) {
+  let t;
+  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+
+/* localStorage throws rather than returning null in restricted contexts, so every
+   access is guarded. Remembered filters are a convenience, never a dependency. */
+function remember(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* fine */ }
+}
+function recall(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : JSON.parse(raw);
+  } catch (e) { return fallback; }
+}
