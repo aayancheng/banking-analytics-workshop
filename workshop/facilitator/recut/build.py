@@ -27,6 +27,7 @@ import argparse
 import json
 import shutil
 import subprocess
+import re
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -35,7 +36,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]          # repo root
 HF = HERE / "hf"                # HyperFrames project
-HF_CLI = ["npx", "--yes", "hyperframes@0.8.36"]
+# the pin lives in hf/package.json (`npx hyperframes@latest upgrade --project hf` bumps it);
+# read it from there so build.py and the project can never disagree on the version
+_PIN = re.search(r'hyperframes@(\d+\.\d+\.\d+)', (HF / "package.json").read_text()).group(1)
+HF_CLI = ["npx", "--yes", f"hyperframes@{_PIN}"]
 
 VIDEO_FINAL = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-profile:v", "high"]
 VIDEO_DRAFT = ["-c:v", "libx264", "-preset", "ultrafast", "-crf", "30", "-pix_fmt", "yuv420p"]
@@ -56,6 +60,15 @@ def run(cmd, log: Path | None = None, cwd=None):
     return p
 
 
+def vduration(path: Path) -> float:
+    """Length of the VIDEO stream. The container's duration (`duration()`) includes the audio's
+    last padded AAC frame -- ~21 ms over per piece -- and the concat demuxer offsets each file
+    by the container length, so a cut that must sit on a musical beat has to be timed by this."""
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration",
+                        "-of", "csv=p=0", str(path)], capture_output=True, text=True, check=True)
+    return float(r.stdout.strip().splitlines()[0])
+
+
 def duration(path: Path) -> float:
     out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
                           "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
@@ -68,7 +81,7 @@ def graphics(doc, out: Path, force: bool):
     g = out / "graphics"
     g.mkdir(parents=True, exist_ok=True)
     comps = HF / "compositions"
-    shared = [comps / "shared.css", comps / "shared.js"]
+    shared = [f for f in (comps / "shared.css", comps / "shared.js", comps / "hook.css", comps / "hook.js") if f.exists()]
 
     def stale(target: Path, *sources: Path) -> bool:
         if force or not target.exists():
@@ -100,8 +113,26 @@ def graphics(doc, out: Path, force: bool):
         print("  up to date  watermark.png")
     # cards
     for key in ("intro", "outro"):
-        comp = doc["cards"][key]
-        render(comps / f"{comp}.html", g / f"{comp}.mp4", "mp4", ["--quality", "high"])
+        if key in doc.get("cards", {}):
+            comp = doc["cards"][key]
+            render(comps / f"{comp}.html", g / f"{comp}.mp4", "mp4", ["--quality", "high"])
+    # a cards-only sequence (the promo): each entry renders its composition, optionally with
+    # variables, under its own name -- so a hook rendered at a whole number of bars for the
+    # promo never overwrites the chapter video's render of the same composition
+    for e in doc.get("sequence", []):
+        comp, name = e["card"], e.get("as", e["card"])
+        target = g / f"{name}.mp4"
+        if e.get("vars"):
+            vars_ = json.dumps(e["vars"], ensure_ascii=False)
+            stamp = target.with_suffix(".vars")
+            if stale(target, comps / f"{comp}.html") or not stamp.exists() or stamp.read_text() != vars_:
+                target.unlink(missing_ok=True)
+                render(comps / f"{comp}.html", target, "mp4", ["--quality", "high", "--variables", vars_])
+                stamp.write_text(vars_)
+            else:
+                print(f"  up to date  {target.name}")
+        else:
+            render(comps / f"{comp}.html", target, "mp4", ["--quality", "high"])
     # chapters: one composition, many renders
     for c in doc["chapters"]:
         vars_ = json.dumps({"session": str(doc.get("session", "1")), "num": str(c["num"]), "title": c["title"]},
@@ -131,7 +162,9 @@ def graphics(doc, out: Path, force: bool):
 # the drop-out -- over the first half-second of the resumed footage.
 
 def pieces(doc):
-    out = [{"name": "intro", "kind": "card"}]
+    if doc.get("sequence"):
+        return [{"name": e.get("as", e["card"]), "kind": "card", "comp": e.get("as", e["card"])} for e in doc["sequence"]]
+    out = [{"name": "intro", "kind": "card", "comp": doc["cards"]["intro"]}]
     chapters = sorted(doc["chapters"], key=lambda c: c["at"])
     for k in doc["keeps"]:
         cuts = [c for c in chapters if k["in"] <= c["at"] < k["out"]]
@@ -151,7 +184,8 @@ def pieces(doc):
                 # the resumed footage carries the banner's drop-out
                 overlays.append((0.0, ch["dur"] - ch["freeze"], f"ch{ch['num']}.mov", ch["freeze"]))
             name = k["id"] if not cuts else f"{k['id']}{'abcdef'[part]}"
-            out.append({"name": name, "kind": "keep", "in": b0, "out": b1, "note": k["note"], "overlays": overlays})
+            out.append({"name": name, "kind": "keep", "in": b0, "out": b1, "note": k["note"], "overlays": overlays,
+                        "mark": k.get("mark") if part == 0 else None})
             part += 1
     # callouts go into whichever keep piece contains them: (local, dur, file, ss-into-file)
     for c in doc["callouts"]:
@@ -161,7 +195,7 @@ def pieces(doc):
                 break
         else:
             sys.exit(f"callout {c['id']} at {fmt(c['at'])} is not inside any keep")
-    out.append({"name": "outro", "kind": "card"})
+    out.append({"name": "outro", "kind": "card", "comp": doc["cards"]["outro"]})
     return out
 
 
@@ -227,6 +261,69 @@ def card_cmd(doc, src: Path, target: Path, draft: bool):
             "-f", "mpegts", str(target)]
 
 
+def loudness(path: Path):
+    """Integrated loudness, range and true peak of a file's audio (ffmpeg ebur128)."""
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(path), "-vn",
+                        "-af", "ebur128=peak=true", "-f", "null", "-"], capture_output=True, text=True)
+    tail = r.stderr[r.stderr.rfind("Summary:"):]
+    vals = {}
+    for key, label in (("I", "I:"), ("LRA", "LRA:"), ("TP", "Peak:")):
+        m = re.search(re.escape(label) + r"\s*([-\d.]+)", tail)
+        vals[key] = float(m.group(1)) if m else float("nan")
+    return vals
+
+
+def mix_music(doc, final: Path, out: Path):
+    """Lay a music bed and timed SFX under the concatenated video, at a target loudness.
+
+    `music`: {"file", "fade_in", "fade_out", "lufs", "true_peak", "sfx": [{"file", "at", "peak",
+    "gain_db"}]}. `at` is the OUTPUT second at which the sound's peak should land and `peak` is
+    where that peak sits inside the file, so the file starts at at - peak. Two passes: the mix
+    is measured at its authored levels, then one global gain moves it to `lufs` and a limiter
+    holds `true_peak`. The video is stream-copied; the cards' silent audio is dropped."""
+    m = doc["music"]
+    length = vduration(final)
+    music = ROOT / m["file"]
+    fi, fo = m.get("fade_in", 0.5), m.get("fade_out", 2.5)
+    sfx = m.get("sfx", [])
+    cmd_in = ["-i", str(final), "-i", str(music)]
+    chain = [f"[1:a]atrim=0:{length:.3f},asetpts=PTS-STARTPTS,"
+             f"afade=t=in:st=0:d={fi},afade=t=out:st={max(length - fo, 0):.3f}:d={fo}[bed]"]
+    labels = ["[bed]"]
+    for i, e in enumerate(sfx):
+        cmd_in += ["-i", str(ROOT / e["file"])]
+        delay = max(int(round((e["at"] - e.get("peak", 0.0)) * 1000)), 0)
+        chain.append(f"[{2 + i}:a]aformat=sample_rates=48000:channel_layouts=stereo,volume={e.get('gain_db', -18)}dB,"
+                     f"adelay={delay}|{delay}[s{i}]")
+        labels.append(f"[s{i}]")
+    mix = f"{''.join(labels)}amix=inputs={len(labels)}:normalize=0:dropout_transition=0"
+
+    def render_audio(gain_db: float, target: Path, video: bool):
+        fc = ";".join(chain + [f"{mix},volume={gain_db:.2f}dB,alimiter=limit={m.get('limit', 0.89)}:attack=5:release=50,"
+                                f"apad=whole_dur={length:.3f}[aout]"])
+        cmd = ["ffmpeg", "-hide_banner", "-nostats", "-y", *cmd_in, "-filter_complex", fc]
+        if video:
+            cmd += ["-map", "0:v", "-map", "[aout]", "-map_metadata", "0", "-map_chapters", "0", "-c:v", "copy",
+                    *AUDIO, "-t", f"{length:.3f}", "-movflags", "+faststart", str(target)]
+        else:
+            cmd += ["-map", "[aout]", "-t", f"{length:.3f}", "-c:a", "pcm_s16le", "-ar", "48000", str(target)]
+        run(cmd, out / "logs" / f"music-{target.stem}.log")
+
+    probe = out / "logs" / f"{final.stem}-mix-probe.wav"
+    render_audio(0.0, probe, video=False)
+    before = loudness(probe)
+    gain = m.get("lufs", -14.0) - before["I"]
+    tmp = final.with_suffix(".mix.mp4")
+    render_audio(gain, tmp, video=True)
+    tmp.replace(final)
+    probe.unlink(missing_ok=True)
+    after = loudness(final)
+    print(f"\nmusic: {music.name}  fade {fi}s/{fo}s  {len(sfx)} sfx  gain {gain:+.1f} dB  "
+          f"-> {after['I']:.1f} LUFS (target {m.get('lufs', -14.0)}), LRA {after['LRA']:.1f}, true peak {after['TP']:.1f} dBTP")
+    for e in sfx:
+        print(f"  sfx {fmt(e['at'])}  {Path(e['file']).stem:<16} {e.get('gain_db', -18):+.0f} dB")
+
+
 def write_chapters(doc, marks, final: Path, out: Path, stem: str):
     """Embed MP4 chapter atoms (VLC, IINA, mpv, QuickTime show them) and write the
     YouTube description block -- YouTube reads chapters from the description, not
@@ -252,7 +349,7 @@ def write_chapters(doc, marks, final: Path, out: Path, stem: str):
 
 
 def build(doc, out: Path, draft: bool, only: str | None, keep_segments: bool, workers: int):
-    src = ROOT / doc["source"]
+    src = ROOT / doc["source"] if doc.get("source") else None
     g = out / "graphics"
     stem = doc.get("stem", "S1")
     frames = out / f"frames-{stem}"; frames.mkdir(parents=True, exist_ok=True)
@@ -268,7 +365,7 @@ def build(doc, out: Path, draft: bool, only: str | None, keep_segments: bool, wo
         if keep_segments and t.exists():
             continue
         if pc["kind"] == "card":
-            jobs.append((pc["name"], card_cmd(doc, g / f"{doc['cards'][pc['name']]}.mp4", t, draft)))
+            jobs.append((pc["name"], card_cmd(doc, g / f"{pc['comp']}.mp4", t, draft)))
         elif pc["kind"] == "freeze":
             jobs.append((pc["name"], freeze_cmd(doc, pc, src, g, frames, t, draft)))
         else:
@@ -288,19 +385,34 @@ def build(doc, out: Path, draft: bool, only: str | None, keep_segments: bool, wo
     if missing:
         sys.exit(f"cannot concat, missing: {missing}")
     lst = seg / "concat.txt"
-    lst.write_text("".join(f"file '{p.resolve()}'\n" for p in order))
     final = out / (f"{stem}-draft.mp4" if draft else f"{stem}-compact.mp4")
-    run(["ffmpeg", "-hide_banner", "-nostats", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
-         "-c", "copy", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart", str(final)],
-        out / "logs" / f"concat{'-draft' if draft else ''}.log")
+    if doc.get("music"):
+        # a music build is cut on beats: tell the demuxer each piece's exact video length so no
+        # seam inherits the audio's 21 ms padding, and drop the cards' silent audio here -- the
+        # bed replaces it in mix_music()
+        lst.write_text("".join(f"file '{p.resolve()}'\nduration {vduration(p):.3f}\n" for p in order))
+        run(["ffmpeg", "-hide_banner", "-nostats", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+             "-an", "-c:v", "copy", "-movflags", "+faststart", str(final)],
+            out / "logs" / f"concat{'-draft' if draft else ''}.log")
+        durs = {pc["name"]: vduration(seg / f"{pc['name']}.ts") for pc in plan}
+    else:
+        lst.write_text("".join(f"file '{p.resolve()}'\n" for p in order))
+        run(["ffmpeg", "-hide_banner", "-nostats", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+             "-c", "copy", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart", str(final)],
+            out / "logs" / f"concat{'-draft' if draft else ''}.log")
+        durs = {pc["name"]: duration(seg / f"{pc['name']}.ts") for pc in plan}
 
     # output-time map, chapter marks, and the length check
-    durs = {pc["name"]: duration(seg / f"{pc['name']}.ts") for pc in plan}
     expected = sum(durs.values())
     offset, rows, marks = 0.0, [], []
     for pc in plan:
         if pc["kind"] == "keep":
             rows.append((offset, f"{pc['name']:<5} {fmt(pc['in'])}-{fmt(pc['out'])}  {pc['note'][:58]}"))
+            if pc.get("mark") and not doc["chapters"]:
+                # a keep-level chapter mark: a YouTube chapter without a freeze. Only in a cuts file
+                # with no chapter freezes (the per-chapter videos) -- in the stitched version the
+                # freeze is the mark, and a second one two seconds later breaks YouTube's 10 s rule.
+                marks.append((offset, pc["mark"]))
             for local, dur, name, ss in pc["overlays"]:
                 if ss == 0.0 and not name.startswith("ch"):
                     rows.append((offset + local, f"      callout {name[:-4]}"))
@@ -311,6 +423,8 @@ def build(doc, out: Path, draft: bool, only: str | None, keep_segments: bool, wo
             rows.append((offset, pc["name"]))
         offset += durs[pc["name"]]
     yt = write_chapters(doc, marks, final, out, stem + ("-draft" if draft else ""))
+    if doc.get("music"):
+        mix_music(doc, final, out)
     actual = duration(final)
     print(f"\n{final.name}: {fmt(actual)}  (pieces sum to {fmt(expected)}, "
           f"{'OK' if abs(actual - expected) < 0.5 else 'MISMATCH'})  {final.stat().st_size / 1e6:.0f} MB")

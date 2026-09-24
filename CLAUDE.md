@@ -191,21 +191,32 @@ repo is decoration.
 - Student-facing wording matters more than usual here: these people are choosing whether to
   trust the material.
 
-## Where things stand — updated 2026-09-18
+## Where things stand — updated 2026-09-19
 
 **v1.4** is the public release. **Session 1 ran Thu 10 Sep** (recording recut to 58:53 and a
 3:04 LinkedIn promo — see *Session recordings* below). **Session 2 ran Thu 17 Sep** at the
-90-minute re-cut; its recording is the next recut job. Sessions 3–5 are Thursdays 8pm EDT.
+90-minute re-cut; **its recording is recut** (2026-09-18) into six standalone chapter videos plus
+a 53:04 stitched version, and a **55 s promo** (2026-09-20: the six hooks over a music bed, no
+footage) — the S2 post is next. YouTube channel **TeamYan, @teamyan2026**; chapter 1 is up.
+Sessions 3–5 are Thursdays 8pm EDT.
 Local `main` may be ahead of `origin/main` — check `git status -sb`; nothing is pushed without
 being asked.
 
-### Session recordings — S1 done, S2 next
+### Session recordings — S1 and S2 done, S3 next
 
 `workshop/facilitator/recut/` (tracked) turns a Zoom recording + transcript into the student
-video and the promo; `workshop/LectureSummaryandRecordings/` (gitignored) holds the inputs and
-outputs. **The README there is the step-by-step for S2** — `cp S1.cuts.json S2.cuts.json`,
-`align.py offset` / `dump`, author keeps from the dump, `snap.py`, read every boundary, cards
-and callouts, `build.py draft` → `final`, then the promo from `S1-promo.cuts.json`.
+video(s) and the promo; `workshop/LectureSummaryandRecordings/` (gitignored) holds the inputs and
+outputs. **The README there is the step-by-step** — S2 is the worked example: a master
+`S2.cuts.json` (keeps carry `chapter` + `mark`, chapters carry `hook`), `split.py` derives one
+cuts file per chapter, each chapter video = a 6–7 s HyperFrames hook → footage → outro; the
+master builds the stitched version with freezes. S2's six theses: WoE+logistic vs the flexible
+challengers (0.8176 vs 0.8096) · DSCR by hand 3→6 bins then optimizer 8 (one feature 0.64) ·
+coin→one→fifteen and the 0.78 gate · the live drop of four bureau columns → **0.7704**, gate
+fails · everyone 0.8176 / booked 0.7447 / rejected 0.8440 · reason codes = WoE × β. Outputs
+`out/S2-ch{1..6}-compact.mp4` (4:55–11:33) and `out/S2-compact.mp4`, with `*-chapters.txt`
+YouTube blocks. Cut everywhere: all polls, the agent-track lab (the agent did not drop the
+features), the public-records Q&A, the client hunt; two spoken first names trimmed on pauses.
+**The deck's 0.7643 for that drop is stale — the screen and `main` say 0.7704** (separate fix).
 
 What S1 settled, so S2 does not re-decide it: cut the polls entirely, cut time checks and
 cohort logistics and plugs, cut a hiccup *and* its later apology; where a hiccup contradicted
@@ -262,8 +273,12 @@ address (invariant 6).
   sentence test, unarguable signs, routing levels through ratios, excluding what a bank must not
   price on, designing the decoys deliberately, weights by target variance share.
 - Nothing equivalent to the S1 reading note exists for Sessions 2–5.
-- **S2 recording recut** — not started; the README in `recut/` is the runbook. Then the S2 post
-  and promo. `run-of-show-app.html` still mirrors S1 (S2 used a phone timer).
+- **S2 post** — the recut and the promo are done (above); the post follows the S1 post's shape
+  with the six chapter videos embedded (playlist links, not bare video links). Titles,
+  descriptions and the promo/LinkedIn copy are in `blog/S2-youtube-descriptions.md`.
+  `run-of-show-app.html` still mirrors S1 (S2 used a phone timer).
+- **Notebooks 01 and 02 carry executed outputs in the working tree** (local paths baked in) from
+  running them in VS Code — clear outputs before committing anything in `notebooks/`.
 - **S2's run of show assumed students arrive on `stage-1`**; after S1's failed handoff the room
   stayed on `main` ("Stage 5 verified"). The S2 T−1 reminder says that state is correct and the
   move to `stage-2` is a group step at the lab (`git stash -u && git checkout stage-2`). Carry
