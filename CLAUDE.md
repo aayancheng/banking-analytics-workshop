@@ -309,8 +309,7 @@ as it does to v1.
   guarded on `(ROOT / "app" / "v2").exists()`, so it is silent at every stage tag and
   only runs where `app/v2` exists. Verified in a clean clone: `stage-0`..`stage-5`
   untouched all report exactly as they did before v2 existed, and running `verify.py`
-  where `app/v2` is present (on the `v2-loan-workbench` branch, and on `main` once
-  merged) exercises the v2 smoke, which asserts a what-if with an empty override body
+  where `app/v2` is present (`main`, merged 2026-09-23) exercises the v2 smoke, which asserts a what-if with an empty override body
   agrees with the batch `/api/adjudicate` decision.
 - **The stage-3 handoff is unsafe — do not give it, and the reason is not v2's
   imports.** `main`'s `app/main.py` is the stage-4+ version of v1: line 26 already
@@ -328,33 +327,25 @@ as it does to v1.
   the failure, on a fresh venv:
   ```
   git checkout -f stage-3
-  git checkout origin/v2-loan-workbench -- app notebooks workshop   # pre-merge source
+  git checkout main -- app notebooks workshop
   python verify.py
   ```
   fails at the apps check with exactly:
   `cannot import name 'watchlist' from 'ews.src' (unknown location)`
 
-  **The safe handoff is stage-4 or later — give one of these two, literally, as a
+  **The safe handoff is stage-4 or later — give this, literally, as a
   ready-to-run command:**
-
-  Before v2 merges to `main` (today):
-  ```
-  git checkout stage-4
-  git checkout origin/v2-loan-workbench -- app notebooks workshop
-  ```
-
-  After v2 merges to `main`:
   ```
   git checkout stage-4
   git checkout main -- app notebooks workshop
   ```
-  Both verified in a clean clone at stage-4 and at stage-5, restoring from
-  `origin/v2-loan-workbench` (since v2 isn't on `main` yet): `verify.py` passes
+  Verified 2026-09-23 on the merged `main`, in a clean clone with a fresh venv, at
+  stage-4 and at stage-5: `verify.py` passes
   (`✅ Stage 4/5 verified`), the server then boots cleanly — no `V2State`
   alignment-assert failure, which is real evidence, since those asserts fire at boot
   if a tag's committed artifacts differ from `main`'s — `/api/v2/health` answers, and
   every tab's endpoint (`/api/v2/loan/BIZ100002{,/decision,/pricing,/ews,
-  /line-increase}`) returns 200.
+  /line-increase}`), `/` (v1) and `/v2` return 200.
 - **v2's what-if must equal the batch pipeline — for the bodies the UI SENDS,
   not only `{}`.** Every slider calls the same module function the batch run calls.
   After the first interaction the browser always posts explicit values (the EWS tab
