@@ -1,0 +1,20 @@
+/* Chapter hooks — the 6-7 s animated cold open of each standalone chapter video.
+   Same palette as the cards (shared.css). Content stays inside the centre so a
+   9:16 re-render for shorts is a size swap, not a redesign. */
+html, body { background: var(--ink); }
+#bg { position: absolute; inset: 0;
+      background: radial-gradient(1300px 760px at 50% 18%, rgba(36, 91, 178, 0.32), transparent 70%), var(--ink); }
+.clip { position: absolute; inset: 0; }
+.eyebrow { position: absolute; left: 0; right: 0; top: 74px; text-align: center;
+           font-size: 24px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-soft); }
+h1.title { position: absolute; left: 160px; right: 160px; top: 112px; text-align: center;
+           font-size: 64px; font-weight: 800; letter-spacing: -0.012em; line-height: 1.08; }
+.stage { position: absolute; left: 120px; right: 120px; top: 240px; height: 600px; }
+.closer { position: absolute; left: 160px; right: 160px; bottom: 96px; text-align: center;
+          font-size: 40px; font-weight: 600; color: #dfe6f0; line-height: 1.25; }
+.closer b { color: #fff; }
+.closer .num { font-family: ui-monospace, Menlo, Consolas, monospace; color: #fff; }
+.foot { position: absolute; left: 0; right: 0; bottom: 40px; text-align: center;
+        font-size: 22px; color: #7f91a8; letter-spacing: 0.04em; }
+.foot .dot { display: inline-block; width: 11px; height: 11px; border-radius: 3px; background: var(--substack); margin: 0 12px 0 0; vertical-align: 1px; }
+.mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }

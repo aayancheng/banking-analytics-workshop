@@ -240,6 +240,13 @@ never clobber each other.
   the `ggml-base.en.bin` model (~150 MB) would let a script transcribe 6 s around each
   boundary and print the words. Ask before downloading. S2's `snapped` note lists the four
   boundaries a by-ear check would settle (K5 in, K6 out, K9b in, K11 out).
+- **Pickups** (S3): a keep may carry its own `"source"` — a short recording made after the
+  session to close a gap the live run left (S3's P1–P3). Its times are seconds into that file;
+  a callout that belongs to it names the same `source`. A solo take usually sits a couple of LU
+  hot against the room recording: `"gain_db": -1.5` on the keep, then measure 30 s either side of each seam. The scripts and screen flow live beside
+  the recordings (`S3-pickups.md`), every number recomputed through the modules first.
+- **Zoom's cloud VTT is on recording time** (S3): `align.py offset` still runs and lands on ≈ 0
+  with every gap hit. The Zoom `.txt` from local recording is wall-clock (S1, S2).
 - **Shorts.** The hooks keep their content centred so a 9:16 render is a `data-width/height`
   swap plus a layout pass; the footage needs a crop/punch-in pass that does not exist yet.
 - **The chapter videos' hooks predate the stage fade-in.** `hookIn()` now fades the whole

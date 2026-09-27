@@ -45,12 +45,11 @@ workshop/facilitator/recordings/
 workshop/LectureSummaryandRecordings/
 
 # Recut inputs and generated outputs from lecture recordings. The recut tooling and
-# README remain tracked; session-specific cuts, compositions, and scratch helpers stay local.
+# README remain tracked -- including split.py and hook.css/hook.js, which every per-chapter
+# recut needs; session-specific cuts and compositions stay local.
 workshop/facilitator/recut/*.cuts.json
 workshop/facilitator/recut/hf/compositions/S*.html
 workshop/facilitator/recut/hf/compositions/callouts/S*.html
-workshop/facilitator/recut/hf/compositions/hook.*
-workshop/facilitator/recut/split.py
 
 # AC-1 lab output. The prompt card tells each student's agent to write
 # reports/audit_AC1.md, so this is per-student work, not repo content — and one

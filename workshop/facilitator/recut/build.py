@@ -185,12 +185,13 @@ def pieces(doc):
                 overlays.append((0.0, ch["dur"] - ch["freeze"], f"ch{ch['num']}.mov", ch["freeze"]))
             name = k["id"] if not cuts else f"{k['id']}{'abcdef'[part]}"
             out.append({"name": name, "kind": "keep", "in": b0, "out": b1, "note": k["note"], "overlays": overlays,
-                        "mark": k.get("mark") if part == 0 else None})
+                        "mark": k.get("mark") if part == 0 else None, "source": k.get("source"),
+                        "gain_db": k.get("gain_db")})
             part += 1
     # callouts go into whichever keep piece contains them: (local, dur, file, ss-into-file)
     for c in doc["callouts"]:
         for pc in out:
-            if pc["kind"] == "keep" and pc["in"] <= c["at"] < pc["out"]:
+            if pc["kind"] == "keep" and pc.get("source") == c.get("source") and pc["in"] <= c["at"] < pc["out"]:
                 pc["overlays"].append((c["at"] - pc["in"], c["dur"], f"{c['id']}.mov", 0.0))
                 break
         else:
@@ -213,6 +214,8 @@ def _overlay_chain(cmd, overlays, g: Path, first_index: int):
 
 
 def keep_cmd(doc, pc, src: Path, g: Path, target: Path, draft: bool):
+    # a keep may name its own source -- a pickup recorded after the session (S3's P1-P3)
+    src = ROOT / pc["source"] if pc.get("source") else src
     length = round(pc["out"] - pc["in"], 3)
     cmd = ["ffmpeg", "-hide_banner", "-nostats", "-y",
            "-ss", f"{pc['in']:.3f}", "-t", f"{length:.3f}", "-i", str(src),
@@ -222,7 +225,8 @@ def keep_cmd(doc, pc, src: Path, g: Path, target: Path, draft: bool):
     if draft:
         chain.append(f"[{last}]scale=960:-2[vout]"); last = "vout"
     a = doc["audio"]
-    chain.append(f"[0:a]volume={a['gain_db']}dB,alimiter=limit={a['limit']}:attack=5:release=50,"
+    gain = a["gain_db"] + (pc.get("gain_db") or 0.0)   # a pickup recorded closer to the mic sits a little hot
+    chain.append(f"[0:a]volume={gain}dB,alimiter=limit={a['limit']}:attack=5:release=50,"
                  f"afade=t=in:st=0:d=0.05,afade=t=out:st={max(length - 0.05, 0):.3f}:d=0.05,"
                  f"apad=whole_dur={length:.3f}[aout]")   # audio exactly as long as the video: no gap at the seam
     cmd += ["-filter_complex", ";".join(chain), "-map", f"[{last}]", "-map", "[aout]",
