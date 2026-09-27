@@ -121,7 +121,8 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   12,000 applicants; on the 8,336 *booked* it scores held-out AUC **0.7447** (rejected-only 0.8440,
   everyone 0.8176). Not a defect — the DGP gives every applicant an outcome — but it is S2's set-piece
   reveal (notebook 02 §7) and the memo's fourth clause. Any "AUC" quoted without its population is
-  incomplete. Dropping the four bureau columns gives **0.7643** — the rehearsed live gate-fail.
+  incomplete. Dropping the four bureau columns gives **0.7704** on `main` (KS 0.4334) — the live
+  gate-fail in S2. The S2 deck, lab and run of show still print a stale **0.7643**; fix all of them together.
 - **`requested_amount` crashes optbinning's default CP solver** (`TypeError: __radd__` inside
   `optbinning/binning/cp.py`) on the training rows with the pinned `ortools==9.14.6206`; row
   subsets (booked-only) can trip it on other variables too. `solver="mip"` binds every safe column
@@ -133,18 +134,8 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   proxies 0.62.
 - **Reading notes render with headless Chrome** (`make reading`) — no npm, LaTeX or pandoc. The
   `.html` is source and the `.pdf` is committed beside it so students need no toolchain.
-- **Recutting a recording** (`workshop/facilitator/recut/README.md` is the runbook; S1 is the
-  worked example). The things that cost time once: **HyperFrames renders the graphics only**
-  (one Chrome screenshot per frame — never the footage; ffmpeg cuts and composites). **This
-  ffmpeg has no `drawtext`** — all text is a HyperFrames render. **Zoom's transcript is
-  wall-clock and the recording starts later** (S1: 13 min later) — `align.py offset` finds the
-  offset by matching transcript gaps to audio pauses; never author a cut from raw cue times.
-  **Every cut and every chapter point must sit on a pause**, and a boundary next to an attendee's
-  spoken first name gets moved by hand (`align.py window`). **Chapter breaks are freezes**, so a
-  mid-sentence chapter point is worse than none. **HyperFrames root-level clips are pinned to
-  top-left** — wrap anything positioned elsewhere. **`npx hyperframes lint` on a missing path
-  reports 0 findings.** The recordings folder is gitignored because the transcript names people;
-  the cut lists' `note` fields must not.
+- **Recutting a recording** — see *Recutting sessions into chapter videos* under *Where things
+  stand*: the house method, the rules every recut follows, and which recut files are local-only.
 - **A notebook's mermaid diagrams need a VS Code extension, not a pip package.** The
   ```mermaid fenced blocks in `03_04_adjudication_pricing_monitoring.ipynb`'s markdown
   cells render in a local VS Code because mermaid support (native since VS Code 1.121,
@@ -201,48 +192,95 @@ repo is decoration.
 - Student-facing wording matters more than usual here: these people are choosing whether to
   trust the material.
 
-## Where things stand — updated 2026-09-19
+## Where things stand — updated 2026-09-27
 
 **v1.4** is the public release. **Session 1 ran Thu 10 Sep** (recording recut to 58:53 and a
 3:04 LinkedIn promo — see *Session recordings* below). **Session 2 ran Thu 17 Sep** at the
 90-minute re-cut; **its recording is recut** (2026-09-18) into six standalone chapter videos plus
 a 53:04 stitched version, and a **55 s promo** (2026-09-20: the six hooks over a music bed, no
-footage) — the S2 post is next. YouTube channel **TeamYan, @teamyan2026**; chapter 1 is up.
-Sessions 3–5 are Thursdays 8pm EDT.
+footage). **Session 3 ran Thu 24 Sep** as a combined S3+S4 (adjudication, pricing, early warning,
+line increase, and the v2 workbench): recut 2026-09-25/27 into **seven chapter videos** with three
+pickups recorded the next morning, plus a 61 s promo — **all uploaded**; the post is drafted in
+`blog/S3-substack.md`. The **finale (model governance)** is Thu 1 Oct, 8pm EDT. YouTube channel
+**TeamYan, @teamyan2026**. S1 is still one stitched video; **re-cutting it into chapters is planned**
+(`lecture1_video.mp4` is kept locally for that — renamed from `video1763836570.mp4`, so
+`S1.cuts.json`'s `source` needs updating first).
 Local `main` may be ahead of `origin/main` — check `git status -sb`; nothing is pushed without
 being asked.
 
-### Session recordings — S1 and S2 done, S3 next
+### Recutting sessions into chapter videos — the house method
 
-`workshop/facilitator/recut/` (tracked) turns a Zoom recording + transcript into the student
-video(s) and the promo; `workshop/LectureSummaryandRecordings/` (gitignored) holds the inputs and
-outputs. **The README there is the step-by-step** — S2 is the worked example: a master
-`S2.cuts.json` (keeps carry `chapter` + `mark`, chapters carry `hook`), `split.py` derives one
-cuts file per chapter, each chapter video = a 6–7 s HyperFrames hook → footage → outro; the
-master builds the stitched version with freezes. S2's six theses: WoE+logistic vs the flexible
-challengers (0.8176 vs 0.8096) · DSCR by hand 3→6 bins then optimizer 8 (one feature 0.64) ·
-coin→one→fifteen and the 0.78 gate · the live drop of four bureau columns → **0.7704**, gate
-fails · everyone 0.8176 / booked 0.7447 / rejected 0.8440 · reason codes = WoE × β. Outputs
-`out/S2-ch{1..6}-compact.mp4` (4:55–11:33) and `out/S2-compact.mp4`, with `*-chapters.txt`
-YouTube blocks. Cut everywhere: all polls, the agent-track lab (the agent did not drop the
-features), the public-records Q&A, the client hunt; two spoken first names trimmed on pauses.
-**The deck's 0.7643 for that drop is stale — the screen and `main` say 0.7704** (separate fix).
+Every session recording becomes **one standalone video per chapter, one thesis each** (for YouTube;
+S2 and S3 are the worked examples), plus a hooks-only promo. `workshop/facilitator/recut/README.md`
+is the step-by-step; these are the rules that keep recuts consistent. S1 predates this shape (one
+stitched video with chapter freezes); its planned recut should follow the rules below.
 
-What S1 settled, so S2 does not re-decide it: cut the polls entirely, cut time checks and
-cohort logistics and plugs, cut a hiccup *and* its later apology; where a hiccup contradicted
-the curriculum (S1's failed stage checkout ended in "don't do stages"), a **correction card**
-at that moment quoting the lab's own command; chapter breaks are a 2.6 s freeze with the banner
-rising to mid-left; watermark bottom-right; chapter marks embedded in the MP4 *and* written as
-a YouTube description block (YouTube ignores embedded chapters); the promo is the strongest
-~20 s of each chapter, not its first 20 s, entered through the chapter freeze. Both S1 videos
-were checked by frame pairs at every seam and by audio cross-correlation (constant −26 ms,
-no drift) — **not by ear**: a words-at-the-seam check needs `whisper-cpp` and a ~150 MB model,
-which was not installed without asking.
+**Pipeline.** `align.py offset` → `dump` (read the whole transcript) → a plan → `S<n>.cuts.json`
+→ `snap.py` → hand-read every boundary with `align.py window … --min 0.2 --noise -28` →
+`split.py S<n>.cuts.json` → `build.py <file> graphics` → `draft` → `final`. HyperFrames renders the
+graphics only (one Chrome screenshot per frame); ffmpeg cuts and composites the footage. This
+ffmpeg has no `drawtext`, so every pixel of text is a HyperFrames render.
 
-S1's Substack post (four milestone screenshots), LinkedIn copy, and the S2 T−1 reminder are in
-`workshop/LectureSummaryandRecordings/blog/` and `workshop/facilitator/emails/`. The S1 post's
-shape — thesis, the "right question" reframe, four milestones, the leakage ladder as the core
-insight, a governance section, homework — is the template for the S2 post.
+**The plan comes first, and Yan approves it.** Show a chapter table (thesis in one sentence,
+source ranges, minutes, hook idea), the cut list, correction cards and the open decisions,
+then wait. Yan answers decisions in one line and then wants results, not more questions.
+Chapters follow **source order** unless moving a passage makes one thesis whole (S2 ch6, S3 ch2
+borrowed later footage). Offer **pickups** where the live session left a question open: write the
+script and screen flow with every number recomputed through the modules, and Yan records them.
+
+**What is cut, always:** polls (launch, wait, read-out), time checks, cohort logistics, plugs
+(the watermark carries them), a hiccup *and* its later apology (S3's Wi-Fi drop), reconnect
+fumbles, failed demos that carry no thesis (S2's agent lab — it goes in the post instead), and
+goodbyes. **Attendee first names spoken on the recording are trimmed on pauses**, not by
+cutting the discussion around them.
+
+**Boundaries.** Every cut sits on a pause, and `snap.py` is not the judge: it lands on pauses
+*inside* sentences (S2 moved 8 of 28 after reading). Read the cue text on both sides. Zoom drops
+speech — check the frame and the RMS before cutting an untranscribed gap. Zoom's local `.txt`
+transcript is wall-clock (S1: recording starts 13 min later); the cloud `.vtt` is already on
+recording time (S3: offset ≈ 0). Never author a cut from raw cue times.
+
+**Every number on screen traces to the repo or to the recording.** Recompute through the modules'
+own functions (`predict_score_pd`, `policy.decide`, `price_population`, `score_population`),
+never quote the deck. Where the recording misspeaks, add an orange **correction card** at that
+moment (S3: gate 0.78 not "75"; mispricing worst in AAA/A, not D). Where the deck is stale,
+quote the screen and flag the repo (S2: 0.7704 vs the deck's 0.7643).
+
+**Each chapter video:** a 6–7 s HyperFrames **hook** (title + one animated idea + a closer line;
+decision colours on the ink background, content centred so a 9:16 render is a layout pass) →
+footage with lower-third **callouts** (kicker · body · note, sized to their overlay window) →
+the session **outro**. Keeps carry a `mark` so each standalone video still has YouTube chapters.
+The thumbnail is the hook's settled frame at ~5.9 s, 1280×720, in `blog/img/`.
+
+**Pickups** are keeps with their own `"source"` (and callouts naming the same source); a solo take
+sits ~2 LU hot against the room, so `"gain_db": -1.5`, then measure 30 s either side of each seam.
+
+**Promo:** a cards-only `sequence` — open card → every hook re-rendered at a whole number of bars
+(`"vars": {"dur": …}`) → CTA card — over *Taking Flight* (Blue Deer Studio, YouTube Audio Library;
+132 BPM, first hit 4.56 s, so the open card is 4.56 s and each hook 16 beats ≈ 7.28 s), whoosh on
+every seam, a bass hit on the most dramatic beat, chime on the CTA, **−14 LUFS**.
+
+**Verify before handing over:** frame pairs at every seam, every callout composited over the frame
+it annotates, audio cross-correlation against the source (a constant ≈ −26…−30 ms is normal; drift
+is not), `ebur128` on promos, SFX checked on an SFX-only render. **Not by ear** — `whisper-cpp` and
+its ~150 MB model are not installed without asking; when a take has no retakes (silence-bracketed),
+no transcription is needed.
+
+**Publishing copy lives beside the videos** in `blog/`: `S<n>-youtube-descriptions.md` (title with
+the thesis first and the series last; description with the `*-chapters.txt` block — YouTube needs
+≥ 3 timestamps for a chapter bar and ignores the chapters embedded in the MP4; Education; not made
+for kids), `S<n>-substack.md` (the post, one section per chapter with the video embedded) and
+`S<n>-linkedin.md`.
+
+**What is tracked and what is not — read this before a fresh clone.** Tracked: `align.py`,
+`snap.py`, `split.py`, `build.py`, the README, and `hf/` (`chapter.html`, `watermark.html`,
+`shared.*`, `hook.css`/`hook.js`), plus S1's cut lists and compositions (committed before the ignore
+rule). **Local only** (`.gitignore`): every other `*.cuts.json` and the `S*` compositions and
+callouts — they are session-specific, and a fresh clone recreates them from the S1 templates and
+the README. Inputs and outputs live in
+`workshop/LectureSummaryandRecordings/` (gitignored: transcripts name attendees). After a session
+is published, its recordings (backed up), segment caches and rendered graphics are deleted
+(2026-09-27 clean-up); the disk runs near full, so alpha renders may need `--low-memory-mode`.
 
 ### The cohort (no names or addresses here — this repo is public)
 
@@ -283,10 +321,9 @@ address (invariant 6).
   sentence test, unarguable signs, routing levels through ratios, excluding what a bank must not
   price on, designing the decoys deliberately, weights by target variance share.
 - Nothing equivalent to the S1 reading note exists for Sessions 2–5.
-- **S2 post** — the recut and the promo are done (above); the post follows the S1 post's shape
-  with the six chapter videos embedded (playlist links, not bare video links). Titles,
-  descriptions and the promo/LinkedIn copy are in `blog/S2-youtube-descriptions.md`.
-  `run-of-show-app.html` still mirrors S1 (S2 used a phone timer).
+- **S3 post** — drafted in `blog/S3-substack.md`; fill the seven `[YouTube link]`s and publish.
+  `run-of-show-app.html` still mirrors S1 (S2 and S3 used a phone timer).
+- **S1 recut into chapter videos** — planned, not started (see the house method above).
 - **Notebooks 01 and 02 carry executed outputs in the working tree** (local paths baked in) from
   running them in VS Code — clear outputs before committing anything in `notebooks/`.
 - **S2's run of show assumed students arrive on `stage-1`**; after S1's failed handoff the room
@@ -299,8 +336,10 @@ address (invariant 6).
 - The dry run ran **22% long** (9m48s against 8m). Applied to 90 minutes that is ~110. The
   recoverable block is named in the run of show; the lab is not it.
 
-Housekeeping: local-only branches `backup/pre-pii-rewrite` and `archive/yanexercise` (the
-deleted remote branch, SHA `bcb055b`) — delete when no longer wanted.
+Housekeeping: local-only branches `backup/pre-pii-rewrite`, `backup/pre-notebook-strip`,
+`backup/pre-trailer-fix` and `archive/yanexercise` (SHA `bcb055b`) — delete when no longer wanted.
+The `banking-analytics-workshop-v2` worktree and the merged `v2-loan-workbench` branch were removed
+2026-09-27.
 
 ## v2 loan workbench (added 2026-09-23, task 16 of the v2-loan-workbench plan)
 
