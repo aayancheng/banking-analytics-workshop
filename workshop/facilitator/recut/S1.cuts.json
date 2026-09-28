@@ -1,6 +1,6 @@
 {
   "_comment": "Source times in seconds. Rough boundaries came from the Zoom transcript aligned to the video (offset 20:03:49.25 by audio cross-correlation); every keep boundary was then moved onto a pause between sentences. Chapters/callouts are source times too; build.py maps them to output time.",
-  "source": "workshop/LectureSummaryandRecordings/video1763836570.mp4",
+  "source": "workshop/LectureSummaryandRecordings/lecture1_video.mp4",
   "out_dir": "workshop/LectureSummaryandRecordings/out",
   "fps": 25,
   "audio": {
@@ -175,7 +175,7 @@
   ],
   "snapped": "hand-verified against silencedetect pauses and transcript cues, 2026-09-12",
   "stem": "S1",
-  "transcript": "workshop/LectureSummaryandRecordings/zoomtranscript.txt",
+  "transcript": "workshop/LectureSummaryandRecordings/S1transcript.txt",
   "session": "1",
   "transcript_offset": 72229.25
 }

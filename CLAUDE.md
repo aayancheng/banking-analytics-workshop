@@ -202,9 +202,10 @@ footage). **Session 3 ran Thu 24 Sep** as a combined S3+S4 (adjudication, pricin
 line increase, and the v2 workbench): recut 2026-09-25/27 into **seven chapter videos** with three
 pickups recorded the next morning, plus a 61 s promo — **all uploaded**; the post is drafted in
 `blog/S3-substack.md`. The **finale (model governance)** is Thu 1 Oct, 8pm EDT. YouTube channel
-**TeamYan, @teamyan2026**. S1 is still one stitched video; **re-cutting it into chapters is planned**
-(`lecture1_video.mp4` is kept locally for that — renamed from `video1763836570.mp4`, so
-`S1.cuts.json`'s `source` needs updating first).
+**TeamYan, @teamyan2026**. **S1 was re-cut into seven chapter videos on 2026-09-27** (`S1-chapters.cuts.json`,
+from the keeps approved for the stitched S1; the published stitched video and 3:04 promo stay) plus a
+61 s hooks promo (`S1-hooks-promo`). `lecture1_video.mp4` is kept locally; `S1.cuts.json` now points
+at it and at `S1transcript.txt`. The S1 ladder callout now quotes the screen (0.7299, not 0.72).
 Local `main` may be ahead of `origin/main` — check `git status -sb`; nothing is pushed without
 being asked.
 
@@ -323,7 +324,8 @@ address (invariant 6).
 - Nothing equivalent to the S1 reading note exists for Sessions 2–5.
 - **S3 post** — drafted in `blog/S3-substack.md`; fill the seven `[YouTube link]`s and publish.
   `run-of-show-app.html` still mirrors S1 (S2 and S3 used a phone timer).
-- **S1 recut into chapter videos** — planned, not started (see the house method above).
+- **S1 chapter videos** — built 2026-09-27; to upload, with `blog/S1-youtube-descriptions.md`, and add
+  to the S1 post with `blog/S1-chapters-addendum.md` (which also fixes the post's 0.72 → 0.7299).
 - **Notebooks 01 and 02 carry executed outputs in the working tree** (local paths baked in) from
   running them in VS Code — clear outputs before committing anything in `notebooks/`.
 - **S2's run of show assumed students arrive on `stage-1`**; after S1's failed handoff the room
