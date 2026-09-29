@@ -23,8 +23,10 @@ TEMPLATE_PARTS = ["purpose", "data", "methodology", "assumptions", "performance"
 POPULATION = re.compile(r"booked|applicant|held.out|rejected|everyone|population", re.I)
 NUMBER = re.compile(r"(?<![\w.])(\d+(?:\.(\d+))?)(?![\d.]\d)\s*(%)?")
 SENTENCE = re.compile(r"(?<=[.!?;])\s+")
+FULL_SENTENCE = re.compile(r"(?<=[.!?])\s+")   # a gate verdict may span a ';'
 GATE_FAILS = re.compile(r"\b(fail|fails|failed|below|miss|misses|missed|not met|does not ship|"
-                        r"doesn't ship|cannot ship|can't ship)\b", re.I)
+                        r"doesn't ship|cannot ship|can't ship)\b"
+                        r"|(?:\bnot|n't)\s+(?:pass|clear|meet)\w*", re.I)
 GATE_PASSES = re.compile(r"(?<!not )(?<!n't )(?<!to )\b(pass|passes|passed|is met|clears|cleared)\b",
                          re.I)
 FINDING = re.compile(r"^[ \t]*\*{0,2}F(\d+)\*{0,2}:\*{0,2}", re.M)
@@ -68,9 +70,9 @@ def _numbers(text: str):
         yield m.group(0).strip(), v, dp
 
 
-def _sentences(text: str) -> list[str]:
+def _sentences(text: str, splitter: re.Pattern = SENTENCE) -> list[str]:
     return [s for para in re.split(r"\n\s*\n", text)
-            for s in SENTENCE.split(" ".join(para.split()))]
+            for s in splitter.split(" ".join(para.split()))]
 
 
 def h2_1(args):
@@ -86,7 +88,7 @@ def h2_1(args):
         msg = (f"you quote the no-bureau held-out AUC ({fact['text']}, recomputed); "
                f"the nearest number in your answer is {nearest}")
     yield found, msg
-    gate = [s for s in _sentences(ans) if re.search(r"\bgate\b", s, re.I)]
+    gate = [s for s in _sentences(ans, FULL_SENTENCE) if re.search(r"\bgate\b", s, re.I)]
     fails = any(GATE_FAILS.search(s) for s in gate)
     passes = [s for s in gate if GATE_PASSES.search(s)]
     yield fails and not passes, ("you say the refit fails the gate" if fails and not passes
@@ -170,10 +172,10 @@ def _evidence(raw: str, facts: dict, i: int) -> tuple[bool, str]:
         return False, f"finding {i} gives no evidence after 'Evidence:'"
     if ref in facts:
         return True, f"finding {i} cites a fact ({ref})"
-    if ref.startswith("wiki/mdd/"):
+    path = (ROOT / ref).resolve()
+    if path.is_relative_to(MDD.resolve()):
         return False, (f"finding {i} cites the documentation ({ref}); the documentation is "
                        "not evidence — cite a fact or the code")
-    path = (ROOT / ref).resolve()
     ok = path.is_relative_to(ROOT) and path.is_file()
     return ok, (f"finding {i} cites a file that exists ({ref})" if ok
                 else f"finding {i} cites neither a fact key nor a file in the repo ({ref})")

@@ -177,3 +177,32 @@ def test_h4_2_accepts_evidence_at_the_end_of_the_finding_line(answers):
         "F3: No out-of-time sample. **Evidence:** `score.psi_score`\n")
     ok, lines = check.run("H4.2")
     assert ok, lines
+
+
+# --- fix round 2 ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("ref", ["./wiki/mdd/score/data.qmd",
+                                 "wiki/../wiki/mdd/score/data.qmd",
+                                 "wiki/mdd/score/data.qmd"])
+def test_h4_2_rejects_the_documentation_however_the_path_is_spelled(answers, ref):
+    (answers / "H4.2.md").write_text(
+        GOOD_H4_2.split("F3:")[0] + f"F3: Band AAA under-predicts.\nEvidence: {ref}\n")
+    ok, lines = check.run("H4.2")
+    assert not ok and "documentation is not evidence" in lines[-1], lines
+
+
+def test_h4_2_accepts_a_code_path_spelled_with_dot_slash(answers):
+    (answers / "H4.2.md").write_text(
+        GOOD_H4_2.split("F3:")[0] + "F3: Scoring.\nEvidence: ./score/src/predict.py\n")
+    ok, lines = check.run("H4.2")
+    assert ok, lines
+
+
+@pytest.mark.parametrize("verdict", ["The refit does not pass the gate.",
+                                     "The refit does not clear the gate; it fails.",
+                                     "It doesn't meet the gate."])
+def test_h2_1_accepts_negated_pass_phrasings(answers, verdict):
+    (answers / "H2.1.md").write_text(
+        f"Without bureau data the held-out AUC is {_fact('score.stress.no_bureau.auc')}. {verdict}")
+    ok, lines = check.run("H2.1")
+    assert ok, lines
