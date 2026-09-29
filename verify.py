@@ -335,6 +335,32 @@ def check_doc_pack():
     return True, f"doc pack complete ({len(text.splitlines())} lines, 7 sections)", None
 
 
+def check_wiki(full: bool = False):
+    """The model documentation wiki lives on main only (no stage tag contains wiki/), so
+    this check is scheduled only where wiki/ exists. It recomputes every fact through the
+    modules, confirms the generated tables are current, and lints the pages."""
+    try:
+        sys.path.insert(0, str(ROOT))
+        from wiki.facts import build_facts, tables
+        from wiki.facts.core import diff_facts, load_facts
+        from wiki.tools.lint import lint_all
+        fresh, _ = build_facts.compute(full)
+        committed = load_facts(build_facts.FACTS_JSON)
+        problems = diff_facts(fresh, committed, partial=not full)
+        problems += tables.stale(committed, build_facts.WIKI)
+        problems += lint_all()
+    except Exception as e:
+        return (False, f"wiki check could not run: {e}",
+                "Rebuild the facts: make wiki-facts — then rerun python verify.py")
+    if problems:
+        more = f" (+{len(problems) - 1} more)" if len(problems) > 1 else ""
+        return (False, f"{problems[0]}{more}",
+                "A number changed: make wiki-facts (make wiki-facts-full for the stress "
+                "refits). A hand-typed number: replace it with {{< var key >}}. "
+                "Full list: python -m wiki.tools.lint")
+    return True, f"{len(committed)} facts current, pages lint clean", None
+
+
 def check_apps(stage: int = 3):
     """Smoke the decision apps in-process (TestClient — no server needed),
     then compare pricing totals to the committed summary. From stage 4 the
@@ -398,7 +424,7 @@ def check_apps(stage: int = 3):
     return True, f"apps up in-process; pricing matches committed summary (n={committed['n']:,})", None
 
 
-def checks_for(stage: int) -> list[Check]:
+def checks_for(stage: int, full: bool = False) -> list[Check]:
     checks = [
         Check("Python 3.11+", check_python),
         Check("Dependencies (pinned)", check_dependencies),
@@ -414,6 +440,9 @@ def checks_for(stage: int) -> list[Check]:
         checks.append(Check("Model: line increase + cohort gates", check_line_increase))
     if stage >= 5:
         checks.append(Check("Docs: model documentation pack", check_doc_pack))
+        # main only: no stage tag contains wiki/, so this is silent at every tag
+        if (ROOT / "wiki").exists():
+            checks.append(Check("Docs: model wiki", lambda: check_wiki(full)))
     if stage >= 3:
         checks.append(Check("Apps: decision platform smoke",
                             lambda: check_apps(stage)))
@@ -436,6 +465,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="You are here, and it works.")
     ap.add_argument("--stage", type=int, default=None, help="override stage.txt")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
+    ap.add_argument("--full", action="store_true",
+                    help="also recompute the wiki's slow stress refits")
     args = ap.parse_args()
 
     stage = read_stage(args.stage)
@@ -448,7 +479,7 @@ def main() -> int:
             print(f"❌ {msg}")
         return 1
 
-    checks = checks_for(stage)
+    checks = checks_for(stage, args.full)
     n = len(checks)
     results = []
     all_ok = True
