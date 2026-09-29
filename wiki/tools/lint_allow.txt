@@ -1,0 +1,4 @@
+# Literals allowed in page prose. One per line; "path::literal" limits it to one page.
+# Every entry needs a reason in a comment.
+95%        # "95% interval" — the confidence level, not a measured value
+100%       # "100% of rows" style statements of completeness
