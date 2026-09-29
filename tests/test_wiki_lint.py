@@ -18,6 +18,8 @@ def test_percent_is_flagged_but_var_code_and_attributes_are_not():
     assert lint("AUC {{< var score.auc_holdout >}}\n") == []
     assert lint("`0.8176` in code\n```\nx = 0.8176\n```\n") == []
     assert lint("![roc](fig/roc.svg){#fig-roc width=80%}\n") == []
+    assert lint("![roc](fig/roc.svg){width=80%}\n") == []
+    assert lint('![r](a.svg){fig-align="center" width=80%}\n') == []
     assert lint("<!-- 0.8176 -->\n") == []
 
 
