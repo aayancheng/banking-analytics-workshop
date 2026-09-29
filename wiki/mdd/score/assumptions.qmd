@@ -25,8 +25,8 @@ scorecard.binning_process_.get_binned_variable("leverage").binning_table.build()
 ```
 
 `leverage` enters the generator's default logit with one sign
-(`shared/data_generator.py`), so the break in its WoE is sampling noise that the binning
-kept. `trade_lines` has no role in the generator at all, so any shape its WoE takes is
+(`shared/data_generator.py`), so the break in its WoE is most likely sampling noise that
+the binning kept. `trade_lines` has no role in the generator at all, so any shape its WoE takes is
 noise; it is part of finding 3 ([4.7](limitations.qmd)).
 
 **What breaks if it fails.** Not discrimination: the held-out AUC in

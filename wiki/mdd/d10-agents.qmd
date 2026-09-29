@@ -81,7 +81,8 @@ interpretability, explainability and potential for bias when setting its tier
 (Principle 1.3).
 
 Neither document addresses AI used to *build* a model, as opposed to AI that *is* the
-model. None of the five models here is itself an agent; the scorecard is a logistic
-regression and the others are gradient-boosted trees. This chapter applies the same
+model. None of the four models here, nor the pricing tool, is itself an agent: the
+scorecard is a logistic regression, the adjudication, early-warning and line-increase
+models are gradient-boosted trees (LightGBM), and pricing is a deterministic calculation. This chapter applies the same
 principle to the tools that built them: an agent's contribution is documented, its output
 is independently checked, and responsibility for the result stays with a named person.

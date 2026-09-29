@@ -109,7 +109,8 @@ logit with one sign (`shared/data_generator.py`). In the committed scorecard it 
 {{< var score.n_woe_nonmonotonic >}} of the {{< var score.n_numeric >}} numeric features is
 not monotonic: {{< var score.woe_nonmonotonic >}} ([4.4](assumptions.qmd#monotonic-weight-of-evidence)).
 `train.py` calls `BinningProcess` without a `monotonic_trend`, so optbinning's default,
-`"auto"`, chose the shape. The break in `leverage` is sampling noise the binning kept.
+`"auto"`, chose the shape. The break in `leverage` is most likely sampling noise the binning kept: the
+generator's effect of leverage is one-signed.
 (`trade_lines` has no role in the generator at all, so its shape is noise too; it is
 covered by finding 3.)
 

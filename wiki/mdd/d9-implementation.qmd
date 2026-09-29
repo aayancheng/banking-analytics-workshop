@@ -94,7 +94,9 @@ documentation existed.
 
 The test suite (`pytest`, in `tests/`) pins what the gates do not:
 
-- the leakage deny-list is disjoint from every model's features, and names real columns;
+- the leakage deny-list is disjoint from the scorecard's and the adjudication model's
+  features, and names real columns (the early-warning and line-increase modules assert the
+  same when they build features and train);
 - the pricing engine's arithmetic: the profit waterfall, break-even and hurdle-clearing
   rates, and invariance to exposure size;
 - the policy layer and the early-warning and line-increase rules;
