@@ -142,17 +142,17 @@ python verify.py
 
 ```
 [9/10] Docs: model wiki ...................... FAIL
-      ❌ score.auc_holdout: facts.json says 0.8276, recomputed 0.8176 (+3 more)
+      ❌ score.auc_holdout: facts.json says 0.8276, recomputed 0.8176 (+4 more)
       Fix: A number changed: make wiki-facts (make wiki-facts-full for the stress refits). A hand-typed number: replace it with {{< var key >}}. Full list: python -m wiki.tools.lint
 [10/10] Apps: decision platform smoke ........ OK
 ❌ Stage 5 not verified yet — fix the line(s) above and rerun. Stuck for 5 minutes? Switch to Codespaces and keep moving.
 ```
 
 Read the ❌ line aloud. *"It names the key, the number you typed and the number the model
-actually produces."* The **+3 more** are the three generated files built from the facts
-(`_generated/score-ceiling.md`, `_generated/score-stress.md`, `reference/facts.qmd`) — each
-now disagrees with the edited `facts.json`. If asked: that is the same edit caught three more
-times, not three more problems.
+actually produces."* The **+4 more** are the four generated files built from the facts
+(`_generated/score-ceiling.md`, `_generated/score-stress.md`, `reference/facts.qmd` and
+`_variables.yml`, which every page prints from) — each now disagrees with the edited
+`facts.json`. If asked: that is the same edit caught four more times, not four more problems.
 
 **0:14 · Restore, and prove it.**
 

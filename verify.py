@@ -346,7 +346,8 @@ def check_wiki(full: bool = False):
         from wiki.tools.lint import lint_all
         fresh, _ = build_facts.compute(full)
         committed = load_facts(build_facts.FACTS_JSON)
-        problems = diff_facts(fresh, committed, partial=not full)
+        problems = diff_facts(fresh, committed,
+                              skip_prefixes=() if full else build_facts.SLOW_PREFIXES)
         problems += tables.stale(committed, build_facts.WIKI)
         problems += lint_all()
     except Exception as e:
