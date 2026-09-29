@@ -21,6 +21,8 @@ ews/           behavioural early warning -> tiered watchlist + named triggers
 line_increase/ candidate model + amount rules + incremental economics
 app/           FastAPI portal (port 8100) — orchestrates modules, never re-implements them
 tools/         doc-pack builder
+wiki/          model documentation wiki (main only): Quarto source -> site + validation PDF + e-book,
+               generated facts layer, agent homework. Prose CC BY-NC-ND 4.0, code MIT
 notebooks/     one per stage: a visual read-out of that stage's key results
 workshop/      slides, labs, prompt cards, CHECKPOINTS.md (students), facilitator/
 workshop/reading/  optional post-session notes: .html is source, .pdf committed beside it
@@ -121,8 +123,13 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   12,000 applicants; on the 8,336 *booked* it scores held-out AUC **0.7447** (rejected-only 0.8440,
   everyone 0.8176). Not a defect — the DGP gives every applicant an outcome — but it is S2's set-piece
   reveal (notebook 02 §7) and the memo's fourth clause. Any "AUC" quoted without its population is
-  incomplete. Dropping the four bureau columns gives **0.7704** on `main` (KS 0.4334) — the live
-  gate-fail in S2. The S2 deck, lab and run of show still print a stale **0.7643**; fix all of them together.
+  incomplete. Dropping four bureau columns gives a different number depending on *which* four, and both are
+  right for their set: `utilization, credit_history_months, prior_delinquencies, public_records` (the S2 lab
+  sheet and run of show) gives **0.7643**; swapping `trade_lines` in for `public_records` (what was
+  commented out live at 49:15 and is shown in the published S2 ch4 video) gives **0.7704** (KS 0.4334) on
+  `main`. Neither is stale. The wiki uses the live set (fact `score.stress.bureau_columns`) and H2.1's
+  prompt card names it, because the lab sheet's set would fail a correct student's check. Always say
+  which four columns.
 - **`requested_amount` crashes optbinning's default CP solver** (`TypeError: __radd__` inside
   `optbinning/binning/cp.py`) on the training rows with the pinned `ortools==9.14.6206`; row
   subsets (booked-only) can trip it on other variables too. `solver="mip"` binds every safe column
@@ -146,6 +153,32 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   extension list; it is a no-op once VS Code's native support is active, so it does not
   need removing later. **Requires a Codespace rebuild** ("Codespaces: Rebuild Container")
   to take effect on an already-created Codespace — reloading the window is not enough.
+- **The model wiki's numbers are generated, never typed.** `wiki/facts/` computes every figure through the
+  modules (`make wiki-facts`; `make wiki-facts-full` for the stress refits) and writes `facts.json`,
+  `_variables.yml`, `_generated/` and `reference/facts.qmd`. Never edit those four by hand. A `.qmd`
+  shows a number as `{{< var key >}}`, a generated table or a generated figure; `wiki/tools/lint.py`
+  fails a page with a hand-typed metric, an unknown var key, a broken link or anchor, or an AUC with
+  no population. Literals that are allowed (`95%`) live in `wiki/tools/lint_allow.txt`, one per line, each
+  with a reason. `verify.py` runs the wiki check only where `wiki/` exists (no stage tag has it); `--full`
+  adds the stress refits. Facts hold the DGP truth only in `wiki/facts/ceiling.py`.
+- **The wiki gotchas.** To show a shortcode literally write `{{</* var key */>}}` (the fact index does this).
+  Quarto crashes on a sidebar `auto:` glob that matches no page. Files and dirs under `wiki/` that must
+  not render start with `_`. Render profiles: `site` (GitHub Pages), `validation` (Typst PDF; render it
+  through `make wiki-pdf`, which passes `-M version -M date` and refreshes the artifact-hash stamp;
+  a bare `quarto render` prints `?meta:version`), `book` (EPUB + PDF; its chapter list must contain
+  every page a chapter links to, or Typst dies on a missing label). Outputs (`_site`, `_validation`,
+  `_book`) and the stamp are gitignored. The stress refits behind D4.6 take ~2 s, not minutes; the
+  slow/`--full` gating stays for design reasons, not speed. **Students on a stage tag need
+  `git checkout main -- workshop notebooks wiki`** to get the wiki, same trap as the notebooks.
+- **D4 (the Business Credit Score chapter) raises five open findings about its own model**, all
+  reproduced from facts, none fixed:
+  1. No out-of-time sample: train and test are random splits of one cohort, so temporal stability is untested.
+  2. The gate population is not the lending population (held-out AUC 0.8176 on everyone, 0.7447 booked).
+  3. Three structural-zero features (`industry`, `entity_type`, `trade_lines`) are in the model: present but inert.
+  4. The score distribution is concentrated in one band (band D holds about half the held-out applicants).
+  5. `leverage`'s WoE is non-monotonic because `train.py` never sets `monotonic_trend` (optbinning's
+     `"auto"` default is left in place), although the generator's effect of leverage is monotonic.
+  Calibration misses in bands A/AAA (5 and 4 defaults) are *observations*, not findings: too few defaults.
 
 ## The DGP, in numbers
 
@@ -192,7 +225,7 @@ repo is decoration.
 - Student-facing wording matters more than usual here: these people are choosing whether to
   trust the material.
 
-## Where things stand — updated 2026-09-27
+## Where things stand — updated 2026-09-29
 
 **v1.4** is the public release. **Session 1 ran Thu 10 Sep** (recording recut to 58:53 and a
 3:04 LinkedIn promo — see *Session recordings* below). **Session 2 ran Thu 17 Sep** at the
@@ -208,6 +241,16 @@ from the keeps approved for the stitched S1; the published stitched video and 3:
 at it and at `S1transcript.txt`. The S1 ladder callout now quotes the screen (0.7299, not 0.72).
 Local `main` may be ahead of `origin/main` — check `git status -sb`; nothing is pushed without
 being asked.
+
+**The model wiki and the S4 finale materials are built, on branch `model-wiki` — not yet on `main`.**
+The wiki (`wiki/`) is D4 in full (the worked example), the platform chapters, two navigation spines,
+the template, the validation PDF and the agent homework with its self-checker. The S4 deck, lab, run of
+show, polls and the T-1 reminder email are in `workshop/`. Verified in a clean clone: `stage-0..5` report
+identically to the commit the branch started from, `verify.py` on the branch (fast and `--full`) passes
+with the wiki check, the facts rebuild is a no-op, all three render profiles build. **Merge to `main`
+and the push are pending Yan's go-ahead, and the reminder email goes only after that** (it tells
+students to pull `main` and open the wiki, which must exist there first). The `v1.5` tag message is
+drafted, not created.
 
 ### Recutting sessions into chapter videos — the house method
 
@@ -318,13 +361,19 @@ address (invariant 6).
 
 ### Open threads, none started
 
+- **Wiki v1 leftovers:** D5–D8 in full (adjudication, pricing, EWS, line increase chapters are stubs
+  that follow the template), E1–E10 (explainers), YouTube ids for the S1–S3 embeds (the wiki's
+  `--strict` video gating waits on them), book packaging (the EPUB/PDF is a three-chapter stub),
+  GitHub Pages enablement (the manual workflow exists; the setting is Yan's), and the Codespace test
+  of the Quarto devcontainer (needs a push).
+
 - A *"how these ten were chosen"* subsection for the reading note, between §3 and §4: the
   sentence test, unarguable signs, routing levels through ratios, excluding what a bank must not
   price on, designing the decoys deliberately, weights by target variance share.
 - Nothing equivalent to the S1 reading note exists for Sessions 2–5.
 - **S3 post** — drafted in `blog/S3-substack.md`; fill the seven `[YouTube link]`s and publish.
   `run-of-show-app.html` still mirrors S1 (S2 and S3 used a phone timer).
-- **S1 chapter videos** — built 2026-09-27; to upload, with `blog/S1-youtube-descriptions.md`, and add
+- **S1 chapter videos** — built 2026-09-27; **not uploaded yet, and the S4 email and deck say S1–S3 are on YouTube — upload first**; to upload, with `blog/S1-youtube-descriptions.md`, and add
   to the S1 post with `blog/S1-chapters-addendum.md` (which also fixes the post's 0.72 → 0.7299).
 - **Notebooks 01 and 02 carry executed outputs in the working tree** (local paths baked in) from
   running them in VS Code — clear outputs before committing anything in `notebooks/`.
