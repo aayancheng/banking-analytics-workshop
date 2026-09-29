@@ -8,11 +8,13 @@ adj:
     Approve: "30.8%"
     Decline: "32.4%"
     Refer: "36.8%"
+  n_applicants: "12,000"
   n_features: "21"
   n_test: "2,400"
   n_train: "9,600"
   t_high: "0.4943"
   t_low: "0.0955"
+  test_share: "20%"
 ceiling:
   gap_holdout: "0.018"
   signal_all: "0.8177"

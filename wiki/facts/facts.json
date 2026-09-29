@@ -48,6 +48,13 @@
     "text": "36.8%",
     "value": 0.368
   },
+  "adj.n_applicants": {
+    "fmt": ",d",
+    "population": "all applicants (adjudication split, seed 42)",
+    "source": "adjudication/models/metadata.json",
+    "text": "12,000",
+    "value": 12000
+  },
   "adj.n_features": {
     "fmt": "d",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
@@ -82,6 +89,13 @@
     "source": "adjudication/models/policy_config.json",
     "text": "0.0955",
     "value": 0.0955
+  },
+  "adj.test_share": {
+    "fmt": ".0%",
+    "population": "all applicants (adjudication split, seed 42)",
+    "source": "adjudication/models/metadata.json",
+    "text": "20%",
+    "value": 0.2
   },
   "ceiling.gap_holdout": {
     "fmt": ".3f",

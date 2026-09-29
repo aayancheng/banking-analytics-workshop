@@ -15,11 +15,13 @@ title: "Every number in this documentation"
 | `adj.mix.Approve` | 30.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication/models/metadata.json` |
 | `adj.mix.Decline` | 32.4% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication/models/metadata.json` |
 | `adj.mix.Refer` | 36.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication/models/metadata.json` |
+| `adj.n_applicants` | 12,000 | all applicants (adjudication split, seed 42) | `adjudication/models/metadata.json` |
 | `adj.n_features` | 21 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication/models/metadata.json` |
 | `adj.n_test` | 2,400 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication/models/metadata.json` |
 | `adj.n_train` | 9,600 | training 80% of applicants | `adjudication/models/metadata.json` |
 | `adj.t_high` | 0.4943 | calibrated at train time | `adjudication/models/policy_config.json` |
 | `adj.t_low` | 0.0955 | calibrated at train time | `adjudication/models/policy_config.json` |
+| `adj.test_share` | 20% | all applicants (adjudication split, seed 42) | `adjudication/models/metadata.json` |
 | `ceiling.gap_holdout` | 0.018 | held-out 20% (score split) | `wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)` |
 | `ceiling.signal_all` | 0.8177 | all 12,000 applicants | `wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)` |
 | `ceiling.signal_holdout` | 0.8353 | held-out 20% (score split) | `wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)` |

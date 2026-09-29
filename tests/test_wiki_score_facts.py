@@ -33,6 +33,13 @@ def test_published_numbers_reproduce(facts, key, text):
     assert facts[key] == text
 
 
+def test_adjudication_split_is_read_from_its_own_metadata(facts):
+    # D5 must describe adjudication's split with adj.* facts, not the scorecard's.
+    assert facts["adj.n_applicants"] == "12,000"
+    assert facts["adj.test_share"] == "20%"
+    assert facts["adj.n_applicants"] == facts["score.n_applicants"]
+
+
 def test_bootstrap_interval_brackets_the_point_estimate(facts):
     assert float(facts["score.auc_ci_lo"]) < 0.8176 < float(facts["score.auc_ci_hi"])
 

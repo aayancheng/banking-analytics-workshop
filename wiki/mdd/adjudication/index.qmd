@@ -8,8 +8,9 @@ headline below is already live.
 
 {{< include ../../_generated/adj-headline.md >}}
 
-Measured on the held-out {{< var score.test_share >}} of applicants, the same
-{{< var score.n_applicants >}} rows the scorecard uses, split with the same seed.
+Measured on the held-out {{< var adj.test_share >}} of the {{< var adj.n_applicants >}}
+applicants, as adjudication's own metadata records its split — the same rows the scorecard
+uses, split with the same seed.
 
 The chapter will cover the gradient-boosted model and the policy layer that turns its PD
 into Approve, Refer or Decline: the {{< var adj.n_features >}} inputs, including the
