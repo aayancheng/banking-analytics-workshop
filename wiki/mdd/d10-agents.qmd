@@ -42,10 +42,10 @@ and none of them relies on the agent's own account of what it did.
 - **Independent review**. Larger pieces of agent work were reviewed by a separate agent
   instance given only the requirements and the diff, then by the developer.
 
-## A mistake caught late: the leakage probe
+## A mistake in the teaching material: the leakage probe
 
 Session 1 teaches leakage with a probe: add a column that would not exist at decision time
-and watch the AUC rise. For weeks, every artifact that described the probe — the lab
+and watch the AUC rise. For a time, every artifact that described the probe — the lab
 sheet, the slides, the run of show and the facilitator's timer — said the AUC would reach
 about 1.0.
 
@@ -54,11 +54,11 @@ default outcome itself. Leaking the true PD does not give a near-perfect model. 
 plausible improvement, the kind that passes review. Only leaking the outcome reaches 1.0.
 
 Each piece looked right on its own. The code ran. The prose was fluent and internally
-consistent. Nothing failed, because nothing compared the two. The error was caught only
-when the developer executed the notebook cell before the session and read its output
-against the sentence on the slide.
+consistent. Nothing failed, because nothing compared the two.
 
-The fix made the mistake the lesson. The probe became a three-rung ladder — honest
+The repository's history records the fix: commit `8075df6` corrected the claim in every
+artifact that shipped it and recomputed each rung of the probe from the code. The fix
+made the mistake the lesson. The probe became a three-rung ladder — honest
 features, then the leaked true PD, then the leaked outcome — and the teaching point moved to
 the middle rung: a leak that looks like a good model, ships, and then performs no better
 than the honest model once the true PD it depended on no longer exists.
