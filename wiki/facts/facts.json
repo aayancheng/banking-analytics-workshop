@@ -139,6 +139,13 @@
     "text": "0.02",
     "value": 0.02
   },
+  "monitoring.min_band_defaults": {
+    "fmt": "d",
+    "population": "policy constant",
+    "source": "wiki.facts.policy (documented monitoring policy)",
+    "text": "20",
+    "value": 20
+  },
   "monitoring.psi_act": {
     "fmt": ".2f",
     "population": "policy constant",

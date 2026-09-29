@@ -58,7 +58,9 @@ Any one of these starts a redevelopment, with the validator informed:
 
 1. The all-applicant AUC on a cohort with outcomes falls below the gate.
 2. Score PSI above {{< var monitoring.psi_act >}}.
-3. A band's observed / predicted ratio outside the tolerance in two consecutive cohorts.
+3. A band's observed / predicted ratio outside the tolerance in two consecutive cohorts,
+   each with at least {{< var monitoring.min_band_defaults >}} defaults behind that band.
+   Below that count a breach is recorded and watched, not acted on.
 4. A change to any input's definition or source, including the bureau feed
    ([4.6](sensitivity.qmd#bureau-feed-down-a-gate-failure-documented)).
 

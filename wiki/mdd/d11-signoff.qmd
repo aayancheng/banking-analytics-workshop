@@ -14,7 +14,8 @@ The version is the repository's `git describe` at render time; a version ending 
 
 ## Artifacts this document cites
 
-Each artifact below is identified by its SHA-256 hash at render time. A validator can
+Each artifact below is identified by the first 16 hex digits of its SHA-256 hash, taken
+at render time. A validator can
 confirm that the models and data reviewed are the ones described by hashing the files in
 the tagged release.
 

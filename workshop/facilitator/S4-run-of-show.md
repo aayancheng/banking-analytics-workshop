@@ -45,8 +45,9 @@ Primary materials:
       **No slide overflows the 16:9 frame**. Fifteen slides.
 - [ ] **H4.2 pre-run.** Run `HW-H4.2.md` through your agent once before the session and keep
       the answer (`wiki/homework/_answers/H4.2.md`, gitignored). At 1:08 you re-run it live;
-      if the agent is slow, you show the pre-run. Rename the pre-run file first
-      (`H4.2-prerun.md`) so the live run cannot read it.
+      if the agent is slow, you show the pre-run. Move the pre-run out of the repo first —
+      `mv wiki/homework/_answers/H4.2.md /tmp/H4.2-prerun.md` — so the live agent, which
+      can read anything under `wiki/`, cannot find it.
 - [ ] The part assignment ready to paste in chat (below, *0:38*).
 - [ ] Both polls created, anonymous — see [S4-polls.md](S4-polls.md).
 - [ ] Screen-share tested; terminal font scaled up; VS Code with `wiki/facts/facts.json`
@@ -252,7 +253,7 @@ does.
    highest fifth") or leave it as not yet measured. The lab sheet's table has every ❌ line.
 3. *"Can I use a `score.*` fact?"* — Only for the scorecard's number, named as the scorecard's.
 
-**1:00 · Start your own H4.2 run** in your window (the pre-run renamed out of the way). It
+**1:00 · Start your own H4.2 run** in your window (the pre-run already moved to `/tmp`). It
 works while the room finishes.
 
 **1:05 · Call time.** *"Whatever your check says now is what we look at."*
@@ -342,7 +343,7 @@ Launch **Poll C** as slide 14 goes up; do not share it.
 - The homework page (*Course* → *Session 4 homework*) has H4.1 (the full chapter: the check
   without `--part`), H4.2 and H4.3, each with a worked solution written by running it with an
   agent.
-- The Session 1–3 chapter videos: YouTube, TeamYan (@teamyan2026).
+- The Session 1 recording and the Session 2–3 chapter videos: YouTube, TeamYan (@teamyan2026).
 
 ## Close (1:27–1:30)
 

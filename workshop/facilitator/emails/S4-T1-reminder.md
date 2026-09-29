@@ -72,8 +72,8 @@ adjudication model's chapter with an AI agent and self-check it.
 **AI AGENT FOR THE LAB**
 GitHub Copilot is free in Codespaces, and Claude Code works too if you have it. Either is fine.
 
-**MISSED AN EARLIER SESSION, OR WANT TO REWATCH?** The Session 1–3 chapter videos are on the
-YouTube channel TeamYan (@teamyan2026): `[[RECORDING_LINK]]`
+**MISSED AN EARLIER SESSION, OR WANT TO REWATCH?** The Session 1 recording and the Session 2–3
+chapter videos are on the YouTube channel TeamYan (@teamyan2026): `[[RECORDING_LINK]]`
 
 Same two rules as last time: questions in the **chat**, not on mic; and the session is
 **recorded**, so if something breaks on your end, nothing is lost.

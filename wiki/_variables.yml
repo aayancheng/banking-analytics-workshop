@@ -24,6 +24,7 @@ market:
   roe_hurdle: "15%"
 monitoring:
   iv_useless: "0.02"
+  min_band_defaults: "20"
   psi_act: "0.25"
   psi_watch: "0.10"
   ratio_hi: "1.25"
