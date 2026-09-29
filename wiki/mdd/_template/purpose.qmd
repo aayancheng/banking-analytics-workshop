@@ -1,0 +1,10 @@
+---
+title: "N.1 Purpose and use"
+order: 1
+---
+
+<!-- TEMPLATE — Purpose and use.
+Cover: what decision the model supports; who uses the output and how; the population it
+is for; downstream consumers (link D3); prohibited uses and why.
+Every number is {{< var key >}} — add facts in wiki/facts/ first if one is missing.
+Name the population beside every metric. Link, don't repeat: explanations live in explain/. -->

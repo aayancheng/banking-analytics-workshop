@@ -1,0 +1,72 @@
+---
+title: "0 Start here"
+---
+
+## 1. Open the repository in a Codespace
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/aayancheng/banking-analytics-workshop)
+
+You need a free GitHub account. The first start takes a few minutes: the Codespace
+installs every pinned package and then runs the checks once. When the terminal settles,
+you are ready.
+
+::: {.callout-tip}
+## Prefer your own machine?
+Clone the repository, then run `make setup` and `make verify`. You need Python 3.11 or
+later. Everything in the course works the same way locally.
+:::
+
+## 2. Run the one command
+
+In the Codespace's terminal:
+
+```bash
+python verify.py
+```
+
+Each line is a check: the Python version, the pinned dependencies, the data, each model's
+gate, the documentation and the decision apps. The last line tells you where you are. Every
+check that passes has been recomputed from scratch on your machine, just now.
+
+If a check fails, read its last line: it says what failed and prints the command that
+repairs it.
+
+## 3. Stage tags: save points you can jump to
+
+The platform was built in stages, and each is a git tag — a permanent bookmark on a moment
+in the repository's history. `stage-0` is the empty environment; `stage-5` has everything.
+Each tag passes its own `verify.py`, so if your own work goes wrong, or you missed a session,
+you can jump to the stage you need and carry on from a working state:
+
+```bash
+git stash -u                  # park your own changes (git stash pop brings them back)
+git checkout stage-4
+git checkout main -- workshop notebooks wiki
+python verify.py
+```
+
+The third line matters. The workshop sheets, the notebooks and this documentation live on
+`main` only — no tag contains them — so a stage jump removes them. Restoring them from
+`main` brings them back without moving you off the stage.
+
+::: {.callout-warning}
+## Use `git ls-files`, not `ls`, to see what a stage contains
+Python leaves cache folders behind that git ignores, so after a jump `ls` can show folders
+that are not part of the stage.
+:::
+
+To come back to the finished platform: `git checkout main`.
+
+## 4. Choose an agent
+
+The homework in every chapter asks you to direct an AI coding agent, then check what it
+produced against the repository. The prompts are written to work with any agent. Two that
+the exercises are tested with:
+
+| Agent | Cost | Where |
+|---|---|---|
+| GitHub Copilot | a free tier is available | built into VS Code, including in a Codespace |
+| Claude Code | paid | runs in the Codespace's terminal |
+
+Whichever you use, the rule is the same: an agent's answer is a claim, not a result. The
+result is what `python verify.py` says after the agent has finished.

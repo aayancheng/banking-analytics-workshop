@@ -1,0 +1,103 @@
+---
+title: "D2 Data"
+---
+
+## The generating process
+
+All data come from one generator, `shared/data_generator.py`, run with the platform seed
+from `shared/config.py`:
+
+```python
+SEED = 42
+```
+
+The generator works in the order a validator would want to reason about it:
+
+1. **Observable features first** — firmographics, financial statements, bureau history and
+   the loan request, each drawn from a stated distribution.
+2. **A latent default logit** built from a subset of those features plus unobserved noise.
+   The true probability of default and the default outcome itself are drawn from it.
+3. **Downstream outcomes** — whether the loan was booked, the rate it was quoted, and, for
+   booked loans, a monthly behavioural history, later deterioration and whether a line
+   increase would have gone well.
+
+It writes three files, committed so that every stage of the workshop is self-sufficient:
+
+| File | One row per | Rows |
+|---|---|---|
+| `shared/data/raw/businesses.parquet` | applicant | {{< var score.n_applicants >}} |
+| `shared/data/raw/portfolio.parquet` | booked account | {{< var score.n_booked >}} |
+| `shared/data/raw/panel.parquet` | booked account and month | the booked accounts × `PANEL_MONTHS` |
+
+`python verify.py` checks all three row counts on every run. The generator's design,
+including which features drive default and which deliberately do not, is the subject of
+the Session 1 reading note (`workshop/reading/S1-data-generation.pdf`) and of the
+explanation pages on synthetic data and leakage ([Explain](../explain/index.qmd)).
+
+## Data quality
+
+Because the data are generated, the usual quality failures — missing values, bad joins,
+stale extracts — are absent by construction. The Session 1 data-quality report
+(`python -m shared.data_quality`, written to `reports/data_quality.md`) still records row
+counts, target rates, a null audit and the distributions of key features, so that a
+regenerated dataset can be compared with the committed one. A validator should read this
+section as a statement about the method, not as assurance about real data (D1).
+
+## Two populations: applicants and booked
+
+Every applicant has an outcome, because the generator gives one to everyone. A real bank
+only observes outcomes for the loans it books. The platform keeps both:
+
+- **Applicants** — all {{< var score.n_applicants >}}. The scorecard and the adjudication
+  model train and are gated on a split of this population.
+- **Booked** — the {{< var score.n_booked >}} applicants the generator marks as booked.
+  The booking decision is drawn from the true PD with noise: it stands in for the bank's
+  historical lending decision, not for the adjudication model's output. Pricing, early
+  warning and line increase operate on this population only.
+
+The difference matters most for discrimination. A model can rank the whole applicant
+population well because it separates obvious declines from obvious approvals, then rank
+the booked population — the only one the bank lends to — much less well. D4 measures the
+scorecard on both and reports the gap as an open finding.
+
+## Leakage controls
+
+A column leaks if it would not exist at the moment the decision is made. The platform keeps
+one deny-list, in `shared/config.py`:
+
+```python
+LEAKAGE_COLUMNS = [
+    "pd_default_origination",     # DGP ground-truth PD
+    "default",                    # scorecard/adjudication target
+    "risk_based_rate",            # priced from the true PD
+    "booked",                     # funding decision (post-adjudication)
+    "deterioration_next_6_12mo",  # downstream early-warning target
+    "line_increase_good",         # downstream line-increase target
+]
+```
+
+It is enforced in three places, so no single oversight lets a column through:
+
+1. **At feature construction.** The adjudication, early-warning and line-increase feature
+   builders (`*/src/feature_engineering.py`) raise an error if any denied column is in
+   their feature list.
+2. **At training.** The same three modules' `train.py` assert that their feature list and
+   the deny-list are disjoint before fitting.
+3. **In the test suite.** `tests/test_leakage.py` asserts that the scorecard's and the
+   adjudication model's feature lists are disjoint from the deny-list, and that every denied
+   column actually exists in the data — a deny-list of typos protects nothing.
+
+The scorecard's feature list is a fixed list of {{< var score.n_features >}} named
+columns, checked by the third control. Two further rules sit beside the deny-list:
+
+- **Downstream modules consume the saved model's output, never the generator's truth.**
+  Adjudication, early warning and line increase read the score and PD from
+  `predict_score_pd`, the scorecard's own scoring function.
+- **Some denied columns are still used, as facts about the book, never as inputs to a
+  model.** Pricing reads `booked` to know which loans exist and `risk_based_rate` as the
+  rate each one was quoted, so that it can flag the ones priced below the hurdle.
+
+## Exclusions
+
+No applicant is excluded from any sample. Train and test splits are stratified on the
+outcome with the platform seed; each module chapter states its own split and population.

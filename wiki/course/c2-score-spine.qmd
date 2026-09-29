@@ -1,0 +1,76 @@
+---
+title: "2 The score spine"
+---
+
+Session 2 builds the model every other part of the platform consumes: a weight-of-evidence
+scorecard that turns an applicant's financials and bureau history into a score, a
+probability of default and a band. It is gated — AUC at least {{< var score.gate >}} on
+held-out applicants — and the gate cannot be negotiated. Then the session asks the question
+a validator asks: held on *which* population?
+
+## The videos
+
+Six chapters, one idea each, in session order.
+
+{{< yt S2-c1 >}}
+
+Why a scorecard, when gradient boosting is available: every point of the score can be traced
+to one bin of one variable, so a validator can replicate it by hand.
+
+{{< yt S2-c2 >}}
+
+Binning one variable by hand, then letting the optimiser do it, and reading weight of
+evidence and information value off the result.
+
+{{< yt S2-c3 >}}
+
+From one variable to {{< var score.n_features >}}: which features carry signal and which
+only look as if they do.
+
+{{< yt S2-c4 >}}
+
+The gate, live: drop the bureau columns and the refit fails at
+{{< var score.stress.no_bureau.auc >}}. The failure is documented, not tuned away.
+
+{{< yt S2-c5 >}}
+
+The committed scorecard scores {{< var score.pop.everyone.auc >}} on all held-out
+applicants and {{< var score.pop.booked.auc >}} on the ones the bank actually books. An AUC
+without its population is incomplete.
+
+{{< yt S2-c6 >}}
+
+Reason codes: why each applicant got the score they got, exactly, from the model's own
+arithmetic.
+
+## Read
+
+The documentation of this model is D4, the Business Credit Score chapter of the Model
+Documentation tab. It is the worked example of the template every other chapter follows.
+
+<!-- TODO(Task 9): link D4 (../mdd/score/index.qmd) once it exists. -->
+
+## Notebook and lab
+
+- Notebook: [`notebooks/02_stage2_score_spine.ipynb`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/notebooks/02_stage2_score_spine.ipynb)
+  — open it in the Codespace; section 7 is the population reveal.
+- Lab: [`workshop/labs/S2-lab.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/labs/S2-lab.md)
+  — bin, weigh, train, gate.
+
+## Check
+
+```bash
+python verify.py
+```
+
+The scorecard line recomputes the held-out AUC from the saved model and compares it with
+the gate. It passes on the committed scorecard.
+
+## Homework with an agent
+
+Three exercises: refit without the bureau columns and document the gate failure; catch an
+agent quoting an AUC without its population; and ask an agent why the feature with the
+largest coefficient explains almost none of the score. They arrive before Session 4, each
+with a self-check.
+
+<!-- TODO(Task 11): link homework-s2.qmd once it exists. -->

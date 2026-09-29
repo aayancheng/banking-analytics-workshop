@@ -1,0 +1,62 @@
+---
+title: "D3 Model dependencies"
+---
+
+## The score spine
+
+One model feeds every other component. The Business Credit Score is computed once, by
+its own scoring function (`predict_score_pd`), and every consumer calls that function
+rather than re-implementing it.
+
+```{mermaid}
+flowchart TD
+  G["Data generator"] --> S["D4 Score<br/>score · PD · band"]
+  S --> A["D5 Adjudication"]
+  S --> P["D6 Pricing"]
+  S --> E["D7 Early Warning"]
+  S --> L["D8 Line Increase"]
+  M["Market assumptions<br/>shared.config.MARKET"] --> P
+  M --> L
+  A --> UI["Portal (app/)"]
+  P --> UI
+  E --> UI
+  L --> UI
+```
+
+Every module also reads the generator's data directly, for its own features and
+population; the diagram shows only what flows between components.
+
+| Consumer | What it takes from the score | Population |
+|---|---|---|
+| D5 Loan Adjudication | `business_score` and `pd_score` as two of its inputs; the band for the policy layer | applicants |
+| D6 Pricing | the PD, as the expected-loss term of the rate | booked |
+| D7 Early Warning | `business_score` and `pd_score` as inputs, beside behavioural features | booked |
+| D8 Line Increase | `pd_score` as an input and as the risk-appetite cut | booked |
+
+Pricing also depends on the market assumptions in `shared.config.MARKET`, and line
+increase uses the same hurdle for its incremental-ROE test. Neither is a model; both are
+policy values under change control (D9).
+
+The portal (`app/`) orchestrates the modules and never re-implements them: every number
+it shows comes from the module's own function. A disagreement between the portal and a
+module is treated as a defect. `verify.py` smoke-tests the portal on every run, and
+checks that an adjudication requested through the loan workbench equals the batch
+decision for the same applicant.
+
+## What a scorecard change forces
+
+Because the score is an input everywhere, a change to it — rebinning, a new feature, a
+refit on new data — is a change to every consumer, even if no consumer's code moves.
+
+| Consumer | What must be redone | Why |
+|---|---|---|
+| D5 Loan Adjudication | retrain; recalibrate the PD zones; re-assert its gate | the score is one of its inputs, and the policy cutoffs are set from the model's PD distribution at training time |
+| D6 Pricing | re-run over the booked book; re-read the mispricing summary | every recommended rate moves with the PD |
+| D7 Early Warning | retrain; recalibrate the tier cutoffs; re-assert its gate | the score is an input and the tiers are set from the fitted probabilities |
+| D8 Line Increase | retrain; recalibrate the offer cutoff; re-assert its gate | the score is an input and sets who is eligible |
+| The portal and this documentation | `python verify.py` | it recomputes every gate and every fact on these pages |
+
+A change is complete only when `python verify.py` passes on the result. Its checks run in
+dependency order — data, score, adjudication, early warning, line increase, documentation,
+portal — and each failure is reported by name, so a scorecard change that breaks a
+consumer shows up at that consumer.

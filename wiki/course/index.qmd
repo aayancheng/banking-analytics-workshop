@@ -1,0 +1,51 @@
+---
+title: "How the course works"
+---
+
+This is a self-paced course in credit analytics with AI agents. Over four sessions you
+rebuild a small-business lending platform — synthetic data, a credit scorecard, and the
+decisions built on it — then document it the way a model validator expects. Every session
+was taught live and recorded; the recordings are cut into short chapter videos, one idea
+each.
+
+## The four sessions
+
+| Session | Theme | What you build or read |
+|---|---|---|
+| 1 | Data and leakage | a synthetic lending book you can reason about, and a model that cheats |
+| 2 | [The score spine](c2-score-spine.qmd) | a weight-of-evidence scorecard, trained and gated |
+| 3 | Decisions, price and watch | adjudication, pricing, early warning and line increases, and the loan workbench |
+| 4 | [Governance](c4-governance.qmd) | the model documentation in this site, written and checked with an agent |
+
+Take them in order: each session consumes what the one before produced. The chapters for
+Sessions 1 and 3 are being written; their videos are already listed in the
+[video index](../reference/videos.qmd).
+
+Each chapter has the same shape: the videos, a short read, a notebook, a lab, a
+`verify.py` check, and homework you do with an AI agent and then check against the
+repository.
+
+## Where you work: a Codespace
+
+A GitHub Codespace is a complete development machine in your browser: VS Code, Python and
+every pinned dependency, already installed. You do not need to install anything on your
+own computer, and nothing you do there can break it. [Start here](c0-start.qmd) opens one.
+
+## How you know you are on track
+
+One command, run from the repository's root, at any moment:
+
+```bash
+python verify.py
+```
+
+It tells you where you are and whether it works. It never changes anything; it only
+checks, and it recomputes every result rather than trusting a stored one. If a check fails,
+it prints the command that fixes it.
+
+## Two tabs, one set of pages
+
+The **Course** tab is the path through the sessions. The **Model Documentation** tab is the
+same platform written up for a validator, in the order supervisors expect. The course
+links into the documentation rather than repeating it, so when a chapter says "see D4" it
+means the page a validator would read.

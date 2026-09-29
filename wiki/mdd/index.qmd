@@ -1,0 +1,68 @@
+---
+title: "How to read this documentation"
+---
+
+This is the model documentation for the SME Lending Decision Platform: one small-business
+lending book of {{< var score.n_applicants >}} synthetic applicants, one scorecard, and four
+decision modules that consume it. It is written for a model validator. It is also written so
+that a learner can see what a validator expects, and why.
+
+## The order: SR 11-7
+
+The chapters follow the order of the US supervisory guidance on model risk management,
+SR 11-7 (OCC 2011-12): what the models are and how much they matter, what they are for, the
+data, how they depend on each other, one chapter per model, then implementation, the use of
+AI agents, and sign-off. The [crosswalk](../reference/crosswalk.qmd) maps each section to
+OSFI E-23 (Canada) and PRA SS1/23 (UK).
+
+| § | Chapter | Status |
+|---|---|---|
+| D0 | [Executive summary, inventory and tiering](d0-summary.qmd) | drafted |
+| D1 | [Platform purpose and use](d1-purpose.qmd) | drafted |
+| D2 | [Data](d2-data.qmd) | drafted |
+| D3 | [Model dependencies](d3-dependencies.qmd) | drafted |
+| D4 | Business Credit Score | complete: the worked example of the template |
+| D5 | [Loan Adjudication](adjudication/index.qmd) | in progress |
+| D6 | [Pricing](pricing/index.qmd) | in progress |
+| D7 | [Early Warning](ews/index.qmd) | in progress |
+| D8 | [Line Increase](line_increase/index.qmd) | in progress |
+| D9 | [Implementation and change control](d9-implementation.qmd) | drafted |
+| D10 | [Use of AI agents in development](d10-agents.qmd) | drafted |
+| D11 | Validation sign-off | in the validation PDF only |
+
+<!-- TODO(Task 9): link D4 to score/index.qmd once it exists. -->
+
+## The template
+
+Every model chapter (D4 to D8) has the same nine parts, so a validator can find the same
+thing in the same place in every chapter:
+
+1. **Purpose and use** — the decision supported, the users, the population, prohibited uses.
+2. **Data and sample** — sources, split, populations, leakage controls, exclusions.
+3. **Methodology and alternatives** — the method, what else was considered and why not.
+4. **Assumptions** — each one, its evidence, and what breaks if it fails.
+5. **Performance** — discrimination with an interval, rank-ordering, calibration,
+   stability, a benchmark and the ceiling, each with the population it was measured on.
+6. **Sensitivity and stress** — refits with fewer inputs; what a gate failure means.
+7. **Limitations and compensating controls** — numbered findings, each with an owner.
+8. **Monitoring plan** — metrics, thresholds, frequency and the action on a breach.
+9. **Gate record** — the committed gate, where it is asserted, where it is recomputed.
+
+The template lives in `wiki/mdd/_template/`: nine short files, each holding the brief for
+its part. To start a new chapter, copy the folder and replace each brief with prose.
+
+## Where the numbers come from
+
+No number in these pages is typed by hand. Each one is a fact computed through the
+platform's own module functions and stored, with the population it was measured on, in
+`wiki/facts/facts.json`. The pages print facts by name, and the
+[fact index](../reference/facts.qmd) lists every one with its source and population.
+
+`python verify.py` recomputes the facts from the committed models and data every time it
+runs, and fails naming the key if any page would print a stale value. A lint fails the
+build on any hand-typed metric. Two consequences for a reader:
+
+- if a number here disagrees with the code, that is a defect, and `verify.py` should
+  already have caught it;
+- an AUC is never printed without the population it was measured on, because the same
+  model scores very differently on applicants and on the loans the bank actually books.

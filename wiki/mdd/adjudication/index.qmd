@@ -1,0 +1,21 @@
+---
+title: "D5 Loan Adjudication"
+order: 0
+---
+
+**Status: in progress.** This chapter is being written from the nine-part template; the
+headline below is already live.
+
+{{< include ../../_generated/adj-headline.md >}}
+
+Measured on the held-out {{< var score.test_share >}} of applicants, the same
+{{< var score.n_applicants >}} rows the scorecard uses, split with the same seed.
+
+The chapter will cover the gradient-boosted model and the policy layer that turns its PD
+into Approve, Refer or Decline: the {{< var adj.n_features >}} inputs, including the
+score it consumes (D3); how the PD zones are calibrated at training time; the hard
+knockouts and refer overrides and why each exists; the reasons returned with every
+decision; performance against both gates, AUC and lift; how the decision mix moves when a
+cutoff moves; and its limitations and monitoring.
+
+The chapter follows the [template](../index.qmd#the-template); D4 is the worked example.

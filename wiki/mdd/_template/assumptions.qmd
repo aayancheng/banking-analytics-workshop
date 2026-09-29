@@ -1,0 +1,9 @@
+---
+title: "N.4 Assumptions"
+order: 4
+---
+
+<!-- TEMPLATE — Assumptions.
+Cover: each assumption, the evidence for it, what breaks if it fails.
+Every number is {{< var key >}} — add facts in wiki/facts/ first if one is missing.
+Name the population beside every metric. Link, don't repeat: explanations live in explain/. -->

@@ -21,6 +21,50 @@ website:
         href: explain/index.qmd
       - text: Reference
         href: reference/index.qmd
+  sidebar:
+    - id: course
+      title: Course
+      contents:
+        - course/index.qmd
+        - course/c0-start.qmd
+        - course/c2-score-spine.qmd
+        - course/c4-governance.qmd
+    - id: mdd
+      title: Model Documentation
+      contents:
+        - mdd/index.qmd
+        - mdd/d0-summary.qmd
+        - mdd/d1-purpose.qmd
+        - mdd/d2-data.qmd
+        - mdd/d3-dependencies.qmd
+        # D4 arrives in Task 9. Quarto 1.10 crashes on an `auto:` that matches no page
+        # ("Cannot read properties of undefined (reading 'score')"), so this section is
+        # commented out until mdd/score/*.qmd exist — uncomment it with the D4 commit.
+        # - section: "D4 Business Credit Score"
+        #   href: mdd/score/index.qmd
+        #   contents:
+        #     - auto: "mdd/score/*.qmd"
+        - section: "D5 Loan Adjudication"
+          href: mdd/adjudication/index.qmd
+          contents:
+            - auto: "mdd/adjudication/*.qmd"
+        - mdd/pricing/index.qmd
+        - mdd/ews/index.qmd
+        - mdd/line_increase/index.qmd
+        - mdd/d9-implementation.qmd
+        - mdd/d10-agents.qmd
+    - id: explain
+      title: Explain
+      contents:
+        - explain/index.qmd
+    - id: reference
+      title: Reference
+      contents:
+        - reference/index.qmd
+        - reference/crosswalk.qmd
+        - reference/glossary.qmd
+        - reference/facts.qmd
+        - reference/videos.qmd
 format:
   html:
     theme:
@@ -28,3 +72,5 @@ format:
       dark: [darkly, styles.scss]
     toc: true
     code-copy: true
+    mermaid:
+      theme: neutral

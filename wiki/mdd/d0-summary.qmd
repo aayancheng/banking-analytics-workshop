@@ -1,0 +1,88 @@
+---
+title: "D0 Executive summary, inventory and tiering"
+---
+
+## Executive summary
+
+The SME Lending Decision Platform scores small-business loan applicants and turns that
+score into four decisions: whether to lend, at what price, which booked loans to watch,
+and which borrowers to offer more credit. Everything runs on a synthetic book of
+{{< var score.n_applicants >}} applicants, of whom {{< var score.n_booked >}} were booked.
+
+**Business Credit Score (D4).** A weight-of-evidence scorecard on
+{{< var score.n_features >}} features. On the held-out {{< var score.test_share >}} of
+applicants it reaches an AUC of {{< var score.auc_holdout >}} (bootstrap interval
+{{< var score.auc_ci_lo >}} to {{< var score.auc_ci_hi >}}) against a committed gate of
+{{< var score.gate >}}. On the held-out loans the bank actually books, the same model
+scores {{< var score.pop.booked.auc >}}: the gate is met on a population the bank never
+lends to. That is the first of four open findings the chapter raises about itself.
+
+**Loan Adjudication (D5).** A gradient-boosted model on {{< var adj.n_features >}} inputs,
+including the score, followed by a policy layer that returns Approve, Refer or Decline
+with reasons. Held-out AUC over all applicants is {{< var adj.auc >}} against a gate of
+{{< var adj.gate_auc >}}; the decision mix on that population is
+{{< var adj.mix.Approve >}} approve, {{< var adj.mix.Refer >}} refer,
+{{< var adj.mix.Decline >}} decline.
+
+**Pricing (D6).** A deterministic return-on-equity calculation: given the score's PD and
+the market assumptions, it solves for the rate that clears a
+{{< var market.roe_hurdle >}} ROE hurdle and flags booked loans quoted below it. It
+estimates nothing.
+
+**Early Warning (D7).** A behavioural model over the booked book's monthly history that
+places loans in risk tiers and names the triggers that fired. It is gated on how many
+deteriorations it captures in its top decile, with AUC reported but not gated, because
+noise in the data puts a low ceiling on AUC. Its headline figures arrive with the chapter.
+
+**Line Increase (D8).** A gradient-boosted candidate model plus amount rules and an incremental-ROE test,
+which offers more credit only to the lower-risk half of the book. Its headline figures
+arrive with the chapter.
+
+## Inventory
+
+| Component | Code | Classification | Estimated parameters | Output consumed by |
+|---|---|---|---|---|
+| Business Credit Score | `score/` | model | WoE bins, logistic coefficients | every other component |
+| Loan Adjudication | `adjudication/` | model | gradient-boosted trees; policy cutoffs calibrated at train time | the portal |
+| Pricing | `pricing/` | deterministic calculation tool | none | the portal |
+| Early Warning | `ews/` | model | gradient-boosted trees; tier cutoffs calibrated at train time | the portal |
+| Line Increase | `line_increase/` | model | gradient-boosted trees; offer cutoff calibrated at train time | the portal |
+
+### Why pricing is listed as a tool, not a model
+
+A model, in the sense of SR 11-7 and its successors, turns data into an *estimate*, and its
+risk comes from the estimate being wrong. The pricing engine (`pricing/src/engine.py`) has
+no estimated parameters. It is arithmetic: interest income less cost of funds, expected
+loss, operating cost and tax, divided by allocated capital, solved for the rate that
+clears the hurdle. The same inputs always give the same rate.
+
+Its risk lives in two inputs, and each is governed where it belongs:
+
+- **The PD** comes from the Business Credit Score, which is inventoried and tiered as a
+  model (D4). A change to the scorecard forces pricing to be re-run (D3).
+- **The market assumptions** — cost of funds, LGD, operating cost, tax rate, capital ratio,
+  hurdle — live in one place, `shared.config.MARKET`. They are not fitted to data; they are
+  policy inputs, set and changed through change control (D9) like any other policy value.
+
+The engine itself is tested as code: unit tests pin the waterfall and the rate solver.
+This classification is a judgement, recorded here so that it can be challenged. A
+validator working to a broader model definition (E-23 counts judgemental assumptions,
+for instance) may reasonably inventory it as a low-tier model instead. What the
+documentation must not do is leave it out of the inventory.
+
+## Risk tiering
+
+Tier 1 is the highest. The tier sets how much validation effort each component gets.
+
+| Component | Tier | Why |
+|---|---|---|
+| Business Credit Score | 1 | Every other component consumes its output, so an error in it propagates into every decision the platform makes. |
+| Loan Adjudication | 1 | It decides who gets credit: the largest financial and customer impact, and the one a declined applicant is owed reasons for. |
+| Early Warning | 2 | It prioritises booked loans for human review; it does not change a credit decision by itself, and a miss is caught at the next review cycle. |
+| Line Increase | 2 | It extends exposure, but only to the lower-risk half of the book and only where the incremental ROE clears the hurdle, so a miss costs a forgone offer or a small, bounded increase in exposure. |
+| Pricing | tool | No estimated parameters (above). Its inputs are governed through the score (Tier 1) and the policy values in `shared.config.MARKET`. |
+
+Two cautions a validator should apply to this table. The data are synthetic, so
+"financial impact" here is the impact the platform *would* have on a real book of this
+shape. And the tiers are the developer's proposal: under E-23 and SS1/23 the risk rating is
+set by the institution's model risk function, not by the team that built the model.

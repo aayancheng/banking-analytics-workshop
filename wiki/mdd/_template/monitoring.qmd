@@ -1,0 +1,9 @@
+---
+title: "N.8 Monitoring plan"
+order: 8
+---
+
+<!-- TEMPLATE — Monitoring plan.
+Cover: metrics, thresholds, frequency, triggers, action on breach.
+Every number is {{< var key >}} — add facts in wiki/facts/ first if one is missing.
+Name the population beside every metric. Link, don't repeat: explanations live in explain/. -->

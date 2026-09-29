@@ -1,0 +1,52 @@
+---
+title: "Video index"
+---
+
+Every session was recorded and cut into short chapter videos, one idea each. A video marked
+*coming soon* is recorded; it plays here once its link is added.
+
+## Session 1 — Data and leakage
+
+{{< yt S1-c1 >}}
+
+{{< yt S1-c2 >}}
+
+{{< yt S1-c3 >}}
+
+{{< yt S1-c4 >}}
+
+{{< yt S1-c5 >}}
+
+{{< yt S1-c6 >}}
+
+{{< yt S1-c7 >}}
+
+## Session 2 — The score spine
+
+{{< yt S2-c1 >}}
+
+{{< yt S2-c2 >}}
+
+{{< yt S2-c3 >}}
+
+{{< yt S2-c4 >}}
+
+{{< yt S2-c5 >}}
+
+{{< yt S2-c6 >}}
+
+## Session 3 — Decisions, price and watch
+
+{{< yt S3-c1 >}}
+
+{{< yt S3-c2 >}}
+
+{{< yt S3-c3 >}}
+
+{{< yt S3-c4 >}}
+
+{{< yt S3-c5 >}}
+
+{{< yt S3-c6 >}}
+
+{{< yt S3-c7 >}}

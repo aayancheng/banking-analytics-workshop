@@ -1,0 +1,14 @@
+---
+title: "D8 Line Increase"
+order: 0
+---
+
+**Status: in progress.**
+
+The chapter will cover the candidate model over the booked book; the amount rules in
+`shared.config.LINE_INCREASE` and the risk-appetite cut on the scorecard's PD; the
+incremental-ROE test against the {{< var market.roe_hurdle >}} hurdle; the difference
+between a borrower with a recommended amount and one who is *eligible* for an offer,
+which is the authority; the cohort checks in its gate; and monitoring.
+
+The chapter follows the [template](../index.qmd#the-template); D4 is the worked example.

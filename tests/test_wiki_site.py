@@ -24,3 +24,28 @@ def test_render_outputs_and_answers_are_gitignored():
 def test_prose_licence_is_declared():
     assert "Attribution-NonCommercial-NoDerivatives 4.0" in (ROOT / "LICENSE-CONTENT").read_text()
     assert "LICENSE-CONTENT" in (ROOT / "README.md").read_text()
+
+
+TEMPLATE_PARTS = ["purpose", "data", "methodology", "assumptions", "performance",
+                  "sensitivity", "limitations", "monitoring", "gate"]
+
+
+def test_template_has_the_nine_parts_in_order():
+    for i, part in enumerate(TEMPLATE_PARTS, 1):
+        text = (WIKI / "mdd" / "_template" / f"{part}.qmd").read_text()
+        assert text.startswith("---\ntitle:"), part
+        assert f"order: {i}" in text, part
+
+
+def test_every_spine_chapter_exists():
+    for rel in ["course/index.qmd", "course/c0-start.qmd", "course/c4-governance.qmd",
+                "mdd/index.qmd", "mdd/d0-summary.qmd", "mdd/d1-purpose.qmd",
+                "mdd/d2-data.qmd", "mdd/d3-dependencies.qmd", "mdd/d9-implementation.qmd",
+                "mdd/d10-agents.qmd", "mdd/d11-signoff.qmd", "reference/crosswalk.qmd",
+                "reference/glossary.qmd", "explain/index.qmd"]:
+        assert (WIKI / rel).exists(), rel
+
+
+def test_all_pages_lint_clean_including_links():
+    from wiki.tools.lint import lint_all
+    assert lint_all() == []

@@ -1,0 +1,23 @@
+---
+title: "Explain"
+---
+
+The explanation pages carry the ideas behind the platform, written to stand on their own
+without the repository. The course and the model documentation link here rather than
+repeating them, and together they are the chapters of the companion book.
+
+| | Chapter | Status |
+|---|---|---|
+| E1 | Synthetic data you can reason about | a draft exists as the Session 1 reading note ([PDF](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/reading/S1-data-generation.pdf)) |
+| E2 | The leakage ladder | planned |
+| E3 | WoE scorecards and exact reason codes | planned |
+| E4 | An AUC without its population is incomplete | planned |
+| E5 | Ceilings, noise and honest gates | planned |
+| E6 | From score to decision: the policy layer | planned |
+| E7 | Pricing without ML | planned |
+| E8 | Early warning when the label is noisy | planned |
+| E9 | Line increases: incremental economics | planned |
+| E10 | Documentation a validator accepts | planned |
+
+Until a chapter is written, the chapter videos in the [video index](../reference/videos.qmd)
+cover most of the same ground.

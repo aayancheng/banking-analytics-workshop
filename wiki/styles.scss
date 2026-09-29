@@ -3,3 +3,8 @@ $font-size-root: 17px;
 /*-- scss:rules --*/
 .yt { position: relative; aspect-ratio: 16 / 9; margin: 1rem 0; }
 .yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* Wide tables scroll inside themselves at phone width instead of widening the page. */
+@media (max-width: 767.98px) {
+  main table { display: block; overflow-x: auto; max-width: 100%; }
+}
+td code, main p code, main li code { white-space: pre-wrap; overflow-wrap: anywhere; }

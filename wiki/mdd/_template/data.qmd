@@ -1,0 +1,10 @@
+---
+title: "N.2 Data and sample"
+order: 2
+---
+
+<!-- TEMPLATE — Data and sample.
+Cover: sources; split and seed; populations (applicants vs booked); leakage deny-list and
+its enforcement; exclusions.
+Every number is {{< var key >}} — add facts in wiki/facts/ first if one is missing.
+Name the population beside every metric. Link, don't repeat: explanations live in explain/. -->

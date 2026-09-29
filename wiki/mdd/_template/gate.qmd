@@ -1,0 +1,9 @@
+---
+title: "N.9 Gate record"
+order: 9
+---
+
+<!-- TEMPLATE — Gate record.
+Cover: gate value, where asserted, where independently recomputed, history of changes.
+Every number is {{< var key >}} — add facts in wiki/facts/ first if one is missing.
+Name the population beside every metric. Link, don't repeat: explanations live in explain/. -->

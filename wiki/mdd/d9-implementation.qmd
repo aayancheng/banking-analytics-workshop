@@ -1,0 +1,106 @@
+---
+title: "D9 Implementation, reproducibility and change control"
+---
+
+## One command: `python verify.py`
+
+Every claim in this documentation can be rechecked by one command, run from the root of
+the repository:
+
+```bash
+python verify.py
+```
+
+It reads the stage recorded in `stage.txt`, runs the checks for that stage, and
+**recomputes every result from the committed data and models**. It never reads a stored
+metric and trusts it. On `main` it checks, in dependency order:
+
+| Check | What is recomputed |
+|---|---|
+| Python and dependencies | the interpreter version, and every package against its pinned version |
+| Data | the row count of each committed data file |
+| Scorecard | the held-out AUC, from the saved scorecard and the committed data |
+| Adjudication | the held-out AUC and top-quintile lift |
+| Early warning | top-decile capture and PR-AUC; AUC against a sanity floor only |
+| Line increase | AUC, lift and the cohort checks |
+| Documentation | the documentation pack; on `main`, every fact on these pages and the lint |
+| Portal | the apps start in-process, return decisions, and the pricing summary matches the committed one |
+
+A failed check names what failed and prints the command that repairs it. The fast path
+runs in well under a minute; `python verify.py --full` also re-runs the slow refits
+behind the stress tests in D4.6.
+
+## Gates are hard asserts, recomputed independently
+
+Each model's training script ends with an `assert` on its gate: a model that misses it
+fails the training run loudly, and `verify.py` then fails on the artifacts it left. For
+the scorecard:
+
+```python
+AUC_GATE = 0.78   # score/src/train.py
+```
+
+`verify.py` carries its **own copy** of every gate and recomputes the metric itself:
+
+```python
+SCORE_AUC_GATE = 0.78   # verify.py
+```
+
+Relaxing the gate in a local `train.py` therefore changes nothing: the checkpoint still
+fails. Two rules govern the gates:
+
+- **A gate is never relaxed to make a model pass.** If a gate fails, the model is
+  investigated. A gate failure under stress is documented as a finding (D4.6), not tuned
+  away.
+- **A gate states what the data can support.** The early-warning gate is on top-decile
+  capture, with AUC reported and not gated, because noise in the synthetic deterioration
+  label puts a real ceiling on AUC. That choice is recorded in the module, not hidden.
+
+Each chapter's part 9, the *gate record*, gives the gate, where it is asserted, where it is
+recomputed and its history.
+
+## Reproducibility
+
+| Control | How |
+|---|---|
+| Deterministic data | the generator is seeded from `shared/config.py`; with pinned `numpy` the row counts and values are exact, not approximate |
+| Deterministic models | every split and every model is seeded from the same constant |
+| Pinned environment | `requirements.txt` pins every package to an exact version; `verify.py` fails on a mismatch |
+| Committed artifacts | data and trained models are committed on purpose, so any stage can be checked without retraining |
+| Numbers in documents | every metric on these pages is a named fact recomputed by `verify.py` ([fact index](../reference/facts.qmd)) |
+
+**The clean-clone sweep.** A warm environment hides missing dependencies. Before a release,
+the repository is cloned fresh, a new virtual environment is built from
+`requirements.txt`, and `verify.py` is run at every stage tag and on `main`. Every
+notebook is executed in the same clone.
+
+## Stage tags and change control
+
+The workshop's curriculum is fixed at six tags, `stage-0` to `stage-5`. Each is a checkpoint
+that contains everything built up to it and passes its own `verify.py`. Learners are
+promised that jumping to a tag always works, so:
+
+- **A stage tag is never moved.** A defect found later is fixed on `main` and released as
+  a new version tag (`v1.x`), which records what was verified.
+- **Every change states what was verified**, in its commit message, alongside what changed
+  and why.
+- **Nothing is published without the owner's approval.** The repository is public.
+
+The documentation lives on `main` only, like the notebooks and the workshop materials; no
+stage tag contains it. At a stage tag, `verify.py` reports exactly as it did before the
+documentation existed.
+
+## Tests
+
+The test suite (`pytest`, in `tests/`) pins what the gates do not:
+
+- the leakage deny-list is disjoint from every model's features, and names real columns;
+- the pricing engine's arithmetic: the profit waterfall, break-even and hurdle-clearing
+  rates, and invariance to exposure size;
+- the policy layer and the early-warning and line-increase rules;
+- the loan workbench: every what-if with the values the browser sends must equal the batch
+  pipeline, across the whole book;
+- this documentation: the facts, the generated tables, the lint and the site structure.
+
+A failing test is fixed at the cause. A test is never edited to agree with a result it was
+written to catch.

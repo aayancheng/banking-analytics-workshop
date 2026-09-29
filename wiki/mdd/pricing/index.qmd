@@ -1,0 +1,20 @@
+---
+title: "D6 Pricing"
+order: 0
+---
+
+**Status: in progress.**
+
+Pricing is inventoried as a deterministic calculation tool, not a model
+([D0](../d0-summary.qmd#why-pricing-is-listed-as-a-tool-not-a-model)). It still gets a
+chapter, because its output drives decisions and its inputs need governing.
+
+The chapter will cover the profit waterfall and the rate that clears the
+{{< var market.roe_hurdle >}} ROE hurdle; the market assumptions in
+`shared.config.MARKET` and how a change to one is controlled; the PD it takes from the
+scorecard (D3); the mispricing measure over the booked book and where it concentrates;
+the engine's unit tests in place of a performance section; and how the portal's what-if
+equals the batch run.
+
+The chapter follows the [template](../index.qmd#the-template), with the parts that assume
+estimated parameters replaced by the tests that pin the arithmetic.

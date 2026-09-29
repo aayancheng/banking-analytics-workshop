@@ -1,0 +1,10 @@
+---
+title: "N.5 Performance"
+order: 5
+---
+
+<!-- TEMPLATE — Performance.
+Cover: discrimination with interval; rank-ordering; calibration; stability (PSI);
+benchmark; ceiling — each with population.
+Every number is {{< var key >}} — add facts in wiki/facts/ first if one is missing.
+Name the population beside every metric. Link, don't repeat: explanations live in explain/. -->

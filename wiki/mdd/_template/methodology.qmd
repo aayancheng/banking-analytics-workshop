@@ -1,0 +1,10 @@
+---
+title: "N.3 Methodology and alternatives"
+order: 3
+---
+
+<!-- TEMPLATE — Methodology and alternatives.
+Cover: method and why; at least one alternative considered and why rejected; feature
+selection; implementation notes.
+Every number is {{< var key >}} — add facts in wiki/facts/ first if one is missing.
+Name the population beside every metric. Link, don't repeat: explanations live in explain/. -->

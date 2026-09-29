@@ -1,0 +1,63 @@
+---
+title: "4 Governance: documenting a model with agents"
+---
+
+Session 4 is the finale. The platform works and every gate passes, but a validator would
+still send its documentation back. This session is about why, and about writing
+documentation a validator accepts, with an AI agent doing much of the drafting and every
+claim checked against the repository.
+
+## Why documentation fails validation
+
+Most model documents fail review for the same few reasons, and none of them is about the
+model:
+
+- **They describe results, not decisions.** A table of metrics is not an account of
+  intended use, alternatives considered, assumptions, limitations or monitoring.
+- **Their numbers drift from the model.** A figure typed into a document is correct on the
+  day it is typed. After the next refit it is a claim nobody rechecks.
+- **They quote a metric without its population.** The same scorecard scores
+  {{< var score.pop.everyone.auc >}} on all held-out applicants and
+  {{< var score.pop.booked.auc >}} on the loans the bank books.
+- **They do not raise their own findings.** A validator trusts a document that names its
+  weaknesses more than one that has none.
+
+## One source, two spines
+
+This site is written once and read two ways. The **Course** tab is the path a learner
+takes, session by session. The **Model Documentation** tab is the same platform in the
+order US supervisory guidance (SR 11-7) expects, with a
+[crosswalk](../reference/crosswalk.qmd) to OSFI E-23 and PRA SS1/23. The same source
+also renders a versioned validation PDF.
+
+Every number on every page is a named fact, recomputed by `python verify.py` through the
+platform's own functions; a lint fails the build on any number typed by hand. See
+[how to read this documentation](../mdd/index.qmd).
+
+## D4: the worked example
+
+The Business Credit Score chapter, D4, is complete. It follows the nine-part
+[template](../mdd/index.qmd#the-template) — purpose, data, methodology, assumptions,
+performance, sensitivity, limitations, monitoring, gate — and raises four open findings
+about its own model, each with evidence, a compensating control and an owner.
+
+<!-- TODO(Task 9): link D4 (../mdd/score/index.qmd) once it exists. -->
+
+## The lab: draft D5 with an agent (H4.1)
+
+In pairs, pick one part of the template and have your agent draft it for D5, Loan
+Adjudication, starting from the [chapter's stub](../mdd/adjudication/index.qmd). The draft
+is done when it passes the lint — every number a fact, every fact resolving — and a
+self-check confirms the part is complete. The lab needs no Quarto: the lint and the check
+are plain Python.
+
+Then turn the agent into a validator: have it review D4 and compare its findings with the
+four the chapter raises.
+
+## Homework with an agent
+
+Three exercises: draft a D5 part (H4.1), review D4 as a validator (H4.2), and extend the
+crosswalk for one module (H4.3). They arrive with the session, each with a self-check
+where one is possible.
+
+<!-- TODO(Task 11): link homework-s4.qmd once it exists. -->

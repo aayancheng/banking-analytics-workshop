@@ -1,0 +1,59 @@
+---
+title: "D1 Platform purpose and use"
+---
+
+## Scope: synthetic data, real methods
+
+**Every record in this platform is synthetic.** The {{< var score.n_applicants >}}
+applicants, their financials, their bureau history, whether they defaulted and whether they
+were booked were all drawn by a data generator (`shared/data_generator.py`) with a fixed
+seed. No real business, person or bank is represented.
+
+That choice is deliberate. Because the generator is known, every result can be checked
+against the truth it was drawn from: how good a model *could* be, which inputs genuinely
+drive default and which only look as if they do. A real book never allows that. The cost
+is equally plain: nothing here is evidence about how any real portfolio behaves, and no
+parameter, cutoff or price in it should be carried to one.
+
+What *is* meant to transfer is the method: the order of the documentation, the controls,
+the tests, and the habit of recomputing every claim.
+
+## Purpose
+
+The platform supports the credit lifecycle of a small-business lending book:
+
+| Decision | Module | Question it answers |
+|---|---|---|
+| Rank risk | Business Credit Score (D4) | How likely is this applicant to default, relative to the others? |
+| Lend or not | Loan Adjudication (D5) | Approve, refer to an underwriter, or decline, and why? |
+| Price | Pricing (D6) | What rate clears the return hurdle, and which booked loans are priced below it? |
+| Watch | Early Warning (D7) | Which booked loans are deteriorating, and which trigger fired? |
+| Grow | Line Increase (D8) | Which borrowers should be offered more credit, and how much? |
+
+## Users
+
+- **Credit risk analysts and model developers**, who build and change the models and run
+  `python verify.py` after every change.
+- **Model validators**, who read this documentation and recompute its claims.
+- **Underwriters and portfolio managers**, as the intended users of the portal
+  (`app/`), which shows each decision with its reasons. On this platform they are a design
+  assumption: the portal is a demonstration, not a production system.
+- **Learners** in the workshop, who rebuild the platform session by session.
+
+## Intended uses
+
+- Teaching and demonstrating credit-model development, validation and documentation.
+- A reference implementation of the controls a validator expects: a leakage deny-list,
+  committed gates, independent recomputation, reproducible artifacts.
+- A test bed for development with AI agents, where every output an agent produces can be
+  checked against a known answer (D10).
+
+## Prohibited uses
+
+| Use | Why it is prohibited |
+|---|---|
+| Any credit decision about a real business or person | The models were fitted to synthetic data; their parameters describe the generator, not any market. |
+| Carrying a cutoff, price, hurdle or market assumption to a real book | They were set for the synthetic population and have no empirical basis elsewhere. |
+| Quoting a metric from this platform as evidence of real-world performance | Every metric is a property of the generator's noise and structure. |
+| Using a module's output without its upstream model | Adjudication, pricing, early warning and line increase all consume the score; run alone they are not what was validated (D3). |
+| Reading the data generator's truth (for example the true PD) into any model or decision | It does not exist at decision time. The deny-list (D2) enforces this. |

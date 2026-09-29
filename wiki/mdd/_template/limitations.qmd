@@ -1,0 +1,9 @@
+---
+title: "N.7 Limitations and compensating controls"
+order: 7
+---
+
+<!-- TEMPLATE — Limitations and compensating controls.
+Cover: numbered findings: finding, evidence, impact, control, owner.
+Every number is {{< var key >}} — add facts in wiki/facts/ first if one is missing.
+Name the population beside every metric. Link, don't repeat: explanations live in explain/. -->

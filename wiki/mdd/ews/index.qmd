@@ -1,0 +1,14 @@
+---
+title: "D7 Early Warning"
+order: 0
+---
+
+**Status: in progress.**
+
+The chapter will cover the behavioural model over the booked book's monthly history; the
+risk tiers and how their cutoffs are set; the named triggers and the thresholds in
+`shared.config.EWS_TRIGGERS`; why the gate is on top-decile capture with AUC reported and
+not gated, and the ceiling the data's noise puts on AUC; the difference between the
+held-out figure and one recomputed over the whole book; and monitoring.
+
+The chapter follows the [template](../index.qmd#the-template); D4 is the worked example.

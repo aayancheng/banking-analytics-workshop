@@ -5,6 +5,11 @@ book:
   title: "Credit Analytics You Can Verify"
   chapters:
     - index.qmd
+    - explain/index.qmd
+    - mdd/d10-agents.qmd
+  appendices:
+    - reference/crosswalk.qmd
+    - reference/glossary.qmd
 format:
   epub:
     toc: true

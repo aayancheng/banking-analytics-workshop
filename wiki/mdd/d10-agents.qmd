@@ -1,0 +1,86 @@
+---
+title: "D10 Use of AI agents in development"
+---
+
+## What was delegated
+
+This platform was built with AI coding agents, and so was this documentation. The
+developer set the requirements, approved each plan, took the design decisions and reviewed the results; an
+agent wrote almost all of the code, the tests and the first draft of most prose, and nearly
+every commit in the repository's history carries an agent co-author line. A validator
+should read everything here knowing that.
+
+{{< yt S1-c1 >}}
+
+What was delegated, across the build:
+
+| Work | What the agent did | What stayed with the developer |
+|---|---|---|
+| The five modules and the portal | wrote the code, training scripts, reports and tests, stage by stage | the gates, the leakage deny-list, the choice of methods, which results to accept |
+| The loan workbench (`app/v2`) | executed a written plan task by task; a separate agent reviewed each task and the whole | the plan, the rule that every number comes from a module function, the decision to ship |
+| This documentation's facts layer | wrote the code that computes every fact through the modules, the generated tables, the lint and the `verify.py` check | the list of facts, the values each had to reproduce, the rule that no number is typed by hand |
+| This documentation's prose | drafted the chapters from a written brief per section | every finding, every classification and tier, and the final wording |
+
+## How every output is checked
+
+An agent's output is treated like a junior analyst's: plausible, fast, and not evidence
+until checked. The checks are the same ones this documentation describes for the models,
+and none of them relies on the agent's own account of what it did.
+
+- **Gates** (D9). A model an agent trains must pass a committed gate, and `verify.py`
+  recomputes the metric with its own copy of the gate. An agent that relaxed a gate to get
+  a model through would fail the checkpoint.
+- **`python verify.py`**. Every claim is recomputed from the committed data and models on
+  every run. An agent's report that "all checks pass" is replaced by running the checks.
+- **The lint**. No number can be typed into these pages by hand; every one is a named fact
+  computed through the modules. An agent paraphrasing a number from memory — the most
+  common way a model document drifts from its model — fails the build.
+- **Human review of numbers against the source**. Where a number appears in teaching
+  material outside the lint's reach, the developer re-executes the code that produced it and
+  reads the result against the claim.
+- **Independent review**. Larger pieces of agent work were reviewed by a separate agent
+  instance given only the requirements and the diff, then by the developer.
+
+## A mistake caught late: the leakage probe
+
+Session 1 teaches leakage with a probe: add a column that would not exist at decision time
+and watch the AUC rise. For weeks, every artifact that described the probe — the lab
+sheet, the slides, the run of show and the facilitator's timer — said the AUC would reach
+about 1.0.
+
+The code all of them shipped leaked a different column: the generator's *true PD*, not the
+default outcome itself. Leaking the true PD does not give a near-perfect model. It gives a
+plausible improvement, the kind that passes review. Only leaking the outcome reaches 1.0.
+
+Each piece looked right on its own. The code ran. The prose was fluent and internally
+consistent. Nothing failed, because nothing compared the two. The error was caught only
+when the developer executed the notebook cell before the session and read its output
+against the sentence on the slide.
+
+The fix made the mistake the lesson. The probe became a three-rung ladder — honest
+features, then the leaked true PD, then the leaked outcome — and the teaching point moved to
+the middle rung: a leak that looks like a good model, ships, and then performs no better
+than the honest model once the true PD it depended on no longer exists.
+
+What it changed in how agents are used here:
+
+- a number in prose must come from executed code, never from a description of the code;
+- the check compares the claim with the output — checking each separately is not enough;
+- this documentation's facts layer and lint exist so that the comparison is automatic.
+
+## What the regulators expect of AI
+
+OSFI's E-23 (effective 2027) defines a model to include AI and machine-learning methods,
+and expects governance to mature with them: explainability requirements set by the model's
+purpose, autonomy and customer impact (Principle 3.3), explainability assessed in
+independent review (Principle 3.4), and monitoring that handles AI-specific challenges
+such as autonomous decision-making (Principle 3.6). The PRA's SS1/23 asks firms to
+identify and manage the risks of AI in modelling techniques, and to weigh a model's
+interpretability, explainability and potential for bias when setting its tier
+(Principle 1.3).
+
+Neither document addresses AI used to *build* a model, as opposed to AI that *is* the
+model. None of the five models here is itself an agent; the scorecard is a logistic
+regression and the others are gradient-boosted trees. This chapter applies the same
+principle to the tools that built them: an agent's contribution is documented, its output
+is independently checked, and responsibility for the result stays with a named person.

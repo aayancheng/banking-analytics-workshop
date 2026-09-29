@@ -1,0 +1,9 @@
+---
+title: "N.6 Sensitivity and stress"
+order: 6
+---
+
+<!-- TEMPLATE — Sensitivity and stress.
+Cover: reduced-input refits; parameter sensitivity; what a gate failure under stress means.
+Every number is {{< var key >}} — add facts in wiki/facts/ first if one is missing.
+Name the population beside every metric. Link, don't repeat: explanations live in explain/. -->

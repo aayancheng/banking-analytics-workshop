@@ -1,0 +1,75 @@
+---
+title: "Glossary"
+---
+
+AUC (area under the ROC curve)
+: The probability that a randomly chosen defaulter is ranked riskier than a randomly chosen
+  non-defaulter. 0.5 is a coin toss and 1 is perfect ranking. It measures ranking only, not
+  whether the predicted probabilities are right, and it depends on the population it is
+  measured on — so these pages never print one without its population.
+
+Booked
+: An applicant whose loan was made. The bank observes outcomes only for booked loans; the
+  synthetic data give every applicant one, which is how these pages can compare the two
+  populations.
+
+EAD (exposure at default)
+: The amount owed if the borrower defaults. Pricing here uses the requested amount.
+
+Gate
+: A committed minimum a model must meet on held-out data, asserted when it is trained and
+  recomputed independently by `verify.py`. A gate is never relaxed to let a model pass; a
+  failure is investigated and documented.
+
+Holdout
+: The share of the data set aside before fitting and used only to measure the model. A
+  held-out metric estimates how the model ranks applicants it has not seen.
+
+IV (information value)
+: A single-variable measure of how well a feature separates defaulters from non-defaulters,
+  summed over its bins' weights of evidence. Convention reads values below `0.02` as
+  unpredictive; IV says nothing about what a feature adds beside the others.
+
+KS (Kolmogorov–Smirnov statistic)
+: The largest gap between the cumulative score distributions of defaulters and
+  non-defaulters. Like AUC it measures separation, and it too depends on the population.
+
+LGD (loss given default)
+: The share of the exposure lost if the borrower defaults, after recoveries. Here it is a
+  market assumption in `shared.config.MARKET`, not an estimate.
+
+PD (probability of default)
+: The model's estimate that a borrower defaults over the outcome window. The scorecard's PD
+  is what every downstream module consumes. The generator's *true* PD is on the leakage
+  deny-list: it never exists at decision time.
+
+Proxy
+: A feature with no causal role of its own that carries real signal borrowed from one that
+  has one — here, columns derived from annual revenue. It ranks, stably and monotonically,
+  for someone else's reasons.
+
+PSI (population stability index)
+: How far a distribution has moved between two samples, summed over bins. Convention reads
+  below `0.10` as stable, `0.10` to `0.25` as worth watching, and above `0.25` as a shift
+  that needs action.
+
+RAROC (risk-adjusted return on capital)
+: Return after expected loss, divided by the capital held against the risk. Reported by the
+  pricing engine beside ROE.
+
+ROE (return on equity)
+: Net income on a loan divided by the equity allocated to it. The pricing engine solves for
+  the rate at which a loan's ROE meets the hurdle.
+
+Structural zero
+: A feature the data generator gives no role in default at all. Any pattern it shows against
+  default is sampling noise, however tidy the chart.
+
+VIF (variance inflation factor)
+: How much a coefficient's variance is inflated because its feature is predictable from the
+  other features. High values mean the model cannot separate those features' effects.
+
+WoE (weight of evidence)
+: For one bin of a feature, the log of the ratio of that bin's share of non-defaulters to its
+  share of defaulters. A scorecard replaces each raw value with its bin's WoE, so every
+  point of the score traces back to one bin of one feature.
