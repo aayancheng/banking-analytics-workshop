@@ -28,7 +28,7 @@ population; the diagram shows only what flows between components.
 
 | Consumer | What it takes from the score | Population |
 |---|---|---|
-| D5 Loan Adjudication | `business_score` and `pd_score` as two of its inputs; the band for the policy layer | applicants |
+| D5 Loan Adjudication | `business_score` and `pd_score` as two of its model inputs; `business_score` again in the policy layer, where a score below the floor turns an Approve into a Refer | applicants |
 | D6 Pricing | the PD, as the expected-loss term of the rate | booked |
 | D7 Early Warning | `business_score` and `pd_score` as inputs, beside behavioural features | booked |
 | D8 Line Increase | `pd_score` as an input and as the risk-appetite cut | booked |
