@@ -287,8 +287,9 @@ recording time (S3: offset ≈ 0). Never author a cut from raw cue times.
 **Every number on screen traces to the repo or to the recording.** Recompute through the modules'
 own functions (`predict_score_pd`, `policy.decide`, `price_population`, `score_population`),
 never quote the deck. Where the recording misspeaks, add an orange **correction card** at that
-moment (S3: gate 0.78 not "75"; mispricing worst in AAA/A, not D). Where the deck is stale,
-quote the screen and flag the repo (S2: 0.7704 vs the deck's 0.7643).
+moment (S3: gate 0.78 not "75"; mispricing worst in AAA/A, not D). Where the deck and the screen
+differ, quote the screen and name the columns (S2: the screen dropped `trade_lines` and showed 0.7704;
+the lab sheet drops `public_records` and gives 0.7643 — both right for their set).
 
 **Each chapter video:** a 6–7 s HyperFrames **hook** (title + one animated idea + a closer line;
 decision colours on the ink background, content centred so a 9:16 render is a layout pass) →
@@ -359,11 +360,11 @@ address (invariant 6).
   edit an `.md`; in a Codespace, `python -m http.server 5180 --directory workshop/slides`.
 - **`make run` now depends on `stop`** — a leftover uvicorn on 8100 killed the dry run.
 
-### Open threads, none started
+### Open threads
 
 - **Wiki v1 leftovers:** D5–D8 in full (adjudication, pricing, EWS, line increase chapters are stubs
   that follow the template), E1–E10 (explainers), YouTube ids for the S1–S3 embeds (the wiki's
-  `--strict` video gating waits on them), book packaging (the EPUB/PDF is a three-chapter stub),
+  `--strict` video gating waits on them), book packaging (the EPUB/PDF is a stub: preface, Explain index, the template page and D10),
   GitHub Pages enablement (the manual workflow exists; the setting is Yan's), and the Codespace test
   of the Quarto devcontainer (needs a push).
 
