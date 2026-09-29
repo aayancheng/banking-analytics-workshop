@@ -1,0 +1,122 @@
+---
+title: "4.5 Performance"
+order: 5
+---
+
+Every figure on this page names the population it was measured on. Unless stated
+otherwise, that is the held-out {{< var score.test_share >}} of applicants:
+{{< var score.n_test >}} rows the scorecard never saw while it was fitted
+([4.2](data.qmd#split-and-seed)).
+
+## Discrimination
+
+| Measure | Held-out applicants |
+|---|---|
+| AUC | {{< var score.auc_holdout >}} |
+| AUC, bootstrap 95% interval | {{< var score.auc_ci_lo >}} – {{< var score.auc_ci_hi >}} |
+| KS | {{< var score.ks_holdout >}} |
+| Gate ([4.9](gate.qmd)) | AUC ≥ {{< var score.gate >}} — met |
+
+The interval comes from {{< var score.bootstrap_n >}} bootstrap resamples of the held-out
+rows, drawn with the platform seed (`wiki/facts/score_facts.py`): the AUC is recomputed on
+each resample and the interval is the central 95% of those values. Its half-width,
+±{{< var score.auc_ci_half >}}, is the honest precision of any AUC quoted for this model
+on this sample: a difference smaller than that is not evidence of anything.
+
+![ROC curve, held-out applicants.](fig/roc.svg){#fig-roc}
+
+@fig-roc is the ROC curve behind the AUC. KS is the largest vertical gap between the
+cumulative score distributions of defaulters and non-defaulters (`ks_statistic` in
+`score/src/train.py`); it is reported, not gated.
+
+{{< yt S2-c3 >}}
+
+### By population
+
+The same model on the held-out applicants the bank actually books scores an AUC of
+{{< var score.pop.booked.auc >}} ({{< var score.pop.booked.n >}} rows), and
+{{< var score.pop.rejected.auc >}} on the {{< var score.pop.rejected.n >}} it rejects. The
+full table is in [4.2](data.qmd#two-populations). The gate is met on all applicants; on the
+booked the AUC is below the gate value. That is finding 2 ([4.7](limitations.qmd)).
+
+## Rank-ordering and calibration by band
+
+{{< include ../../_generated/score-bands.md >}}
+
+![Mean predicted PD and observed default rate by band, held-out applicants.](fig/calibration.svg){#fig-calibration}
+
+**Rank-ordering holds.** The observed default rate falls in every step from band D
+({{< var score.band.D.observed >}}) to band AAA ({{< var score.band.AAA.observed >}}).
+
+**Calibration is good where the defaults are, and loose where they are few.** The last
+column divides the observed default rate by the mean predicted PD: 1 means the PD is right
+on average in that band, above 1 means the model under-predicts. @fig-calibration shows the
+two rates side by side.
+
+- In bands D, C and B the ratio is {{< var score.band.D.ratio >}},
+  {{< var score.band.C.ratio >}} and {{< var score.band.B.ratio >}}: inside the monitoring
+  tolerance of {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}}
+  ([4.8](monitoring.qmd)).
+- In bands A and AAA it is {{< var score.band.A.ratio >}} and
+  {{< var score.band.AAA.ratio >}}: outside that tolerance, with the model predicting
+  fewer defaults than occur. These ratios rest on very few defaults —
+  {{< var score.band.A.defaults >}} of {{< var score.band.A.n >}} applicants in band A and
+  {{< var score.band.AAA.defaults >}} of {{< var score.band.AAA.n >}} in band AAA — so a
+  handful of defaults either way moves them a long way. They are recorded as an
+  observation in [4.7](limitations.qmd#observations), not a finding.
+
+Band D holds {{< var score.band.D.n >}} of the {{< var score.n_test >}} held-out applicants
+({{< var score.band_d_share >}}): finding 4 ([4.7](limitations.qmd)).
+
+## Stability
+
+Population stability index (PSI) from the training split to the held-out split, computed
+over the scorecard's own bins for each feature and over the five bands for the score:
+
+| Measure | Train → held-out |
+|---|---|
+| Score PSI, by band | {{< var score.psi_score >}} |
+| Largest feature PSI | {{< var score.psi_max >}} ({{< var score.psi_max_feature >}}) |
+| Features above the {{< var monitoring.psi_watch >}} watch level | {{< var score.psi_n_over_010 >}} |
+
+![Feature PSI, training split to held-out split.](fig/psi.svg){#fig-psi}
+
+@fig-psi shows every feature far below the watch level. That is expected, and it says
+little: the two splits are a random partition of one cross-section, so their PSI measures
+sampling noise, not change over time. Stability over time is untested — finding 1
+([4.7](limitations.qmd)).
+
+## Benchmark
+
+The adjudication model (D5), a gradient-boosted model whose inputs include this score,
+split with the same seed and stratification and so held out on the same applicants:
+
+| Model | Held-out AUC, same held-out applicants |
+|---|---|
+| Business Credit Score | {{< var score.auc_holdout >}} |
+| Adjudication, LightGBM | {{< var score.benchmark_adj_auc >}} |
+
+Comparable discrimination: the gap is smaller than the scorecard's interval half-width.
+Why the scorecard is kept is in [4.3](methodology.qmd#alternative-considered-a-gradient-boosted-model).
+
+## The ceiling
+
+Because the data are generated, the best AUC any model could reach can be computed: rank
+applicants by the generator's own default logit without its noise term
+(`wiki/facts/ceiling.py`, the only code in this documentation that reads the generator's
+truth; it grades the data, not a model).
+
+{{< include ../../_generated/score-ceiling.md >}}
+
+**Compare only within a row's sample.** The first two rows are measured over all
+{{< var score.n_applicants >}} applicants, the next two over the held-out split. Setting
+the population ceiling ({{< var ceiling.signal_all >}}) beside the scorecard's held-out
+{{< var score.auc_holdout >}} makes the model look almost exactly at the maximum; they are
+two different samples. On the held-out split itself the ceiling is
+{{< var ceiling.signal_holdout >}}, and the scorecard falls short of it by
+{{< var ceiling.gap_holdout >}}.
+
+That gap is inside the ±{{< var score.auc_ci_half >}} interval above. The honest claim is
+that the scorecard is **indistinguishable from the maximum** this data allows. The true
+PD's higher AUC ({{< var ceiling.truepd_all >}}) is not reachable: it includes the
+generator's unobserved noise term, which no model built on the observed features can know.

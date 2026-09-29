@@ -118,6 +118,41 @@
     "text": "15%",
     "value": 0.15
   },
+  "monitoring.iv_useless": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "wiki.facts.policy (documented monitoring policy)",
+    "text": "0.02",
+    "value": 0.02
+  },
+  "monitoring.psi_act": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "wiki.facts.policy (documented monitoring policy)",
+    "text": "0.25",
+    "value": 0.25
+  },
+  "monitoring.psi_watch": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "wiki.facts.policy (documented monitoring policy)",
+    "text": "0.10",
+    "value": 0.1
+  },
+  "monitoring.ratio_hi": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "wiki.facts.policy (documented monitoring policy)",
+    "text": "1.25",
+    "value": 1.25
+  },
+  "monitoring.ratio_lo": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "wiki.facts.policy (documented monitoring policy)",
+    "text": "0.75",
+    "value": 0.75
+  },
   "score.auc_ci_half": {
     "fmt": ".2f",
     "population": "held-out 20% of applicants (score split, seed 42)",
@@ -145,6 +180,13 @@
     "source": "score.src.predict.predict_score_pd",
     "text": "0.8176",
     "value": 0.817562
+  },
+  "score.band.A.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "businesses.default",
+    "text": "5",
+    "value": 5
   },
   "score.band.A.n": {
     "fmt": ",d",
@@ -181,6 +223,13 @@
     "text": "7.6%",
     "value": 0.075833
   },
+  "score.band.AAA.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "businesses.default",
+    "text": "4",
+    "value": 4
+  },
   "score.band.AAA.n": {
     "fmt": ",d",
     "population": "held-out 20% of applicants (score split, seed 42)",
@@ -215,6 +264,13 @@
     "source": "score.src.predict.predict_score_pd",
     "text": "8.0%",
     "value": 0.08
+  },
+  "score.band.B.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "businesses.default",
+    "text": "16",
+    "value": 16
   },
   "score.band.B.n": {
     "fmt": ",d",
@@ -251,6 +307,13 @@
     "text": "15.2%",
     "value": 0.1525
   },
+  "score.band.C.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "businesses.default",
+    "text": "31",
+    "value": 31
+  },
   "score.band.C.n": {
     "fmt": ",d",
     "population": "held-out 20% of applicants (score split, seed 42)",
@@ -285,6 +348,13 @@
     "source": "score.src.predict.predict_score_pd",
     "text": "18.2%",
     "value": 0.1825
+  },
+  "score.band.D.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "businesses.default",
+    "text": "345",
+    "value": 345
   },
   "score.band.D.n": {
     "fmt": ",d",
@@ -517,6 +587,13 @@
     "text": "5",
     "value": 5
   },
+  "score.n_numeric": {
+    "fmt": "d",
+    "population": "training 80% of applicants (score split, seed 42)",
+    "source": "score.src.feature_engineering.FEATURE_COLUMNS",
+    "text": "13",
+    "value": 13
+  },
   "score.n_test": {
     "fmt": ",d",
     "population": "held-out 20% of applicants (score split, seed 42)",
@@ -530,6 +607,13 @@
     "source": "wiki.facts.data.score_split",
     "text": "9,600",
     "value": 9600
+  },
+  "score.n_woe_nonmonotonic": {
+    "fmt": "d",
+    "population": "training 80% of applicants (score split, seed 42)",
+    "source": "BinningProcess binning tables (WoE in bin order; monotonic_trend='auto')",
+    "text": "2",
+    "value": 2
   },
   "score.pop.booked.auc": {
     "fmt": ".4f",
@@ -817,5 +901,12 @@
     "source": "VIF on WoE features",
     "text": "debt_to_income",
     "value": "debt_to_income"
+  },
+  "score.woe_nonmonotonic": {
+    "fmt": "",
+    "population": "training 80% of applicants (score split, seed 42)",
+    "source": "BinningProcess binning tables (WoE in bin order; monotonic_trend='auto')",
+    "text": "leverage, trade_lines",
+    "value": "leverage, trade_lines"
   }
 }

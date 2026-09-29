@@ -49,3 +49,17 @@ def test_every_spine_chapter_exists():
 def test_all_pages_lint_clean_including_links():
     from wiki.tools.lint import lint_all
     assert lint_all() == []
+
+
+def test_d4_has_an_index_and_the_nine_parts_in_order():
+    assert "order: 0" in (WIKI / "mdd" / "score" / "index.qmd").read_text()
+    for i, part in enumerate(TEMPLATE_PARTS, 1):
+        text = (WIKI / "mdd" / "score" / f"{part}.qmd").read_text()
+        assert f'title: "4.{i} ' in text and f"order: {i}" in text, part
+        assert "TEMPLATE" not in text, f"{part}: template brief not replaced"
+
+
+def test_signoff_open_findings_are_d4_limitations_word_for_word():
+    rows = lambda p: [l for l in p.read_text().splitlines() if l[:4] in {f"| {n} " for n in "1234"}]
+    d11 = rows(WIKI / "mdd" / "d11-signoff.qmd")
+    assert len(d11) == 4 and d11 == rows(WIKI / "mdd" / "score" / "limitations.qmd")

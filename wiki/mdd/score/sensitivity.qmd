@@ -1,0 +1,74 @@
+---
+title: "4.6 Sensitivity and stress"
+order: 6
+---
+
+## Method
+
+Each scenario refits the scorecard with `train.py`'s own recipe — the same split, the same
+`BinningProcess`, logistic regression and scaling — on a reduced set of columns, and
+measures the refit on the same held-out applicants (`wiki/facts/score_stress.py`). The
+bureau scenario drops columns from the committed {{< var score.n_features >}} and keeps
+`train.py`'s default binning solver; the three raw-column scenarios bin raw data columns
+and use the mixed-integer solver ([4.3](methodology.qmd#implementation-note-the-binning-solver)).
+
+The refits take minutes, so they are cached in the facts and re-run by
+`python verify.py --full` (or `make wiki-facts-full`), not on every run.
+
+{{< include ../../_generated/score-stress.md >}}
+
+## Bureau feed down: a gate failure, documented
+
+If the credit bureau feed fails, the model loses {{< var score.stress.bureau_columns >}}.
+Refitted without them, the scorecard reaches a held-out AUC of
+{{< var score.stress.no_bureau.auc >}} (KS {{< var score.stress.no_bureau.ks >}}), **below
+the {{< var score.gate >}} gate**.
+
+That result is kept as it is. The gate is not lowered for the scenario and the refit is
+not tuned until it passes: the failure is the result. It says the model's performance
+depends on the bureau feed, so a scorecard refitted without it is not the validated model
+and may not replace it. The consequence for operations: an applicant whose bureau data are
+missing cannot be scored by this model as validated. The documented response is to refer
+such an applicant to an underwriter rather than score it on partial inputs. The platform
+does not implement that rule today, because its generated data have no missing values; a
+production implementation would have to. As the code stands, a missing bureau value would
+not stop scoring at all: `compute_features` would score it as zero
+([4.2](data.qmd#features)).
+
+{{< yt S2-c4 >}}
+
+## Five raw columns: most of the signal is in a few features
+
+Five raw columns — {{< var score.stress.five_raw_columns >}}, all of them in the
+generator's default logit — reach a held-out AUC of {{< var score.stress.five_raw.auc >}}
+on their own: at the gate, by a margin far smaller than the
+±{{< var score.auc_ci_half >}} interval half-width ([4.5](performance.qmd#discrimination)).
+Most of what the full card ranks on is carried by a handful of causal features. This
+agrees with the variance shares in [4.3](methodology.qmd#feature-selection-and-signal).
+
+## Structural zeros: nothing to rank on
+
+The five columns the generator gives no role in default —
+{{< var score.stress.structural_five_columns >}} — refit to a held-out AUC of
+{{< var score.stress.structural_five.auc >}}: a coin toss. Three of them are in the
+committed model; this scenario is the direct evidence that they cannot rank applicants,
+and the reason finding 3 in [4.7](limitations.qmd) treats them as inert.
+
+## Revenue and its relatives: real but limited signal
+
+The last scenario keeps {{< var score.stress.proxy_five_columns >}}. Only `annual_revenue`
+is in the generator's default logit. `requested_amount`, `net_income` and `total_debt` are
+drawn as multiples of it, so any signal they carry is borrowed from it; `employees` has no
+role at all. Together they reach {{< var score.stress.proxy_five.auc >}}: real, stable
+ranking, from one causal input and its derivatives. A proxy ranks for someone else's
+reasons ([glossary](../../reference/glossary.qmd)), and a model built on proxies would
+fail as soon as the relationship to the causal feature changed.
+
+## What the scenarios establish
+
+- The committed card passes; one realistic operational failure — the bureau feed — does
+  not, and the chapter says so rather than moving the gate.
+- The model's discrimination rests on the causal features, not on the structural zeros it
+  also contains.
+- Each column set is fixed in `wiki/facts/score_stress.py`, so every scenario reruns
+  identically and a changed result is a changed model or data, not a changed test.

@@ -37,13 +37,10 @@ website:
         - mdd/d1-purpose.qmd
         - mdd/d2-data.qmd
         - mdd/d3-dependencies.qmd
-        # D4 arrives in Task 9. Quarto 1.10 crashes on an `auto:` that matches no page
-        # ("Cannot read properties of undefined (reading 'score')"), so this section is
-        # commented out until mdd/score/*.qmd exist — uncomment it with the D4 commit.
-        # - section: "D4 Business Credit Score"
-        #   href: mdd/score/index.qmd
-        #   contents:
-        #     - auto: "mdd/score/*.qmd"
+        - section: "D4 Business Credit Score"
+          href: mdd/score/index.qmd
+          contents:
+            - auto: "mdd/score/*.qmd"
         - section: "D5 Loan Adjudication"
           href: mdd/adjudication/index.qmd
           contents:

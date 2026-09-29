@@ -1,0 +1,110 @@
+---
+title: "4.7 Limitations and compensating controls"
+order: 7
+---
+
+The chapter raises four open findings about its own model. Each has evidence drawn from
+the facts, a compensating control and an owner. The same four, in the same words, are the
+open findings of the validation sign-off (D11, in the validation PDF).
+
+| # | Finding | Evidence | Compensating control | Owner | Status |
+|---|---|---|---|---|---|
+| 1 | No out-of-time sample: origination is a single cross-section, so temporal stability is untested. | Train and test are random splits of one cohort; PSI between them ({{< var score.psi_score >}} on the score) measures sampling noise, not drift. | Monitoring plan (D4.8): score and feature PSI on each new cohort, with redevelopment triggers. | Model developer | open |
+| 2 | The gate population is not the lending population. | Held-out AUC {{< var score.pop.everyone.auc >}} on all applicants (the gate, {{< var score.gate >}}); {{< var score.pop.booked.auc >}} on the booked only. | Report both on every run; track the booked-only AUC beside the gate; consider gating on the booked population at redevelopment. | Model developer | open |
+| 3 | Features with no causal role in the generator are in the model (`industry`, `entity_type`, `trade_lines`). | Together they carry {{< var score.var_share_structural >}} of the logit's variance on the held-out applicants. | Present but inert: remove at the next redevelopment; removal is a simplification, not a risk fix. | Model developer | open |
+| 4 | The score distribution is concentrated in one band. | {{< var score.band.D.n >}} of {{< var score.n_test >}} held-out applicants ({{< var score.band_d_share >}}) fall in band D, limiting discrimination inside it. | Downstream decisions use the PD, not the band alone; review band boundaries at redevelopment. | Model developer | open |
+
+## Finding 1 — No out-of-time sample
+
+**Finding.** Every applicant comes from one generated cross-section. Train and test are a
+random partition of it ([4.2](data.qmd#split-and-seed)), so nothing in this chapter tests
+whether the model holds on a later cohort.
+
+**Evidence.** The score PSI between the splits is {{< var score.psi_score >}} and no
+feature exceeds the {{< var monitoring.psi_watch >}} watch level
+([4.5](performance.qmd#stability)). That is what a random split of one sample should
+show: it measures sampling noise, not drift.
+
+**Impact.** A shift in the applicant population would move the bins' default rates and
+the PD in every band. Nothing at development would have warned of it.
+
+**Compensating control.** The monitoring plan ([4.8](monitoring.qmd)): score and feature
+PSI, and observed-to-predicted default rates by band, on each new cohort, with thresholds
+that trigger review and redevelopment. **Owner:** model developer.
+
+## Finding 2 — The gate population is not the lending population
+
+**Finding.** The model trains and is gated on all applicants. The bank lends only to the
+ones it books, and on them the model ranks noticeably worse.
+
+**Evidence.** On the held-out split
+([4.2](data.qmd#two-populations)):
+
+- all applicants, the gate's population: AUC {{< var score.pop.everyone.auc >}}
+  ({{< var score.pop.everyone.n >}} rows), against the {{< var score.gate >}} gate;
+- booked only: AUC {{< var score.pop.booked.auc >}} ({{< var score.pop.booked.n >}} rows);
+- rejected only: AUC {{< var score.pop.rejected.auc >}} ({{< var score.pop.rejected.n >}}
+  rows).
+
+Much of the whole-population AUC comes from separating the obvious rejections from the
+obvious approvals. Among the booked, whom the bank already judged acceptable, the
+remaining differences are smaller and harder to rank. This is not a defect of the model:
+the generator gives every applicant an outcome. It is a property of where the gate is
+measured.
+
+**Impact.** The gate overstates how well the score ranks where lending happens. Pricing,
+early warning and line increase all operate on the booked book (D3), in the weaker
+population.
+
+**Compensating control.** Report both AUCs on every run; track the booked-only AUC beside
+the gate in monitoring ([4.8](monitoring.qmd)); consider gating on the booked population at
+redevelopment. The gate itself is not changed by this finding ([4.9](gate.qmd)).
+**Owner:** model developer.
+
+## Finding 3 — Features with no causal role are in the model
+
+**Finding.** `industry`, `entity_type` and `trade_lines` are structural zeros: the data
+generator gives them no role in default. All three are among the
+{{< var score.n_features >}} `FEATURE_COLUMNS`.
+
+**Evidence.** Their fitted contribution was measured before this finding was written:
+`feature_contributions` on the held-out applicants, share of the variance of the model's
+logit. **They are present but inert: together they carry
+{{< var score.var_share_structural >}} of the logit's variance.** Each has an IV below the
+{{< var monitoring.iv_useless >}} line ([4.3](methodology.qmd#feature-selection-and-signal)),
+and a refit on structural zeros alone ranks at {{< var score.stress.structural_five.auc >}}
+([4.6](sensitivity.qmd#structural-zeros-nothing-to-rank-on)).
+
+**Impact.** Small. The three features move the score very little, so removing them is a
+simplification, not a risk fix. They do cost something: each adds a WoE table to validate
+and monitor, and can surface as a reason code that has no causal basis.
+
+**Compensating control.** Remove them at the next redevelopment, then re-verify the gate.
+**Owner:** model developer.
+
+## Finding 4 — The score distribution is concentrated in one band
+
+**Finding.** About half the held-out applicants fall in the riskiest band.
+
+**Evidence.** {{< var score.band.D.n >}} of {{< var score.n_test >}} held-out applicants
+({{< var score.band_d_share >}}) are in band D ([4.5](performance.qmd#rank-ordering-and-calibration-by-band)),
+where the observed default rate is {{< var score.band.D.observed >}}.
+
+**Impact.** The band cannot distinguish between the applicants inside band D. Any use of the band alone — a rate card, a cutoff, a report — treats them
+as one.
+
+**Compensating control.** Downstream decisions use the PD, not the band alone: adjudication,
+pricing, early warning and line increase all take the continuous PD or score
+([4.1](purpose.qmd#who-consumes-it-and-how)), and pricing by band is a prohibited use.
+Review the band boundaries at redevelopment. **Owner:** model developer.
+
+## Observations {#observations}
+
+Three matters are recorded but not raised as findings. Each is minor on this data or
+already covered by a control above, and each is re-examined at redevelopment.
+
+| Observation | Evidence | Why not a finding | Action |
+|---|---|---|---|
+| WoE is not monotonic in {{< var score.woe_nonmonotonic >}} | `monotonic_trend` left at optbinning's `"auto"` default ([4.4](assumptions.qmd#monotonic-weight-of-evidence)) | Discrimination is measured with these bins; `trade_lines` is already in finding 3 | Set the monotonic trend explicitly for each numeric feature at redevelopment |
+| Bands A and AAA are outside the calibration tolerance (ratios {{< var score.band.A.ratio >}} and {{< var score.band.AAA.ratio >}}) | {{< var score.band.A.defaults >}} and {{< var score.band.AAA.defaults >}} defaults behind them ([4.5](performance.qmd#rank-ordering-and-calibration-by-band)) | Too few defaults to distinguish a miscalibration from noise | Watched by the band calibration check in [4.8](monitoring.qmd) |
+| A missing numeric input is scored as zero | `compute_features` fills missing and non-numeric values with zero ([4.2](data.qmd#features)) | The generated data have no missing values | Reject or refer incomplete applications in any production use ([4.6](sensitivity.qmd#bureau-feed-down-a-gate-failure-documented)) |

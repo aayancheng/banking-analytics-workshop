@@ -1,0 +1,76 @@
+---
+title: "4.1 Purpose and use"
+order: 1
+---
+
+## The decision it supports
+
+The score answers one question at origination: **how likely is this applicant to default,
+relative to the others?** It rank-orders all {{< var score.n_applicants >}} applicants on
+one scale, and returns with each score a probability of default (PD) and a band. It does
+not decide anything by itself; the decisions belong to the modules that consume it.
+
+## The output
+
+`predict_score_pd` (`score/src/predict.py`) is the one scoring function. For any applicant
+it returns three values:
+
+| Output | What it is |
+|---|---|
+| `business_score` | an integer score; higher means lower risk |
+| `pd` | the scorecard's probability of default |
+| `score_band` | the score's band: D, C, B, A or AAA, from riskiest to safest |
+
+The scale and the band edges are code, not prose:
+
+```python
+SCORE_MIN = 300          # shared/config.py
+SCORE_MAX = 850
+_BANDS_BINS = [300, 580, 640, 700, 750, 850]    # score/src/predict.py
+_BANDS_LABELS = ["D", "C", "B", "A", "AAA"]
+```
+
+The raw scorecard points are mapped linearly onto `SCORE_MIN`–`SCORE_MAX` between two
+percentiles of the training split's raw scores, and clamped outside them
+(`score_to_fico`; [4.3](methodology.qmd)):
+
+```python
+lo, hi = np.percentile(raw_train, 1), np.percentile(raw_train, 99)   # score/src/train.py
+```
+
+The two ends are saved in `score/models/score_scaling.json`, so scoring never refits them.
+The committed range is also recorded in `score/models/metadata.json` as `score_range`.
+
+## The population it is for
+
+Small-business loan applicants of the kind the data generator draws
+([D2](../d2-data.qmd)): every applicant, booked or not. It is trained and gated on a split
+of that whole population ([4.2](data.qmd)). The bank, however, lends only to the
+{{< var score.n_booked >}} it books, and on that population the score ranks less well
+([4.5](performance.qmd), finding 2 in [4.7](limitations.qmd)).
+
+## Who consumes it, and how
+
+Every consumer calls `predict_score_pd` on the saved scorecard. None re-implements it, and
+none reads the generator's true PD, which is on the leakage deny-list and does not exist at
+decision time ([D2](../d2-data.qmd#leakage-controls)). The flow is drawn in
+[D3](../d3-dependencies.qmd).
+
+| Consumer | What it takes |
+|---|---|
+| D5 Loan Adjudication | `business_score` and the PD (as `pd_score`) as model inputs; `business_score` again in the policy layer's score floor |
+| D6 Pricing | the PD, as the expected-loss term of the ROE calculation; the band only to segment its report |
+| D7 Early Warning | `business_score` and `pd_score`, beside behavioural features, for booked loans |
+| D8 Line Increase | `pd_score`, as an input and as the risk-appetite cut, for booked loans |
+
+Because every consumer takes the saved model's output, a change to the scorecard is a
+change to all of them ([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)).
+
+## Prohibited uses
+
+| Use | Why it is prohibited |
+|---|---|
+| Pricing a loan from its band alone, without the ROE engine | A band spans a wide range of PDs (band D alone holds {{< var score.band_d_share >}} of held-out applicants, [4.5](performance.qmd)); a rate card by band misprices the loans inside it. The rate comes from the loan's own PD through the pricing engine (D6). |
+| Scoring any population other than small-business applicants of this kind | The bins, weights and scaling were fitted to this population; outside it neither the ranking nor the PD has been tested. |
+| Using the origination PD to monitor booked loans without recalibration | The PD is calibrated at origination on applicants. Deterioration after booking is the early-warning model's job (D7); reading the origination PD as a current PD would need a recalibration on the booked book that has not been done. |
+| Any decision about a real business | The model was fitted to synthetic data ([D1](../d1-purpose.qmd#prohibited-uses)). |

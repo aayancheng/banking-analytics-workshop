@@ -3,13 +3,14 @@ own functions (predict_score_pd, feature_contributions, the saved scorecard)."""
 from __future__ import annotations
 
 import json
+import warnings
 
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score, roc_curve
 
 from shared.config import ROOT, SEED
-from score.src.feature_engineering import FEATURE_COLUMNS, compute_features
+from score.src.feature_engineering import CATEGORICAL, FEATURE_COLUMNS, compute_features
 from score.src.predict import _load, predict_score_pd
 from score.src.reason_codes import feature_contributions
 from score.src.train import AUC_GATE, ks_statistic
@@ -93,6 +94,7 @@ def compute(split) -> tuple[dict[str, Fact], dict]:
         put(f"score.band.{b}.observed", obs, ".1%", "businesses.default", HOLDOUT)
         put(f"score.band.{b}.predicted", pred, ".1%", SRC_PRED, HOLDOUT)
         put(f"score.band.{b}.ratio", obs / pred, ".2f", SRC_PRED, HOLDOUT)
+        put(f"score.band.{b}.defaults", int(y_te[m].sum()), ",d", "businesses.default", HOLDOUT)
     put("score.band_d_share", f["score.band.D.share"].value, ".0%", SRC_PRED, HOLDOUT)
 
     idx = bp.transform(X, metric="indices")
@@ -112,6 +114,23 @@ def compute(split) -> tuple[dict[str, Fact], dict]:
     put("score.n_features", len(FEATURE_COLUMNS), "d",
         "score.src.feature_engineering.FEATURE_COLUMNS", TRAIN)
     put("score.n_iv_below_002", int((iv < 0.02).sum()), "d", "BinningProcess.summary()", TRAIN)
+
+    nonmono = []                        # WoE read in bin order, Special/Missing rows dropped
+    for c in FEATURE_COLUMNS:
+        if c in CATEGORICAL:            # categories have no order to be monotonic in
+            continue
+        with warnings.catch_warnings():   # optbinning calls a renamed sklearn argument
+            warnings.simplefilter("ignore", FutureWarning)
+            table = bp.get_binned_variable(c).binning_table.build()
+        woe = table["WoE"].iloc[:-3].astype(float)
+        d = np.diff(woe.to_numpy())
+        if not ((d >= 0).all() or (d <= 0).all()):
+            nonmono.append(c)
+    src_mono = "BinningProcess binning tables (WoE in bin order; monotonic_trend='auto')"
+    put("score.woe_nonmonotonic", ", ".join(nonmono) if nonmono else "none", "", src_mono, TRAIN)
+    put("score.n_woe_nonmonotonic", len(nonmono), "d", src_mono, TRAIN)
+    put("score.n_numeric", len(FEATURE_COLUMNS) - len(CATEGORICAL), "d",
+        "score.src.feature_engineering.FEATURE_COLUMNS", TRAIN)
 
     woe_tr = bp.transform(X.iloc[tr], metric="woe")
     coef = pd.Series(scorecard.estimator_.coef_[0], index=woe_tr.columns)

@@ -1,0 +1,40 @@
+---
+title: "D4 Business Credit Score"
+order: 0
+---
+
+::: {.callout-note}
+## D4 at a glance
+
+- **Discrimination:** held-out AUC {{< var score.auc_holdout >}} on the held-out
+  {{< var score.test_share >}} of applicants (bootstrap 95% interval
+  {{< var score.auc_ci_lo >}}–{{< var score.auc_ci_hi >}}).
+- **Gate:** AUC ≥ {{< var score.gate >}} on that population, asserted at training and
+  recomputed by `verify.py` — met.
+- **On the loans the bank books:** held-out AUC {{< var score.pop.booked.auc >}} on the
+  {{< var score.pop.booked.n >}} booked applicants in the held-out split — below the gate value.
+- **Four open findings** the chapter raises about its own model ([4.7](limitations.qmd)).
+:::
+
+The Business Credit Score is a weight-of-evidence scorecard: {{< var score.n_features >}}
+features, each binned and replaced by its bin's weight of evidence, combined by a logistic
+regression and scaled to a score between `SCORE_MIN` and `SCORE_MAX`
+([4.1](purpose.qmd)). It is the platform's score spine: every other
+model and the pricing engine consume its output ([D3](../d3-dependencies.qmd)), which makes
+it Tier 1 ([D0](../d0-summary.qmd#risk-tiering)).
+
+This chapter is the worked example of the nine-part [template](../index.qmd#the-template).
+Every number in it is a named fact recomputed by `python verify.py`; the
+[fact index](../../reference/facts.qmd) gives each one's source and population.
+
+| § | Part | What it establishes |
+|---|---|---|
+| 4.1 | [Purpose and use](purpose.qmd) | the decision it supports, its consumers, prohibited uses |
+| 4.2 | [Data and sample](data.qmd) | the split, the two populations, leakage controls |
+| 4.3 | [Methodology and alternatives](methodology.qmd) | WoE + logistic, why not the gradient-boosted challenger, feature signal |
+| 4.4 | [Assumptions](assumptions.qmd) | monotonic WoE, independence, stability, the generator as ground truth |
+| 4.5 | [Performance](performance.qmd) | discrimination with an interval, rank-ordering, calibration, stability, benchmark, ceiling |
+| 4.6 | [Sensitivity and stress](sensitivity.qmd) | four refits on reduced inputs, one of them a gate failure |
+| 4.7 | [Limitations and compensating controls](limitations.qmd) | four open findings, each with a control and an owner |
+| 4.8 | [Monitoring plan](monitoring.qmd) | metrics, thresholds, frequency, action on breach |
+| 4.9 | [Gate record](gate.qmd) | the gate, where it is asserted and recomputed, its history |

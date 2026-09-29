@@ -13,7 +13,7 @@ import argparse
 import os
 
 from shared.config import ROOT
-from wiki.facts import adj_facts, ceiling, figures, score_facts, score_stress, tables
+from wiki.facts import adj_facts, ceiling, figures, policy, score_facts, score_stress, tables
 from wiki.facts.core import Fact, dump_facts, load_facts, nest, to_yaml
 from wiki.facts.data import score_split
 
@@ -32,6 +32,7 @@ def compute(full: bool) -> tuple[dict[str, Fact], dict]:
     facts, exhibits = score_facts.compute(split)
     facts.update(adj_facts.compute())
     facts.update(ceiling.compute(split))
+    facts.update(policy.compute())
     if full:
         facts.update(score_stress.compute(split))
     return facts, exhibits

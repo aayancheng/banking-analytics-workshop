@@ -45,10 +45,9 @@ arithmetic.
 
 ## Read
 
-The documentation of this model is D4, the Business Credit Score chapter of the Model
-Documentation tab. It is the worked example of the template every other chapter follows.
-
-<!-- TODO(Task 9): link D4 (../mdd/score/index.qmd) once it exists. -->
+The documentation of this model is [D4, the Business Credit Score
+chapter](../mdd/score/index.qmd) of the Model Documentation tab. It is the worked example
+of the template every other chapter follows.
 
 ## Notebook and lab
 

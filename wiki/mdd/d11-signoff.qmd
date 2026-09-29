@@ -22,7 +22,7 @@ the tagged release.
 
 ## Open findings
 
-Raised by the documentation itself, in D4.7. Each has a compensating control and an owner.
+Raised by the documentation itself, in [D4.7](score/limitations.qmd). Each has a compensating control and an owner.
 
 | # | Finding | Evidence | Compensating control | Owner | Status |
 |---|---|---|---|---|---|

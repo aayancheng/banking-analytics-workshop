@@ -27,7 +27,7 @@ Holdout
 
 IV (information value)
 : A single-variable measure of how well a feature separates defaulters from non-defaulters,
-  summed over its bins' weights of evidence. Convention reads values below `0.02` as
+  summed over its bins' weights of evidence. Convention reads values below {{< var monitoring.iv_useless >}} as
   unpredictive; IV says nothing about what a feature adds beside the others.
 
 KS (Kolmogorov–Smirnov statistic)
@@ -50,7 +50,8 @@ Proxy
 
 PSI (population stability index)
 : How far a distribution has moved between two samples, summed over bins. Convention reads
-  below `0.10` as stable, `0.10` to `0.25` as worth watching, and above `0.25` as a shift
+  below {{< var monitoring.psi_watch >}} as stable, {{< var monitoring.psi_watch >}} to
+  {{< var monitoring.psi_act >}} as worth watching, and above {{< var monitoring.psi_act >}} as a shift
   that needs action.
 
 RAROC (risk-adjusted return on capital)

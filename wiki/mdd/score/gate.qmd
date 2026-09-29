@@ -1,0 +1,75 @@
+---
+title: "4.9 Gate record"
+order: 9
+---
+
+::: {.callout-important}
+## The gate
+
+**Held-out AUC ≥ {{< var score.gate >}}**, on the held-out {{< var score.test_share >}} of
+all applicants ([4.2](data.qmd#split-and-seed)). Current value
+{{< var score.auc_holdout >}}: **met**. KS is reported, not gated.
+:::
+
+## Where it is asserted
+
+At the end of training, in `score/src/train.py`. A scorecard that misses the gate fails
+its own training run:
+
+```python
+AUC_GATE = 0.78   # workshop gate — the committed promise (KS reported, not gated)
+...
+    assert auc >= AUC_GATE, f"GATE FAIL: AUC {auc:.4f} < {AUC_GATE}"
+```
+
+The value is also written into `score/models/metadata.json`, under `["gate"]["auc_min"]`.
+
+## Where it is recomputed, independently
+
+`verify.py` carries its own copy of the gate:
+
+```python
+SCORE_AUC_GATE = 0.78    # verify.py
+```
+
+and its scorecard check does not read the stored metric. It loads `scorecard.pkl`,
+redraws the held-out split from the committed data with the platform seed, recomputes the
+AUC and compares it with its own constant. On `main` it then recomputes every fact in this
+chapter, including the gate as `score.src.train.AUC_GATE` reads it
+([D9](../d9-implementation.qmd)).
+
+This is why **a relaxed local gate cannot pass.** Lowering `AUC_GATE` in `train.py` lets a
+weaker model finish training and save its artifacts, but `verify.py` recomputes that
+model's AUC against the constant it carries itself, and fails. The gate lives in two
+places on purpose: the training script is where a developer works, and the checker is
+not.
+
+## Why this value
+
+The gate was set below the ceiling this data allows ([4.5](performance.qmd#the-ceiling)),
+so that it is demanding but reachable. The committed scorecard meets it with its whole
+bootstrap interval ({{< var score.auc_ci_lo >}} – {{< var score.auc_ci_hi >}}) above the
+gate, and sits indistinguishable from the ceiling. A gate above the ceiling could be
+passed only by leakage or by chance in the sample.
+
+## What the gate does not cover
+
+- **The booked population.** The gate is measured on all applicants; on the booked, the
+  model scores {{< var score.pop.booked.auc >}}. Finding 2 ([4.7](limitations.qmd)) and the
+  monitoring plan ([4.8](monitoring.qmd)) carry this.
+- **Stress.** The bureau-feed-down refit fails the gate
+  ([4.6](sensitivity.qmd#bureau-feed-down-a-gate-failure-documented)). That is a documented
+  result about the model's dependence on its inputs, and it moves neither the gate nor the
+  committed model.
+
+## History
+
+| Version | Change | Gate |
+|---|---|---|
+| `stage-2` (commit `99b201c`) | gate introduced with the scorecard, in `train.py` and `verify.py` | {{< var score.gate >}} |
+| `stage-3` to `stage-5`, `v1.0` to `v1.4`, `main` | unchanged | {{< var score.gate >}} |
+
+The gate has not changed since it was introduced, and it is never relaxed to let a model
+pass ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)). A
+change to it would be a change of the committed promise: made on `main`, recorded in a new
+version tag, and shown in this table.

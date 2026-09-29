@@ -20,6 +20,12 @@ ceiling:
   truepd_all: "0.8311"
 market:
   roe_hurdle: "15%"
+monitoring:
+  iv_useless: "0.02"
+  psi_act: "0.25"
+  psi_watch: "0.10"
+  ratio_hi: "1.25"
+  ratio_lo: "0.75"
 score:
   auc_ci_half: "0.02"
   auc_ci_hi: "0.8383"
@@ -27,30 +33,35 @@ score:
   auc_holdout: "0.8176"
   band:
     A:
+      defaults: "5"
       n: "182"
       observed: "2.7%"
       predicted: "1.9%"
       ratio: "1.42"
       share: "7.6%"
     AAA:
+      defaults: "4"
       n: "192"
       observed: "2.1%"
       predicted: "0.8%"
       ratio: "2.65"
       share: "8.0%"
     B:
+      defaults: "16"
       n: "366"
       observed: "4.4%"
       predicted: "3.7%"
       ratio: "1.17"
       share: "15.2%"
     C:
+      defaults: "31"
       n: "438"
       observed: "7.1%"
       predicted: "7.4%"
       ratio: "0.96"
       share: "18.2%"
     D:
+      defaults: "345"
       n: "1,222"
       observed: "28.2%"
       predicted: "28.7%"
@@ -85,8 +96,10 @@ score:
   n_booked: "8,336"
   n_features: "15"
   n_iv_below_002: "5"
+  n_numeric: "13"
   n_test: "2,400"
   n_train: "9,600"
+  n_woe_nonmonotonic: "2"
   pop:
     booked:
       auc: "0.7447"
@@ -138,3 +151,4 @@ score:
   var_share_structural: "0.4%"
   vif_max: "2.68"
   vif_max_feature: "debt_to_income"
+  woe_nonmonotonic: "leverage, trade_lines"

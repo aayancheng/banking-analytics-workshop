@@ -1,0 +1,66 @@
+---
+title: "4.8 Monitoring plan"
+order: 8
+---
+
+## What is monitored
+
+Each new cohort of applicants is compared with the development sample (the training split,
+[4.2](data.qmd#split-and-seed)), and, once its outcomes are known, measured against the
+model's development performance. The thresholds are policy constants, kept in one place
+(`wiki/facts/policy.py`) and printed here by name.
+
+| Metric | Population | Threshold | Frequency | Action on breach |
+|---|---|---|---|---|
+| Score PSI, by band | new applicants vs training split | below {{< var monitoring.psi_watch >}} stable; {{< var monitoring.psi_watch >}} to {{< var monitoring.psi_act >}} watch; above {{< var monitoring.psi_act >}} act | every cohort | Watch: find the features that moved. Act: review with the validator; recalibrate or redevelop. |
+| Feature PSI, over the scorecard's bins | new applicants vs training split | same as the score | every cohort | A feature above {{< var monitoring.psi_act >}}: check the source data before the model. |
+| Observed / predicted default rate, by band | booked loans with outcomes | ratio outside {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}} | when outcomes mature | Check the band's default count first; a breach that persists into the next cohort triggers recalibration. |
+| AUC, all applicants | the cohort's applicants with outcomes | below the gate, {{< var score.gate >}} | when outcomes mature | Gate breach: redevelopment ([4.9](gate.qmd)). |
+| AUC, booked only | the cohort's booked loans with outcomes | a fall of more than {{< var score.auc_ci_half >}} from development ({{< var score.pop.booked.auc >}}) | when outcomes mature | Review with the validator; weigh gating on the booked population (finding 2). |
+
+The last row is the control for finding 2 ([4.7](limitations.qmd)): the booked-only AUC is
+always reported beside the gate, never instead of it. The PSI rows are the control for
+finding 1. The fall that triggers review on the booked AUC is the half-width of the
+all-applicant bootstrap interval ([4.5](performance.qmd#discrimination)); the booked
+population is smaller, so its own interval would be wider, and the threshold is
+deliberately the stricter of the two.
+
+## Development baselines
+
+What "no change" looks like, measured at development:
+
+| Metric | Development value | Population |
+|---|---|---|
+| Score PSI, by band | {{< var score.psi_score >}} | train vs held-out applicants |
+| Largest feature PSI | {{< var score.psi_max >}} ({{< var score.psi_max_feature >}}) | train vs held-out applicants |
+| AUC | {{< var score.auc_holdout >}} | held-out applicants |
+| AUC, booked only | {{< var score.pop.booked.auc >}} | held-out booked applicants |
+| Observed / predicted, band D | {{< var score.band.D.ratio >}} | held-out applicants |
+| Observed / predicted, band AAA | {{< var score.band.AAA.ratio >}} | held-out applicants |
+
+Bands A and AAA are already outside the calibration tolerance at development, on very few
+defaults ([4.5](performance.qmd#rank-ordering-and-calibration-by-band)). The first cohorts
+with matured outcomes show whether that is noise or a persistent under-prediction at the
+safe end.
+
+## Redevelopment triggers
+
+Any one of these starts a redevelopment, with the validator informed:
+
+1. The all-applicant AUC on a cohort with outcomes falls below the gate.
+2. Score PSI above {{< var monitoring.psi_act >}}.
+3. A band's observed / predicted ratio outside the tolerance in two consecutive cohorts.
+4. A change to any input's definition or source, including the bureau feed
+   ([4.6](sensitivity.qmd#bureau-feed-down-a-gate-failure-documented)).
+
+A redevelopment is also where findings 3 and 4 and the observations in
+[4.7](limitations.qmd) are acted on.
+Every redevelopment re-runs [4.5](performance.qmd) and [4.6](sensitivity.qmd), passes the
+gate, and forces the downstream work in [D3](../d3-dependencies.qmd#what-a-scorecard-change-forces).
+
+## What is automated today
+
+This plan is documented, not yet automated. The platform has one cohort of applicants, so
+there is no new population to compare. What runs today is the development side: `python
+verify.py` recomputes the held-out AUC against the gate, and every figure on this page,
+from the committed model and data on every run ([D9](../d9-implementation.qmd)).

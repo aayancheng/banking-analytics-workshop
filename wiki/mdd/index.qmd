@@ -21,7 +21,7 @@ OSFI E-23 (Canada) and PRA SS1/23 (UK).
 | D1 | [Platform purpose and use](d1-purpose.qmd) | drafted |
 | D2 | [Data](d2-data.qmd) | drafted |
 | D3 | [Model dependencies](d3-dependencies.qmd) | drafted |
-| D4 | Business Credit Score | complete: the worked example of the template |
+| D4 | [Business Credit Score](score/index.qmd) | complete: the worked example of the template |
 | D5 | [Loan Adjudication](adjudication/index.qmd) | in progress |
 | D6 | [Pricing](pricing/index.qmd) | in progress |
 | D7 | [Early Warning](ews/index.qmd) | in progress |
@@ -29,8 +29,6 @@ OSFI E-23 (Canada) and PRA SS1/23 (UK).
 | D9 | [Implementation and change control](d9-implementation.qmd) | drafted |
 | D10 | [Use of AI agents in development](d10-agents.qmd) | drafted |
 | D11 | Validation sign-off | in the validation PDF only |
-
-<!-- TODO(Task 9): link D4 to score/index.qmd once it exists. -->
 
 ## The template
 

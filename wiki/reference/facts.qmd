@@ -25,30 +25,40 @@ Each value below is recomputed by `python verify.py`. Pages print these through 
 | `ceiling.signal_holdout` | 0.8353 | held-out 20% (score split) | `wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)` |
 | `ceiling.truepd_all` | 0.8311 | all 12,000 applicants | `wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)` |
 | `market.roe_hurdle` | 15% | platform assumption | `shared.config.MARKET` |
+| `monitoring.iv_useless` | 0.02 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
+| `monitoring.psi_act` | 0.25 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
+| `monitoring.psi_watch` | 0.10 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
+| `monitoring.ratio_hi` | 1.25 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
+| `monitoring.ratio_lo` | 0.75 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
 | `score.auc_ci_half` | 0.02 | held-out 20% of applicants (score split, seed 42) | `bootstrap, 1000 resamples, seed 42` |
 | `score.auc_ci_hi` | 0.8383 | held-out 20% of applicants (score split, seed 42) | `bootstrap, 1000 resamples, seed 42` |
 | `score.auc_ci_lo` | 0.7945 | held-out 20% of applicants (score split, seed 42) | `bootstrap, 1000 resamples, seed 42` |
 | `score.auc_holdout` | 0.8176 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
+| `score.band.A.defaults` | 5 | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.A.n` | 182 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.A.observed` | 2.7% | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.A.predicted` | 1.9% | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.A.ratio` | 1.42 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.A.share` | 7.6% | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
+| `score.band.AAA.defaults` | 4 | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.AAA.n` | 192 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.AAA.observed` | 2.1% | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.AAA.predicted` | 0.8% | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.AAA.ratio` | 2.65 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.AAA.share` | 8.0% | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
+| `score.band.B.defaults` | 16 | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.B.n` | 366 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.B.observed` | 4.4% | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.B.predicted` | 3.7% | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.B.ratio` | 1.17 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.B.share` | 15.2% | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
+| `score.band.C.defaults` | 31 | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.C.n` | 438 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.C.observed` | 7.1% | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.C.predicted` | 7.4% | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.C.ratio` | 0.96 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.C.share` | 18.2% | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
+| `score.band.D.defaults` | 345 | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.D.n` | 1,222 | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
 | `score.band.D.observed` | 28.2% | held-out 20% of applicants (score split, seed 42) | `businesses.default` |
 | `score.band.D.predicted` | 28.7% | held-out 20% of applicants (score split, seed 42) | `score.src.predict.predict_score_pd` |
@@ -82,8 +92,10 @@ Each value below is recomputed by `python verify.py`. Pages print these through 
 | `score.n_booked` | 8,336 | all 12,000 applicants | `businesses.booked` |
 | `score.n_features` | 15 | training 80% of applicants (score split, seed 42) | `score.src.feature_engineering.FEATURE_COLUMNS` |
 | `score.n_iv_below_002` | 5 | training 80% of applicants (score split, seed 42) | `BinningProcess.summary()` |
+| `score.n_numeric` | 13 | training 80% of applicants (score split, seed 42) | `score.src.feature_engineering.FEATURE_COLUMNS` |
 | `score.n_test` | 2,400 | held-out 20% of applicants (score split, seed 42) | `wiki.facts.data.score_split` |
 | `score.n_train` | 9,600 | training 80% of applicants (score split, seed 42) | `wiki.facts.data.score_split` |
+| `score.n_woe_nonmonotonic` | 2 | training 80% of applicants (score split, seed 42) | `BinningProcess binning tables (WoE in bin order; monotonic_trend='auto')` |
 | `score.pop.booked.auc` | 0.7447 | held-out booked applicants | `score.src.predict.predict_score_pd` |
 | `score.pop.booked.dr` | 11.1% | held-out booked applicants | `businesses.default` |
 | `score.pop.booked.n` | 1,644 | held-out booked applicants | `businesses.booked` |
@@ -125,3 +137,4 @@ Each value below is recomputed by `python verify.py`. Pages print these through 
 | `score.var_share_structural` | 0.4% | held-out 20% of applicants (score split, seed 42) | `score.src.reason_codes.feature_contributions (variance share)` |
 | `score.vif_max` | 2.68 | training 80% of applicants (score split, seed 42) | `VIF on WoE features` |
 | `score.vif_max_feature` | debt_to_income | training 80% of applicants (score split, seed 42) | `VIF on WoE features` |
+| `score.woe_nonmonotonic` | leverage, trade_lines | training 80% of applicants (score split, seed 42) | `BinningProcess binning tables (WoE in bin order; monotonic_trend='auto')` |

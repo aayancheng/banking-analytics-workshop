@@ -36,12 +36,10 @@ platform's own functions; a lint fails the build on any number typed by hand. Se
 
 ## D4: the worked example
 
-The Business Credit Score chapter, D4, is complete. It follows the nine-part
+The [Business Credit Score chapter, D4](../mdd/score/index.qmd), is complete. It follows the nine-part
 [template](../mdd/index.qmd#the-template) — purpose, data, methodology, assumptions,
 performance, sensitivity, limitations, monitoring, gate — and raises four open findings
 about its own model, each with evidence, a compensating control and an owner.
-
-<!-- TODO(Task 9): link D4 (../mdd/score/index.qmd) once it exists. -->
 
 ## The lab: draft D5 with an agent (H4.1)
 

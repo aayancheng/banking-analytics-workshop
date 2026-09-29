@@ -1,0 +1,96 @@
+---
+title: "4.2 Data and sample"
+order: 2
+---
+
+## Source
+
+One file, `shared/data/raw/businesses.parquet`: {{< var score.n_applicants >}} applicants,
+one row each, drawn by the platform's data generator ([D2](../d2-data.qmd)). The target is
+`default`. The generator gives every applicant an outcome, booked or not, which a real
+bank's data never would; that is what lets this chapter measure the model on both
+populations below.
+
+## Features
+
+The model uses the {{< var score.n_features >}} columns of `FEATURE_COLUMNS`
+(`score/src/feature_engineering.py`): twelve read directly from the data and three ratios
+built from it by `compute_features`.
+
+| Kind | Columns |
+|---|---|
+| Firmographic | `years_in_business`, `annual_revenue`, `industry`, `entity_type` |
+| Financial statement | `dscr`, `current_ratio`, `leverage` |
+| Bureau (credit file) | `utilization`, `credit_history_months`, `prior_delinquencies`, `trade_lines` |
+| Public record | `public_records` |
+| Derived ratios | `debt_to_income` (total debt over net income), `revenue_per_employee`, `profit_margin` (net income over revenue) |
+
+`industry` and `entity_type` are categorical; the other {{< var score.n_numeric >}} are
+numeric. `compute_features` turns any missing or non-numeric value in a numeric column
+into zero. The generated data contain none, so on this data the rule changes nothing; on
+data with gaps it would score a missing value as zero without warning, which is recorded
+as an observation in [4.7](limitations.qmd#observations).
+
+## Split and seed
+
+The split is drawn once, in `score/src/train.py`, and redrawn identically by `verify.py`
+and by the facts behind this chapter:
+
+```python
+SEED = 42    # shared/config.py
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=SEED, stratify=y)
+```
+
+That gives {{< var score.n_train >}} training rows and {{< var score.n_test >}} held-out
+rows (the held-out {{< var score.test_share >}}), stratified on `default` so both carry
+the same default rate, to within one row. Every "held-out" metric in this chapter is
+measured on those {{< var score.n_test >}} rows, which the scorecard never saw while it was
+fitted. The adjudication model splits the same rows with the same seed and the same
+stratification, so its held-out applicants are the same ones
+([4.5](performance.qmd#benchmark)).
+
+## Two populations
+
+The model **trains and gates on applicants, while the bank lends to the
+{{< var score.n_booked >}} it books.** Within the held-out split:
+
+{{< include ../../_generated/score-populations.md >}}
+
+The gate ([4.9](gate.qmd)) is measured on the first row. The booked applicants are the
+population every loan decision after origination is made on, and there the same model
+ranks noticeably worse. Why that is so, and what is done about it, are finding 2 in
+[4.7](limitations.qmd).
+
+{{< yt S2-c5 >}}
+
+## Leakage controls
+
+The platform keeps one deny-list of columns that do not exist when the decision is made
+([D2](../d2-data.qmd#leakage-controls) gives the list and its three enforcement points):
+
+```python
+LEAKAGE_COLUMNS = [                   # shared/config.py
+    "pd_default_origination",     # DGP ground-truth PD
+    "default",                    # scorecard/adjudication target
+    "risk_based_rate",            # priced from the true PD
+    "booked",                     # funding decision (post-adjudication)
+    "deterioration_next_6_12mo",  # downstream early-warning target
+    "line_increase_good",         # downstream line-increase target
+]
+```
+
+For the scorecard the control is its fixed feature list, checked by the test suite:
+
+```python
+def test_score_features_are_leakage_free():      # tests/test_leakage.py
+    assert set(FEATURE_COLUMNS).isdisjoint(LEAKAGE_COLUMNS)
+```
+
+`score/src/train.py` itself does not assert against the deny-list, unlike the downstream
+trainers; the list it trains on is a constant, and the test fails the suite if a denied
+column is ever added to it.
+
+## Exclusions
+
+None. Every applicant is in either the training or the held-out split.

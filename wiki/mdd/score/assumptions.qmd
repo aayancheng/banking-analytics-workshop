@@ -1,0 +1,92 @@
+---
+title: "4.4 Assumptions"
+order: 4
+---
+
+Four assumptions carry the model. For each: what it is, the evidence, and what breaks if
+it fails. Two hold, one holds only in part, and one cannot be tested with the data the
+model was built on.
+
+## Monotonic weight of evidence
+
+**The assumption.** For each numeric feature, risk moves one way across its range: more
+leverage, more risk; longer history, less. A scorecard whose WoE rises and falls across a
+feature's bins gives an applicant a better score for a worse value somewhere in the range,
+and a reason code that cannot be defended.
+
+**The evidence.** `train.py` does not constrain the direction: `BinningProcess` is called
+without a `monotonic_trend`, so `optbinning` uses its default, `"auto"`, which chooses a
+shape per feature and may choose one that is not monotonic. Read in bin order, the WoE of
+{{< var score.n_woe_nonmonotonic >}} of the {{< var score.n_numeric >}} numeric features is
+not monotonic: **{{< var score.woe_nonmonotonic >}}**. The binning tables show it:
+
+```python
+scorecard.binning_process_.get_binned_variable("leverage").binning_table.build()
+```
+
+`leverage` enters the generator's default logit with one sign
+(`shared/data_generator.py`), so the break in its WoE is sampling noise that the binning
+kept. `trade_lines` has no role in the generator at all, so any shape its WoE takes is
+noise; it is part of finding 3 ([4.7](limitations.qmd)).
+
+**What breaks if it fails.** Not discrimination: the held-out AUC in
+[4.5](performance.qmd) is measured with these bins. What breaks is defensibility, for the
+applicants whose values fall where the WoE turns. The assumption **holds in part**. It is
+recorded as an observation in [4.7](limitations.qmd#observations), with its control:
+set the monotonic trend explicitly for each numeric feature at redevelopment.
+
+## Feature independence
+
+**The assumption.** No feature is so well predicted by the others that the regression
+cannot separate their effects. If one were, its coefficient would be unstable, and could
+even take the wrong sign.
+
+**The evidence**, on the WoE columns of the training split:
+
+| Measure | Value | Where |
+|---|---|---|
+| Largest pairwise correlation (absolute) | {{< var score.corr_max >}} | {{< var score.corr_max_pair >}} |
+| Largest variance inflation factor | {{< var score.vif_max >}} | {{< var score.vif_max_feature >}} |
+
+The largest correlation is built in: `revenue_per_employee` is `annual_revenue` divided by
+`employees` (`compute_features`). The decisive check is the coefficients' signs: all
+{{< var score.n_features >}} are {{< var score.coef_sign >}} (opposite-signed:
+{{< var score.coef_opposite >}}; [4.3](methodology.qmd#coefficient-signs)). No effect
+has been flipped by collinearity. The assumption **holds**.
+
+**What breaks if it fails.** The reason codes: with collinear features, WoE × coefficient
+splits one effect between two features arbitrarily.
+
+## A stable population
+
+**The assumption.** The applicants the model scores look like the ones it was fitted on.
+
+**The evidence.** Between the training and held-out splits, the score-band PSI is
+{{< var score.psi_score >}}; the largest feature PSI is {{< var score.psi_max >}}
+(on {{< var score.psi_max_feature >}}), and {{< var score.psi_n_over_010 >}} features exceed
+the {{< var monitoring.psi_watch >}} watch level ([4.5](performance.qmd#stability)). But
+the two splits are a random partition of **one cross-section** of applicants. Their PSI
+measures sampling noise, not drift over time. There is no out-of-time sample, so the
+assumption is **untested** — finding 1 ([4.7](limitations.qmd)), controlled by the
+monitoring plan ([4.8](monitoring.qmd)).
+
+**What breaks if it fails.** Both the ranking and the PD: bins fitted on one population
+misplace applicants from a shifted one, and the PD in each band drifts from the rate
+actually observed.
+
+## The generator as ground truth
+
+**The assumption.** The data generator's outcomes are the truth the model is measured
+against. Every `default` in the data was drawn by `shared/data_generator.py`, with noise
+added twice: inside the default logit, and again in the draw of each outcome from its
+probability.
+
+**The evidence.** The generator is code, so the truth is known exactly. That is what lets
+[4.5](performance.qmd#the-ceiling) state the best AUC any model could reach on this data,
+and [4.7](limitations.qmd) say which features have no causal role. The same fact bounds
+every claim in this chapter: each is a statement about the generator, not about any real
+book ([D1](../d1-purpose.qmd#scope-synthetic-data-real-methods)).
+
+**What breaks if it fails.** On real data there is no generator to consult: the ceiling
+and the structural-zero findings could not be established, and would have to be argued
+from domain knowledge and out-of-time evidence instead.

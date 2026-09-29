@@ -45,3 +45,15 @@ def test_every_band_is_present_and_shares_sum_to_one(facts):
 
 def test_structural_zero_share_is_measured(facts):
     assert facts["score.var_share_structural"].endswith("%")
+
+
+def test_band_defaults_add_up_to_the_held_out_default_rate(facts):
+    n = sum(int(facts[f"score.band.{b}.defaults"].replace(",", "")) for b in
+            ("D", "C", "B", "A", "AAA"))
+    assert abs(n / 2400 * 100 - float(facts["score.pop.everyone.dr"].rstrip("%"))) < 0.05
+
+
+def test_woe_monotonicity_is_measured_on_the_committed_card(facts):
+    # D4.4 reports this as an assumption not fully met; a change here changes that text.
+    assert facts["score.woe_nonmonotonic"] == "leverage, trade_lines"
+    assert facts["score.n_woe_nonmonotonic"] == "2"
