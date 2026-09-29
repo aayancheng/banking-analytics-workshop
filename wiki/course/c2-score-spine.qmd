@@ -70,6 +70,4 @@ the gate. It passes on the committed scorecard.
 Three exercises: refit without the bureau columns and document the gate failure; catch an
 agent quoting an AUC without its population; and ask an agent why the feature with the
 largest coefficient explains almost none of the score. They arrive before Session 4, each
-with a self-check.
-
-<!-- TODO(Task 11): link homework-s2.qmd once it exists. -->
+with a self-check where one is possible: [Session 2 homework](homework-s2.qmd).

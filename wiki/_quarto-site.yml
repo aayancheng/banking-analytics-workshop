@@ -28,7 +28,9 @@ website:
         - course/index.qmd
         - course/c0-start.qmd
         - course/c2-score-spine.qmd
+        - course/homework-s2.qmd
         - course/c4-governance.qmd
+        - course/homework-s4.qmd
     - id: mdd
       title: Model Documentation
       contents:

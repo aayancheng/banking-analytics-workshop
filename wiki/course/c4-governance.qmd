@@ -56,6 +56,4 @@ five the chapter raises.
 
 Three exercises: draft a D5 part (H4.1), review D4 as a validator (H4.2), and extend the
 crosswalk for one module (H4.3). They arrive with the session, each with a self-check
-where one is possible.
-
-<!-- TODO(Task 11): link homework-s4.qmd once it exists. -->
+where one is possible: [Session 4 homework](homework-s4.qmd).

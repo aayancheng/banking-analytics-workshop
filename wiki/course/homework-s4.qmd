@@ -1,0 +1,187 @@
+---
+title: "4 Homework: documenting a model, with an agent"
+---
+
+Three exercises for Session 4: the first is also the session's lab. In each you direct an
+AI coding agent and then check its work against the repository — the same discipline a
+validator applies to a developer's document.
+
+**Before you start.** Work on `main` (`git checkout main`), at the repository's root.
+Answers go in `wiki/homework/_answers/<ID>.md`, a folder git ignores; drafts of D5 go where
+the documentation lives, in `wiki/mdd/adjudication/`. None of the exercises needs Quarto:
+the lint and the self-check are plain Python.
+
+```bash
+python -m wiki.homework.check <ID>
+```
+
+Each solution below was written by running the exercise with an agent (Claude Code) in this
+repository, including where its first attempt went wrong. Try the exercise before you open
+it.
+
+## H4.1 Draft one part of D5 {#h4-1}
+
+**Kind:** Build. **Prompt card:**
+[`workshop/prompt-cards/HW-H4.1.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H4.1.md).
+**Answer:** `wiki/mdd/adjudication/<part>.qmd`.
+
+**Goal.** Have the agent draft one of the nine parts of the
+[template](../mdd/index.qmd#the-template) for D5, Loan Adjudication, starting from the
+[chapter's stub](../mdd/adjudication/index.qmd), with [D4](../mdd/score/index.qmd) as the
+worked example. In the lab, pairs take different parts and work in parallel; as homework,
+finish the chapter.
+
+**Check:** `python -m wiki.homework.check H4.1 --part <part>` checks one part: at least
+150 words beyond the template's comment, at least one fact cited, and a clean lint — every
+number a fact, every fact resolving. Without `--part` it checks all nine.
+
+**The trap.** A draft that lints clean can still be wrong. A `score.*` fact renders the
+scorecard's number, not the adjudication model's; a claim about a cutoff can contradict
+`adjudication/src/policy.py`. The lint proves every number is traceable, not that it is the
+right number in the right sentence. Read two claims against the code yourself.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The prompt that worked** is the card, with `performance` as the part.
+
+**The agent's draft** (excerpt, as rendered):
+
+> The gradient-boosted model scores a held-out AUC of {{< var adj.auc >}} on all held-out
+> applicants, against a gate of {{< var adj.gate_auc >}}. That is below the scorecard's
+> {{< var score.auc_holdout >}} on the same rows, although the model consumes the score as
+> one of its {{< var adj.n_features >}} inputs; the difference is inside the scorecard's own
+> interval of ±{{< var score.auc_ci_half >}}, so it is not evidence that either model is
+> better.
+>
+> Calibration by zone, stability and the booked-only AUC need facts that do not exist yet;
+> they are added in `wiki/facts/` before this section is written.
+
+**Where it first went wrong.** The first draft defined the lift as measured on the top
+fifth of applicants by predicted PD, but wrote the fifth as a percentage. The check failed
+it: the lint reports a hand-typed number and names the line. Numbers hide in phrases that read like words. The
+agent rephrased; it did not add the literal to `lint_allow.txt`, which would have silenced
+the lint and left the number untraceable.
+
+Two things it did right are worth copying. It named the gaps — calibration, stability, the
+booked-only AUC for this model — as "not yet measured" rather than filling them. And it
+compared the two models only within the precision the scorecard's bootstrap interval allows.
+
+**Rehearsed.** A line reading "The AUC is" followed by the adjudication AUC typed as digits
+fails the check with "hand-typed number". So does a relaxed gate in `score/src/train.py`,
+in every exercise.
+:::
+
+## H4.2 Turn the agent into a validator {#h4-2}
+
+**Kind:** Audit. **Prompt card:**
+[`workshop/prompt-cards/HW-H4.2.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H4.2.md).
+**Answer:** `wiki/homework/_answers/H4.2.md`.
+
+**Goal.** Have the agent review D4 as an independent validator, *without* reading the
+findings D4 raises about itself, and write at least three findings about the model, each
+with evidence. Then compare its findings with
+[D4.7](../mdd/score/limitations.qmd) — which did it miss, and which did it find that D4.7
+does not raise?
+
+**Check:** `python -m wiki.homework.check H4.2` — at least three findings, each citing
+evidence that exists: a fact key from `wiki/facts/facts.json` or a path in the repository.
+
+**The trap.** Evidence that is the documentation itself. "The chapter says so" proves what
+the document claims, not what the model does. Point at a fact or at code.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The prompt that worked** is the card as written. The answer's shape:
+
+```text
+F1: The gate is met on all held-out applicants but not on the held-out booked applicants,
+the population the bank lends to.
+Evidence: `score.pop.booked.auc`
+
+F2: A missing input, including a bureau field, is silently scored as zero rather than
+refused, although 4.6 shows the model fails its gate without bureau data. The refer rule is
+documented but not implemented.
+Evidence: `score/src/feature_engineering.py`
+
+F3: Band AAA under-predicts on the held-out booked applicants by a ratio well outside the
+monitoring tolerance.
+Evidence: `score.band_booked.AAA.ratio`
+
+F4: No out-of-time sample; the PSI between random splits measures sampling noise, not drift.
+Evidence: `score.psi_score`
+```
+
+**Where it first went wrong.** Its first F3 cited a page anchor in the documentation as
+evidence. The check failed it — no such file — and rightly: the evidence for a finding
+against the model is the measured ratio, not the page that reports it. It re-pointed F3 at
+the fact.
+
+**Against D4.7.** Two of the agent's findings are D4.7's (the gate population, the missing
+out-of-time sample). Two are matters D4.7 records only as *observations*: the missing-input
+rule and the loose calibration in the top bands. D4.7 argues both are too small, or too
+thinly evidenced, to raise on this data — a validator could fairly disagree about the first,
+since the control is documented but not built. The agent missed the concentration of the
+score in band D and the non-monotonic weight of evidence of `leverage`. Both were on pages
+it had been given — band D's share in [4.5](../mdd/score/performance.qmd), the
+weight of evidence in [4.4](../mdd/score/assumptions.qmd) — and it missed them by reading
+selectively: it worked through performance and sensitivity closely and never opened the
+binning tables. An agent audits what it looks at, so ask it which pages and tables it read.
+
+Note too that the blind is partial. Other D4 pages cross-reference the findings by number,
+so an agent that reads everything is led towards D4.7's list; an honest review says which
+findings it reached independently.
+:::
+
+## H4.3 Extend the crosswalk for one module {#h4-3}
+
+**Kind:** Build. **Prompt:** below; there is no card and no self-check. **Answer:**
+`wiki/homework/_answers/H4.3.md`.
+
+**Goal.** The [crosswalk](../reference/crosswalk.qmd) maps each element of SR 11-7 to a
+part of the documentation — N.1 to N.9 stand for any model chapter. Have the agent make it
+concrete for one module: for each row, the page and section of that chapter where the
+element is covered, or "not covered in this chapter" with where it is covered instead.
+
+> In the `banking-analytics-workshop` repo on `main`, read `wiki/reference/crosswalk.qmd` and
+> every page in `wiki/mdd/score/`. For each row of the crosswalk table, give the D4 page and
+> section heading where that element is documented for the Business Credit Score, as a
+> relative link from `wiki/reference/`. If D4 does not cover it, say so and name the chapter
+> that does. Do not change the OSFI or PRA columns and do not add principle numbers of your
+> own. Write the table to `wiki/homework/_answers/H4.3.md`.
+
+**The trap.** Regulatory references from memory. An agent will happily supply principle
+numbers, and a wrong one reads exactly like a right one. The crosswalk's numbers were read
+from the source documents; the exercise extends the table's *here* column and nothing else.
+The second trap is the easy row: a cell filled with the chapter's index page, because
+something must go there.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The agent's table** for D4, the Business Credit Score:
+
+| SR 11-7 element | In D4 |
+|---|---|
+| Model definition and inventory | [D4, "at a glance"](../mdd/score/index.qmd); the inventory is D0 |
+| Purpose and use | [4.1](../mdd/score/purpose.qmd), including [prohibited uses](../mdd/score/purpose.qmd#prohibited-uses) |
+| Data | [4.2](../mdd/score/data.qmd), including [leakage controls](../mdd/score/data.qmd#leakage-controls) |
+| Model dependencies | [4.1, who consumes it](../mdd/score/purpose.qmd#who-consumes-it-and-how); the dependency map is D3 |
+| Conceptual soundness | [4.3](../mdd/score/methodology.qmd), [4.4](../mdd/score/assumptions.qmd) |
+| Implementation | [the binning solver](../mdd/score/methodology.qmd#implementation-note-the-binning-solver), [where the gate is asserted](../mdd/score/gate.qmd#where-it-is-asserted); the platform is D9 |
+| Performance and outcomes analysis | [4.5](../mdd/score/performance.qmd) |
+| Sensitivity | [4.6](../mdd/score/sensitivity.qmd) |
+| Limitations | [4.7](../mdd/score/limitations.qmd) |
+| Ongoing monitoring | [4.8](../mdd/score/monitoring.qmd) |
+| Governance and change control | [4.9](../mdd/score/gate.qmd), including its [history](../mdd/score/gate.qmd#history); sign-off is D11 |
+| Risk tiering | not covered in this chapter: D0 |
+| AI/ML: explainability, autonomy, agent use | [4.3, why this method](../mdd/score/methodology.qmd#why-this-method) (exact reason codes); agent use is D10 |
+
+**Where it first went wrong.** Its first pass put "model dependencies" down as not covered
+in D4 and pointed only at D3. Listing D4's section headings showed otherwise: 4.1 has a
+section on who consumes the score and how, which is the score's side of the dependency. It
+made the same mistake on the *implementation* row, first answering "D9 only" before finding
+the two D4 sections that describe how the scorecard is built and gated in code. Both errors
+were the easy row: a plausible cell filled before the headings were read.
+:::
+
+## Check your own work
+
+After any exercise, `python verify.py` should still pass. If it does not, the agent changed
+something it was told not to: `git status` shows what, and `git checkout -- <path>` puts it
+back.

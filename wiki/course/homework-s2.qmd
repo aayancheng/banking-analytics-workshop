@@ -1,0 +1,182 @@
+---
+title: "2 Homework: the score spine, with an agent"
+---
+
+Three exercises for after Session 2. In each you direct an AI coding agent — any agent
+that can read files and run commands in your Codespace — and then check what it produced
+against the repository. The skill is not getting an answer; it is knowing whether the
+answer is right.
+
+**Before you start.** Work on `main` (`git checkout main`), at the repository's root. Each
+answer goes in `wiki/homework/_answers/<ID>.md`; that folder is ignored by git, so nothing
+you write there is committed or shared. Where an exercise has a self-check, it recomputes
+every number itself and never trusts one pasted into your answer:
+
+```bash
+python -m wiki.homework.check <ID>
+```
+
+Each solution below was written by running the exercise with an agent (Claude Code) in this
+repository, including where its first attempt went wrong. Try the exercise before you open
+it.
+
+## H2.1 Bureau feed down: document a gate failure {#h2-1}
+
+**Kind:** Build. **Prompt card:**
+[`workshop/prompt-cards/HW-H2.1.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H2.1.md).
+**Answer:** `wiki/homework/_answers/H2.1.md`.
+
+**Goal.** Have the agent refit the scorecard with `score/src/train.py`'s exact recipe but
+without the four bureau columns — `utilization`, `credit_history_months`,
+`prior_delinquencies` and `trade_lines` — and report the held-out AUC and what it means for
+the gate of {{< var score.gate >}}. The committed model and the gate must be untouched when
+it finishes. This is the scenario D4 documents in
+[4.6](../mdd/score/sensitivity.qmd#bureau-feed-down-a-gate-failure-documented).
+
+**Check:** `python -m wiki.homework.check H2.1` — it compares your AUC with its own
+recomputation and fails if `AUC_GATE` in `score/src/train.py` or `SCORE_AUC_GATE` in
+`verify.py` has moved.
+
+**The trap.** The refit fails the gate. An agent asked to "make it work" will reach for the
+gate, or for the binning, until it passes. The exercise is to document the failure, not
+remove it. A second trap is the tool: `make train-score` overwrites the committed model in
+`score/models/`, which every later module consumes.
+
+The S2 lab sheet runs the same experiment with `public_records` as the fourth column instead
+of `trade_lines`. Both refits are correct for their own column set; they give different
+AUCs. This exercise and D4 use `trade_lines`.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The prompt that worked** is the card as written. What made it work is step 3: the refit
+runs in a scratch script, so nothing under `score/` is written.
+
+**The agent's reply** (excerpt):
+
+> Refit with train.py's recipe, dropping the four bureau columns. Held-out AUC on all
+> held-out applicants: {{< var score.stress.no_bureau.auc >}} (KS
+> {{< var score.stress.no_bureau.ks >}}), below the committed gate of {{< var score.gate >}}.
+> The gate fails; the model does not ship. I did not change `AUC_GATE`, and the committed
+> scorecard is untouched.
+
+**Where it first went wrong.** The script failed on its first run with
+`ModuleNotFoundError: No module named 'shared'`: a script run from outside the repository's
+root does not see the repository's packages. It needed `PYTHONPATH=.` — a fix, not a
+finding. The more instructive detail is the column list. The S2 lab sheet and D4.6 name
+different fourth columns, so the agent refitted both and got two different AUCs, each
+correct for its own columns. An answer that quoted the lab sheet's number would fail this
+check, which recomputes the scenario with `trade_lines`. When a number fails a check, first
+ask whether it is the same experiment.
+
+**The gate, rehearsed.** With `AUC_GATE` set to a lower value in `score/src/train.py`, the
+same correct answer fails the check: "a gate was changed — the exercise is failed". Restore
+it with `git checkout -- score/src/train.py`.
+:::
+
+## H2.2 Catch an AUC without its population {#h2-2}
+
+**Kind:** Catch. **Prompt card:**
+[`workshop/prompt-cards/HW-H2.2.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H2.2.md).
+**Answer:** `wiki/homework/_answers/H2.2.md`.
+
+**Goal.** Ask the agent how good the scorecard is, the way a manager would, and let it
+answer. Then catch every AUC in its answer that does not say on whom it was measured, and
+send it back to measure the one that matters for the loans the bank holds: the held-out
+booked applicants.
+
+**Check:** `python -m wiki.homework.check H2.2` — it recomputes the booked-only AUC and
+fails any AUC in your answer with no population beside it.
+
+**The trap.** The easy booked-only number is the wrong one. Filtering the whole book to the
+booked loans and computing the AUC mixes the loans the model trained on with the ones it
+did not, and gives a number that is too high. The honest number comes from the scorecard's
+own held-out split, filtered afterwards. See [4.2](../mdd/score/data.qmd#two-populations)
+for why the two populations differ.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**Round 1, the agent's first answer** (excerpt):
+
+> The committed scorecard has an AUC of {{< var score.auc_holdout >}} and a KS of
+> {{< var score.ks_holdout >}} (`score/models/metadata.json`), comfortably above the
+> {{< var score.gate >}} gate. On the loans the bank actually books it is [a higher number].
+
+**Where it went wrong.** Twice. The first AUC is correct but names no population: the
+reader cannot tell it is measured on all held-out applicants, which is the population the
+gate uses and not the one the bank lends to. The second was computed over every booked loan
+in the book, most of which the model was trained on; it names a population, but the wrong
+one, and it overstates the model by a margin larger than the AUC's own bootstrap interval.
+The check failed the answer on both counts: the booked-only AUC was missing, and three
+numbers had no population beside them. (One of the three was the KS: the check flags any
+bare four-decimal number, which is the right rule for a KS too.)
+
+**The prompt that worked** is round 2 of the card, which fixes the split before the filter.
+
+**The agent's reply** (excerpt):
+
+> On all {{< var score.pop.everyone.n >}} held-out applicants the committed scorecard's AUC
+> is {{< var score.pop.everyone.auc >}} — the population the gate ({{< var score.gate >}}) is
+> measured on. On the {{< var score.pop.booked.n >}} held-out booked applicants it is
+> {{< var score.pop.booked.auc >}}, below the gate value; on the
+> {{< var score.pop.rejected.n >}} held-out rejected applicants it is
+> {{< var score.pop.rejected.auc >}}.
+
+That is finding 2 of D4 ([4.7](../mdd/score/limitations.qmd)), reached from a one-line
+question.
+:::
+
+## H2.3 Ask: a large weight, a small effect {#h2-3}
+
+**Kind:** Ask. **Prompt:** below; there is no card. **Answer:** anywhere you like — this
+exercise has no self-check, because the answer is an explanation.
+
+**Goal.** In the data generator, `profit_margin` carries the largest weight in the default
+logit (`shared/data_generator.py`). In the committed scorecard it carries
+{{< var score.var_share.profit_margin >}} of the variance of the logit on held-out
+applicants, against {{< var score.var_share.dscr >}} for `dscr`. Ask the agent why, and judge
+whether its answer would survive a validator.
+
+> In the `banking-analytics-workshop` repo on `main`: in `shared/data_generator.py`,
+> `profit_margin` has the largest coefficient in the default logit. In the committed
+> scorecard, its share of the logit's variance on held-out applicants is small (see
+> `wiki/facts/facts.json`, key `score.var_share.profit_margin`, and how it is computed in
+> `wiki/facts/score_facts.py`). Explain why, using the code. Then say which of the two —
+> coefficient or variance share — you would use to rank features by importance, and why.
+
+**The trap.** The premise is about the generator, not the scorecard. An agent that does not
+check will explain a large scorecard coefficient that does not exist.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**Where it first went wrong.** Its first move was to check the premise in the wrong model.
+It printed the committed scorecard's coefficients and found `profit_margin`'s is not the
+largest there — several features carry larger ones. The premise is true only of the
+generator's logit. The check was the right instinct, aimed at the wrong file; naming
+`shared/data_generator.py` in the prompt points it at the right one. An agent answers the
+question it finds, so say where to look — and a premise it cannot confirm is worth hearing
+about before any explanation.
+
+**The agent's reply** (excerpt):
+
+> A coefficient is a weight per unit of its variable, and `profit_margin` is one of two
+> variables that enter the generator's logit unstandardised. Its spread is small — a few
+> points of margin either side of its mean — so a large weight times a small spread is a
+> small contribution. The effect on the logit is weight × spread, not the weight.
+>
+> The scorecard shows the same thing another way. Each term of its logit is
+> WoE × coefficient, and `feature_contributions` in `score/src/reason_codes.py` computes it
+> row by row; the variance share is each term's variance over the total, on the held-out
+> applicants. `profit_margin`'s bins barely separate defaulters (IV
+> {{< var score.iv.profit_margin >}}), so its WoE barely moves, and its term carries
+> {{< var score.var_share.profit_margin >}} of the variance.
+>
+> To rank features, use the variance share: it is in the units of the thing being
+> explained. A coefficient's size depends on how its variable was scaled.
+
+That answer survives. [4.3](../mdd/score/methodology.qmd) makes the same argument for the
+committed card, and the low IV is not evidence of no effect: `profit_margin` does enter the
+generator's logit.
+:::
+
+## Check your own work
+
+After any exercise, `python verify.py` should still pass. If it does not, the agent changed
+something it was told not to: `git status` shows what, and `git checkout -- <path>` puts it
+back.
