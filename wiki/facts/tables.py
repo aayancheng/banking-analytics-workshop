@@ -76,7 +76,7 @@ def fact_index(meta: dict[str, dict]) -> str:
             for k, d in sorted(meta.items())]
     return ("---\ntitle: \"Every number in this documentation\"\n---\n\n" + HEADER +
             "Each value below is recomputed by `python verify.py`. Pages print these through "
-            "`{{< var key >}}`; none is typed by hand.\n\n" +
+            "`{{</* var key */>}}`; none is typed by hand.\n\n" +
             _table(["Key", "Value", "Population", "Source"], rows))
 
 

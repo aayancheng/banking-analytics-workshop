@@ -71,3 +71,10 @@ def test_stale_reports_an_outdated_generated_file(tmp_path):
     t = {"a.b": "1"}
     (tmp_path / "facts.qmd").write_text("old")
     assert any("facts.qmd" in p for p in tables.stale_files({"facts.qmd": "new"}, tmp_path))
+
+
+def test_fact_index_escapes_the_var_shortcode_it_names():
+    meta = _meta({"score.auc": "0.8176"})
+    text = tables.fact_index(meta)
+    assert "{{</* var key */>}}" in text
+    assert "{{< var key >}}" not in text
