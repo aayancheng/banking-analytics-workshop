@@ -110,8 +110,9 @@ Evidence: `score.psi_score`
 ```
 
 **Where it first went wrong.** Its first F3 cited a page anchor in the documentation as
-evidence. The check failed it — no such file — and rightly: the evidence for a finding
-against the model is the measured ratio, not the page that reports it. It re-pointed F3 at
+evidence. The check failed it — "the documentation is not evidence" — and rightly: the
+evidence for a finding against the model is the measured ratio, not the page that reports
+it. It re-pointed F3 at
 the fact.
 
 **Against D4.7.** Two of the agent's findings are D4.7's (the gate population, the missing

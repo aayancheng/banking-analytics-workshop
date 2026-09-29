@@ -43,7 +43,8 @@ what that does to the gate — with the committed scorecard and the gate exactly
 python -m wiki.homework.check H2.1
 ```
 
-The check recomputes the no-bureau AUC itself and compares it with your answer, and it
+The check recomputes the no-bureau AUC itself and compares it with your answer (three or
+four decimals, or a percentage), wants a sentence saying the refit fails the gate, and it
 fails if the gate in `score/src/train.py` or `verify.py` has moved.
 
 ## The trap

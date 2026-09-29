@@ -43,8 +43,9 @@ Read the reply before you go on. Mark every AUC in it that does not say *on whom
 python -m wiki.homework.check H2.2
 ```
 
-The check recomputes the booked-only AUC and fails any AUC in your answer with no
-population near it.
+The check recomputes the booked-only AUC and fails any AUC in your answer whose sentence
+(or, in a table, whose row or header row) names no population. It counts as an AUC any
+number that matches one of the recomputed AUCs to four decimals; a KS is not checked.
 
 ## The trap
 

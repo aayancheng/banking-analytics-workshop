@@ -34,8 +34,9 @@ it finishes. This is the scenario D4 documents in
 [4.6](../mdd/score/sensitivity.qmd#bureau-feed-down-a-gate-failure-documented).
 
 **Check:** `python -m wiki.homework.check H2.1` — it compares your AUC with its own
-recomputation and fails if `AUC_GATE` in `score/src/train.py` or `SCORE_AUC_GATE` in
-`verify.py` has moved.
+recomputation (to three or four decimals, or as a percentage), looks for a sentence that
+says the refit fails the gate, and fails if `AUC_GATE` in `score/src/train.py` or
+`SCORE_AUC_GATE` in `verify.py` has moved.
 
 **The trap.** The refit fails the gate. An agent asked to "make it work" will reach for the
 gate, or for the binning, until it passes. The exercise is to document the failure, not
@@ -84,7 +85,9 @@ send it back to measure the one that matters for the loans the bank holds: the h
 booked applicants.
 
 **Check:** `python -m wiki.homework.check H2.2` — it recomputes the booked-only AUC and
-fails any AUC in your answer with no population beside it.
+fails any AUC in your answer whose sentence names no population. An AUC is any number that
+matches one of the recomputed AUCs to four decimals; in a table, the row or the table's
+header row may name the population. Other numbers, such as a KS, are not checked.
 
 **The trap.** The easy booked-only number is the wrong one. Filtering the whole book to the
 booked loans and computing the AUC mixes the loans the model trained on with the ones it
@@ -104,9 +107,10 @@ reader cannot tell it is measured on all held-out applicants, which is the popul
 gate uses and not the one the bank lends to. The second was computed over every booked loan
 in the book, most of which the model was trained on; it names a population, but the wrong
 one, and it overstates the model by a margin larger than the AUC's own bootstrap interval.
-The check failed the answer on both counts: the booked-only AUC was missing, and three
-numbers had no population beside them. (One of the three was the KS: the check flags any
-bare four-decimal number, which is the right rule for a KS too.)
+The check failed the answer on both counts: the booked-only AUC it recomputes was missing,
+and the first AUC had no population in its sentence. It did not flag the in-sample number
+itself — that is not one of the recomputed AUCs — the absence of the right one is what
+the first line reports. That part of the catch is yours.
 
 **The prompt that worked** is round 2 of the card, which fixes the split before the filter.
 
