@@ -97,6 +97,18 @@ def compute(split) -> tuple[dict[str, Fact], dict]:
         put(f"score.band.{b}.defaults", int(y_te[m].sum()), ",d", "businesses.default", HOLDOUT)
     put("score.band_d_share", f["score.band.D.share"].value, ".0%", SRC_PRED, HOLDOUT)
 
+    BOOKED_HOLDOUT = "held-out booked applicants"    # the population 4.8 monitors
+    bk = booked[te]
+    for b in BANDS:
+        m = (band_all[te] == b) & bk
+        n, obs, pred = int(m.sum()), float(y_te[m].mean()), float(pd_te[m].mean())
+        put(f"score.band_booked.{b}.n", n, ",d", SRC_PRED, BOOKED_HOLDOUT)
+        put(f"score.band_booked.{b}.defaults", int(y_te[m].sum()), ",d", "businesses.default",
+            BOOKED_HOLDOUT)
+        put(f"score.band_booked.{b}.observed", obs, ".1%", "businesses.default", BOOKED_HOLDOUT)
+        put(f"score.band_booked.{b}.predicted", pred, ".1%", SRC_PRED, BOOKED_HOLDOUT)
+        put(f"score.band_booked.{b}.ratio", obs / pred, ".2f", SRC_PRED, BOOKED_HOLDOUT)
+
     idx = bp.transform(X, metric="indices")
     psi = pd.Series({c: _psi(idx[c].iloc[tr], idx[c].iloc[te]) for c in idx.columns})
     src_psi = "PSI over the scorecard's own bins, train -> test"

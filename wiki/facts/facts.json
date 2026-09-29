@@ -391,6 +391,181 @@
     "text": "50.9%",
     "value": 0.509167
   },
+  "score.band_booked.A.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "5",
+    "value": 5
+  },
+  "score.band_booked.A.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "157",
+    "value": 157
+  },
+  "score.band_booked.A.observed": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "3.2%",
+    "value": 0.031847
+  },
+  "score.band_booked.A.predicted": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "1.9%",
+    "value": 0.019278
+  },
+  "score.band_booked.A.ratio": {
+    "fmt": ".2f",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "1.65",
+    "value": 1.65199
+  },
+  "score.band_booked.AAA.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "4",
+    "value": 4
+  },
+  "score.band_booked.AAA.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "161",
+    "value": 161
+  },
+  "score.band_booked.AAA.observed": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "2.5%",
+    "value": 0.024845
+  },
+  "score.band_booked.AAA.predicted": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "0.8%",
+    "value": 0.007916
+  },
+  "score.band_booked.AAA.ratio": {
+    "fmt": ".2f",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "3.14",
+    "value": 3.138348
+  },
+  "score.band_booked.B.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "16",
+    "value": 16
+  },
+  "score.band_booked.B.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "302",
+    "value": 302
+  },
+  "score.band_booked.B.observed": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "5.3%",
+    "value": 0.05298
+  },
+  "score.band_booked.B.predicted": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "3.7%",
+    "value": 0.037274
+  },
+  "score.band_booked.B.ratio": {
+    "fmt": ".2f",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "1.42",
+    "value": 1.421374
+  },
+  "score.band_booked.C.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "28",
+    "value": 28
+  },
+  "score.band_booked.C.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "351",
+    "value": 351
+  },
+  "score.band_booked.C.observed": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "8.0%",
+    "value": 0.079772
+  },
+  "score.band_booked.C.predicted": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "7.4%",
+    "value": 0.073843
+  },
+  "score.band_booked.C.ratio": {
+    "fmt": ".2f",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "1.08",
+    "value": 1.0803
+  },
+  "score.band_booked.D.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "130",
+    "value": 130
+  },
+  "score.band_booked.D.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "673",
+    "value": 673
+  },
+  "score.band_booked.D.observed": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "businesses.default",
+    "text": "19.3%",
+    "value": 0.193165
+  },
+  "score.band_booked.D.predicted": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "22.3%",
+    "value": 0.223245
+  },
+  "score.band_booked.D.ratio": {
+    "fmt": ".2f",
+    "population": "held-out booked applicants",
+    "source": "score.src.predict.predict_score_pd",
+    "text": "0.87",
+    "value": 0.865261
+  },
   "score.band_d_share": {
     "fmt": ".0%",
     "population": "held-out 20% of applicants (score split, seed 42)",

@@ -32,8 +32,8 @@ noise; it is part of finding 3 ([4.7](limitations.qmd)).
 **What breaks if it fails.** Not discrimination: the held-out AUC in
 [4.5](performance.qmd) is measured with these bins. What breaks is defensibility, for the
 applicants whose values fall where the WoE turns. The assumption **holds in part**. It is
-recorded as an observation in [4.7](limitations.qmd#observations), with its control:
-set the monotonic trend explicitly for each numeric feature at redevelopment.
+finding 5 in [4.7](limitations.qmd), with its control: set the monotonic trend explicitly
+for each numeric feature at redevelopment.
 
 ## Feature independence
 

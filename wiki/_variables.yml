@@ -67,6 +67,37 @@ score:
       predicted: "28.7%"
       ratio: "0.98"
       share: "50.9%"
+  band_booked:
+    A:
+      defaults: "5"
+      n: "157"
+      observed: "3.2%"
+      predicted: "1.9%"
+      ratio: "1.65"
+    AAA:
+      defaults: "4"
+      n: "161"
+      observed: "2.5%"
+      predicted: "0.8%"
+      ratio: "3.14"
+    B:
+      defaults: "16"
+      n: "302"
+      observed: "5.3%"
+      predicted: "3.7%"
+      ratio: "1.42"
+    C:
+      defaults: "28"
+      n: "351"
+      observed: "8.0%"
+      predicted: "7.4%"
+      ratio: "1.08"
+    D:
+      defaults: "130"
+      n: "673"
+      observed: "19.3%"
+      predicted: "22.3%"
+      ratio: "0.87"
   band_d_share: "51%"
   benchmark_adj_auc: "0.8096"
   bootstrap_n: "1,000"

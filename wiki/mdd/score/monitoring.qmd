@@ -27,7 +27,9 @@ deliberately the stricter of the two.
 
 ## Development baselines
 
-What "no change" looks like, measured at development:
+What "no change" looks like, measured at development. The calibration baselines are on the
+held-out **booked** applicants, the same population the calibration check monitors
+([4.5](performance.qmd#held-out-booked-applicants)).
 
 | Metric | Development value | Population |
 |---|---|---|
@@ -35,13 +37,20 @@ What "no change" looks like, measured at development:
 | Largest feature PSI | {{< var score.psi_max >}} ({{< var score.psi_max_feature >}}) | train vs held-out applicants |
 | AUC | {{< var score.auc_holdout >}} | held-out applicants |
 | AUC, booked only | {{< var score.pop.booked.auc >}} | held-out booked applicants |
-| Observed / predicted, band D | {{< var score.band.D.ratio >}} | held-out applicants |
-| Observed / predicted, band AAA | {{< var score.band.AAA.ratio >}} | held-out applicants |
 
-Bands A and AAA are already outside the calibration tolerance at development, on very few
-defaults ([4.5](performance.qmd#rank-ordering-and-calibration-by-band)). The first cohorts
-with matured outcomes show whether that is noise or a persistent under-prediction at the
-safe end.
+| Band | Observed / predicted | Defaults behind it | Population |
+|---|---|---|---|
+| D | {{< var score.band_booked.D.ratio >}} | {{< var score.band_booked.D.defaults >}} | held-out booked applicants |
+| C | {{< var score.band_booked.C.ratio >}} | {{< var score.band_booked.C.defaults >}} | held-out booked applicants |
+| B | {{< var score.band_booked.B.ratio >}} | {{< var score.band_booked.B.defaults >}} | held-out booked applicants |
+| A | {{< var score.band_booked.A.ratio >}} | {{< var score.band_booked.A.defaults >}} | held-out booked applicants |
+| AAA | {{< var score.band_booked.AAA.ratio >}} | {{< var score.band_booked.AAA.defaults >}} | held-out booked applicants |
+
+Bands B, A and AAA are already outside the calibration tolerance at development, each on
+few defaults ([4.5](performance.qmd#held-out-booked-applicants)). The first cohorts with
+matured outcomes show whether that is noise or a persistent under-prediction at the safe
+end; until then, a breach in those bands is read against its default count before any
+action.
 
 ## Redevelopment triggers
 
@@ -53,7 +62,7 @@ Any one of these starts a redevelopment, with the validator informed:
 4. A change to any input's definition or source, including the bureau feed
    ([4.6](sensitivity.qmd#bureau-feed-down-a-gate-failure-documented)).
 
-A redevelopment is also where findings 3 and 4 and the observations in
+A redevelopment is also where findings 3, 4 and 5 and the observations in
 [4.7](limitations.qmd) are acted on.
 Every redevelopment re-runs [4.5](performance.qmd) and [4.6](sensitivity.qmd), passes the
 gate, and forces the downstream work in [D3](../d3-dependencies.qmd#what-a-scorecard-change-forces).

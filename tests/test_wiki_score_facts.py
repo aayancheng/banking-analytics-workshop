@@ -57,3 +57,15 @@ def test_woe_monotonicity_is_measured_on_the_committed_card(facts):
     # D4.4 reports this as an assumption not fully met; a change here changes that text.
     assert facts["score.woe_nonmonotonic"] == "leverage, trade_lines"
     assert facts["score.n_woe_nonmonotonic"] == "2"
+
+
+def test_booked_band_facts_are_the_booked_subset(facts):
+    bands = ("D", "C", "B", "A", "AAA")
+    n = sum(int(facts[f"score.band_booked.{b}.n"].replace(",", "")) for b in bands)
+    d = sum(int(facts[f"score.band_booked.{b}.defaults"].replace(",", "")) for b in bands)
+    assert n == int(facts["score.pop.booked.n"].replace(",", ""))
+    assert abs(d / n * 100 - float(facts["score.pop.booked.dr"].rstrip("%"))) < 0.05
+    for b in bands:   # the booked rows are a subset of each band's held-out rows
+        assert int(facts[f"score.band_booked.{b}.defaults"].replace(",", "")) <= \
+            int(facts[f"score.band.{b}.defaults"].replace(",", ""))
+    assert facts["score.band_booked.D.ratio"] == "0.87"   # reviewer's independent recompute

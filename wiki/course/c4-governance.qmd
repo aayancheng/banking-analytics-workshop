@@ -38,7 +38,7 @@ platform's own functions; a lint fails the build on any number typed by hand. Se
 
 The [Business Credit Score chapter, D4](../mdd/score/index.qmd), is complete. It follows the nine-part
 [template](../mdd/index.qmd#the-template) — purpose, data, methodology, assumptions,
-performance, sensitivity, limitations, monitoring, gate — and raises four open findings
+performance, sensitivity, limitations, monitoring, gate — and raises five open findings
 about its own model, each with evidence, a compensating control and an owner.
 
 ## The lab: draft D5 with an agent (H4.1)
@@ -50,7 +50,7 @@ self-check confirms the part is complete. The lab needs no Quarto: the lint and 
 are plain Python.
 
 Then turn the agent into a validator: have it review D4 and compare its findings with the
-four the chapter raises.
+five the chapter raises.
 
 ## Homework with an agent
 

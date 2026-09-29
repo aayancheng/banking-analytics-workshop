@@ -48,7 +48,7 @@ agrees with the variance shares in [4.3](methodology.qmd#feature-selection-and-s
 
 ## Structural zeros: nothing to rank on
 
-The five columns the generator gives no role in default —
+Five of the columns the generator gives no role in default —
 {{< var score.stress.structural_five_columns >}} — refit to a held-out AUC of
 {{< var score.stress.structural_five.auc >}}: a coin toss. Three of them are in the
 committed model; this scenario is the direct evidence that they cannot rank applicants,
@@ -56,11 +56,19 @@ and the reason finding 3 in [4.7](limitations.qmd) treats them as inert.
 
 ## Revenue and its relatives: real but limited signal
 
-The last scenario keeps {{< var score.stress.proxy_five_columns >}}. Only `annual_revenue`
-is in the generator's default logit. `requested_amount`, `net_income` and `total_debt` are
-drawn as multiples of it, so any signal they carry is borrowed from it; `employees` has no
-role at all. Together they reach {{< var score.stress.proxy_five.auc >}}: real, stable
-ranking, from one causal input and its derivatives. A proxy ranks for someone else's
+The last scenario keeps {{< var score.stress.proxy_five_columns >}}. Of these, only
+`annual_revenue` is in the generator's default logit. Three of the others are each
+`annual_revenue` times a multiplier (`shared/data_generator.py`):
+
+- `requested_amount`: revenue times a random draw — noise, so its signal is borrowed from
+  revenue alone;
+- `net_income`: revenue times `profit_margin`, and `total_debt`: revenue times `leverage`.
+  Both multipliers are causal primitives in the generator, but the product does not isolate
+  them: each column mixes the multiplier's effect with revenue's scale.
+
+`employees` has no role at all; it is another of the generator's structural zeros. Together
+the five reach {{< var score.stress.proxy_five.auc >}}: real, stable ranking, carried by
+revenue and by what its products happen to carry of two causal ratios. A proxy ranks for someone else's
 reasons ([glossary](../../reference/glossary.qmd)), and a model built on proxies would
 fail as soon as the relationship to the causal feature changed.
 

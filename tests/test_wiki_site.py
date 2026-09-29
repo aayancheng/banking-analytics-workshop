@@ -60,6 +60,6 @@ def test_d4_has_an_index_and_the_nine_parts_in_order():
 
 
 def test_signoff_open_findings_are_d4_limitations_word_for_word():
-    rows = lambda p: [l for l in p.read_text().splitlines() if l[:4] in {f"| {n} " for n in "1234"}]
+    rows = lambda p: [l for l in p.read_text().splitlines() if l[:4] in {f"| {n} " for n in "12345"}]
     d11 = rows(WIKI / "mdd" / "d11-signoff.qmd")
-    assert len(d11) == 4 and d11 == rows(WIKI / "mdd" / "score" / "limitations.qmd")
+    assert len(d11) == 5 and d11 == rows(WIKI / "mdd" / "score" / "limitations.qmd")

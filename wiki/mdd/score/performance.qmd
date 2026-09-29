@@ -41,6 +41,13 @@ booked the AUC is below the gate value. That is finding 2 ([4.7](limitations.qmd
 
 ## Rank-ordering and calibration by band
 
+Calibration is shown on two populations, because they answer different questions: all
+held-out applicants is where the model was built and gated; the held-out **booked**
+applicants are the loans whose outcomes a bank actually observes, and so the population
+the monitoring plan tracks ([4.8](monitoring.qmd)).
+
+### All held-out applicants
+
 {{< include ../../_generated/score-bands.md >}}
 
 ![Mean predicted PD and observed default rate by band, held-out applicants.](fig/calibration.svg){#fig-calibration}
@@ -54,16 +61,45 @@ on average in that band, above 1 means the model under-predicts. @fig-calibratio
 two rates side by side.
 
 - In bands D, C and B the ratio is {{< var score.band.D.ratio >}},
-  {{< var score.band.C.ratio >}} and {{< var score.band.B.ratio >}}: inside the monitoring
-  tolerance of {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}}
-  ([4.8](monitoring.qmd)).
+  {{< var score.band.C.ratio >}} and {{< var score.band.B.ratio >}}: inside the tolerance
+  of {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}} that the monitoring
+  plan applies ([4.8](monitoring.qmd)).
 - In bands A and AAA it is {{< var score.band.A.ratio >}} and
   {{< var score.band.AAA.ratio >}}: outside that tolerance, with the model predicting
   fewer defaults than occur. These ratios rest on very few defaults —
   {{< var score.band.A.defaults >}} of {{< var score.band.A.n >}} applicants in band A and
   {{< var score.band.AAA.defaults >}} of {{< var score.band.AAA.n >}} in band AAA — so a
-  handful of defaults either way moves them a long way. They are recorded as an
-  observation in [4.7](limitations.qmd#observations), not a finding.
+  handful of defaults either way moves them a long way.
+
+### Held-out booked applicants
+
+| Band | n | Defaults | Observed default rate | Mean predicted PD | Observed / predicted |
+|---|---|---|---|---|---|
+| D | {{< var score.band_booked.D.n >}} | {{< var score.band_booked.D.defaults >}} | {{< var score.band_booked.D.observed >}} | {{< var score.band_booked.D.predicted >}} | {{< var score.band_booked.D.ratio >}} |
+| C | {{< var score.band_booked.C.n >}} | {{< var score.band_booked.C.defaults >}} | {{< var score.band_booked.C.observed >}} | {{< var score.band_booked.C.predicted >}} | {{< var score.band_booked.C.ratio >}} |
+| B | {{< var score.band_booked.B.n >}} | {{< var score.band_booked.B.defaults >}} | {{< var score.band_booked.B.observed >}} | {{< var score.band_booked.B.predicted >}} | {{< var score.band_booked.B.ratio >}} |
+| A | {{< var score.band_booked.A.n >}} | {{< var score.band_booked.A.defaults >}} | {{< var score.band_booked.A.observed >}} | {{< var score.band_booked.A.predicted >}} | {{< var score.band_booked.A.ratio >}} |
+| AAA | {{< var score.band_booked.AAA.n >}} | {{< var score.band_booked.AAA.defaults >}} | {{< var score.band_booked.AAA.observed >}} | {{< var score.band_booked.AAA.predicted >}} | {{< var score.band_booked.AAA.ratio >}} |
+
+On the booked the picture is less tidy. Rank-ordering still holds, from
+{{< var score.band_booked.D.observed >}} in band D to {{< var score.band_booked.AAA.observed >}}
+in band AAA.
+
+- In bands D and C the ratio is {{< var score.band_booked.D.ratio >}} and
+  {{< var score.band_booked.C.ratio >}}: inside the tolerance. In band D the model now
+  predicts more defaults than occur: booking was drawn from the true PD
+  ([D2](../d2-data.qmd#two-populations-applicants-and-booked)), so the booked in band D are
+  the ones whose true risk was lower than their score suggests.
+- In bands B, A and AAA it is {{< var score.band_booked.B.ratio >}},
+  {{< var score.band_booked.A.ratio >}} and {{< var score.band_booked.AAA.ratio >}}: outside
+  the tolerance, under-predicting. Each rests on few defaults —
+  {{< var score.band_booked.B.defaults >}} in band B, {{< var score.band_booked.A.defaults >}}
+  in band A, {{< var score.band_booked.AAA.defaults >}} in band AAA — too few to tell a
+  miscalibration from noise.
+
+The breaches on both populations are recorded together as an observation in
+[4.7](limitations.qmd#observations), not a finding, and the booked figures are the
+baselines the monitoring plan starts from ([4.8](monitoring.qmd#development-baselines)).
 
 Band D holds {{< var score.band.D.n >}} of the {{< var score.n_test >}} held-out applicants
 ({{< var score.band_d_share >}}): finding 4 ([4.7](limitations.qmd)).

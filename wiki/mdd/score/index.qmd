@@ -13,7 +13,7 @@ order: 0
   recomputed by `verify.py` — met.
 - **On the loans the bank books:** held-out AUC {{< var score.pop.booked.auc >}} on the
   {{< var score.pop.booked.n >}} booked applicants in the held-out split — below the gate value.
-- **Four open findings** the chapter raises about its own model ([4.7](limitations.qmd)).
+- **Five open findings** the chapter raises about its own model ([4.7](limitations.qmd)).
 :::
 
 The Business Credit Score is a weight-of-evidence scorecard: {{< var score.n_features >}}
@@ -35,6 +35,6 @@ Every number in it is a named fact recomputed by `python verify.py`; the
 | 4.4 | [Assumptions](assumptions.qmd) | monotonic WoE, independence, stability, the generator as ground truth |
 | 4.5 | [Performance](performance.qmd) | discrimination with an interval, rank-ordering, calibration, stability, benchmark, ceiling |
 | 4.6 | [Sensitivity and stress](sensitivity.qmd) | four refits on reduced inputs, one of them a gate failure |
-| 4.7 | [Limitations and compensating controls](limitations.qmd) | four open findings, each with a control and an owner |
+| 4.7 | [Limitations and compensating controls](limitations.qmd) | five open findings, each with a control and an owner |
 | 4.8 | [Monitoring plan](monitoring.qmd) | metrics, thresholds, frequency, action on breach |
 | 4.9 | [Gate record](gate.qmd) | the gate, where it is asserted and recomputed, its history |
