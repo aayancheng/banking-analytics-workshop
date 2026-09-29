@@ -1,6 +1,12 @@
 {
   "name": "banking-analytics-workshop",
   "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  // Quarto renders the model documentation wiki (make wiki). Pinned to the version the
+  // wiki was built with. Existing Codespaces need "Codespaces: Rebuild Container" to get
+  // it; the wiki's lint and homework checks are pure Python and work without it.
+  "features": {
+    "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": { "version": "1.10.18" }
+  },
   "postCreateCommand": "make setup && make verify",
   "forwardPorts": [8100, 5180],
   // `make setup` installs into .venv, so put it first on PATH: bare `python`

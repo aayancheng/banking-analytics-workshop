@@ -1,0 +1,39 @@
+# Renders the wiki's site profile to GitHub Pages. Manual until Yan enables Pages
+# (Settings → Pages → Source: GitHub Actions); then add `push: branches: [main]`.
+name: wiki
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Lint (stdlib only — facts are committed)
+        run: python -m wiki.tools.lint --strict || python -m wiki.tools.lint
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.10.18
+      - name: Render site
+        run: quarto render wiki --profile site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: wiki/_site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
