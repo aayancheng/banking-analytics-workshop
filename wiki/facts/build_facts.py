@@ -22,6 +22,7 @@ FACTS_JSON = WIKI / "facts" / "facts.json"
 VARIABLES_YML = WIKI / "_variables.yml"
 GENERATED = WIKI / "_generated"
 FIG_DIR = WIKI / "mdd" / "score" / "fig"
+FACT_INDEX = WIKI / "reference" / "facts.qmd"
 SLOW_PREFIXES = ("score.stress.",)
 
 
