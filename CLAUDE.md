@@ -157,10 +157,13 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   modules (`make wiki-facts`; `make wiki-facts-full` for the stress refits) and writes `facts.json`,
   `_variables.yml`, `_generated/` and `reference/facts.qmd`. Never edit those four by hand. A `.qmd`
   shows a number as `{{< var key >}}`, a generated table or a generated figure; `wiki/tools/lint.py`
-  fails a page with a hand-typed metric, an unknown var key, a broken link or anchor, or an AUC with
-  no population. Literals that are allowed (`95%`) live in `wiki/tools/lint_allow.txt`, one per line, each
+  fails a page with a hand-typed metric, an unknown var key, or a broken link or anchor. (An AUC with no
+  population is caught only by `python -m wiki.homework.check H2.2`, on homework answers — not by the
+  lint.) Literals that are allowed (`95%`) live in `wiki/tools/lint_allow.txt`, one per line, each
   with a reason. `verify.py` runs the wiki check only where `wiki/` exists (no stage tag has it); `--full`
-  adds the stress refits. Facts hold the DGP truth only in `wiki/facts/ceiling.py`.
+  adds the stress refits. It also rejects any fact in `facts.json` that no module computes (only the
+  cached `score.stress.*` refits are excused on the fast path), compares each fact's population, source
+  and format, and checks `_variables.yml` like the other generated files. Facts hold the DGP truth only in `wiki/facts/ceiling.py`.
 - **The wiki gotchas.** To show a shortcode literally write `{{</* var key */>}}` (the fact index does this).
   Quarto crashes on a sidebar `auto:` glob that matches no page. Files and dirs under `wiki/` that must
   not render start with `_`. Render profiles: `site` (GitHub Pages), `validation` (Typst PDF; render it
@@ -178,7 +181,8 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   4. The score distribution is concentrated in one band (band D holds about half the held-out applicants).
   5. `leverage`'s WoE is non-monotonic because `train.py` never sets `monotonic_trend` (optbinning's
      `"auto"` default is left in place), although the generator's effect of leverage is monotonic.
-  Calibration misses in bands A/AAA (5 and 4 defaults) are *observations*, not findings: too few defaults.
+  Calibration misses in bands A/AAA on all held-out applicants (5 and 4 defaults), and in B/A/AAA on the
+  held-out booked (16, 5 and 4 defaults), are *observations*, not findings: too few defaults.
 
 ## The DGP, in numbers
 
