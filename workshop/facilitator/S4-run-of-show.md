@@ -16,7 +16,7 @@ Primary materials:
 - the wiki: `wiki/` — D4 is `wiki/mdd/score/`, D5's stub is `wiki/mdd/adjudication/`.
 
 > **Where the room is.** On `main`, seeing "Stage 5 verified", as after S2 and S3. The
-> reminder email asked for `git pull`, then *Codespaces: Rebuild Container*, then
+> reminder email asked for `git stash -u && git checkout main && git pull`, then *Codespaces: Rebuild Container*, then
 > `python verify.py`. Some will have skipped the rebuild; that costs them the rendered preview
 > and nothing else — the lint and `wiki.homework.check` are plain Python. Say so once, at 0:00,
 > and do not troubleshoot a rebuild in the room.
@@ -25,7 +25,7 @@ Primary materials:
 
 ## Pre-flight (T–30 min)
 
-- [ ] **The wiki is on `origin/main`.** Tonight's `git pull` is what brings `wiki/`, the
+- [ ] **The wiki is on `origin/main`.** Tonight's pull is what brings `wiki/`, the
       prompt cards and the devcontainer change to the room. If it is not merged and pushed
       before the reminder goes out, nothing below works for them.
 - [ ] Instructor Codespace on **`main`**, `git status` **clean** — the 0:12 demo edits
@@ -63,7 +63,7 @@ Primary materials:
 
 | Time | Block | Notes |
 |---|---|---|
-| **0:00–0:08** | Would this pass validation? Current pack vs SR 11-7 checklist · **Poll A** (0:00) | Slides 1–2. Paste `git pull && python verify.py` in chat; launch Poll A while it runs. Share it. Open the 147-line pack, scroll it once. The slide's three columns: present / thin / absent. Land: *correct numbers are not documentation.* Do not explain the **0.7447** yet — it is finding 2. |
+| **0:00–0:08** | Would this pass validation? Current pack vs SR 11-7 checklist · **Poll A** (0:00) | Slides 1–2. Paste `git stash -u && git checkout main && git pull && python verify.py` in chat; launch Poll A while it runs. Share it. Open the 147-line pack, scroll it once. The slide's three columns: present / thin / absent. Land: *correct numbers are not documentation.* Do not explain the **0.7447** (held-out booked) yet — it is finding 2. |
 | **0:08–0:20** | Wiki tour: two tabs, one source, three outputs, the facts layer | Slides 3–5. Site in the browser (Course tab, then Model Documentation tab), the PDF's title page for ten seconds. **0:12 LIVE: change a fact, `verify.py` fails** — minute by minute below. Then the two spines, sixty seconds. |
 | **0:20–0:38** | D4 walkthrough: the template, then the five open findings · **RECOVERABLE** | Slides 6–11. The nine-part template (D4's column), then one slide per finding, three minutes each. Every number is on the slide and in `wiki/mdd/score/limitations.qmd`. **If behind at 0:26:** show the template, finding 2 and finding 5 only, and say the other three are on the page. |
 | **0:38–1:08** | **Lab H4.1** — pairs draft one D5 part each with an agent; `check H4.1` passes · **PROTECT, 30 min** | Slide 12. Paste the part assignment and the three commands in chat. **1:00** start your own H4.2 agent run (it is ready by 1:08). **1:05** call time: *"whatever your check says now, that is what we look at."* |
@@ -78,8 +78,11 @@ Primary materials:
 **0:00 · Open.** Paste in chat:
 
 ```bash
-git pull && python verify.py
+git stash -u && git checkout main && git pull && python verify.py
 ```
+
+The stash and checkout rescue anyone still on a stage tag from S3, where a bare `git pull`
+fails. "Stage 5 verified" is the right answer.
 
 Launch Poll A while it runs (45 s). *"If you didn't rebuild the container, you lose the
 preview and nothing else."* Share Poll A and read it back (see [S4-polls.md](S4-polls.md)).
@@ -93,8 +96,8 @@ dependencies, the risk tier).
 
 *"Your validator starts from the right-hand column."*
 
-**0:06 · The population.** The pack quotes a held-out AUC of **0.8176**. It does not say on
-whom. Point at the **0.7447** at the bottom of the slide and leave it: *"we'll come back to that
+**0:06 · The population.** The pack quotes a held-out AUC of **0.8176** (it means all held-out applicants). It does not
+say so. Point at the **0.7447** (held-out booked applicants) at the bottom of the slide and leave it: *"we'll come back to that
 number at 0:26 — it's a finding."*
 
 ---
@@ -197,7 +200,7 @@ finds the same thing in the same place. Read D4's column down, fast. Stop on two
 
 - **Row 6, sensitivity.** The bureau feed is `utilization, credit_history_months,
   prior_delinquencies, trade_lines`. With all four removed and the card refitted, held-out AUC
-  is **0.7704** — below the **0.78** gate. *"The document records a gate failure. It doesn't
+  is **0.7704** on the held-out applicants — below the **0.78** gate. *"The document records a gate failure. It doesn't
   hide it; it says what the bank does when the feed is down."*
 - **Row 7, limitations.** Five open findings, each with evidence, a compensating control and
   an owner. *"A validator trusts a document that raises its own findings."*
@@ -208,7 +211,7 @@ finds the same thing in the same place. Read D4's column down, fast. Stop on two
 | Slide | Finding | The line to land |
 |---|---|---|
 | 7 · 0:24 | No out-of-time sample (PSI **0.0018**; **0** features over the **0.10** watch level) | *"A stable PSI between two random splits isn't good news. It's no news."* |
-| 8 · 0:27 | The gate population is not the lending population (**0.8176** all, **0.7447** booked, gate **0.78**) | *"S2's reveal, written down, with an owner."* |
+| 8 · 0:27 | The gate population is not the lending population (held-out AUC **0.8176** all applicants, **0.7447** booked, gate **0.78**) | *"S2's reveal, written down, with an owner."* |
 | 9 · 0:30 | Features with no causal role (`industry`, `entity_type`, `trade_lines`: **0.4%** of the logit's variance) | *"We measured before we wrote the finding. 'Inert' is what the number says."* |
 | 10 · 0:33 | Concentrated in band D (**1,222** of **2,400**, **51%**, default rate **28.2%**) | *"The band can't tell these applicants apart. The PD can."* |
 | 11 · 0:35 | `leverage`'s WoE not monotonic (**2** of **13** numeric features; `leverage` carries **11.4%** of the logit's variance) | *"Not a discrimination problem. A reason-code problem: you can't explain it to the applicant."* |

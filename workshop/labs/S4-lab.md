@@ -6,11 +6,12 @@ the wiki lives on `main` only, like `notebooks/` and `workshop/`.
 > **First commands**, in your Codespace terminal:
 >
 > ```bash
-> git pull
+> git stash -u && git checkout main && git pull
 > python verify.py        # ✅ Stage 5 verified — you are here, and it works
 > ```
 >
-> `git pull` refuses because of local changes? `git stash -u && git pull`. Nothing is lost.
+> The first line works wherever you are — on `main`, or on a stage tag from an earlier session —
+> and stashes any local changes rather than losing them. "Stage 5 verified" is the right answer.
 > Did not rebuild the container? You lose the rendered preview and nothing else: the lint and
 > the check below are plain Python.
 

@@ -13,7 +13,7 @@ send.** Over ~90 addresses, split into two sends.
 morning of *their* Friday as well — a Wednesday-evening Toronto reminder lands while they sleep.
 
 **What state are they in?** On `main`, seeing "Stage 5 verified", as after S2 and S3. This email
-does not ask for any stage jump. The one new pre-work step is `git pull` **then** the container rebuild
+does not ask for any stage jump. The one new pre-work step is `git stash -u && git checkout main && git pull` (S3's robust sync: it also rescues anyone who stayed on a stage tag, where a bare `git pull` fails) **then** the container rebuild
 (the rebuild reads the pulled `devcontainer.json`, which is what adds Quarto), then `verify.py`. It is deliberately optional in effect: the lab's checks are plain Python, so a failed
 rebuild costs the rendered preview and nothing else. Say so in the email so nobody arrives
 anxious about it.
@@ -50,10 +50,11 @@ adjudication model's chapter with an AI agent and self-check it.
    In the terminal, run:
 
    ```
-   git pull
+   git stash -u && git checkout main && git pull
    ```
 
-   This brings in the change that adds Quarto, the tool that renders the wiki.
+   This puts you on `main`, wherever the last session left you (nothing is lost: any local
+   changes are stashed), and brings in the change that adds Quarto, the tool that renders the wiki.
 2. Then open the Command Palette and run **Codespaces: Rebuild Container**. It takes about
    5 minutes. The order matters: the rebuild reads the configuration you just pulled.
 3. When it finishes, in the terminal:
@@ -90,7 +91,7 @@ environment — plus one new pre-work step that must not become a reason to stay
 
 - **The link is first**, before any prose. On the night, people scroll to the top and click.
 - **The order is pull, rebuild, verify.** The rebuild uses the `devcontainer.json` in the
-  workspace, so Quarto only arrives once `git pull` has run. The cost (about 5 minutes) is named
+  workspace, so Quarto only arrives once the pull has run. The cost (about 5 minutes) is named
   so it can be scheduled rather than discovered at 8:01.
 - **The fallback is stated plainly.** "Come anyway" removes the failure mode where someone
   whose rebuild broke decides not to join. The lab is designed so Quarto is a preview
