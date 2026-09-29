@@ -6,22 +6,21 @@ book:
   subtitle: "Validation copy"
   chapters:
     - index.qmd
+    - mdd/index.qmd
     - mdd/d0-summary.qmd
     - mdd/d1-purpose.qmd
     - mdd/d2-data.qmd
     - mdd/d3-dependencies.qmd
-    - part: "D4 Business Credit Score"
-      chapters:
-        - mdd/score/index.qmd
-        - mdd/score/purpose.qmd
-        - mdd/score/data.qmd
-        - mdd/score/methodology.qmd
-        - mdd/score/assumptions.qmd
-        - mdd/score/performance.qmd
-        - mdd/score/sensitivity.qmd
-        - mdd/score/limitations.qmd
-        - mdd/score/monitoring.qmd
-        - mdd/score/gate.qmd
+    - mdd/score/index.qmd
+    - mdd/score/purpose.qmd
+    - mdd/score/data.qmd
+    - mdd/score/methodology.qmd
+    - mdd/score/assumptions.qmd
+    - mdd/score/performance.qmd
+    - mdd/score/sensitivity.qmd
+    - mdd/score/limitations.qmd
+    - mdd/score/monitoring.qmd
+    - mdd/score/gate.qmd
     - mdd/adjudication/index.qmd
     - mdd/pricing/index.qmd
     - mdd/ews/index.qmd
@@ -36,5 +35,6 @@ book:
 format:
   typst:
     toc: true
+    include-in-header: _validation-header.typ
     number-sections: true
     papersize: us-letter

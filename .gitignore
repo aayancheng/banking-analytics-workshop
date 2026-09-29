@@ -63,5 +63,6 @@ wiki/_validation/
 wiki/_book/
 wiki/.quarto/
 wiki/mdd/_artifacts.qmd
+wiki/**/*_files/
 wiki/homework/_answers/*
 !wiki/homework/_answers/.gitkeep

@@ -25,7 +25,7 @@ the tagged release.
 Raised by the documentation itself, in [D4.7](score/limitations.qmd). Each has a compensating control and an owner.
 
 | # | Finding | Evidence | Compensating control | Owner | Status |
-|---|---|---|---|---|---|
+|--|--------------|----------------|------------------|-------|------|
 | 1 | No out-of-time sample: origination is a single cross-section, so temporal stability is untested. | Train and test are random splits of one cohort; PSI between them ({{< var score.psi_score >}} on the score) measures sampling noise, not drift. | Monitoring plan (D4.8): score and feature PSI on each new cohort, with redevelopment triggers. | Model developer | open |
 | 2 | The gate population is not the lending population. | Held-out AUC {{< var score.pop.everyone.auc >}} on all applicants (the gate, {{< var score.gate >}}); {{< var score.pop.booked.auc >}} on the booked only. | Report both on every run; track the booked-only AUC beside the gate; consider gating on the booked population at redevelopment. | Model developer | open |
 | 3 | Features with no causal role in the generator are in the model (`industry`, `entity_type`, `trade_lines`). | Together they carry {{< var score.var_share_structural >}} of the logit's variance on the held-out applicants. | Present but inert: remove at the next redevelopment; removal is a simplification, not a risk fix. | Model developer | open |
