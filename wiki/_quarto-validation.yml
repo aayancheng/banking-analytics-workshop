@@ -1,0 +1,13 @@
+project:
+  type: book
+  output-dir: _validation
+book:
+  title: "SME Lending Decision Platform — Model Documentation"
+  subtitle: "Validation copy"
+  chapters:
+    - index.qmd
+format:
+  typst:
+    toc: true
+    number-sections: true
+    papersize: us-letter

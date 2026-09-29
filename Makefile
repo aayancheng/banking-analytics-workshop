@@ -3,7 +3,7 @@
 
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
-.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop slides notebooks reading
+.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop slides notebooks reading wiki-facts wiki-facts-full wiki wiki-site wiki-pdf wiki-book
 
 setup:
 	python3 -m venv .venv
@@ -88,3 +88,24 @@ reading:
 	    "file://$(CURDIR)/$$f" >/dev/null 2>&1; \
 	  echo "rendered $${f%.html}.pdf"; \
 	done
+
+# The model documentation wiki (main only — no stage tag contains wiki/).
+# Facts are Python; rendering needs Quarto (https://quarto.org, or the Codespace feature).
+wiki-facts:
+	$(PY) -m wiki.facts.build_facts
+
+wiki-facts-full:
+	$(PY) -m wiki.facts.build_facts --full
+
+wiki:
+	quarto preview wiki --profile site
+
+wiki-site:
+	quarto render wiki --profile site
+
+wiki-pdf:
+	$(PY) -m wiki.tools.stamp
+	quarto render wiki --profile validation -M version:"$$(git describe --tags --always --dirty)" -M date:"$$(date +%F)"
+
+wiki-book:
+	quarto render wiki --profile book

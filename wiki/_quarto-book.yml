@@ -1,0 +1,13 @@
+project:
+  type: book
+  output-dir: _book
+book:
+  title: "Credit Analytics You Can Verify"
+  chapters:
+    - index.qmd
+format:
+  epub:
+    toc: true
+  typst:
+    toc: true
+    papersize: "us-letter"

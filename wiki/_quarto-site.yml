@@ -1,0 +1,30 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - "*.qmd"
+    - "!mdd/d11-signoff.qmd"
+website:
+  title: "Credit Analytics You Can Verify"
+  repo-url: https://github.com/aayancheng/banking-analytics-workshop
+  repo-subdir: wiki
+  repo-actions: [edit, issue]
+  page-navigation: true
+  search: true
+  navbar:
+    left:
+      - text: Course
+        href: course/index.qmd
+      - text: Model Documentation
+        href: mdd/index.qmd
+      - text: Explain
+        href: explain/index.qmd
+      - text: Reference
+        href: reference/index.qmd
+format:
+  html:
+    theme:
+      light: [cosmo, styles.scss]
+      dark: [darkly, styles.scss]
+    toc: true
+    code-copy: true

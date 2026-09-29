@@ -1,0 +1,17 @@
+---
+title: "Credit Analytics You Can Verify"
+---
+
+::: {.content-visible when-profile="site"}
+A self-paced course in credit analytics with AI agents, and the model documentation it
+produces. Every number on these pages is recomputed from the repository.
+:::
+
+::: {.content-visible when-profile="validation"}
+This is the validation copy of the model documentation for the SME Lending Decision
+Platform. Every figure in it is generated from committed artifacts.
+:::
+
+::: {.content-visible when-profile="book"}
+Preface.
+:::

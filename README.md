@@ -145,3 +145,8 @@ Both are running the same models on the same data. Open them side by side.
 
 MIT — see [LICENSE](LICENSE). Built by [TeamYan](https://teamyan.substack.com) from the
 open [BusinessBankingApp](https://github.com/aayancheng/BusinessBankingApp) reference build.
+
+## Licence
+
+Code: MIT (`LICENSE`). Prose in `wiki/` and the book built from it: CC BY-NC-ND 4.0
+(`LICENSE-CONTENT`).

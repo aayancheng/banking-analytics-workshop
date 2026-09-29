@@ -56,3 +56,12 @@ workshop/facilitator/recut/hf/compositions/callouts/S*.html
 # committed sample would read as the reference answer to a lab whose whole point is
 # that YOU review the agent.
 reports/audit_AC1*.md
+
+# wiki render outputs and learner answers (main only)
+wiki/_site/
+wiki/_validation/
+wiki/_book/
+wiki/.quarto/
+wiki/mdd/_artifacts.qmd
+wiki/homework/_answers/*
+!wiki/homework/_answers/.gitkeep
