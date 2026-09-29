@@ -47,3 +47,27 @@ def test_diff_names_the_stale_key():
 
 def test_diff_reports_new_facts():
     assert diff_facts({"a": Fact(1, "d", "s", "p")}, {}) == ["a: new, not in facts.json"]
+
+
+from wiki.facts import tables
+
+
+def _meta(t):
+    return {k: {"text": v, "source": "src", "population": "pop"} for k, v in t.items()}
+
+
+def test_band_table_is_generated_from_fact_text():
+    t = {}
+    for b in ("D", "C", "B", "A", "AAA"):
+        t.update({f"score.band.{b}.n": "1", f"score.band.{b}.share": "2%",
+                  f"score.band.{b}.observed": "3%", f"score.band.{b}.predicted": "4%",
+                  f"score.band.{b}.ratio": "0.75"})
+    md = tables.band_table(t)
+    assert md.splitlines()[0] == "| Band | n | Share | Observed default rate | Mean predicted PD | Observed / predicted |"
+    assert "| AAA | 1 | 2% | 3% | 4% | 0.75 |" in md
+
+
+def test_stale_reports_an_outdated_generated_file(tmp_path):
+    t = {"a.b": "1"}
+    (tmp_path / "facts.qmd").write_text("old")
+    assert any("facts.qmd" in p for p in tables.stale_files({"facts.qmd": "new"}, tmp_path))
