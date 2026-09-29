@@ -35,7 +35,8 @@ SCORE_AUC_GATE = 0.78    # verify.py
 and its scorecard check does not read the stored metric. It loads `scorecard.pkl`,
 redraws the held-out split from the committed data with the platform seed, recomputes the
 AUC and compares it with its own constant. On `main` it then recomputes every fact in this
-chapter, including the gate as `score.src.train.AUC_GATE` reads it
+chapter, including the gate as `score.src.train.AUC_GATE` reads it — the stress refits of
+[4.6](sensitivity.qmd) only under `python verify.py --full`
 ([D9](../d9-implementation.qmd)).
 
 This is why **a relaxed local gate cannot pass.** Lowering `AUC_GATE` in `train.py` lets a

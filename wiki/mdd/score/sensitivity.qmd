@@ -12,8 +12,8 @@ bureau scenario drops columns from the committed {{< var score.n_features >}} an
 `train.py`'s default binning solver; the three raw-column scenarios bin raw data columns
 and use the mixed-integer solver ([4.3](methodology.qmd#implementation-note-the-binning-solver)).
 
-The refits take minutes, so they are cached in the facts and re-run by
-`python verify.py --full` (or `make wiki-facts-full`), not on every run.
+The refits are cached in the facts and re-run by `python verify.py --full` (or
+`make wiki-facts-full`), not on every run; the fast path recomputes everything else.
 
 {{< include ../../_generated/score-stress.md >}}
 

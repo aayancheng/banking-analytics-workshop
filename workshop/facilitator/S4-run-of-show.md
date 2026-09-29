@@ -88,8 +88,8 @@ Launch Poll A while it runs (45 s). *"If you didn't rebuild the container, you l
 preview and nothing else."* Share Poll A and read it back (see [S4-polls.md](S4-polls.md)).
 
 **0:02 · The pack.** Open `docs/model_doc_pack/MODEL_DOCUMENTATION.md` and scroll it top to
-bottom — it is short, and that is the point. Every metric in it is recomputed by `verify.py`;
-none of it is wrong. Then the slide: for the scorecard alone, what a validator would find
+bottom — it is short, and that is the point. Every metric in it is read from a committed
+artifact; none of it is wrong. Then the slide: for the scorecard alone, what a validator would find
 **present** (data and leakage controls, performance, the gate), **thin** (purpose and use,
 methodology, implementation) and **absent** (sensitivity, limitations, a monitoring plan,
 dependencies, the risk tier).
@@ -347,7 +347,7 @@ Launch **Poll C** as slide 14 goes up; do not share it.
 ## Close (1:27–1:30)
 
 `python verify.py` on screen, one last time. *"It tells you where you are and that it works.
-Tonight it also tells you the document is true."* Thank the room; this is the last session.
+Tonight it also tells you the document's numbers are current."* Thank the room; this is the last session.
 
 ---
 

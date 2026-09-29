@@ -71,5 +71,5 @@ gate, and forces the downstream work in [D3](../d3-dependencies.qmd#what-a-score
 
 This plan is documented, not yet automated. The platform has one cohort of applicants, so
 there is no new population to compare. What runs today is the development side: `python
-verify.py` recomputes the held-out AUC against the gate, and every figure on this page,
+verify.py` recomputes the held-out AUC against the gate, and every fact on this page,
 from the committed model and data on every run ([D9](../d9-implementation.qmd)).

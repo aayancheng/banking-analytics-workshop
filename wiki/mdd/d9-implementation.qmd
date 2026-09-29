@@ -23,7 +23,7 @@ metric and trusts it. On `main` it checks, in dependency order:
 | Adjudication | the held-out AUC and top-quintile lift |
 | Early warning | top-decile capture and PR-AUC; AUC against a sanity floor only |
 | Line increase | AUC, lift and the cohort checks |
-| Documentation | the documentation pack; on `main`, every fact on these pages and the lint |
+| Documentation | the documentation pack; on `main`, every fact on these pages (the stress refits only under `--full`), every generated file, and the lint |
 | Portal | the apps start in-process, return decisions, and the pricing summary matches the committed one |
 
 A failed check names what failed and prints the command that repairs it. The fast path
@@ -67,7 +67,7 @@ recomputed and its history.
 | Deterministic models | every split and every model is seeded from the same constant |
 | Pinned environment | `requirements.txt` pins every package to an exact version; `verify.py` fails on a mismatch |
 | Committed artifacts | data and trained models are committed on purpose, so any stage can be checked without retraining |
-| Numbers in documents | every metric on these pages is a named fact recomputed by `verify.py` ([fact index](../reference/facts.qmd)) |
+| Numbers in documents | every metric on these pages is a named fact, recomputed by `verify.py` through the modules or read from the committed artifact named under its source; stress refits only under `--full` ([fact index](../reference/facts.qmd)) |
 
 **The clean-clone sweep.** A warm environment hides missing dependencies. Before a release,
 the repository is cloned fresh, a new virtual environment is built from

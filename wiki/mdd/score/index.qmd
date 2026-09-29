@@ -24,8 +24,10 @@ model and the pricing engine consume its output ([D3](../d3-dependencies.qmd)), 
 it Tier 1 ([D0](../d0-summary.qmd#risk-tiering)).
 
 This chapter is the worked example of the nine-part [template](../index.qmd#the-template).
-Every number in it is a named fact recomputed by `python verify.py`; the
-[fact index](../../reference/facts.qmd) gives each one's source and population.
+Every number in it is a named fact, recomputed through the modules' own functions by
+`python verify.py` — the stress refits in [4.6](sensitivity.qmd) only under
+`python verify.py --full`; the [fact index](../../reference/facts.qmd) gives each one's
+source and population.
 
 | § | Part | What it establishes |
 |---|---|---|

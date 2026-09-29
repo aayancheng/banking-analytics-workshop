@@ -30,8 +30,10 @@ order US supervisory guidance (SR 11-7) expects, with a
 [crosswalk](../reference/crosswalk.qmd) to OSFI E-23 and PRA SS1/23. The same source
 also renders a versioned validation PDF.
 
-Every number on every page is a named fact, recomputed by `python verify.py` through the
-platform's own functions; a lint fails the build on any number typed by hand. See
+Every number on every page is a named fact. `python verify.py` recomputes it through the
+platform's own functions, or reads it from the committed artifact named under its source
+in the [fact index](../reference/facts.qmd); the stress refits are recomputed only under
+`python verify.py --full`. A lint fails the build on any number typed by hand. See
 [how to read this documentation](../mdd/index.qmd).
 
 ## D4: the worked example

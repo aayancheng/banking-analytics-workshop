@@ -56,8 +56,10 @@ platform's own module functions and stored, with the population it was measured 
 `wiki/facts/facts.json`. The pages print facts by name, and the
 [fact index](../reference/facts.qmd) lists every one with its source and population.
 
-`python verify.py` recomputes the facts from the committed models and data every time it
-runs, and fails naming the key if any page would print a stale value. A lint fails the
+`python verify.py` recomputes the facts through the modules from the committed models and
+data every time it runs — or reads them from the committed artifact named under Source,
+as for the `adj.*` facts; the stress refits only under `--full` — and fails naming the key
+if any page would print a stale value. A lint fails the
 build on any hand-typed metric. Two consequences for a reader:
 
 - if a number here disagrees with the code, that is a defect, and `verify.py` should

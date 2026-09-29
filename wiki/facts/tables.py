@@ -78,8 +78,11 @@ def fact_index(meta: dict[str, dict]) -> str:
     rows = [[f"`{k}`", d["text"], d["population"], f"`{d['source']}`"]
             for k, d in sorted(meta.items())]
     return ("---\ntitle: \"Every number in this documentation\"\n---\n\n" + HEADER +
-            "Each value below is recomputed by `python verify.py`. Pages print these through "
-            "`{{</* var key */>}}`; none is typed by hand.\n\n" +
+            "`python verify.py` recomputes each value below through the modules' own functions, "
+            "or reads it from the committed artifact named under Source (the `adj.*` facts "
+            "come from adjudication's `metadata.json` and `policy_config.json`); the "
+            "`score.stress.*` refits are recomputed only under `python verify.py --full`. "
+            "Pages print these through `{{</* var key */>}}`; none is typed by hand.\n\n" +
             _table(["Key", "Value", "Population", "Source"], rows))
 
 

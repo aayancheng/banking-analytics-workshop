@@ -55,7 +55,7 @@ refit on new data — is a change to every consumer, even if no consumer's code 
 | D6 Pricing | re-run over the booked book; re-read the mispricing summary | every recommended rate moves with the PD |
 | D7 Early Warning | retrain; recalibrate the tier cutoffs; re-assert its gate | the score is an input and the tiers are set from the fitted probabilities |
 | D8 Line Increase | retrain; recalibrate the offer cutoff; re-assert its gate | the score is an input and sets who is eligible |
-| The portal and this documentation | `python verify.py` | it recomputes every gate and every fact on these pages |
+| The portal and this documentation | `python verify.py` | it recomputes every gate and checks every fact on these pages (the stress refits only under `--full`) |
 
 A change is complete only when `python verify.py` passes on the result. Its checks run in
 dependency order — data, score, adjudication, early warning, line increase, documentation,

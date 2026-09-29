@@ -4,7 +4,7 @@ title: "Credit Analytics You Can Verify"
 
 ::: {.content-visible when-profile="site"}
 A self-paced course in credit analytics with AI agents, and the model documentation it
-produces. Every number on these pages is recomputed from the repository.
+produces. Every number on these pages is generated from the repository and checked by `python verify.py`.
 :::
 
 ::: {.content-visible when-profile="validation"}

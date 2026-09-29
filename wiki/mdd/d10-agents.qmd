@@ -30,8 +30,9 @@ and none of them relies on the agent's own account of what it did.
 - **Gates** (D9). A model an agent trains must pass a committed gate, and `verify.py`
   recomputes the metric with its own copy of the gate. An agent that relaxed a gate to get
   a model through would fail the checkpoint.
-- **`python verify.py`**. Every claim is recomputed from the committed data and models on
-  every run. An agent's report that "all checks pass" is replaced by running the checks.
+- **`python verify.py`**. Every gate and every fact is recomputed from the committed data
+  and models, or read from the committed artifact named under its source, on every run
+  (the stress refits under `--full`). An agent's report that "all checks pass" is replaced by running the checks.
 - **The lint**. No number can be typed into these pages by hand; every one is a named fact
   computed through the modules. An agent paraphrasing a number from memory — the most
   common way a model document drifts from its model — fails the build.
