@@ -13,7 +13,7 @@ PSI_ACT = 0.25      # above this, a shift that needs action
 RATIO_LO = 0.75     # observed / predicted default rate by band: tolerance, lower edge
 RATIO_HI = 1.25     # ... upper edge
 IV_USELESS = 0.02   # information value below this: conventionally unpredictive
-MIN_BAND_DEFAULTS = 20  # a band's calibration breach counts toward a trigger only on this many defaults
+MIN_BAND_DEFAULTS = 10  # a band's calibration breach counts toward a trigger only on this many defaults
 
 
 def compute() -> dict[str, Fact]:

@@ -66,11 +66,11 @@ Primary materials:
 |---|---|---|
 | **0:00–0:08** | Would this pass validation? Current pack vs SR 11-7 checklist · **Poll A** (0:00) | Slides 1–2. Paste `git stash -u && git checkout main && git pull && python verify.py` in chat; launch Poll A while it runs. Share it. Open the 147-line pack, scroll it once. The slide's three columns: present / thin / absent. Land: *correct numbers are not documentation.* Do not explain the **0.7447** (held-out booked) yet — it is finding 2. |
 | **0:08–0:20** | Wiki tour: two tabs, one source, three outputs, the facts layer | Slides 3–5. Site in the browser (Course tab, then Model Documentation tab), the PDF's title page for ten seconds. **0:12 LIVE: change a fact, `verify.py` fails** — minute by minute below. Then the two spines, sixty seconds. |
-| **0:20–0:38** | D4 walkthrough: the template, then the five open findings · **RECOVERABLE** | Slides 6–11. The nine-part template (D4's column), then one slide per finding, three minutes each. Every number is on the slide and in `wiki/mdd/score/limitations.qmd`. **If behind at 0:26:** show the template, finding 2 and finding 5 only, and say the other three are on the page. |
-| **0:38–1:08** | **Lab H4.1** — pairs draft one D5 part each with an agent; `check H4.1` passes · **PROTECT, 30 min** | Slide 12. Paste the part assignment and the three commands in chat. **1:00** start your own H4.2 agent run (it is ready by 1:08). **1:05** call time: *"whatever your check says now, that is what we look at."* |
-| **1:08–1:20** | Validator review live (H4.2); the room judges which findings are real | Slide 13. Your agent's findings, one at a time; the room votes **F / O / N** (finding, observation, noise) in chat. Then `limitations.qmd` side by side: which of the five did it miss? Two or three pairs report a claim they checked against the code. |
-| **1:20–1:27** | Publishing and continuing self-paced · **Poll C** (1:20, not shown) | Slide 14. The site, the PDF, the homework page, the videos. No dates promised. |
-| **1:27–1:30** | Close | Slide 15. `python verify.py` on screen, one last time, green. Thank the room — this is the last session. |
+| **0:20–0:38** | D4 walkthrough: the template, then the six open findings · **RECOVERABLE** | Slides 6–12. The nine-part template (D4's column), then one slide per finding: six in fourteen minutes, about two minutes each. Every number is on the slide and in `wiki/mdd/score/limitations.qmd`. **If behind at 0:26:** show the template, finding 2 and finding 5 only, and say the other four are on the page. |
+| **0:38–1:08** | **Lab H4.1** — pairs draft one D5 part each with an agent; `check H4.1` passes · **PROTECT, 30 min** | Slide 13. Paste the part assignment and the three commands in chat. **1:00** start your own H4.2 agent run (it is ready by 1:08). **1:05** call time: *"whatever your check says now, that is what we look at."* |
+| **1:08–1:20** | Validator review live (H4.2); the room judges which findings are real | Slide 14. Your agent's findings, one at a time; the room votes **F / O / N** (finding, observation, noise) in chat. Then `limitations.qmd` side by side: which of the six did it miss? Two or three pairs report a claim they checked against the code. |
+| **1:20–1:27** | Publishing and continuing self-paced · **Poll C** (1:20, not shown) | Slide 15. The site, the PDF, the homework page, the videos. No dates promised. |
+| **1:27–1:30** | Close | Slide 16. `python verify.py` on screen, one last time, green. Thank the room — this is the last session. |
 
 ---
 
@@ -203,25 +203,26 @@ finds the same thing in the same place. Read D4's column down, fast. Stop on two
   prior_delinquencies, trade_lines`. With all four removed and the card refitted, held-out AUC
   is **0.7704** on the held-out applicants — below the **0.78** gate. *"The document records a gate failure. It doesn't
   hide it; it says what the bank does when the feed is down."*
-- **Row 7, limitations.** Five open findings, each with evidence, a compensating control and
+- **Row 7, limitations.** Six open findings, each with evidence, a compensating control and
   an owner. *"A validator trusts a document that raises its own findings."*
 
-**0:24–0:38 · Five findings, one slide each** (all numbers from `facts.json`; the page is
+**0:24–0:38 · Six findings, one slide each, about two minutes each** (all numbers from `facts.json`; the page is
 `wiki/mdd/score/limitations.qmd`):
 
 | Slide | Finding | The line to land |
 |---|---|---|
 | 7 · 0:24 | No out-of-time sample (PSI **0.0018**; **0** features over the **0.10** watch level) | *"A stable PSI between two random splits isn't good news. It's no news."* |
-| 8 · 0:27 | The gate population is not the lending population (held-out AUC **0.8176** all applicants, **0.7447** booked, gate **0.78**) | *"S2's reveal, written down, with an owner."* |
-| 9 · 0:30 | Features with no causal role (`industry`, `entity_type`, `trade_lines`: **0.4%** of the logit's variance) | *"We measured before we wrote the finding. 'Inert' is what the number says."* |
-| 10 · 0:33 | Concentrated in band D (**1,222** of **2,400**, **51%**, default rate **28.2%**) | *"The band can't tell these applicants apart. The PD can."* |
-| 11 · 0:35 | `leverage`'s WoE not monotonic (**2** of **13** numeric features; `leverage` carries **11.4%** of the logit's variance) | *"Not a discrimination problem. A reason-code problem: you can't explain it to the applicant."* |
+| 8 · 0:26 | The gate population is not the lending population (held-out AUC **0.8176** all applicants, **0.7447** booked, gate **0.78**) | *"S2's reveal, written down, with an owner."* |
+| 9 · 0:29 | Features with no causal role (`industry`, `entity_type`, `trade_lines`: **0.4%** of the logit's variance) | *"We measured before we wrote the finding. 'Inert' is what the number says."* |
+| 10 · 0:31 | Concentrated in band D (**1,222** of **2,400**, **51%**, default rate **28.2%**) | *"The band can't tell these applicants apart. The PD can."* |
+| 11 · 0:33 | `leverage`'s WoE not monotonic (**2** of **13** numeric features; `leverage` carries **11.4%** of the logit's variance) | *"Not a discrimination problem. A reason-code problem: you can't explain it to the applicant."* |
+| 12 · 0:35 | Band B under-predicts on the booked (observed / predicted **1.42** on **302** loans, **16** defaults; floor **10**; A and AAA have **5** and **4**, below it) | *"Same rule as monitoring: 1.42 on sixteen defaults counts. 3.14 on four doesn't — yet."* |
 
 **Recovery.** If you reach 0:26 still on the template, go to finding 2, then finding 5, and
-say the other three are on the page. The lab starts at 0:38 whatever happens here.
+say the other four are on the page. The lab starts at 0:38 whatever happens here.
 
-**Bridge (0:37).** *"Five findings, each with evidence, a control and an owner. Now you write
-D5. Nobody finds five in thirty minutes — one well-documented part is the whole job."*
+**Bridge (0:37).** *"Six findings, each with evidence, a control and an owner. Now you write
+D5. Nobody finds six in thirty minutes — one well-documented part is the whole job."*
 
 ---
 
@@ -321,9 +322,11 @@ If your agent cited a documentation page, the check says so — show it, it is t
 **1:10 · The room judges.** One finding at a time. The room types **F** (a finding: the
 developer must fix or control it), **O** (an observation: record it, do not raise it) or **N**
 (noise). Anyone who answered *I'm the validator* in Poll A goes first. Then open
-`wiki/mdd/score/limitations.qmd` beside it: which of D4's five did the agent miss, and could it
+`wiki/mdd/score/limitations.qmd` beside it: which of D4's six did the agent miss, and could it
 have seen them? In the worked solution it missed band D and `leverage` — both on pages it had
-been given; it never opened the band table or the binning tables. *"An agent audits what it
+been given; it never opened the band table or the binning tables. It also cited band AAA
+(**4** booked defaults, below the floor of **10**) and passed over band B (**1.42** on **16**),
+which is finding 6. *"An agent audits what it
 looks at. Ask it what it read."*
 
 **1:16 · Two or three pairs report** one claim from their draft they checked against the code.
@@ -336,7 +339,7 @@ is wrong while linting clean.
 
 ## Publishing and self-paced (1:20–1:27)
 
-Launch **Poll C** as slide 14 goes up; do not share it.
+Launch **Poll C** as slide 15 goes up; do not share it.
 
 - The site goes on GitHub Pages and the validation PDF on a release **when Yan publishes
   them** — the link comes in the follow-up email. Promise no date.
@@ -373,7 +376,7 @@ Tonight it also tells you the document's numbers are current."* Thank the room; 
 - *"Can the agent add the facts too?"* — Yes: a new number is added in
   `wiki/facts/adj_facts.py` through the module's own functions, then `make wiki-facts`. That
   is code, reviewed like code — homework, not tonight.
-- *"Why five findings and not zero?"* — A document with no findings has not looked. Every one
+- *"Why six findings and not zero?"* — A document with no findings has not looked. Every one
   of these has a measured number behind it and an owner.
 
 ---

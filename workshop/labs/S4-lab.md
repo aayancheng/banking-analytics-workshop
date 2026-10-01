@@ -125,7 +125,7 @@ documentation is part of the platform. Finish the draft, or move it aside
 The facilitator runs this one live; follow along, or run it yourself if you are ahead.
 
 1. Open [`workshop/prompt-cards/HW-H4.2.md`](../prompt-cards/HW-H4.2.md). The agent reviews
-   D4 **without** opening `wiki/mdd/score/limitations.qmd` — D4's own five findings.
+   D4 **without** opening `wiki/mdd/score/limitations.qmd` — D4's own six findings.
 2. It writes at least three findings to `wiki/homework/_answers/H4.2.md` (a folder git
    ignores), each with one piece of evidence: a fact key or a file in the repo.
 3. Check it:
@@ -135,7 +135,7 @@ The facilitator runs this one live; follow along, or run it yourself if you are 
    ```
 
 4. **The room judges.** For each finding: a real finding, an observation, or noise? Then open
-   `limitations.qmd` and compare. Which of D4's five did the agent miss — did it not look, or
+   `limitations.qmd` and compare. Which of D4's six did the agent miss — did it not look, or
    could it not have seen it?
 
 Evidence is never the documentation: "the chapter says so" proves what the document claims,

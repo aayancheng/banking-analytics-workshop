@@ -15,7 +15,7 @@ applicants it reaches an AUC of {{< var score.auc_holdout >}} (bootstrap interva
 {{< var score.auc_ci_lo >}} to {{< var score.auc_ci_hi >}}) against a committed gate of
 {{< var score.gate >}}. On the held-out loans the bank actually books, the same model
 scores {{< var score.pop.booked.auc >}}: the gate is met on a population wider than the one
-the bank lends to. That is the first of five open findings the chapter raises about itself.
+the bank lends to. That is the first of six open findings the chapter raises about itself.
 
 **Loan Adjudication (D5).** A gradient-boosted model on {{< var adj.n_features >}} inputs,
 including the score, followed by a policy layer that returns Approve, Refer or Decline

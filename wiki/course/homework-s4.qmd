@@ -125,6 +125,11 @@ it had been given — band D's share in [4.5](../mdd/score/performance.qmd), the
 weight of evidence in [4.4](../mdd/score/assumptions.qmd) — and it missed them by reading
 selectively: it worked through performance and sensitivity closely and never opened the
 binning tables. An agent audits what it looks at, so ask it which pages and tables it read.
+It also came close to finding 6 and missed it: its F3 reads the right table but picks band
+AAA, on {{< var score.band_booked.AAA.defaults >}} booked defaults, below the monitoring
+floor of {{< var monitoring.min_band_defaults >}}, and passes over band B, whose ratio of
+{{< var score.band_booked.B.ratio >}} rests on {{< var score.band_booked.B.defaults >}}
+defaults and clears it. A ratio is evidence only with the count behind it.
 
 Note too that the blind is partial. Other D4 pages cross-reference the findings by number,
 so an agent that reads everything is led towards D4.7's list; an honest review says which

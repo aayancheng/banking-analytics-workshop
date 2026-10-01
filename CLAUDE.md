@@ -173,7 +173,7 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   `_book`) and the stamp are gitignored. The stress refits behind D4.6 take ~2 s, not minutes; the
   slow/`--full` gating stays for design reasons, not speed. **Students on a stage tag need
   `git checkout main -- workshop notebooks wiki`** to get the wiki, same trap as the notebooks.
-- **D4 (the Business Credit Score chapter) raises five open findings about its own model**, all
+- **D4 (the Business Credit Score chapter) raises six open findings about its own model**, all
   reproduced from facts, none fixed:
   1. No out-of-time sample: train and test are random splits of one cohort, so temporal stability is untested.
   2. The gate population is not the lending population (held-out AUC 0.8176 on everyone, 0.7447 booked).
@@ -181,8 +181,12 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   4. The score distribution is concentrated in one band (band D holds about half the held-out applicants).
   5. `leverage`'s WoE is non-monotonic because `train.py` never sets `monotonic_trend` (optbinning's
      `"auto"` default is left in place), although the generator's effect of leverage is monotonic.
-  Calibration misses in bands A/AAA on all held-out applicants (5 and 4 defaults), and in B/A/AAA on the
-  held-out booked (16, 5 and 4 defaults), are *observations*, not findings: too few defaults.
+  6. Band B under-predicts on the held-out booked: observed/predicted 1.42 on 16 defaults, which clears
+     the monitoring floor `MIN_BAND_DEFAULTS = 10` (`wiki/facts/policy.py`; was 20 until 2026-09-30).
+  The floor decides finding vs observation, the same rule trigger 3 applies to a cohort
+  (`tests/test_wiki_site.py` pins it). Calibration misses in bands A/AAA on all held-out applicants
+  (5 and 4 defaults) and on the held-out booked (5 and 4) are *observations*: below the floor. D11's
+  open-findings table repeats D4.7's six rows character for character.
 
 ## The DGP, in numbers
 

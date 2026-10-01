@@ -46,11 +46,14 @@ held-out **booked** applicants, the same population the calibration check monito
 | A | {{< var score.band_booked.A.ratio >}} | {{< var score.band_booked.A.defaults >}} | held-out booked applicants |
 | AAA | {{< var score.band_booked.AAA.ratio >}} | {{< var score.band_booked.AAA.defaults >}} | held-out booked applicants |
 
-Bands B, A and AAA are already outside the calibration tolerance at development, each on
-few defaults ([4.5](performance.qmd#held-out-booked-applicants)). The first cohorts with
-matured outcomes show whether that is noise or a persistent under-prediction at the safe
-end; until then, a breach in those bands is read against its default count before any
-action.
+Bands B, A and AAA are already outside the calibration tolerance at development
+([4.5](performance.qmd#held-out-booked-applicants)). Band B's breach rests on
+{{< var score.band_booked.B.defaults >}} defaults, at or above the floor in trigger 3
+below, and is finding 6 ([4.7](limitations.qmd)), with its own control. Bands A and AAA
+rest on {{< var score.band_booked.A.defaults >}} and {{< var score.band_booked.AAA.defaults >}},
+below it. The first cohorts with matured outcomes show whether those are noise or a
+persistent under-prediction at the safe end; until then, a breach in those bands is read
+against its default count before any action.
 
 ## Redevelopment triggers
 
@@ -60,11 +63,13 @@ Any one of these starts a redevelopment, with the validator informed:
 2. Score PSI above {{< var monitoring.psi_act >}}.
 3. A band's observed / predicted ratio outside the tolerance in two consecutive cohorts,
    each with at least {{< var monitoring.min_band_defaults >}} defaults behind that band.
-   Below that count a breach is recorded and watched, not acted on.
+   Below that count a breach is recorded and watched, not acted on. Band B on the booked
+   already breaches at development on enough defaults (finding 6), so the first cohorts
+   with matured outcomes are read against this trigger for band B before any other band.
 4. A change to any input's definition or source, including the bureau feed
    ([4.6](sensitivity.qmd#bureau-feed-down-a-gate-failure-documented)).
 
-A redevelopment is also where findings 3, 4 and 5 and the observations in
+A redevelopment is also where findings 3, 4, 5 and 6 and the observations in
 [4.7](limitations.qmd) are acted on.
 Every redevelopment re-runs [4.5](performance.qmd) and [4.6](sensitivity.qmd), passes the
 gate, and forces the downstream work in [D3](../d3-dependencies.qmd#what-a-scorecard-change-forces).

@@ -8,7 +8,7 @@ from wiki.facts import policy
 @pytest.mark.parametrize("key,text", [
     ("monitoring.psi_watch", "0.10"), ("monitoring.psi_act", "0.25"),
     ("monitoring.ratio_lo", "0.75"), ("monitoring.ratio_hi", "1.25"),
-    ("monitoring.iv_useless", "0.02"), ("monitoring.min_band_defaults", "20"),
+    ("monitoring.iv_useless", "0.02"), ("monitoring.min_band_defaults", "10"),
 ])
 def test_documented_policy_values(key, text):
     f = policy.compute()[key]

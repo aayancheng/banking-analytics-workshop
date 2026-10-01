@@ -28,7 +28,7 @@ title: "Every number in this documentation"
 | `ceiling.truepd_all` | 0.8311 | all 12,000 applicants | `wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)` |
 | `market.roe_hurdle` | 15% | platform assumption | `shared.config.MARKET` |
 | `monitoring.iv_useless` | 0.02 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
-| `monitoring.min_band_defaults` | 20 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
+| `monitoring.min_band_defaults` | 10 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
 | `monitoring.psi_act` | 0.25 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
 | `monitoring.psi_watch` | 0.10 | policy constant | `wiki.facts.policy (documented monitoring policy)` |
 | `monitoring.ratio_hi` | 1.25 | policy constant | `wiki.facts.policy (documented monitoring policy)` |

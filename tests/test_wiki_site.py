@@ -60,6 +60,33 @@ def test_d4_has_an_index_and_the_nine_parts_in_order():
 
 
 def test_signoff_open_findings_are_d4_limitations_word_for_word():
-    rows = lambda p: [l for l in p.read_text().splitlines() if l[:4] in {f"| {n} " for n in "12345"}]
+    rows = lambda p: [l for l in p.read_text().splitlines() if l[:4] in {f"| {n} " for n in "123456"}]
     d11 = rows(WIKI / "mdd" / "d11-signoff.qmd")
-    assert len(d11) == 5 and d11 == rows(WIKI / "mdd" / "score" / "limitations.qmd")
+    assert len(d11) == 6 and d11 == rows(WIKI / "mdd" / "score" / "limitations.qmd")
+
+
+def test_calibration_findings_follow_the_monitoring_floor():
+    """D4.7 raises a band's calibration breach as a finding exactly when the monitoring rule
+    would count it: ratio outside the tolerance on at least the floor's defaults. Below the
+    floor it is an observation. If the facts move a band across the line, the prose must move."""
+    import json
+    f = {k: v["text"] for k, v in json.loads((WIKI / "facts" / "facts.json").read_text()).items()}
+    lo, hi = float(f["monitoring.ratio_lo"]), float(f["monitoring.ratio_hi"])
+    floor = int(f["monitoring.min_band_defaults"])
+    breach = lambda pre, b: not lo <= float(f[f"{pre}.{b}.ratio"]) <= hi
+    findings, observations = set(), set()
+    for pre in ("score.band", "score.band_booked"):
+        for b in ("D", "C", "B", "A", "AAA"):
+            if breach(pre, b):
+                n = int(f[f"{pre}.{b}.defaults"].replace(",", ""))
+                (findings if n >= floor else observations).add(f"{pre}.{b}")
+    assert findings == {"score.band_booked.B"}
+    assert observations == {"score.band.A", "score.band.AAA",
+                            "score.band_booked.A", "score.band_booked.AAA"}
+    text = (WIKI / "mdd" / "score" / "limitations.qmd").read_text()
+    f6 = text.split("## Finding 6", 1)[1].split("\n## ", 1)[0]
+    assert "score.band_booked.B.ratio" in f6 and "monitoring.min_band_defaults" in f6
+    obs = next(l for l in text.splitlines() if l.startswith("| Bands A and AAA"))
+    for key in observations:
+        assert f"{key}.ratio" in obs, key
+    assert "score.band_booked.B." not in obs

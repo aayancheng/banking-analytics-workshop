@@ -143,8 +143,8 @@
     "fmt": "d",
     "population": "policy constant",
     "source": "wiki.facts.policy (documented monitoring policy)",
-    "text": "20",
-    "value": 20
+    "text": "10",
+    "value": 10
   },
   "monitoring.psi_act": {
     "fmt": ".2f",

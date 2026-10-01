@@ -90,14 +90,18 @@ in band AAA.
   predicts more defaults than occur: booking was drawn from the true PD
   ([D2](../d2-data.qmd#two-populations-applicants-and-booked)), so the booked in band D are
   the ones whose true risk was lower than their score suggests.
-- In bands B, A and AAA it is {{< var score.band_booked.B.ratio >}},
-  {{< var score.band_booked.A.ratio >}} and {{< var score.band_booked.AAA.ratio >}}: outside
-  the tolerance, under-predicting. Each rests on few defaults —
-  {{< var score.band_booked.B.defaults >}} in band B, {{< var score.band_booked.A.defaults >}}
-  in band A, {{< var score.band_booked.AAA.defaults >}} in band AAA — too few to tell a
-  miscalibration from noise.
+- In band B it is {{< var score.band_booked.B.ratio >}}: outside the tolerance,
+  under-predicting, on {{< var score.band_booked.B.defaults >}} defaults — at least the
+  {{< var monitoring.min_band_defaults >}} the monitoring plan requires before a band's
+  breach counts ([4.8](monitoring.qmd#redevelopment-triggers)). That is finding 6
+  ([4.7](limitations.qmd)).
+- In bands A and AAA it is {{< var score.band_booked.A.ratio >}} and
+  {{< var score.band_booked.AAA.ratio >}}: also outside the tolerance, under-predicting,
+  but on {{< var score.band_booked.A.defaults >}} defaults in band A and
+  {{< var score.band_booked.AAA.defaults >}} in band AAA — below that floor, too few to tell
+  a miscalibration from noise.
 
-The breaches on both populations are recorded together as an observation in
+The A and AAA breaches on both populations are recorded together as an observation in
 [4.7](limitations.qmd#observations), not a finding, and the booked figures are the
 baselines the monitoring plan starts from ([4.8](monitoring.qmd#development-baselines)).
 
