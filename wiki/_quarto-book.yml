@@ -2,7 +2,9 @@ project:
   type: book
   output-dir: _book
 book:
-  title: "Credit Analytics You Can Verify"
+  title: "Credit Analytics with AI Agents"
+  subtitle: "Credit analytics you can verify"
+  author: "TeamYan"
   chapters:
     - index.qmd
     - explain/index.qmd

@@ -1,22 +1,127 @@
 {
-  "S1-c1": {"title": "I didn't write a line of this code", "youtube": null, "session": 1},
-  "S1-c2": {"title": "Five milestones on one spine", "youtube": null, "session": 1},
-  "S1-c3": {"title": "A credit platform, live", "youtube": null, "session": 1},
-  "S1-c4": {"title": "Fake data, real rules", "youtube": null, "session": 1},
-  "S1-c5": {"title": "make data — or ask an agent to audit it", "youtube": null, "session": 1},
-  "S1-c6": {"title": "A chart that lies", "youtube": null, "session": 1},
-  "S1-c7": {"title": "A model that cheats", "youtube": null, "session": 1},
-  "S2-c1": {"title": "The simplest scorecard a validator can replicate", "youtube": null, "session": 2},
-  "S2-c2": {"title": "One variable, by hand, then by the optimizer", "youtube": null, "session": 2},
-  "S2-c3": {"title": "From a coin to fifteen features", "youtube": null, "session": 2},
-  "S2-c4": {"title": "The gate you cannot negotiate — live", "youtube": null, "session": 2},
-  "S2-c5": {"title": "The gate held on a population you never lend to", "youtube": null, "session": 2},
-  "S2-c6": {"title": "The score explains itself", "youtube": null, "session": 2},
-  "S3-c1": {"title": "One score, four decisions", "youtube": null, "session": 3},
-  "S3-c2": {"title": "Adjudication: knockouts, PD zones, referrals", "youtube": null, "session": 3},
-  "S3-c3": {"title": "Pricing is one fraction", "youtube": null, "session": 3},
-  "S3-c4": {"title": "$1.28 billion below the hurdle", "youtube": null, "session": 3},
-  "S3-c5": {"title": "Early warning: gate the action, report the AUC", "youtube": null, "session": 3},
-  "S3-c6": {"title": "Line increase: offer before they ask", "youtube": null, "session": 3},
-  "S3-c7": {"title": "Three million tokens for a better app", "youtube": null, "session": 3}
+  "S1-c1": {
+    "title": "I didn't write a line of this code",
+    "youtube": "-m25HOdnMYM",
+    "session": 1
+  },
+  "S1-c2": {
+    "title": "Five milestones on one spine",
+    "youtube": "tTzx-lnVSTY",
+    "session": 1
+  },
+  "S1-c3": {
+    "title": "A credit platform, live",
+    "youtube": "FQhBL_LXVfM",
+    "session": 1
+  },
+  "S1-c4": {
+    "title": "Fake data, real rules",
+    "youtube": "_F1vlOhPRJI",
+    "session": 1
+  },
+  "S1-c5": {
+    "title": "make data — or ask an agent to audit it",
+    "youtube": "dXMMmcPHoCY",
+    "session": 1
+  },
+  "S1-c6": {
+    "title": "A chart that lies",
+    "youtube": "1jrOUhWW7mo",
+    "session": 1
+  },
+  "S1-c7": {
+    "title": "A model that cheats",
+    "youtube": "OxJXT9b74Ew",
+    "session": 1
+  },
+  "S2-c1": {
+    "title": "The simplest scorecard a validator can replicate",
+    "youtube": "bflRjF5phNU",
+    "session": 2
+  },
+  "S2-c2": {
+    "title": "One variable, by hand, then by the optimizer",
+    "youtube": "f4i0GUiNAfw",
+    "session": 2
+  },
+  "S2-c3": {
+    "title": "From a coin to fifteen features",
+    "youtube": "rsbARq6PPJk",
+    "session": 2
+  },
+  "S2-c4": {
+    "title": "The gate you cannot negotiate — live",
+    "youtube": "B3YZT6bimJ4",
+    "session": 2
+  },
+  "S2-c5": {
+    "title": "The gate held on a population you never lend to",
+    "youtube": "nbiS2mnUI7o",
+    "session": 2
+  },
+  "S2-c6": {
+    "title": "The score explains itself",
+    "youtube": "kISkqCBtS44",
+    "session": 2
+  },
+  "S3-c1": {
+    "title": "One score, four decisions",
+    "youtube": "WlQog5ZOQUI",
+    "session": 3
+  },
+  "S3-c2": {
+    "title": "Adjudication: knockouts, PD zones, referrals",
+    "youtube": "CLg-pQI963A",
+    "session": 3
+  },
+  "S3-c3": {
+    "title": "Pricing is one fraction",
+    "youtube": "w8xD0vrdwEk",
+    "session": 3
+  },
+  "S3-c4": {
+    "title": "$1.28 billion below the hurdle",
+    "youtube": "QTBRZH-CVj4",
+    "session": 3
+  },
+  "S3-c5": {
+    "title": "Early warning: gate the action, report the AUC",
+    "youtube": "uRueSqY8SNM",
+    "session": 3
+  },
+  "S3-c6": {
+    "title": "Line increase: offer before they ask",
+    "youtube": "8QVssgYoqMQ",
+    "session": 3
+  },
+  "S3-c7": {
+    "title": "Three million tokens for a better app",
+    "youtube": "Xs1OupYuIBU",
+    "session": 3
+  },
+  "S1-full": {
+    "title": "Credit Analytics Workshop - Session 1 Full Video",
+    "youtube": "d9bkU08wkZQ",
+    "session": 1
+  },
+  "S2-full": {
+    "title": "Credit Analytics Workshop - Session 2 Full Video",
+    "youtube": "67PC9znr8cU",
+    "session": 2
+  },
+  "S1-highlights": {
+    "title": "Credit Analytics Workshops - Session 1 Highlights",
+    "youtube": "7SY9GBv6Jvk",
+    "session": 1
+  },
+  "S2-highlights": {
+    "title": "Credit Analytics Workshop - Session 2 Highlights",
+    "youtube": "xt5TR7CNV4s",
+    "session": 2
+  },
+  "S3-highlights": {
+    "title": "Credit Analytics Workshop - Session 3 Highlights",
+    "youtube": "6TFBhbFgtz0",
+    "session": 3
+  }
 }

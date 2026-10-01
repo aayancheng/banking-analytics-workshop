@@ -1,6 +1,6 @@
 # Shared by every profile. Pick one with --profile site|validation|book.
 profile:
   default: site
-title: "Credit Analytics You Can Verify"
-author: "Yan Cheng"
+title: "Credit Analytics with AI Agents"
+author: "TeamYan"
 lang: en

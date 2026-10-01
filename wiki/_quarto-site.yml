@@ -5,13 +5,15 @@ project:
     - "*.qmd"
     - "!mdd/d11-signoff.qmd"
 website:
-  title: "Credit Analytics You Can Verify"
+  title: "Credit Analytics with AI Agents"
   repo-url: https://github.com/aayancheng/banking-analytics-workshop
   repo-subdir: wiki
   repo-actions: [edit, issue]
   page-navigation: true
   search: true
   navbar:
+    logo: _assets/teamyan-mark.png
+    logo-alt: "TeamYan"
     left:
       - text: Course
         href: course/index.qmd
@@ -64,6 +66,7 @@ website:
         - reference/glossary.qmd
         - reference/facts.qmd
         - reference/videos.qmd
+        - reference/resources.qmd
 format:
   html:
     theme:
@@ -71,5 +74,11 @@ format:
       dark: [darkly, styles.scss]
     toc: true
     code-copy: true
+    page-layout: full
+    grid:
+      sidebar-width: 300px
+      body-width: 1150px
+      margin-width: 270px
+      gutter-width: 2rem
     mermaid:
       theme: neutral

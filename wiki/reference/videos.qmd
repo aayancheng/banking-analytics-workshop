@@ -2,8 +2,9 @@
 title: "Video index"
 ---
 
-Every session was recorded and cut into short chapter videos, one idea each. A video marked
-*coming soon* is recorded; it plays here once its link is added.
+Every session was recorded and cut into short chapter videos, one idea each, published on the
+[TeamYan YouTube channel](https://www.youtube.com/@teamyan2026). Each session's highlights reel
+and the full recordings are at the end of this page.
 
 ## Session 1 — Data and leakage
 
@@ -50,3 +51,15 @@ Every session was recorded and cut into short chapter videos, one idea each. A v
 {{< yt S3-c6 >}}
 
 {{< yt S3-c7 >}}
+
+## Highlights and full sessions
+
+{{< yt S1-highlights >}}
+
+{{< yt S2-highlights >}}
+
+{{< yt S3-highlights >}}
+
+{{< yt S1-full >}}
+
+{{< yt S2-full >}}

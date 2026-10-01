@@ -1,0 +1,26 @@
+---
+title: "Resources"
+---
+
+Everything this course is built from is public. Start anywhere.
+
+| Resource | What you will find | Link |
+|---|---|---|
+| **GitHub repository** | The code, the data, the models, this wiki's source and `verify.py` | [github.com/aayancheng/banking-analytics-workshop](https://github.com/aayancheng/banking-analytics-workshop) |
+| **Open in Codespaces** | The whole platform in your browser, nothing to install | [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/aayancheng/banking-analytics-workshop) |
+| **YouTube: TeamYan** | Every session cut into short chapter videos, one idea each, plus full recordings | [youtube.com/@teamyan2026](https://www.youtube.com/@teamyan2026) |
+| **Substack: TeamYan** | A written post per session, with the videos embedded and the numbers explained | [teamyan.substack.com](https://teamyan.substack.com) |
+| **Video index** | The chapter videos on this site, by session | [Video index](videos.qmd) |
+
+## Licences
+
+The code in the repository, including the scripts that generate this wiki's numbers, is MIT.
+The prose of this wiki and the book built from it is
+[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/): share it with credit,
+not commercially, and not modified.
+
+## Feedback
+
+Every page has **Edit this page** and **Report an issue** links in its right-hand margin. A
+number that looks wrong is the most useful issue you can file: say which page and which
+number, and the fact index will tell us where it came from.

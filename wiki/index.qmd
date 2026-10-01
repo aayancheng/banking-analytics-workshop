@@ -1,5 +1,6 @@
 ---
-title: "Credit Analytics You Can Verify"
+title: "Credit Analytics with AI Agents"
+subtitle: "Credit analytics you can verify"
 ---
 
 ::: {.content-visible when-profile="site"}

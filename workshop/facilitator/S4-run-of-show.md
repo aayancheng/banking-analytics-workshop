@@ -343,7 +343,7 @@ Launch **Poll C** as slide 14 goes up; do not share it.
 - The homework page (*Course* → *Session 4 homework*) has H4.1 (the full chapter: the check
   without `--part`), H4.2 and H4.3, each with a worked solution written by running it with an
   agent.
-- The Session 1 recording and the Session 2–3 chapter videos: YouTube, TeamYan (@teamyan2026).
+- The Session 1–3 chapter videos: YouTube, TeamYan (@teamyan2026).
 
 ## Close (1:27–1:30)
 

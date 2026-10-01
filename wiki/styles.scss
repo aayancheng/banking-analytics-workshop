@@ -1,5 +1,17 @@
 /*-- scss:defaults --*/
 $font-size-root: 17px;
+
+// TeamYan brand (workshop/brand/readme-banner.svg): ink bar, cream text, ember accent.
+$ty-ink: #0C1522;
+$ty-ink-2: #3D4A5C;
+$ty-cream: #FBF6EF;
+$ty-sand: #E5DCD1;
+$ty-ember: #C9530C;
+
+$navbar-bg: $ty-ink;
+$navbar-fg: $ty-sand;
+$navbar-hl: #FFFFFF;
+
 /*-- scss:rules --*/
 .yt { position: relative; aspect-ratio: 16 / 9; margin: 1rem 0; }
 .yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
@@ -8,3 +20,33 @@ $font-size-root: 17px;
   main table { display: block; overflow-x: auto; max-width: 100%; }
 }
 td code, main p code, main li code { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Navbar: the site title reads as a brand, the four tabs read as tabs, and the one you are
+   on is unmistakable (ember underline, white, bold) against the ones you could go to. */
+.navbar {
+  border-bottom: 3px solid $ty-ember;
+  .navbar-title { font-weight: 700; letter-spacing: 0.01em; color: #FFFFFF; }
+  .navbar-logo { max-height: 34px; border-radius: 50%; background: $ty-cream; padding: 2px; }
+  .navbar-nav .nav-link {
+    padding: 0.45rem 0.9rem;
+    margin: 0 0.15rem;
+    border-radius: 6px 6px 0 0;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .navbar-nav .nav-link:hover { background-color: rgba(255, 255, 255, 0.08); color: #FFFFFF; }
+  .navbar-nav .nav-link.active {
+    color: #FFFFFF;
+    font-weight: 700;
+    background-color: $ty-ink-2;
+    box-shadow: inset 0 -3px 0 $ty-ember;
+  }
+}
+
+/* Sidebar: the current page carries the same ember mark as its tab. */
+.sidebar-navigation .sidebar-link.active,
+.sidebar-navigation .sidebar-item-section .sidebar-link.active {
+  font-weight: 700;
+  border-left: 3px solid $ty-ember;
+  padding-left: 0.5rem;
+  margin-left: -0.6rem;
+}

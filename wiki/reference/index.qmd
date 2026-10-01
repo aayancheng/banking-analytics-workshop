@@ -8,3 +8,5 @@ title: "Reference"
 - [Fact index](facts.qmd) — every number in the documentation, with the function that
   computes it and the population it was measured on.
 - [Video index](videos.qmd) — every chapter video, by session.
+- [Resources](resources.qmd) — the GitHub repository, Codespaces, the TeamYan YouTube channel
+  and Substack, and the licences.

@@ -367,8 +367,7 @@ address (invariant 6).
 ### Open threads
 
 - **Wiki v1 leftovers:** D5–D8 in full (adjudication, pricing, EWS, line increase chapters are stubs
-  that follow the template), E1–E10 (explainers), YouTube ids for the S1–S3 embeds (the wiki's
-  `--strict` video gating waits on them), book packaging (the EPUB/PDF is a stub: preface, Explain index, the template page and D10),
+  that follow the template), E1–E10 (explainers), book packaging (the EPUB/PDF is a stub: preface, Explain index, the template page and D10),
   GitHub Pages enablement (the manual workflow exists; the setting is Yan's), and the Codespace test
   of the Quarto devcontainer (needs a push).
 
@@ -378,7 +377,8 @@ address (invariant 6).
 - Nothing equivalent to the S1 reading note exists for Sessions 2–5.
 - **S3 post** — drafted in `blog/S3-substack.md`; fill the seven `[YouTube link]`s and publish.
   `run-of-show-app.html` still mirrors S1 (S2 and S3 used a phone timer).
-- **S1 chapter videos** — built 2026-09-27; **not uploaded yet, and the S4 email and deck say S1–S3 are on YouTube — upload first**; to upload, with `blog/S1-youtube-descriptions.md`, and add
+- **S1 chapter videos** — uploaded (all 20 S1–S3 chapter ids are in `wiki/_data/videos.json`, with the
+  highlights reels and the S1/S2 full videos; `lint --strict` is clean). Still to add them
   to the S1 post with `blog/S1-chapters-addendum.md` (which also fixes the post's 0.72 → 0.7299).
 - **Notebooks 01 and 02 carry executed outputs in the working tree** (local paths baked in) from
   running them in VS Code — clear outputs before committing anything in `notebooks/`.
