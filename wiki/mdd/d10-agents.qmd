@@ -56,6 +56,14 @@ plausible improvement, the kind that passes review. Only leaking the outcome rea
 Each piece looked right on its own. The code ran. The prose was fluent and internally
 consistent. Nothing failed, because nothing compared the two.
 
+It was caught by running the code, not by reading the material. While building a notebook to
+compare the AUC of different feature sets, the developer never saw the promised 1.0. Reading
+the data generator explained why: default is drawn in two steps. The generator first computes
+each applicant's true PD, then flips a coin weighted by it. A model that knows the true PD
+still has to guess the coin, so it cannot reach 1.0 unless it is given the outcome itself.
+With that reasoning written down, the developer asked the agent to confirm it against the
+code before anything was changed.
+
 The repository's history records the fix: commit `8075df6` corrected the claim in every
 artifact that shipped it and recomputed each rung of the probe from the code. The fix
 made the mistake the lesson. The probe became a three-rung ladder — honest
