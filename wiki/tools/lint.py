@@ -2,7 +2,9 @@
 
 Fails on: a hand-typed metric (a decimal with 3+ places, or a percentage) in page prose;
 an unknown {{< var key >}}; an unknown {{< yt ID >}}; a same-page @fig-/@tbl-/@sec- reference
-without its anchor; a relative link to a .qmd that does not exist.
+without its anchor; a relative link to a .qmd that does not exist; a ```{mermaid} cell (it
+needs a browser to render for the PDF -- use _assets/<name>.mmd and `make wiki-diagrams`); a
+diagram PNG whose recorded source hash no longer matches its .mmd.
 Code blocks, inline code, shortcodes, HTML comments and {attribute} blocks are not prose.
 Stdlib only: CI runs this without the project's virtualenv.
 
@@ -88,6 +90,21 @@ def lint_text(rel: str, text: str, keys: set[str], videos: dict,
     return problems
 
 
+MERMAID = re.compile(r"^```\{mermaid\}", re.M)
+
+
+def lint_diagrams(wiki: Path = WIKI) -> list[str]:
+    """Each _assets/*.mmd has a PNG rendered from exactly this source (see wiki/tools/diagrams.py)."""
+    import hashlib
+    out = []
+    for mmd in sorted((wiki / "_assets").glob("*.mmd")):
+        png, sha = mmd.with_suffix(".png"), mmd.with_suffix(".png.sha")
+        want = hashlib.sha256(mmd.read_bytes()).hexdigest()[:16]
+        if not png.exists() or not sha.exists() or sha.read_text().strip() != want:
+            out.append(f"_assets/{mmd.name}: the PNG is missing or older than its source -- run `make wiki-diagrams`")
+    return out
+
+
 def lint_all(wiki: Path = WIKI, files: list[Path] | None = None,
              strict: bool = False) -> list[str]:
     keys = set(json.loads(FACTS_JSON.read_text())) if FACTS_JSON.exists() else set()
@@ -100,7 +117,12 @@ def lint_all(wiki: Path = WIKI, files: list[Path] | None = None,
         rel = str(p.relative_to(wiki))
         if rel == "reference/facts.qmd":
             continue                     # generated from facts.json; checked by tables.stale
-        problems += lint_text(rel, p.read_text(), keys, videos, page_path=p)
+        text = p.read_text()
+        problems += lint_text(rel, text, keys, videos, page_path=p)
+        for m in MERMAID.finditer(text):
+            problems.append(f"{rel}:{_line(text, m.start())}: a {{mermaid}} cell needs a browser to render "
+                            "for the PDF -- move it to _assets/<name>.mmd and run `make wiki-diagrams`")
+    problems += lint_diagrams(wiki)
     if strict:
         problems += [f"_data/videos.json: '{k}' has no YouTube id yet"
                      for k, v in videos.items() if not v.get("youtube")]

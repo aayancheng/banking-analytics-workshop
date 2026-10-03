@@ -164,6 +164,12 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   adds the stress refits. It also rejects any fact in `facts.json` that no module computes (only the
   cached `score.stress.*` refits are excused on the fast path), compares each fact's population, source
   and format, and checks `_variables.yml` like the other generated files. Facts hold the DGP truth only in `wiki/facts/ceiling.py`.
+- **No `{mermaid}` cells in the wiki.** Quarto executes a mermaid cell in every profile — even inside
+  content hidden for that profile — and rendering it for Typst (PDF, book) needs a browser. A Codespace has
+  none, so `make wiki-pdf` died there with a bare `AssertionError` on `d3-dependencies.qmd` (2026-10-03) while
+  working on a Mac with Chrome. Diagrams live as `wiki/_assets/<name>.mmd`; `make wiki-diagrams` renders the
+  committed PNG (needs Chrome — author-side) and records the source hash; `wiki/tools/lint.py` fails on a
+  mermaid cell or a PNG older than its `.mmd`.
 - **The wiki gotchas.** To show a shortcode literally write `{{</* var key */>}}` (the fact index does this).
   Quarto crashes on a sidebar `auto:` glob that matches no page. Files and dirs under `wiki/` that must
   not render start with `_`. Render profiles: `site` (GitHub Pages), `validation` (Typst PDF; render it

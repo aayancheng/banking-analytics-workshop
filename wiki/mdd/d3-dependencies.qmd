@@ -8,21 +8,10 @@ One model feeds every other component. The Business Credit Score is computed onc
 its own scoring function (`predict_score_pd`), and every consumer calls that function
 rather than re-implementing it.
 
-```{mermaid}
-%%{init: {"themeVariables": {"fontSize": "12px"}, "flowchart": {"nodeSpacing": 15, "padding": 6}}}%%
-flowchart TD
-  G["Data generator"] --> S["D4 Score<br/>score · PD · band"]
-  S --> A["D5<br/>Adjudication"]
-  S --> P["D6<br/>Pricing"]
-  S --> E["D7<br/>Early Warning"]
-  S --> L["D8<br/>Line Increase"]
-  M["Market<br/>assumptions<br/>(MARKET)"] --> P
-  M --> L
-  A --> UI["Portal (app/)"]
-  P --> UI
-  E --> UI
-  L --> UI
-```
+<!-- Diagram source: _assets/d3-dependencies.mmd. A {mermaid} cell would need a browser to
+     render for the PDF and book (a Codespace has none), so every profile shows this committed PNG.
+     After editing the .mmd, run `make wiki-diagrams` (needs Chrome); the wiki lint fails until you do. -->
+![](../_assets/d3-dependencies.png){width=55% fig-alt="The score spine: the data generator feeds the D4 score; the score feeds adjudication, pricing, early warning and line increase; market assumptions feed pricing and line increase; all four feed the portal."}
 
 Every module also reads the generator's data directly, for its own features and
 population; the diagram shows only what flows between components.

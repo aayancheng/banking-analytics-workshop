@@ -3,7 +3,7 @@
 
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
-.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop slides notebooks reading wiki-facts wiki-facts-full wiki wiki-site wiki-pdf wiki-book
+.PHONY: setup verify data train-score train-adjudication price train-ews train-line-increase docpack test run stop slides notebooks reading wiki-facts wiki-facts-full wiki wiki-site wiki-diagrams wiki-pdf wiki-book
 
 setup:
 	python3 -m venv .venv
@@ -102,6 +102,9 @@ wiki:
 
 wiki-site:
 	quarto render wiki --profile site
+
+wiki-diagrams:
+	$(PY) -m wiki.tools.diagrams
 
 wiki-pdf:
 	$(PY) -m wiki.tools.stamp

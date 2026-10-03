@@ -1,0 +1,13 @@
+%%{init: {"themeVariables": {"fontSize": "12px"}, "flowchart": {"nodeSpacing": 15, "padding": 6}}}%%
+flowchart TD
+  G["Data generator"] --> S["D4 Score<br/>score · PD · band"]
+  S --> A["D5<br/>Adjudication"]
+  S --> P["D6<br/>Pricing"]
+  S --> E["D7<br/>Early Warning"]
+  S --> L["D8<br/>Line Increase"]
+  M["Market<br/>assumptions<br/>(MARKET)"] --> P
+  M --> L
+  A --> UI["Portal (app/)"]
+  P --> UI
+  E --> UI
+  L --> UI
