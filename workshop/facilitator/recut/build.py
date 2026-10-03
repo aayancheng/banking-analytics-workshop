@@ -213,6 +213,30 @@ def _overlay_chain(cmd, overlays, g: Path, first_index: int):
     return steps, last
 
 
+def _caption_list(doc, pc, g: Path, target: Path, length: float):
+    """The piece's captions as an ffmpeg concat list of PNGs with durations (piece-local
+    time), blank.png filling the gaps. None when the cuts file has no captions."""
+    if not doc.get("captions"):
+        return None
+    cdir = g / f"{doc['stem'].split('-ch')[0]}-captions"
+    segs = json.loads((cdir / "segments.json").read_text())
+    src = pc.get("source")
+    mine = sorted((max(s["start"], pc["in"]) - pc["in"], min(s["end"], pc["out"]) - pc["in"], s["png"])
+                  for s in segs if s["source"] == src and s["end"] > pc["in"] and s["start"] < pc["out"])
+    lines, t = [], 0.0
+    for a, b, png in mine:
+        if a > t + 0.001:
+            lines += [f"file '{(cdir / 'blank.png').resolve()}'", f"duration {a - t:.3f}"]
+        lines += [f"file '{(cdir / png).resolve()}'", f"duration {b - a:.3f}"]
+        t = b
+    if length > t + 0.001:
+        lines += [f"file '{(cdir / 'blank.png').resolve()}'", f"duration {length - t:.3f}"]
+    lines.append(f"file '{(cdir / 'blank.png').resolve()}'")      # the concat demuxer drops the last duration
+    path = target.with_suffix(".captions.txt")
+    path.write_text("\n".join(lines) + "\n")
+    return path
+
+
 def keep_cmd(doc, pc, src: Path, g: Path, target: Path, draft: bool):
     # a keep may name its own source -- a pickup recorded after the session (S3's P1-P3)
     src = ROOT / pc["source"] if pc.get("source") else src
@@ -222,6 +246,11 @@ def keep_cmd(doc, pc, src: Path, g: Path, target: Path, draft: bool):
            "-i", str(g / "watermark.png")]
     steps, last = _overlay_chain(cmd, sorted(pc["overlays"]), g, 2)
     chain = ["[0:v][1:v]overlay=0:0[v0]", *steps]
+    caps = _caption_list(doc, pc, g, target, length)
+    if caps:                                  # burned-in captions (captions.py): one timed image list
+        idx = 2 + len(pc["overlays"])
+        cmd += ["-f", "concat", "-safe", "0", "-i", str(caps)]
+        chain.append(f"[{last}][{idx}:v]overlay=0:0:eof_action=pass[vcap]"); last = "vcap"
     if draft:
         chain.append(f"[{last}]scale=960:-2[vout]"); last = "vout"
     a = doc["audio"]
