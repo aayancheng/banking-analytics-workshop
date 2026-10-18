@@ -250,9 +250,10 @@ Then cut/annotate a `v1.x` tag recording what was verified.
      below 20% (model held fixed: split/refit variance not included). The gate was re-specified
      pre-commit, with results in view, after the master spec's AUC 0.75 / 3x proved unreachable
      (even the noise-free logit gets 0.7329 / 26.9%); Option A (de-noise the label) was deferred
-     as a prototype choice to keep the merged data untouched — the notes' own safety analysis found
-     D4–D6 unaffected (only the EWS and line-increase labels change), so the doc pack's "never
-     regenerate data a downstream model consumes" is not the reason for this change. Not a relaxation under invariant 2 (that governs
+     as a prototype choice to keep the merged data untouched; the notes' safety analysis reasons
+     that score, adjudication and pricing would be unaffected (only the EWS and line-increase labels
+     change; the confirming checksum is listed as a step, not done). The doc pack's "never to
+     regenerate data a downstream model already consumes" is a general principle, not that reason. Not a relaxation under invariant 2 (that governs
      committed gates), but the level is *not* derived from the ceiling, and the record names no
      approver or date — 7.9's history says all of this.
   4. Not distinguishable from `pd_score` alone on AUC (diff +0.0223, paired CI -0.0132..0.0548);
