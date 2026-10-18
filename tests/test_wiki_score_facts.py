@@ -10,12 +10,13 @@ from shared.config import ROOT
 @pytest.fixture(scope="module")
 def facts():
     os.chdir(ROOT)
-    from wiki.facts import adj_facts, ceiling, score_facts
+    from wiki.facts import adj_facts, ceiling, pricing_facts, score_facts
     from wiki.facts.data import score_split
     split = score_split()
     f, _ = score_facts.compute(split)
     f.update(adj_facts.compute(split))
     f.update(ceiling.compute(split))
+    f.update(pricing_facts.market_facts())
     return {k: v.text() for k, v in f.items()}
 
 

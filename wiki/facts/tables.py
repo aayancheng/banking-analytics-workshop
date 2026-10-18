@@ -141,6 +141,92 @@ def adj_calibration_table(t: dict[str, str]) -> str:
                    for p in ("everyone", "booked") for k in ADJ_DECISIONS])
 
 
+PRICING_SENS = ["cost_of_funds", "lgd", "opex_rate", "tax_rate", "capital_ratio", "roe_hurdle"]
+
+
+def pricing_market_table(t: dict[str, str]) -> str:
+    keys = ["cost_of_funds", "lgd", "opex_rate", "tax_rate", "capital_ratio", "base_margin",
+            "roe_hurdle"]
+    return _table(["Assumption (`shared.config.MARKET`)", "Value"],
+                  [[f"`{k}`", t[f"market.{k}"]] for k in keys] +
+                  [["`fee_rate` (engine default, not in `MARKET`)", t["pricing.fee_rate"]]])
+
+
+def pricing_headline_table(t: dict[str, str]) -> str:
+    return _table(["Measure", "Value"], [
+        ["Booked loans priced", t["pricing.n"]],
+        ["Clear the ROE hurdle at the quoted rate",
+         f"{t['pricing.n_clears']} ({t['pricing.share_clears']})"],
+        ["Quoted below the hurdle-clearing rate (mispriced)",
+         f"{t['pricing.n_mispriced']} ({t['pricing.share_mispriced']})"],
+        ["Quoted below break-even (negative ROE)",
+         f"{t['pricing.below_break_even.n']} ({t['pricing.below_break_even.share']})"],
+        ["Median ROE at the quoted rate", t["pricing.median_roe"]],
+        ["Mispriced EAD", f"${t['pricing.mispriced_ead']} of ${t['pricing.total_ead']} "
+                          f"({t['pricing.mispriced_ead_share']})"],
+        ["Median quoted / recommended rate",
+         f"{t['pricing.median_quoted_rate']} / {t['pricing.median_recommended_rate']}"],
+    ])
+
+
+def pricing_band_table(t: dict[str, str]) -> str:
+    return _table(["Band", "n", "Mispriced", "Median ROE", "Mean PD", "Mean quoted rate",
+                   "Mean recommended rate", "EAD ($)", "Mispriced EAD ($)"],
+                  [[b] + [t[f"pricing.band.{b}.{c}"] for c in
+                          ("n", "mispriced_rate", "median_roe", "mean_pd", "mean_quoted",
+                           "mean_recommended", "ead", "mispriced_ead")] for b in BANDS])
+
+
+def pricing_industry_table(t: dict[str, str]) -> str:
+    inds = sorted({k.split(".")[2] for k in t if k.startswith("pricing.industry.")})
+    inds.sort(key=lambda i: (-float(t[f"pricing.industry.{i}.mispriced_rate"].rstrip("%")),
+                             t[f"pricing.industry.{i}.name"]))
+    return _table(["Industry", "n", "Mispriced"],
+                  [[t[f"pricing.industry.{i}.name"], t[f"pricing.industry.{i}.n"],
+                    t[f"pricing.industry.{i}.mispriced_rate"]] for i in inds])
+
+
+def pricing_sensitivity_table(t: dict[str, str]) -> str:
+    rows = [["Committed", "—", t["pricing.share_clears"], t["pricing.n_clears"],
+             t["pricing.median_roe"], t["pricing.mispriced_ead"]]]
+    step = t["pricing.sens.step"]
+    for fd in PRICING_SENS:
+        for name, sign in (("down", "−"), ("up", "+")):
+            k = f"pricing.sens.{fd}.{name}"
+            rows.append([f"`{fd}` {sign}{step}", t[f"{k}.value"], t[f"{k}.share_clears"],
+                         t[f"{k}.n_clears"], t[f"{k}.median_roe"], t[f"{k}.mispriced_ead"]])
+    return _table(["Scenario", "Assumption becomes", "Clear the hurdle", "n clearing",
+                   "Median ROE", "Mispriced EAD ($)"], rows)
+
+
+def pricing_pd_table(t: dict[str, str]) -> str:
+    rows = [["Score PD as committed", t["pricing.share_clears"], t["pricing.n_clears"],
+             t["pricing.median_roe"], t["pricing.mispriced_ead"]]]
+    for name in ("down", "up"):
+        k = f"pricing.pd_scale.{name}"
+        rows.append([f"Score PD × {t[f'{k}.factor']}", t[f"{k}.share_clears"],
+                     t[f"{k}.n_clears"], t[f"{k}.median_roe"], t[f"{k}.mispriced_ead"]])
+    return _table(["PD fed to the engine", "Clear the hurdle", "n clearing", "Median ROE",
+                   "Mispriced EAD ($)"], rows)
+
+
+def pricing_waterfall_table(t: dict[str, str]) -> str:
+    e = "pricing.example"
+    labels = [("interest_income", "Interest income"), ("cost_of_funds", "− Cost of funds"),
+              ("expected_loss", "− Expected loss (PD × LGD × EAD)"),
+              ("operating_cost", "− Operating cost"), ("pre_tax_profit", "= Pre-tax profit"),
+              ("tax", "− Tax"), ("net_income", "= Net income"),
+              ("allocated_equity", "Allocated equity (capital ratio × EAD)")]
+    rows = [[lab, f"${t[f'{e}.wf.{k}']}"] for k, lab in labels]
+    rows += [["ROE at the quoted rate (net income / equity)", t[f"{e}.roe"]],
+             ["Quoted rate", t[f"{e}.quoted_rate"]],
+             ["Break-even rate (ROE 0)", t[f"{e}.break_even"]],
+             [f"Hurdle-clearing rate (ROE {t['market.roe_hurdle']})", t[f"{e}.hurdle_clearing"]],
+             ["Recommended rate (hurdle-clearing + base margin)", t[f"{e}.recommended"]]]
+    return _table([f"`{t[f'{e}.business_id']}` (band {t[f'{e}.band']}, PD {t[f'{e}.pd']}, "
+                   f"EAD ${t[f'{e}.ead']})", "At the quoted rate"], rows)
+
+
 def fact_index(meta: dict[str, dict]) -> str:
     rows = [[f"`{k}`", d["text"], d["population"], f"`{d['source']}`"]
             for k, d in sorted(meta.items())]
@@ -148,7 +234,9 @@ def fact_index(meta: dict[str, dict]) -> str:
             "`python verify.py` recomputes each value below through the modules' own functions, "
             "or reads it from the committed artifact named under Source (the `adj.*` facts "
             "are recomputed through the saved model and `policy.decide`, exactly as the "
-            "platform scores adjudication); the "
+            "platform scores adjudication, and the `pricing.*` facts through "
+            "`price_population` and the engine's own functions, exactly as the portal "
+            "prices the booked book); the "
             "`score.stress.*` refits are recomputed only under `python verify.py --full`. "
             "Pages print these through `{{</* var key */>}}`; none is typed by hand.\n\n" +
             _table(["Key", "Value", "Population", "Source"], rows))
@@ -171,6 +259,13 @@ def render_all(t: dict[str, str], meta: dict[str, dict]) -> dict[str, str]:
         "_generated/adj-cutoffs.md": adj_cutoff_table(t),
         "_generated/adj-rules.md": adj_rule_table(t),
         "_generated/adj-calibration.md": adj_calibration_table(t),
+        "_generated/pricing-market.md": pricing_market_table(t),
+        "_generated/pricing-headline.md": pricing_headline_table(t),
+        "_generated/pricing-bands.md": pricing_band_table(t),
+        "_generated/pricing-industries.md": pricing_industry_table(t),
+        "_generated/pricing-sensitivity.md": pricing_sensitivity_table(t),
+        "_generated/pricing-pd-scaling.md": pricing_pd_table(t),
+        "_generated/pricing-waterfall.md": pricing_waterfall_table(t),
         "reference/facts.qmd": fact_index(meta),
     }
     if "score.stress.no_bureau.auc" in t:

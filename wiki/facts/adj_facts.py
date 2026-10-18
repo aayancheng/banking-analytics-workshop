@@ -24,7 +24,7 @@ from adjudication.src.feature_engineering import (
 from adjudication.src.policy import PolicyConfig, decide
 from adjudication.src.reason_codes import top_adverse_shap
 from adjudication.src.train import AUC_GATE, LIFT_GATE, top_ventile_lift
-from shared.config import MARKET, ROOT, SEED
+from shared.config import ROOT, SEED
 from wiki.facts.core import Fact
 from wiki.facts.score_facts import BOOTSTRAP_N
 
@@ -125,8 +125,6 @@ def compute(split) -> dict[str, Fact]:
     put("adj.lift_top_share", lift_top_share(), ".0%", SRC_LIFT,
         "measured on the function (one default among 10,000 ranked rows)")
     put("adj.lift_function", "top_ventile_lift", "", SRC_LIFT, "function name")
-    put("market.roe_hurdle", float(MARKET["roe_hurdle"]), ".0%", "shared.config.MARKET",
-        "platform assumption")
 
     # --- thresholds: recomputed as train.py calibrates them, checked against the config ---
     t_low, t_high = (round(float(np.quantile(p_all, q)), 4) for q in (Q_LOW, Q_HIGH))

@@ -1686,12 +1686,54 @@
     "text": "0.8311",
     "value": 0.831076
   },
+  "market.base_margin": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "shared.config.MARKET",
+    "text": "2.0%",
+    "value": 0.02
+  },
+  "market.capital_ratio": {
+    "fmt": ".0%",
+    "population": "platform assumption",
+    "source": "shared.config.MARKET",
+    "text": "12%",
+    "value": 0.12
+  },
+  "market.cost_of_funds": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "shared.config.MARKET",
+    "text": "3.5%",
+    "value": 0.035
+  },
+  "market.lgd": {
+    "fmt": ".0%",
+    "population": "platform assumption",
+    "source": "shared.config.MARKET",
+    "text": "45%",
+    "value": 0.45
+  },
+  "market.opex_rate": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "shared.config.MARKET",
+    "text": "1.0%",
+    "value": 0.01
+  },
   "market.roe_hurdle": {
     "fmt": ".0%",
     "population": "platform assumption",
     "source": "shared.config.MARKET",
     "text": "15%",
     "value": 0.15
+  },
+  "market.tax_rate": {
+    "fmt": ".0%",
+    "population": "platform assumption",
+    "source": "shared.config.MARKET",
+    "text": "25%",
+    "value": 0.25
   },
   "monitoring.iv_useless": {
     "fmt": ".2f",
@@ -1741,6 +1783,1525 @@
     "source": "wiki.facts.policy (documented monitoring policy)",
     "text": "50%",
     "value": 0.5
+  },
+  "pricing.band.A.ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band A",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "228,506,000",
+    "value": 228506000.0
+  },
+  "pricing.band.A.mean_pd": {
+    "fmt": ".2%",
+    "population": "booked book, score band A",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "1.92%",
+    "value": 0.019169
+  },
+  "pricing.band.A.mean_quoted": {
+    "fmt": ".2%",
+    "population": "booked book, score band A",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "7.47%",
+    "value": 0.074687
+  },
+  "pricing.band.A.mean_recommended": {
+    "fmt": ".2%",
+    "population": "booked book, score band A",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "9.76%",
+    "value": 0.097626
+  },
+  "pricing.band.A.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, score band A",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "12.5%",
+    "value": 0.124894
+  },
+  "pricing.band.A.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band A",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "171,434,000",
+    "value": 171434000.0
+  },
+  "pricing.band.A.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band A",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "73.1%",
+    "value": 0.7314
+  },
+  "pricing.band.A.n": {
+    "fmt": ",d",
+    "population": "booked book, score band A",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "845",
+    "value": 845
+  },
+  "pricing.band.AAA.ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band AAA",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "287,048,000",
+    "value": 287048000.0
+  },
+  "pricing.band.AAA.mean_pd": {
+    "fmt": ".2%",
+    "population": "booked book, score band AAA",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "0.82%",
+    "value": 0.008173
+  },
+  "pricing.band.AAA.mean_quoted": {
+    "fmt": ".2%",
+    "population": "booked book, score band AAA",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "6.93%",
+    "value": 0.069262
+  },
+  "pricing.band.AAA.mean_recommended": {
+    "fmt": ".2%",
+    "population": "booked book, score band AAA",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "9.27%",
+    "value": 0.092678
+  },
+  "pricing.band.AAA.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, score band AAA",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "12.7%",
+    "value": 0.126676
+  },
+  "pricing.band.AAA.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band AAA",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "231,588,000",
+    "value": 231588000.0
+  },
+  "pricing.band.AAA.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band AAA",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "80.4%",
+    "value": 0.8041
+  },
+  "pricing.band.AAA.n": {
+    "fmt": ",d",
+    "population": "booked book, score band AAA",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "822",
+    "value": 822
+  },
+  "pricing.band.B.ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band B",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "363,866,000",
+    "value": 363866000.0
+  },
+  "pricing.band.B.mean_pd": {
+    "fmt": ".2%",
+    "population": "booked book, score band B",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "3.73%",
+    "value": 0.037274
+  },
+  "pricing.band.B.mean_quoted": {
+    "fmt": ".2%",
+    "population": "booked book, score band B",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "8.26%",
+    "value": 0.082584
+  },
+  "pricing.band.B.mean_recommended": {
+    "fmt": ".2%",
+    "population": "booked book, score band B",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "10.58%",
+    "value": 0.105773
+  },
+  "pricing.band.B.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, score band B",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "11.5%",
+    "value": 0.115127
+  },
+  "pricing.band.B.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band B",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "256,579,000",
+    "value": 256579000.0
+  },
+  "pricing.band.B.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band B",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "70.9%",
+    "value": 0.7094
+  },
+  "pricing.band.B.n": {
+    "fmt": ",d",
+    "population": "booked book, score band B",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "1,497",
+    "value": 1497
+  },
+  "pricing.band.C.ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band C",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "391,773,000",
+    "value": 391773000.0
+  },
+  "pricing.band.C.mean_pd": {
+    "fmt": ".2%",
+    "population": "booked book, score band C",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "7.37%",
+    "value": 0.073655
+  },
+  "pricing.band.C.mean_quoted": {
+    "fmt": ".2%",
+    "population": "booked book, score band C",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "9.93%",
+    "value": 0.099328
+  },
+  "pricing.band.C.mean_recommended": {
+    "fmt": ".2%",
+    "population": "booked book, score band C",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "12.21%",
+    "value": 0.122145
+  },
+  "pricing.band.C.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, score band C",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "10.1%",
+    "value": 0.100838
+  },
+  "pricing.band.C.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band C",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "262,750,000",
+    "value": 262750000.0
+  },
+  "pricing.band.C.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band C",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "65.9%",
+    "value": 0.6591
+  },
+  "pricing.band.C.n": {
+    "fmt": ",d",
+    "population": "booked book, score band C",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "1,851",
+    "value": 1851
+  },
+  "pricing.band.D.ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band D",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "528,537,000",
+    "value": 528537000.0
+  },
+  "pricing.band.D.mean_pd": {
+    "fmt": ".2%",
+    "population": "booked book, score band D",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "22.92%",
+    "value": 0.229207
+  },
+  "pricing.band.D.mean_quoted": {
+    "fmt": ".2%",
+    "population": "booked book, score band D",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "15.86%",
+    "value": 0.15858
+  },
+  "pricing.band.D.mean_recommended": {
+    "fmt": ".2%",
+    "population": "booked book, score band D",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "19.21%",
+    "value": 0.192143
+  },
+  "pricing.band.D.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, score band D",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "4.3%",
+    "value": 0.042575
+  },
+  "pricing.band.D.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, score band D",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "353,797,000",
+    "value": 353797000.0
+  },
+  "pricing.band.D.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band D",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "67.5%",
+    "value": 0.6748
+  },
+  "pricing.band.D.n": {
+    "fmt": ",d",
+    "population": "booked book, score band D",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "3,321",
+    "value": 3321
+  },
+  "pricing.below_break_even.ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine.break_even_rate vs the quoted rate",
+    "text": "251,218,000",
+    "value": 251218000.0
+  },
+  "pricing.below_break_even.n": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine.break_even_rate vs the quoted rate",
+    "text": "1,547",
+    "value": 1547
+  },
+  "pricing.below_break_even.share": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine.break_even_rate vs the quoted rate",
+    "text": "18.6%",
+    "value": 0.185581
+  },
+  "pricing.best_band": {
+    "fmt": "",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary (bands ranked by mispriced rate)",
+    "text": "C",
+    "value": "C"
+  },
+  "pricing.best_band_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band C",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "65.9%",
+    "value": 0.6591
+  },
+  "pricing.best_industry": {
+    "fmt": "",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary (industries ranked by mispriced rate)",
+    "text": "Wholesale",
+    "value": "Wholesale"
+  },
+  "pricing.best_industry_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Wholesale",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "63.6%",
+    "value": 0.6364
+  },
+  "pricing.capital_charge": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "hurdle_clearing_rate - break_even_rate (= roe_hurdle x capital_ratio / (1 - tax_rate))",
+    "text": "2.4%",
+    "value": 0.024
+  },
+  "pricing.capital_charge_less_margin": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "hurdle_clearing_rate - break_even_rate - MARKET.base_margin",
+    "text": "0.4%",
+    "value": 0.004
+  },
+  "pricing.example.band": {
+    "fmt": "",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "predict_score_pd",
+    "text": "C",
+    "value": "C"
+  },
+  "pricing.example.break_even": {
+    "fmt": ".2%",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.break_even_rate",
+    "text": "7.83%",
+    "value": 0.078347
+  },
+  "pricing.example.business_id": {
+    "fmt": "",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "BIZ101719",
+    "value": "BIZ101719"
+  },
+  "pricing.example.clears": {
+    "fmt": "",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.price_loan (clears_hurdle)",
+    "text": "misses",
+    "value": "misses"
+  },
+  "pricing.example.ead": {
+    "fmt": ",.0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "businesses.requested_amount",
+    "text": "57,000",
+    "value": 57000.0
+  },
+  "pricing.example.hurdle_clearing": {
+    "fmt": ".2%",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.hurdle_clearing_rate",
+    "text": "10.23%",
+    "value": 0.102347
+  },
+  "pricing.example.industry": {
+    "fmt": "",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "businesses.industry",
+    "text": "Healthcare",
+    "value": "Healthcare"
+  },
+  "pricing.example.pd": {
+    "fmt": ".2%",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "predict_score_pd",
+    "text": "7.41%",
+    "value": 0.074105
+  },
+  "pricing.example.quoted_rate": {
+    "fmt": ".2%",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "businesses.risk_based_rate",
+    "text": "8.76%",
+    "value": 0.0876
+  },
+  "pricing.example.raroc": {
+    "fmt": ".1%",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "7.7%",
+    "value": 0.077106
+  },
+  "pricing.example.recommended": {
+    "fmt": ".2%",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.recommended_rate",
+    "text": "12.23%",
+    "value": 0.122347
+  },
+  "pricing.example.roe": {
+    "fmt": ".1%",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "5.8%",
+    "value": 0.05783
+  },
+  "pricing.example.roe_at_recommended": {
+    "fmt": ".1%",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.price_loan",
+    "text": "27.5%",
+    "value": 0.275
+  },
+  "pricing.example.rule": {
+    "fmt": "",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "wiki.facts.pricing_facts (worked-example selection)",
+    "text": "position 4,169 of 8,336 when the booked book is ordered by score PD, then business_id",
+    "value": "position 4,169 of 8,336 when the booked book is ordered by score PD, then business_id"
+  },
+  "pricing.example.shortfall_bps": {
+    "fmt": ".0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.price_loan (rate_shortfall, in basis points)",
+    "text": "147",
+    "value": 147.47236
+  },
+  "pricing.example.wf.allocated_equity": {
+    "fmt": ",.0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "6,840",
+    "value": 6840.0
+  },
+  "pricing.example.wf.cost_of_funds": {
+    "fmt": ",.0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "1,995",
+    "value": 1995.0
+  },
+  "pricing.example.wf.expected_loss": {
+    "fmt": ",.0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "1,901",
+    "value": 1900.792452
+  },
+  "pricing.example.wf.interest_income": {
+    "fmt": ",.0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "4,993",
+    "value": 4993.2
+  },
+  "pricing.example.wf.net_income": {
+    "fmt": ",.0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "396",
+    "value": 395.555661
+  },
+  "pricing.example.wf.operating_cost": {
+    "fmt": ",.0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "570",
+    "value": 570.0
+  },
+  "pricing.example.wf.pre_tax_profit": {
+    "fmt": ",.0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "527",
+    "value": 527.407548
+  },
+  "pricing.example.wf.tax": {
+    "fmt": ",.0f",
+    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "source": "pricing.src.engine.profit_waterfall at the quoted rate",
+    "text": "132",
+    "value": 131.851887
+  },
+  "pricing.fee_rate": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.engine.MarketAssumptions.fee_rate (default; not set in MARKET)",
+    "text": "0.0%",
+    "value": 0.0
+  },
+  "pricing.identity.break_even": {
+    "fmt": ".1e",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine, max over the booked book of |ROE at break_even_rate - 0|",
+    "text": "4.9e-16",
+    "value": 0.0
+  },
+  "pricing.identity.ead_invariance": {
+    "fmt": ".1e",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine, max over the booked book of |ROE at the loan's EAD - ROE at EAD 1|",
+    "text": "4.4e-16",
+    "value": 0.0
+  },
+  "pricing.identity.hurdle": {
+    "fmt": ".1e",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine, max over the booked book of |ROE at hurdle_clearing_rate - roe_hurdle|",
+    "text": "6.7e-16",
+    "value": 0.0
+  },
+  "pricing.identity.max": {
+    "fmt": ".1e",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine, largest of the pricing.identity.* residuals",
+    "text": "6.7e-16",
+    "value": 0.0
+  },
+  "pricing.identity.recommended": {
+    "fmt": ".1e",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine, max over the booked book of |recommended_rate - hurdle_clearing_rate - base_margin|",
+    "text": "1.7e-17",
+    "value": 0.0
+  },
+  "pricing.identity.waterfall": {
+    "fmt": ".1e",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine, max over the booked book of waterfall sums (per $ of EAD) and ROE = net income / equity",
+    "text": "0.0e+00",
+    "value": 0.0
+  },
+  "pricing.industry.agriculture.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Agriculture",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "72.3%",
+    "value": 0.7229
+  },
+  "pricing.industry.agriculture.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Agriculture",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "794",
+    "value": 794
+  },
+  "pricing.industry.agriculture.name": {
+    "fmt": "",
+    "population": "booked book, industry Agriculture",
+    "source": "businesses.industry",
+    "text": "Agriculture",
+    "value": "Agriculture"
+  },
+  "pricing.industry.construction.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Construction",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "76.7%",
+    "value": 0.7667
+  },
+  "pricing.industry.construction.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Construction",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "840",
+    "value": 840
+  },
+  "pricing.industry.construction.name": {
+    "fmt": "",
+    "population": "booked book, industry Construction",
+    "source": "businesses.industry",
+    "text": "Construction",
+    "value": "Construction"
+  },
+  "pricing.industry.healthcare.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Healthcare",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "67.2%",
+    "value": 0.6724
+  },
+  "pricing.industry.healthcare.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Healthcare",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "867",
+    "value": 867
+  },
+  "pricing.industry.healthcare.name": {
+    "fmt": "",
+    "population": "booked book, industry Healthcare",
+    "source": "businesses.industry",
+    "text": "Healthcare",
+    "value": "Healthcare"
+  },
+  "pricing.industry.hospitality.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Hospitality",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "72.6%",
+    "value": 0.7264
+  },
+  "pricing.industry.hospitality.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Hospitality",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "859",
+    "value": 859
+  },
+  "pricing.industry.hospitality.name": {
+    "fmt": "",
+    "population": "booked book, industry Hospitality",
+    "source": "businesses.industry",
+    "text": "Hospitality",
+    "value": "Hospitality"
+  },
+  "pricing.industry.manufacturing.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Manufacturing",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "71.1%",
+    "value": 0.7108
+  },
+  "pricing.industry.manufacturing.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Manufacturing",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "816",
+    "value": 816
+  },
+  "pricing.industry.manufacturing.name": {
+    "fmt": "",
+    "population": "booked book, industry Manufacturing",
+    "source": "businesses.industry",
+    "text": "Manufacturing",
+    "value": "Manufacturing"
+  },
+  "pricing.industry.professional_services.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Professional Services",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "65.2%",
+    "value": 0.6524
+  },
+  "pricing.industry.professional_services.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Professional Services",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "863",
+    "value": 863
+  },
+  "pricing.industry.professional_services.name": {
+    "fmt": "",
+    "population": "booked book, industry Professional Services",
+    "source": "businesses.industry",
+    "text": "Professional Services",
+    "value": "Professional Services"
+  },
+  "pricing.industry.retail.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Retail",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "65.7%",
+    "value": 0.6569
+  },
+  "pricing.industry.retail.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Retail",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "822",
+    "value": 822
+  },
+  "pricing.industry.retail.name": {
+    "fmt": "",
+    "population": "booked book, industry Retail",
+    "source": "businesses.industry",
+    "text": "Retail",
+    "value": "Retail"
+  },
+  "pricing.industry.technology.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Technology",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "70.6%",
+    "value": 0.7063
+  },
+  "pricing.industry.technology.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Technology",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "800",
+    "value": 800
+  },
+  "pricing.industry.technology.name": {
+    "fmt": "",
+    "population": "booked book, industry Technology",
+    "source": "businesses.industry",
+    "text": "Technology",
+    "value": "Technology"
+  },
+  "pricing.industry.transport.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Transport",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "71.4%",
+    "value": 0.7136
+  },
+  "pricing.industry.transport.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Transport",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "817",
+    "value": 817
+  },
+  "pricing.industry.transport.name": {
+    "fmt": "",
+    "population": "booked book, industry Transport",
+    "source": "businesses.industry",
+    "text": "Transport",
+    "value": "Transport"
+  },
+  "pricing.industry.wholesale.mispriced_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Wholesale",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "63.6%",
+    "value": 0.6364
+  },
+  "pricing.industry.wholesale.n": {
+    "fmt": ",d",
+    "population": "booked book, industry Wholesale",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "858",
+    "value": 858
+  },
+  "pricing.industry.wholesale.name": {
+    "fmt": "",
+    "population": "booked book, industry Wholesale",
+    "source": "businesses.industry",
+    "text": "Wholesale",
+    "value": "Wholesale"
+  },
+  "pricing.median_quoted_rate": {
+    "fmt": ".2%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "9.42%",
+    "value": 0.0942
+  },
+  "pricing.median_recommended_rate": {
+    "fmt": ".2%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "12.23%",
+    "value": 0.122346
+  },
+  "pricing.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "10.9%",
+    "value": 0.1087
+  },
+  "pricing.median_shortfall_bps": {
+    "fmt": ".0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- mispriced loans only",
+    "source": "pricing.src.portfolio.price_population (rate_shortfall, in basis points)",
+    "text": "121",
+    "value": 120.955818
+  },
+  "pricing.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "1,276,148,000",
+    "value": 1276148000.0
+  },
+  "pricing.mispriced_ead_share": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "70.9%",
+    "value": 0.709077
+  },
+  "pricing.n": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "8,336",
+    "value": 8336
+  },
+  "pricing.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "2,534",
+    "value": 2534
+  },
+  "pricing.n_engine_tests": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "tests/test_engine.py (test_ functions, counted with ast)",
+    "text": "6",
+    "value": 6
+  },
+  "pricing.n_mispriced": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "5,802",
+    "value": 5802
+  },
+  "pricing.negative_roe.n": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "1,547",
+    "value": 1547
+  },
+  "pricing.pd_scale.down.factor": {
+    "fmt": ".1f",
+    "population": "module constant",
+    "source": "wiki.facts.pricing_facts.PD_SCALES",
+    "text": "0.9",
+    "value": 0.9
+  },
+  "pricing.pd_scale.down.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 0.9",
+    "source": "price_loan over the booked rows with predict_score_pd's pd x 0.9",
+    "text": "12.3%",
+    "value": 0.1231
+  },
+  "pricing.pd_scale.down.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 0.9",
+    "source": "price_loan over the booked rows with predict_score_pd's pd x 0.9",
+    "text": "1,165,315,000",
+    "value": 1165315000.0
+  },
+  "pricing.pd_scale.down.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 0.9",
+    "source": "price_loan over the booked rows with predict_score_pd's pd x 0.9",
+    "text": "3,020",
+    "value": 3020
+  },
+  "pricing.pd_scale.down.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 0.9",
+    "source": "price_loan over the booked rows with predict_score_pd's pd x 0.9",
+    "text": "36.2%",
+    "value": 0.3623
+  },
+  "pricing.pd_scale.up.factor": {
+    "fmt": ".1f",
+    "population": "module constant",
+    "source": "wiki.facts.pricing_facts.PD_SCALES",
+    "text": "1.1",
+    "value": 1.1
+  },
+  "pricing.pd_scale.up.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 1.1",
+    "source": "price_loan over the booked rows with predict_score_pd's pd x 1.1",
+    "text": "9.4%",
+    "value": 0.0944
+  },
+  "pricing.pd_scale.up.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 1.1",
+    "source": "price_loan over the booked rows with predict_score_pd's pd x 1.1",
+    "text": "1,358,662,000",
+    "value": 1358662000.0
+  },
+  "pricing.pd_scale.up.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 1.1",
+    "source": "price_loan over the booked rows with predict_score_pd's pd x 1.1",
+    "text": "2,108",
+    "value": 2108
+  },
+  "pricing.pd_scale.up.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 1.1",
+    "source": "price_loan over the booked rows with predict_score_pd's pd x 1.1",
+    "text": "25.3%",
+    "value": 0.2529
+  },
+  "pricing.second_band": {
+    "fmt": "",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary (bands ranked by mispriced rate)",
+    "text": "A",
+    "value": "A"
+  },
+  "pricing.second_band_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band A",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "73.1%",
+    "value": 0.7314
+  },
+  "pricing.sens.capital_ratio.down.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "text": "12.1%",
+    "value": 0.1207
+  },
+  "pricing.sens.capital_ratio.down.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "text": "1,131,421,000",
+    "value": 1131421000.0
+  },
+  "pricing.sens.capital_ratio.down.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "text": "3,027",
+    "value": 3027
+  },
+  "pricing.sens.capital_ratio.down.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "text": "36.3%",
+    "value": 0.3631
+  },
+  "pricing.sens.capital_ratio.down.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "text": "+5.9%",
+    "value": 0.0591
+  },
+  "pricing.sens.capital_ratio.down.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "text": "10.8%",
+    "value": 0.108
+  },
+  "pricing.sens.capital_ratio.up.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "text": "9.9%",
+    "value": 0.0988
+  },
+  "pricing.sens.capital_ratio.up.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "text": "1,370,953,000",
+    "value": 1370953000.0
+  },
+  "pricing.sens.capital_ratio.up.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "text": "2,134",
+    "value": 2134
+  },
+  "pricing.sens.capital_ratio.up.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "text": "25.6%",
+    "value": 0.256
+  },
+  "pricing.sens.capital_ratio.up.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "text": "-4.8%",
+    "value": -0.048
+  },
+  "pricing.sens.capital_ratio.up.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "text": "13.2%",
+    "value": 0.132
+  },
+  "pricing.sens.cost_of_funds.down.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "text": "13.1%",
+    "value": 0.1305
+  },
+  "pricing.sens.cost_of_funds.down.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "text": "1,056,177,000",
+    "value": 1056177000.0
+  },
+  "pricing.sens.cost_of_funds.down.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "text": "3,305",
+    "value": 3305
+  },
+  "pricing.sens.cost_of_funds.down.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "text": "39.6%",
+    "value": 0.3965
+  },
+  "pricing.sens.cost_of_funds.down.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "text": "+9.3%",
+    "value": 0.0925
+  },
+  "pricing.sens.cost_of_funds.down.value": {
+    "fmt": ".2%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "text": "3.15%",
+    "value": 0.0315
+  },
+  "pricing.sens.cost_of_funds.up.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "text": "8.7%",
+    "value": 0.0868
+  },
+  "pricing.sens.cost_of_funds.up.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "text": "1,411,217,000",
+    "value": 1411217000.0
+  },
+  "pricing.sens.cost_of_funds.up.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "text": "1,985",
+    "value": 1985
+  },
+  "pricing.sens.cost_of_funds.up.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "text": "23.8%",
+    "value": 0.2381
+  },
+  "pricing.sens.cost_of_funds.up.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "text": "-6.6%",
+    "value": -0.0659
+  },
+  "pricing.sens.cost_of_funds.up.value": {
+    "fmt": ".2%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "text": "3.85%",
+    "value": 0.0385
+  },
+  "pricing.sens.dominant": {
+    "fmt": "",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "wiki.facts.pricing_facts (largest |n_clears(+10%) - n_clears(-10%)|)",
+    "text": "cost_of_funds",
+    "value": "cost_of_funds"
+  },
+  "pricing.sens.lgd.down.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "text": "12.3%",
+    "value": 0.1231
+  },
+  "pricing.sens.lgd.down.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "text": "1,165,315,000",
+    "value": 1165315000.0
+  },
+  "pricing.sens.lgd.down.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "text": "3,020",
+    "value": 3020
+  },
+  "pricing.sens.lgd.down.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "text": "36.2%",
+    "value": 0.3623
+  },
+  "pricing.sens.lgd.down.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "text": "+5.8%",
+    "value": 0.0583
+  },
+  "pricing.sens.lgd.down.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "text": "40.5%",
+    "value": 0.405
+  },
+  "pricing.sens.lgd.up.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "text": "9.4%",
+    "value": 0.0944
+  },
+  "pricing.sens.lgd.up.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "text": "1,358,662,000",
+    "value": 1358662000.0
+  },
+  "pricing.sens.lgd.up.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "text": "2,108",
+    "value": 2108
+  },
+  "pricing.sens.lgd.up.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "text": "25.3%",
+    "value": 0.2529
+  },
+  "pricing.sens.lgd.up.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "text": "-5.1%",
+    "value": -0.0511
+  },
+  "pricing.sens.lgd.up.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "text": "49.5%",
+    "value": 0.495
+  },
+  "pricing.sens.opex_rate.down.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "text": "11.5%",
+    "value": 0.1149
+  },
+  "pricing.sens.opex_rate.down.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "text": "1,223,433,000",
+    "value": 1223433000.0
+  },
+  "pricing.sens.opex_rate.down.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "text": "2,713",
+    "value": 2713
+  },
+  "pricing.sens.opex_rate.down.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "text": "32.6%",
+    "value": 0.3255
+  },
+  "pricing.sens.opex_rate.down.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "text": "+2.2%",
+    "value": 0.0215
+  },
+  "pricing.sens.opex_rate.down.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "text": "0.9%",
+    "value": 0.009
+  },
+  "pricing.sens.opex_rate.up.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "text": "10.2%",
+    "value": 0.1024
+  },
+  "pricing.sens.opex_rate.up.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "text": "1,319,806,000",
+    "value": 1319806000.0
+  },
+  "pricing.sens.opex_rate.up.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "text": "2,363",
+    "value": 2363
+  },
+  "pricing.sens.opex_rate.up.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "text": "28.3%",
+    "value": 0.2835
+  },
+  "pricing.sens.opex_rate.up.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "text": "-2.1%",
+    "value": -0.0205
+  },
+  "pricing.sens.opex_rate.up.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "text": "1.1%",
+    "value": 0.011
+  },
+  "pricing.sens.roe_hurdle.down.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "text": "10.9%",
+    "value": 0.1087
+  },
+  "pricing.sens.roe_hurdle.down.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "text": "1,131,421,000",
+    "value": 1131421000.0
+  },
+  "pricing.sens.roe_hurdle.down.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "text": "3,027",
+    "value": 3027
+  },
+  "pricing.sens.roe_hurdle.down.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "text": "36.3%",
+    "value": 0.3631
+  },
+  "pricing.sens.roe_hurdle.down.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "text": "+5.9%",
+    "value": 0.0591
+  },
+  "pricing.sens.roe_hurdle.down.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "text": "13.5%",
+    "value": 0.135
+  },
+  "pricing.sens.roe_hurdle.up.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "text": "10.9%",
+    "value": 0.1087
+  },
+  "pricing.sens.roe_hurdle.up.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "text": "1,370,953,000",
+    "value": 1370953000.0
+  },
+  "pricing.sens.roe_hurdle.up.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "text": "2,134",
+    "value": 2134
+  },
+  "pricing.sens.roe_hurdle.up.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "text": "25.6%",
+    "value": 0.256
+  },
+  "pricing.sens.roe_hurdle.up.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "text": "-4.8%",
+    "value": -0.048
+  },
+  "pricing.sens.roe_hurdle.up.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "text": "16.5%",
+    "value": 0.165
+  },
+  "pricing.sens.step": {
+    "fmt": ".0%",
+    "population": "module constant",
+    "source": "wiki.facts.pricing_facts.SENS_STEP",
+    "text": "10%",
+    "value": 0.1
+  },
+  "pricing.sens.tax_rate.down.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "text": "11.2%",
+    "value": 0.1123
+  },
+  "pricing.sens.tax_rate.down.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "text": "1,233,152,000",
+    "value": 1233152000.0
+  },
+  "pricing.sens.tax_rate.down.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "text": "2,669",
+    "value": 2669
+  },
+  "pricing.sens.tax_rate.down.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "text": "32.0%",
+    "value": 0.3202
+  },
+  "pricing.sens.tax_rate.down.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "text": "+1.6%",
+    "value": 0.0162
+  },
+  "pricing.sens.tax_rate.down.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "text": "22.5%",
+    "value": 0.225
+  },
+  "pricing.sens.tax_rate.up.median_roe": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "text": "10.5%",
+    "value": 0.105
+  },
+  "pricing.sens.tax_rate.up.mispriced_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "text": "1,315,196,000",
+    "value": 1315196000.0
+  },
+  "pricing.sens.tax_rate.up.n_clears": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "text": "2,385",
+    "value": 2385
+  },
+  "pricing.sens.tax_rate.up.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "text": "28.6%",
+    "value": 0.2861
+  },
+  "pricing.sens.tax_rate.up.swing": {
+    "fmt": "+.1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "text": "-1.8%",
+    "value": -0.0179
+  },
+  "pricing.sens.tax_rate.up.value": {
+    "fmt": ".1%",
+    "population": "platform assumption",
+    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "text": "27.5%",
+    "value": 0.275
+  },
+  "pricing.share_clears": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "30.4%",
+    "value": 0.304
+  },
+  "pricing.share_mispriced": {
+    "fmt": ".1%",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "69.6%",
+    "value": 0.696017
+  },
+  "pricing.test_tolerance": {
+    "fmt": ".0e",
+    "population": "module constant",
+    "source": "tests/test_engine.py (pytest.approx abs= for the rate solvers)",
+    "text": "1e-12",
+    "value": 0.0
+  },
+  "pricing.total_ead": {
+    "fmt": ",.0f",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.price_population",
+    "text": "1,799,730,000",
+    "value": 1799730000.0
+  },
+  "pricing.whatif.flips": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "app.v2.pricing.price_one vs price_population (clears_hurdle disagreements)",
+    "text": "0",
+    "value": 0
+  },
+  "pricing.whatif.max_diff": {
+    "fmt": ".1e",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "app.v2.pricing.price_one (the portal's what-if path) vs price_population, max abs difference in ROE, recommended and quoted rate",
+    "text": "3.1e-16",
+    "value": 0.0
+  },
+  "pricing.whatif.n_pd_differ": {
+    "fmt": ",d",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "predict_score_pd on all 12,000 applicants (the portal) vs on the booked rows alone (price_population): loans whose PD differs in any bit",
+    "text": "20",
+    "value": 20
+  },
+  "pricing.worst_band": {
+    "fmt": "",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary (bands ranked by mispriced rate)",
+    "text": "AAA",
+    "value": "AAA"
+  },
+  "pricing.worst_band_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band AAA",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "80.4%",
+    "value": 0.8041
+  },
+  "pricing.worst_industry": {
+    "fmt": "",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.portfolio_summary (industries ranked by mispriced rate)",
+    "text": "Construction",
+    "value": "Construction"
+  },
+  "pricing.worst_industry_rate": {
+    "fmt": ".1%",
+    "population": "booked book, industry Construction",
+    "source": "pricing.src.portfolio.portfolio_summary",
+    "text": "76.7%",
+    "value": 0.7667
   },
   "score.auc_ci_half": {
     "fmt": ".2f",

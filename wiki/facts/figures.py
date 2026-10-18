@@ -41,3 +41,18 @@ def write_all(ex: dict, out: Path) -> None:
         ax.barh(series.index[::-1], series.values[::-1], color=ACCENT)
         ax.set_xlabel(xlabel)
         _save(fig, out / f"{name}.svg")
+
+
+def write_pricing(t: dict[str, str], out: Path) -> None:
+    """D6: share of each score band's booked loans quoted below the hurdle-clearing rate,
+    drawn from the printed facts so the figure and the tables cannot disagree."""
+    out.mkdir(parents=True, exist_ok=True)
+    bands = ["D", "C", "B", "A", "AAA"]
+    rates = [float(t[f"pricing.band.{b}.mispriced_rate"].rstrip("%")) for b in bands]
+    fig, ax = plt.subplots(figsize=(6, 3.6))
+    ax.bar(bands, rates, color=ACCENT)
+    ax.axhline(float(t["pricing.share_mispriced"].rstrip("%")), color=INK, ls="--", lw=1,
+               label="whole booked book")
+    ax.set_ylim(0, 100); ax.set_xlabel("score band"); ax.set_ylabel("quoted below hurdle (%)")
+    ax.legend(frameon=False, loc="lower right")
+    _save(fig, out / "mispriced-by-band.svg")
