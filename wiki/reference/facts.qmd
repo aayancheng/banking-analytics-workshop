@@ -486,26 +486,31 @@ title: "Every number in this documentation"
 | `li.band.A.n` | 845 | booked book, score band A | `line_increase.src.candidates.segments` |
 | `li.band.A.offer_rate` | 1.4% | booked book, score band A | `line_increase.src.candidates.segments (offer_rate, unrounded)` |
 | `li.band.A.offers` | 12 | booked book, score band A | `candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)` |
+| `li.band.A.pd_min` | 0.0136 | booked book, score band A | `predict_score_pd's pd, minimum in the band` |
 | `li.band.AAA.amount_positive` | 88 | booked book, score band AAA | `line_increase.src.amount_rules.recommended_amount (> 0)` |
 | `li.band.AAA.exposure` | 457,973 | booked book, score band AAA | `line_increase.src.candidates.segments (expected_incremental_exposure)` |
 | `li.band.AAA.n` | 822 | booked book, score band AAA | `line_increase.src.candidates.segments` |
 | `li.band.AAA.offer_rate` | 1.9% | booked book, score band AAA | `line_increase.src.candidates.segments (offer_rate, unrounded)` |
 | `li.band.AAA.offers` | 16 | booked book, score band AAA | `candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)` |
+| `li.band.AAA.pd_min` | 0.0004 | booked book, score band AAA | `predict_score_pd's pd, minimum in the band` |
 | `li.band.B.amount_positive` | 179 | booked book, score band B | `line_increase.src.amount_rules.recommended_amount (> 0)` |
 | `li.band.B.exposure` | 1,368,753 | booked book, score band B | `line_increase.src.candidates.segments (expected_incremental_exposure)` |
 | `li.band.B.n` | 1,497 | booked book, score band B | `line_increase.src.candidates.segments` |
 | `li.band.B.offer_rate` | 2.9% | booked book, score band B | `line_increase.src.candidates.segments (offer_rate, unrounded)` |
 | `li.band.B.offers` | 43 | booked book, score band B | `candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)` |
+| `li.band.B.pd_min` | 0.0249 | booked book, score band B | `predict_score_pd's pd, minimum in the band` |
 | `li.band.C.amount_positive` | 266 | booked book, score band C | `line_increase.src.amount_rules.recommended_amount (> 0)` |
 | `li.band.C.exposure` | 523,406 | booked book, score band C | `line_increase.src.candidates.segments (expected_incremental_exposure)` |
 | `li.band.C.n` | 1,851 | booked book, score band C | `line_increase.src.candidates.segments` |
 | `li.band.C.offer_rate` | 1.3% | booked book, score band C | `line_increase.src.candidates.segments (offer_rate, unrounded)` |
 | `li.band.C.offers` | 24 | booked book, score band C | `candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)` |
+| `li.band.C.pd_min` | 0.0509 | booked book, score band C | `predict_score_pd's pd, minimum in the band` |
 | `li.band.D.amount_positive` | 617 | booked book, score band D | `line_increase.src.amount_rules.recommended_amount (> 0)` |
 | `li.band.D.exposure` | 0 | booked book, score band D | `line_increase.src.candidates.segments (expected_incremental_exposure)` |
 | `li.band.D.n` | 3,321 | booked book, score band D | `line_increase.src.candidates.segments` |
 | `li.band.D.offer_rate` | 0.0% | booked book, score band D | `line_increase.src.candidates.segments (offer_rate, unrounded)` |
 | `li.band.D.offers` | 0 | booked book, score band D | `candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)` |
+| `li.band.D.pd_min` | 0.1012 | booked book, score band D | `predict_score_pd's pd, minimum in the band` |
 | `li.base_rate` | 22.2% | booked book, all 8,336 accounts (as the portal scores it) | `portfolio.line_increase_good` |
 | `li.base_rate_holdout` | 22.2% | held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) | `portfolio.line_increase_good` |
 | `li.baseline.best.auc` | 0.7371 | held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) | `roc_auc_score of that feature alone, oriented` |

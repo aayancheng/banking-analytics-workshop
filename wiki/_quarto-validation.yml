@@ -52,6 +52,15 @@ book:
     - mdd/ews/monitoring.qmd
     - mdd/ews/gate.qmd
     - mdd/line_increase/index.qmd
+    - mdd/line_increase/purpose.qmd
+    - mdd/line_increase/data.qmd
+    - mdd/line_increase/methodology.qmd
+    - mdd/line_increase/assumptions.qmd
+    - mdd/line_increase/performance.qmd
+    - mdd/line_increase/sensitivity.qmd
+    - mdd/line_increase/limitations.qmd
+    - mdd/line_increase/monitoring.qmd
+    - mdd/line_increase/gate.qmd
     - mdd/d9-implementation.qmd
     - mdd/d10-agents.qmd
     - mdd/d11-signoff.qmd

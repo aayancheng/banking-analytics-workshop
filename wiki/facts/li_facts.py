@@ -657,6 +657,8 @@ def compute(ls: LiSplit, es) -> dict[str, Fact]:
         put(f"li.band.{bnd}.offer_rate", float(off[m].mean()), ".1%",
             "line_increase.src.candidates.segments (offer_rate, unrounded)", popb)
         put(f"li.band.{bnd}.amount_positive", int(c[m].sum()), ",d", SRC_AMT + " (> 0)", popb)
+        put(f"li.band.{bnd}.pd_min", float(pd_s[m].min()), ".4f",
+            "predict_score_pd's pd, minimum in the band", popb)
         put(f"li.band.{bnd}.exposure", seg[bnd]["expected_incremental_exposure"], ",.0f",
             "line_increase.src.candidates.segments (expected_incremental_exposure)", popb)
 

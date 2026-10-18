@@ -89,7 +89,7 @@ def test_signoff_open_findings_are_d6_limitations_word_for_word():
 
 def test_signoff_lists_every_finding_row_once():
     text = (WIKI / "mdd" / "d11-signoff.qmd").read_text()
-    assert len(_finding_rows(text)) == 6 + 6 + 5 + 8
+    assert len(_finding_rows(text)) == 6 + 6 + 5 + 8 + 6
 
 
 def test_d5_has_an_index_and_the_nine_parts_in_order():
@@ -113,7 +113,7 @@ def test_d6_has_an_index_and_the_nine_parts_in_order():
 
 def test_validation_book_lists_every_model_chapter_page():
     book = (WIKI / "_quarto-validation.yml").read_text()
-    for chapter in ("score", "adjudication", "pricing", "ews"):
+    for chapter in ("score", "adjudication", "pricing", "ews", "line_increase"):
         pos = [book.index(f"mdd/{chapter}/{p}.qmd") for p in ["index"] + TEMPLATE_PARTS]
         assert pos == sorted(pos), chapter
 
@@ -547,3 +547,188 @@ def test_d7_code_claims_hold():
     for line in ("assert capture >= CAPTURE_GATE", "assert pr_auc > base",
                  "assert auc >= AUC_REPORT_FLOOR"):
         assert line in t and t.index(line) > t.index('(DOCS / "validation_report.md").write_text'), line
+
+
+def test_signoff_open_findings_are_d8_limitations_word_for_word():
+    d11 = _finding_rows(_signoff_section("D8"))
+    assert len(d11) == 6
+    assert d11 == _finding_rows((WIKI / "mdd" / "line_increase" / "limitations.qmd").read_text())
+
+
+def test_d8_has_an_index_and_the_nine_parts_in_order():
+    index = (WIKI / "mdd" / "line_increase" / "index.qmd").read_text()
+    assert "order: 0" in index and "Status: complete" in index
+    for i, part in enumerate(TEMPLATE_PARTS, 1):
+        text = (WIKI / "mdd" / "line_increase" / f"{part}.qmd").read_text()
+        assert f'title: "8.{i} ' in text and f"order: {i}" in text, part
+        assert "TEMPLATE" not in text, f"{part}: template brief not replaced"
+    site = (WIKI / "_quarto-site.yml").read_text()
+    assert 'auto: "mdd/line_increase/*.qmd"' in site
+    assert "| D8 | [Line Increase](line_increase/index.qmd) | complete |" in \
+        (WIKI / "mdd" / "index.qmd").read_text()
+
+
+def test_d8_offer_calibration_follows_the_monitoring_floor():
+    """D8.5 applies the floor rule to the held-out offers (events = label positives) and to
+    the held-out offers' default and deterioration counts: below the floor, an observation."""
+    f = _facts()
+    lo, hi = _num(f["monitoring.ratio_lo"]), _num(f["monitoring.ratio_hi"])
+    floor = _num(f["monitoring.min_band_defaults"])
+    for g in ("li.offers_ho", "li.thr_ho"):
+        assert lo <= _num(f[f"{g}.ratio"]) <= hi and f[f"{g}.status"] == "within tolerance", g
+    # "on ... events, which clears the monitoring floor" (8.5)
+    assert _num(f["li.offers_ho.events"]) >= floor
+    # held-out offers' defaults and deteriorations "below the floor" (8.5, observations)
+    assert _num(f["li.offers_ho.default.events"]) < floor
+    assert _num(f["li.offers_ho.det.events"]) < floor
+    # all offers' defaults "on only ... defaults, below the floor" (8.5)
+    assert _num(f["li.offers.default.events"]) < floor
+    # all offers' deteriorations are enough events for the binomial test to be read (8.5)
+    assert _num(f["li.offers.det.events"]) >= floor
+
+
+def test_d8_prose_conclusions_hold_on_the_facts():
+    """Sentences in D8 that state a conclusion about a fact: if the fact moves, the prose must."""
+    f = _facts()
+    n = lambda k: _num(f[k])
+    # model gates met; AUC interval's low end "just above" the gate; lift "firmly"
+    assert n("li.auc") >= n("li.gate.auc_min") and n("li.lift") >= n("li.gate.lift_min")
+    assert 0 < n("li.boot.auc.lo") - n("li.gate.auc_min") < 0.02
+    assert n("li.boot.lift.lo") > n("li.gate.lift_min") and f["li.boot.lift_below_gate"] == "0.0%"
+    assert 0 < n("li.boot.auc_below_gate") < 5
+    # "almost perfectly" on training rows; most of the book is training rows
+    assert n("li.train.auc") > 0.98 and n("li.n_train") / n("li.n_book") > 0.5
+    assert n("li.train.auc") > n("li.whole.auc") > n("li.boot.auc.hi")
+    # an offer is eligible, not a positive amount
+    assert (f["li.n_offered"], f["li.n_amount_positive"]) == ("95", "1,243")
+    # funnel: the threshold removes "most of the book"
+    assert n("li.funnel.prob.dropped") > n("li.n_book") / 2
+    # cohort gates: 3 cannot fail, 1 by construction, 2 on this book; the evidence the prose cites
+    assert (f["li.cohort_gate.n_cannot_fail"], f["li.cohort_gate.n_by_construction"],
+            f["li.cohort_gate.n_on_this_book"], f["li.gate.n_gates"]) == ("3", "1", "2", "6")
+    assert f["li.cohort_gate.pd.book_median"] == f["li.offer_max_pd"]
+    assert n("li.offer_max_pd") < n("li.book_pd")
+    assert n("li.cohort_gate.util.min_amount") > n("li.config.target_util") > n("li.book_util")
+    assert n("li.cohort_gate.roe.min_offers") >= n("li.gate.roe_hurdle")
+    # every sensitivity scenario passes the cohort gates; settings move offers as stated (8.6)
+    fields = ("offer_quantile", "max_pd_quantile", "target_util", "pct_cap", "revenue_mult_cap")
+    sens = [(fd, d) for fd in fields for d in ("down", "up")]
+    assert all(f[f"li.sens.{fd}.{d}.gates"] == "pass" for fd, d in sens)
+    assert f["li.sens.pct_cap.down.n_offered"] == f["li.sens.pct_cap.up.n_offered"] == f["li.n_offered"]
+    swing = {fd: abs(n(f"li.sens.{fd}.down.exposure") - n(f"li.sens.{fd}.up.exposure"))
+             for fd in fields}
+    assert max(swing, key=swing.get) == "target_util"           # "swings widest of all"
+    rois = [n(f"li.sens.{fd}.{d}.agg_roe") for fd, d in sens]
+    assert (min(rois), max(rois)) == (n("li.sens.max_pd_quantile.down.agg_roe"),
+                                      n("li.sens.revenue_mult_cap.up.agg_roe"))
+    assert n("li.sens.max_pd_quantile.up.cohort_pd") > n("li.cohort_pd")
+    # baselines: the model beats every single input; none reaches the AUC gate; 5 pass lift
+    for b in ("utilization", "revenue", "pd_score", "ews"):
+        assert n(f"li.baseline.{b}.diff_lo") > 0, b
+    assert f["li.baseline.best.feature"] == "annual_revenue"
+    # "against utilisation, the score's PD and EWS the intervals lie further above zero"
+    assert all(n(f"li.baseline.{b}.diff_lo") > n("li.baseline.revenue.diff_lo")
+               for b in ("utilization", "pd_score", "ews"))
+    assert f["li.baseline.best.auc"] == f["li.baseline.revenue.auc"]
+    assert n("li.baseline.best.auc") < n("li.gate.auc_min")
+    assert n("li.baseline.n_pass_lift") >= 2
+    assert n("li.baseline.utilization.lift") >= n("li.gate.lift_min")
+    assert n("li.baseline.revenue.lift") >= n("li.gate.lift_min")
+    assert n("li.baseline.pd_score.auc") < 0.6 and n("li.baseline.ews.auc") < 0.6   # "weak"
+    # the ceiling: model below it on the same rows; deterioration term "barely" matters;
+    # the gate below what the data allow
+    assert n("li.auc") < n("ceiling.li.latent_holdout")
+    assert abs(n("ceiling.li.latent_holdout") - n("ceiling.li.latent_no_det_holdout")) < 0.005
+    assert n("li.gate.auc_min") < n("ceiling.li.latent_holdout")
+    # threshold share on held-out "close to" intended; train > holdout
+    assert abs(n("li.thr.share_holdout") - n("li.thr.share_book")) < 3
+    assert n("li.thr.share_train") > n("li.thr.share_holdout")
+    # in-sample served list: almost all training rows, rate 100%
+    for slug in ("portal", "page"):
+        assert n(f"li.served.{slug}.n_train") >= 0.8 * n(f"li.served.{slug}.n"), slug
+        assert f[f"li.served.{slug}.rate"] == "100.0%", slug
+    assert n("li.offers.n_train") > n("li.offers.n_holdout")
+    assert n("li.offers.rate") > n("li.offers_ho.observed")
+    # Early Warning: offers flagged LESS by tier, more by trigger, mostly utilisation rules;
+    # DELINQUENCY fires on fewer offers; deterioration not distinguishable from the book
+    assert n("li.offers.ews.High.share") < n("li.book.ews.High.share")
+    assert n("li.offers.ews.high_or_medium.share") < n("li.book.ews.high_or_medium.share")
+    assert n("li.offers.ews.any_trigger.share") > n("li.book.ews.any_trigger.share")
+    gap_any = n("li.offers.ews.any_trigger.share") - n("li.book.ews.any_trigger.share")
+    gap_non = n("li.offers.ews.non_util_trigger.share") - n("li.book.ews.non_util_trigger.share")
+    assert 0 <= gap_non < gap_any / 2
+    for t in ("frequent_overdrafts", "deposit_decline"):
+        assert n(f"li.offers.ews.trigger.{t}.share") > n(f"li.book.ews.trigger.{t}.share"), t
+    assert n("li.offers.ews.trigger.delinquency.share") < n("li.book.ews.trigger.delinquency.share")
+    assert f["li.offers.ews.watchlist_n"] == "0"
+    assert n("li.offers.det.p_value") > 0.05
+    assert n("li.offers.det.ci_lo") < n("li.book.det.rate") < n("li.offers.det.ci_hi")
+    assert n("li.offers.default.rate") < n("li.book.default.rate")
+    # bands: D gets none because its lowest PD is above the ceiling; B gets the most
+    assert f["li.band.D.offers"] == "0" and n("li.band.D.pd_min") > n("li.offer_max_pd")
+    assert n("li.band.D.amount_positive") > 0
+    offers = {b: n(f"li.band.{b}.offers") for b in ("D", "C", "B", "A", "AAA")}
+    assert max(offers, key=offers.get) == "B"
+    # economics: committed amount larger than assumed exposure; full draw moves the aggregate
+    # "slightly", same offers; "many" within a point of the hurdle
+    assert n("li.econ.amount_total") > n("li.econ.exposure_total")
+    assert f["li.econ.full_draw.n_offered"] == f["li.n_offered"]
+    assert 0 < abs(n("li.econ.full_draw.agg_roe") - n("li.agg_roe")) < 0.005
+    assert n("li.econ.n_near_hurdle") >= 10
+    # the ROE test is the pricing test on every account with an amount
+    assert f["li.econ.pricing_agree"] == f["li.n_amount_positive"]
+    # importance ordinals printed beside the var ("5th", "3rd"); the pairs
+    assert (f["li.importance.gain.pd_score_rank"], f["li.importance.split.pd_score_rank"]) == ("5", "3")
+    assert {f[f"li.importance.gain.top{i}.feature"] for i in (1, 2, 3)} == \
+        {"current_balance", "annual_revenue", "utilization_onbook"}
+    # every cap binds somewhere
+    assert f["li.caps.n_dead"] == "0"
+    # the unread key
+    assert (f["li.config.unread"], f["li.config.n_unread"]) == ("roe_hurdle", "1")
+    assert f["li.config.roe_hurdle"] == f["li.gate.roe_hurdle"]
+
+
+def test_d8_code_claims_hold():
+    """D8 statements about the code, not the facts."""
+    import inspect
+    from line_increase.src import amount_rules, candidates
+    # the hurdle is MARKET's, via the market argument (finding 4)
+    src = inspect.getsource(amount_rules.incremental_roe)
+    assert '"clears_hurdle": bool(ead > 0 and w["roe"] >= market.roe_hurdle),' in src
+    t = (ROOT / "line_increase" / "src" / "train.py").read_text()
+    assert 'assert agg_incr_roe >= MARKET["roe_hurdle"], (' in t
+    # six asserts, last, after the report is written (8.9)
+    for line in ("assert auc >= AUC_GATE", "assert lift >= LIFT_GATE", "assert n_offered > 0",
+                 "assert cohort_pd < book_pd", "assert cohort_util > book_util",
+                 "assert agg_incr_roe >= MARKET"):
+        assert line in t and t.index(line) > t.index('(DOCS / "validation_report.md").write_text'), line
+    assert "AUC_GATE = 0.78" in t and "LIFT_GATE = 2.0" in t
+    # verify.py's own constants, lift lines and cohort check (8.9)
+    v = (ROOT / "verify.py").read_text()
+    assert "LI_AUC_GATE = 0.78" in v and "LI_LIFT_GATE = 2.0" in v
+    assert "lift = float(y_te[p >= cut].mean() / y_te.mean())" in v
+    assert "and util[offered].mean() > util.mean()" in v
+    assert 'thr, max_pd = meta["offer_threshold"], meta["offer_max_pd"]' in v
+    # the drawdown assumption (8.4) and the amount rules quoted in 8.3
+    assert "return float(delta_amount) * util" in inspect.getsource(amount_rules.incremental_exposure)
+    assert "delta = min(raw_delta, pct_cap, revenue_ceiling)" in \
+        inspect.getsource(amount_rules.recommended_amount)
+    # the label's generator lines quoted in 8.2
+    gen = (ROOT / "shared" / "data_generator.py").read_text()
+    for line in ("- 3.0 * pd_true", "+ 7.0 * np.clip(util_last3 - 0.5, 0, None)",
+                 "- 0.4 * deterioration", "+ rng.normal(0, 0.18, m)",
+                 "noise-capped below its"):
+        assert line in gen, line
+    # the v1 endpoints: candidates default 25, the page asks for 10; no SHAP on the v1 row
+    m = (ROOT / "app" / "main.py").read_text()
+    assert "def li_candidates_endpoint(n: int = 25):" in m
+    assert 'fetch("/api/line-increase/candidates?n=10")' in \
+        (ROOT / "app" / "static" / "index.html").read_text()
+    row = m.split("def li_row", 1)[1].split("@app.get", 1)[0]
+    assert "top_shap_reasons" not in row
+    # no line-increase what-if route in the workbench; no LI leakage test
+    router = (ROOT / "app" / "v2" / "router.py").read_text()
+    assert "line-increase/whatif" not in router and "/line-increase" in router
+    assert "line_increase" not in (ROOT / "tests" / "test_leakage.py").read_text()
+    # candidates() ranks eligible, never a positive amount
+    assert 'df[df["eligible"]]' in inspect.getsource(candidates.candidates)

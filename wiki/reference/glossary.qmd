@@ -29,8 +29,21 @@ Capture (top-decile capture)
   is the top-decile lift. Early Warning is gated on it, measured on held-out accounts (D7.5,
   D7.9).
 
+Drawdown
+: The share of a credit line a borrower actually uses. Line Increase assumes an increase is
+  drawn at the account's current utilisation, so its incremental EAD is the increase times
+  that utilisation; the ROE of each increase does not depend on the assumption, but every
+  exposure figure does (D8.4, D8.7 finding 5).
+
 EAD (exposure at default)
-: The amount owed if the borrower defaults. Pricing here uses the requested amount.
+: The amount owed if the borrower defaults. Pricing here uses the requested amount;
+  Line Increase uses the increase times the assumed drawdown.
+
+Eligible
+: Line Increase's offer: an account whose candidate probability clears the offer threshold,
+  whose scorecard PD is within the risk-appetite ceiling, whose recommended amount is positive
+  and whose incremental ROE clears the hurdle — all four. `candidates()` is the authority; a
+  positive recommended amount alone is not an offer (D8.1).
 
 Gate
 : A committed minimum a model must meet on held-out data, asserted when it is trained and
@@ -45,6 +58,12 @@ Hurdle-clearing rate
 : The rate at which a loan's return on equity equals the hurdle: the break-even rate plus the
   capital charge. A loan quoted at or above it clears the hurdle; below it, it is mispriced
   (D6.3).
+
+Incremental ROE
+: The return on equity of an increase in a credit line, priced on its own by the pricing
+  engine at the account's PD and quoted rate. Line Increase offers an increase only if it
+  clears the hurdle; because every line of the waterfall is proportional to exposure, it
+  equals the ROE of the existing loan at the same rate (D8.3).
 
 IV (information value)
 : A single-variable measure of how well a feature separates defaulters from non-defaulters,
@@ -67,7 +86,9 @@ LGD (loss given default)
 Lift
 : The default rate among the riskiest share of a population, ranked by a model, divided by
   the default rate of the whole population. A lift of 2 means the riskiest group defaults at
-  twice the average rate. It depends on the share chosen, so these pages always name it.
+  twice the average rate. It depends on the share chosen, so these pages always name it. For
+  Line Increase the event is the label and the share is the top fifth (top-quintile lift,
+  D8.5).
 
 Mispriced EAD
 : The total exposure of the booked loans whose quoted rate is below their hurdle-clearing

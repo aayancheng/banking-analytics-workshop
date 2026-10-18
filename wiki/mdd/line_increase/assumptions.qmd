@@ -1,0 +1,134 @@
+---
+title: "8.4 Assumptions"
+order: 4
+---
+
+Six assumptions carry the output. For each: what it is, the evidence, and what breaks if it
+fails.
+
+## The increase is drawn at today's utilisation {#li-drawdown}
+
+**The assumption.** An increase is not a loan: the bank commits a higher limit and the
+customer draws some of it. `incremental_exposure` assumes the new headroom is drawn at the
+account's current on-book utilisation, so the incremental EAD is the increase times that
+utilisation ([8.3](methodology.qmd#li-roe)). Every dollar figure the module reports — the
+incremental exposure, the incremental net income, `segments`' exposure by band — rests on it.
+
+**The evidence.** Three parts, two of them exact:
+
+- **Per loan, the ROE does not depend on it.** Every line of `profit_waterfall` is
+  proportional to EAD, so the ROE of an increase is the same whatever share of it is drawn:
+  across the offers, the ROE at the incremental EAD and at an EAD of one differ by
+  {{< var li.econ.ead_invariance >}}. `line_increase/docs/validation_report.md` states this,
+  and it is right per loan. No account's verdict moves with the drawdown.
+- **The aggregate depends on it, slightly.** The gate tests the offers' aggregate ROE, total
+  net income over total allocated equity: an equity-weighted mean of the per-loan ROEs, with
+  weights set by each offer's EAD. Scaling every offer's EAD by the same factor leaves it
+  unchanged — re-priced offer by offer at half its EAD, it moves by
+  {{< var li.econ.agg_uniform_invariance >}} — but changing their relative sizes moves it. If
+  every increase were fully drawn, the same {{< var li.econ.full_draw.n_offered >}} accounts
+  would be offered and the aggregate would be {{< var li.econ.full_draw.agg_roe >}} instead
+  of {{< var li.agg_roe >}}.
+- **The exposure depends on it entirely.** The {{< var li.n_offered >}} offers commit
+  \${{< var li.econ.amount_total >}} of new limit; the assumed drawn exposure is
+  \${{< var li.econ.exposure_total >}} ([8.5](performance.qmd#li-economics)). Nothing in the
+  data says how much of an increase a business draws; the generator never grants one.
+
+The assumption **holds for the verdicts and not for the dollars**: who is offered does not
+depend on it, how much exposure the offers add does, and that figure is unvalidated —
+finding 5 ([8.7](limitations.qmd)).
+
+**What breaks if it fails.** A business offered more room because it is near its limit may
+well draw more than its current share of the new room. Exposure, capital and income would
+then all be higher than reported, by up to the committed amount. The ROE verdicts would not
+change.
+
+## The caps and `target_util` are policy, not estimates {#li-caps}
+
+**The assumption.** `target_util`, `pct_cap`, `revenue_mult_cap` and `round_to` in
+`shared.config.LINE_INCREASE` are credit policy: a utilisation the bank is comfortable with
+after an increase, a largest single step, and a ceiling against revenue. None is fitted, and
+the assumption is that each is a sensible limit for this book.
+
+**The evidence.** Each binds on some accounts ([8.3](methodology.qmd#li-amount)): among the
+offers, headroom to target utilisation binds on {{< var li.caps.headroom_to_target_util.offers >}},
+the revenue ceiling on {{< var li.caps.revenue_ceiling.offers >}} and the share of the limit
+on {{< var li.caps.pct_cap.offers >}}. `target_util` does more than size the increase: an
+amount exists only above it, so it decides who can be offered anything, and moving it by
+{{< var li.sens.step >}} moves the offers from {{< var li.n_offered >}} to between
+{{< var li.sens.target_util.up.n_offered >}} and {{< var li.sens.target_util.down.n_offered >}}
+([8.6](sensitivity.qmd)). No document records who set the values or why. The assumption
+**holds as policy**: the values do what the code says and none is dead, but none is
+justified by evidence about the book.
+
+**What breaks if it fails.** A `target_util` set too low offers more room to accounts that
+are not constrained; too high, and the offers dry up. Changing any of them changes the
+offers without a retrain, and the cohort gates would not notice (finding 1).
+
+## The threshold and the ceiling are fixed shares {#li-shares}
+
+**The assumption.** The offer threshold and the PD ceiling are not levels the bank chose; they
+are the {{< var li.config.offer_quantile >}} quantile of the model's probability and the
+{{< var li.config.max_pd_quantile >}} quantile of the scorecard's PD, both over the whole
+book, re-taken on every retrain ([8.3](methodology.qmd#li-threshold)). The assumption is that
+a fixed share of the book is the right appetite.
+
+**The evidence.** On this book the threshold is {{< var li.offer_threshold >}} and the
+ceiling {{< var li.offer_max_pd >}}. The threshold is taken partly over in-sample
+probabilities; on accounts the model has not seen it lets through
+{{< var li.thr.share_holdout >}}, close to the {{< var li.thr.share_book >}} intended, and
+its held-out observed rate among the accounts above it, {{< var li.thr_ho.observed >}}
+against a mean probability of {{< var li.thr_ho.predicted >}}, is
+{{< var li.thr_ho.status >}} ([8.5](performance.qmd#li-cohort)). The assumption **holds in
+part**: the mechanics behave on new accounts, but the PD ceiling is relative, so a retrain on
+a riskier book would raise it and keep offering to half the book.
+
+**What breaks if it fails.** The ceiling is called a risk appetite, but it moves with the
+book. A deteriorating book would keep its offer rate and accept a higher PD; the monitoring
+plan watches the ceiling itself on every retrain ([8.8](monitoring.qmd)).
+
+## The score is a valid input {#li-the-score}
+
+**The assumption.** `pd_score` comes from the saved scorecard ([8.2](data.qmd#li-score-input))
+and is what D4 documents: a valid ranking of credit risk.
+
+**The evidence.** It is computed by `predict_score_pd`, never from the generator's truth. It
+is in-sample for the scorecard on most booked accounts. And it carries D4's findings into
+three places at once — the model, the ceiling and the price. One matters directly: on the
+held-out booked, band B under-predicts (D4 finding 6), and band B receives the most offers,
+{{< var li.band.B.offers >}} of {{< var li.n_offered >}} ([8.5](performance.qmd#li-bands)).
+The assumption **holds**, with the dependency stated.
+
+**What breaks if it fails.** A scorecard change moves the ceiling, the model's input and every
+increment's ROE: retrain, re-take both quantiles and re-assert the gate
+([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)).
+
+## The label means "a good candidate" {#li-the-label}
+
+**The assumption.** `{{< var li.target >}}` marks the accounts to which an increase would
+have been good for the bank, so ranking by it ranks candidates.
+
+**The evidence.** The generator draws it from the true PD, utilisation above a level,
+revenue and, with a small weight, later deterioration ([8.2](data.qmd#li-label)). It is drawn
+for every account, though no account was ever offered an increase; there is no record of an
+offer, a take-up, a drawdown or a repayment. The label is a construction of the generator, not
+an outcome of an increase. The assumption **holds only by definition** — finding 6.
+
+**What breaks if it fails.** On a real book the outcome of an increase exists only for
+accounts that were given one, chosen by an earlier policy. A model trained on those alone
+learns that policy's choices as well as the outcome; one trained on a constructed label, as
+here, learns the construction.
+
+## The generator as ground truth
+
+**The assumption.** As in D4 (D4.4): every label in the data was drawn by
+`shared/data_generator.py`, and every claim in this chapter is a statement about that
+generator ([D1](../d1-purpose.qmd#scope-synthetic-data-real-methods)).
+
+**The evidence.** The generator is code, which is how this chapter can state the ceiling on
+ranking ([8.5](performance.qmd#li-ceiling)) and say that the label is constructed rather than
+observed.
+
+**What breaks if it fails.** On real data the label would need a definition and an
+observation window, the drawdown would be measured rather than assumed, and the caps would
+meet distributions no one has looked at. Each is named above or in [8.7](limitations.qmd).

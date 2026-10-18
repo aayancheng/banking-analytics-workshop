@@ -3345,6 +3345,13 @@
     "text": "12",
     "value": 12
   },
+  "li.band.A.pd_min": {
+    "fmt": ".4f",
+    "population": "booked book, score band A",
+    "source": "predict_score_pd's pd, minimum in the band",
+    "text": "0.0136",
+    "value": 0.013614
+  },
   "li.band.AAA.amount_positive": {
     "fmt": ",d",
     "population": "booked book, score band AAA",
@@ -3379,6 +3386,13 @@
     "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)",
     "text": "16",
     "value": 16
+  },
+  "li.band.AAA.pd_min": {
+    "fmt": ".4f",
+    "population": "booked book, score band AAA",
+    "source": "predict_score_pd's pd, minimum in the band",
+    "text": "0.0004",
+    "value": 0.000419
   },
   "li.band.B.amount_positive": {
     "fmt": ",d",
@@ -3415,6 +3429,13 @@
     "text": "43",
     "value": 43
   },
+  "li.band.B.pd_min": {
+    "fmt": ".4f",
+    "population": "booked book, score band B",
+    "source": "predict_score_pd's pd, minimum in the band",
+    "text": "0.0249",
+    "value": 0.02492
+  },
   "li.band.C.amount_positive": {
     "fmt": ",d",
     "population": "booked book, score band C",
@@ -3450,6 +3471,13 @@
     "text": "24",
     "value": 24
   },
+  "li.band.C.pd_min": {
+    "fmt": ".4f",
+    "population": "booked book, score band C",
+    "source": "predict_score_pd's pd, minimum in the band",
+    "text": "0.0509",
+    "value": 0.05089
+  },
   "li.band.D.amount_positive": {
     "fmt": ",d",
     "population": "booked book, score band D",
@@ -3484,6 +3512,13 @@
     "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)",
     "text": "0",
     "value": 0
+  },
+  "li.band.D.pd_min": {
+    "fmt": ".4f",
+    "population": "booked book, score band D",
+    "source": "predict_score_pd's pd, minimum in the band",
+    "text": "0.1012",
+    "value": 0.101235
   },
   "li.base_rate": {
     "fmt": ".1%",

@@ -1,0 +1,228 @@
+---
+title: "8.5 Performance"
+order: 5
+---
+
+Every figure on this page names the population it was measured on. Two kinds are measured,
+and they are not the same: the **model's ranking**, on the held-out
+{{< var li.test_share >}} of the booked book — {{< var li.n_test >}} accounts the model never
+saw while it was fitted, {{< var li.n_events_holdout >}} of them positive
+([8.2](data.qmd#li-split)) — and the **offered cohort**, which is drawn from the whole book and
+is mostly the model's training rows.
+
+## The headline {#li-headline}
+
+{{< include ../../_generated/li-headline.md >}}
+
+`train.py` asserts six gates ([8.9](gate.qmd)). Two measure the model on held-out accounts:
+
+- **AUC** {{< var li.auc >}} against a gate of {{< var li.gate.auc_min >}}, a margin of
+  {{< var li.gate.auc_margin >}}.
+- **Top-quintile lift** {{< var li.lift >}}× against {{< var li.gate.lift_min >}}×: the
+  held-out fifth with the highest probability — {{< var li.top20.n >}} accounts — holds
+  {{< var li.top20.events >}} positives, a rate of {{< var li.top20.rate >}} against a base
+  rate of {{< var li.base_rate_holdout >}}, and {{< var li.top20.capture >}} of all held-out
+  positives.
+
+The other four check the offered cohort against the book, and the last column of the table
+says whether each can fail. Only "accounts offered" can. The aggregate ROE gate cannot fail
+**by construction**: it is an equity-weighted mean of per-loan ROEs that each clear the same
+hurdle. The PD and utilisation gates cannot fail **on this book**: the PD ceiling is the
+book's median PD, {{< var li.cohort_gate.pd.book_median >}}, which here lies below the mean,
+{{< var li.book_pd >}}, so any cohort under the ceiling has a lower mean than the book; and an
+amount needs utilisation above `target_util`, so every account with one is at
+{{< var li.cohort_gate.util.min_amount >}} or more (median
+{{< var li.cohort_gate.util.median_amount >}}, mean
+{{< var li.cohort_gate.util.mean_amount >}}), above the book's mean of
+{{< var li.book_util >}}. A book whose PD were skewed the other way, or whose mean utilisation
+were above `target_util`, could fail them; this one cannot. That is finding 1
+([8.7](limitations.qmd)).
+
+### How firm each result is
+
+From {{< var li.boot.n >}} bootstrap resamples of the held-out accounts, with the platform
+seed, as for D4, D5 and D7:
+
+- **AUC: met.** The interval, {{< var li.boot.auc.lo >}} to {{< var li.boot.auc.hi >}},
+  has its low end just above the {{< var li.gate.auc_min >}} gate;
+  {{< var li.boot.auc_below_gate >}} of resamples fall below it.
+- **Lift: met, firmly.** The interval, {{< var li.boot.lift.lo >}}× to
+  {{< var li.boot.lift.hi >}}×, lies wholly above the gate; {{< var li.boot.lift_below_gate >}}
+  of resamples fall below it. But single inputs pass this gate too (below).
+
+## The ceiling {#li-ceiling}
+
+Because the data are generated, the best possible ranking is known: rank the accounts by the
+generator's own line-increase logit without its noise term (`wiki/facts/ceiling.py`, the only
+code in this documentation that reads the generator's truth; it uses the stored, rounded
+on-book utilisation where the generator used the unrounded value, which changes no rank that
+matters).
+
+{{< include ../../_generated/li-ceiling.md >}}
+
+**Compare only within a row's sample.** On the held-out accounts the noise-free logit reaches
+{{< var ceiling.li.latent_holdout >}}; the model falls short by
+{{< var ceiling.li.gap_holdout >}} and gets {{< var ceiling.li.share_of_reach >}} of the way
+from a coin toss to the ceiling. The ceiling barely depends on the one driver a bank could not
+know at decision time: without the deterioration term it is
+{{< var ceiling.li.latent_no_det_holdout >}}. Unlike Early Warning's, this label is
+learnable: the noise is small, and the gate at {{< var li.gate.auc_min >}} sits below what the
+data allow.
+
+## Baselines: single inputs {#li-baselines}
+
+The label's observable drivers are inputs ([8.2](data.qmd#li-label)), so the simplest offer
+list is the book sorted by one of them. The table above compares the model with each, on the
+same held-out accounts; each difference has a paired bootstrap interval
+({{< var li.boot.n >}} resamples scoring both rankings on the same rows).
+
+- **The model beats every single input.** Against `annual_revenue`, the best single numeric
+  input by held-out AUC ({{< var li.baseline.best.auc >}}), its lead is
+  {{< var li.baseline.revenue.diff >}} with an interval of {{< var li.baseline.revenue.diff_lo >}}
+  to {{< var li.baseline.revenue.diff_hi >}}. That best input was picked on these same held-out
+  rows, which flatters it, so the model's lead is if anything understated. Against utilisation,
+  the score's PD and Early Warning's probability the intervals lie further above zero.
+- **No single input reaches the AUC gate.** All {{< var li.baseline.n_numeric >}} numeric
+  inputs were tried alone, each oriented to rank the right way; the best reaches
+  {{< var li.baseline.best.auc >}}.
+- **{{< var li.baseline.n_pass_lift >}} of them pass the lift gate alone.** Sorted by
+  utilisation, by revenue, by the balance, or by a column that restates one of them, the top fifth of the
+  held-out accounts beats the base rate by at least {{< var li.gate.lift_min >}}×:
+  utilisation reaches {{< var li.baseline.utilization.lift >}}× and revenue
+  {{< var li.baseline.revenue.lift >}}×. The lift gate would pass a sort on one column, so it
+  says little about the model; the AUC gate does the work (finding 3).
+- **A low PD is not a good candidate.** The score's PD alone ranks this label at
+  {{< var li.baseline.pd_score.auc >}}, and Early Warning's probability at
+  {{< var li.baseline.ews.auc >}}: low risk and room to grow are different questions.
+
+## Held out against the whole book {#li-held-out-vs-whole-book}
+
+The portal scores the whole booked book. Over it the model looks far stronger:
+
+{{< include ../../_generated/li-insample.md >}}
+
+**Only the first row is a performance measure.** {{< var li.n_train >}} of the
+{{< var li.n_book >}} booked accounts are training rows, on which the model is almost
+perfect. The threshold is a quantile of the whole-book column, and every offer is chosen from
+it (finding 2).
+
+## The offered cohort {#li-cohort}
+
+The offers are drawn from the whole book: {{< var li.offers.n_train >}} of the
+{{< var li.n_offered >}} ({{< var li.offers.train_share >}}) are training rows, and
+{{< var li.offers.n_holdout >}} are held out. Their outcomes, against the book's:
+
+{{< include ../../_generated/li-cohort.md >}}
+
+**The label rate among all offers is in-sample.** {{< var li.offers.rate >}} of offers are
+positive, but most of them are rows whose label the model was fitted on. The held-out offers
+are the honest measure: {{< var li.offers_ho.observed >}} positive against a mean probability
+of {{< var li.offers_ho.predicted >}} — observed / predicted {{< var li.offers_ho.ratio >}},
+{{< var li.offers_ho.status >}} on {{< var li.offers_ho.events >}} events, which clears the
+monitoring floor of {{< var monitoring.min_band_defaults >}} — and
+{{< var li.offers_ho.lift >}} times the book's base rate. Every held-out account above the
+threshold, offered or not ({{< var li.thr_ho.n >}} accounts), gives observed
+{{< var li.thr_ho.observed >}} against predicted {{< var li.thr_ho.predicted >}}, ratio
+{{< var li.thr_ho.ratio >}}, {{< var li.thr_ho.status >}}. Calibration is judged against the
+tolerance {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}}, counted only on
+at least the floor's events, the same rule as D4, D5 and D7 ([8.8](monitoring.qmd)).
+
+**Outcomes the label does not measure.** The cohort table also gives deterioration (Early
+Warning's label) and default:
+
+- Across all offers, {{< var li.offers.default.rate >}} default against
+  {{< var li.book.default.rate >}} for the book — on only {{< var li.offers.default.events >}}
+  defaults, below the floor, so it is recorded, not measured. Default is not this model's
+  label, but the PD ceiling selects on the scorecard's estimate of it, so a low rate is what
+  the rules are designed to give. On the held-out offers there are
+  {{< var li.offers_ho.default.events >}} defaults.
+- Offers deteriorate at {{< var li.offers.det.rate >}} ({{< var li.offers.det.events >}} of
+  {{< var li.n_offered >}}) against {{< var li.book.det.rate >}} for the book. **That is not
+  distinguishable from the book**: an exact binomial test against the book rate gives a
+  p-value of {{< var li.offers.det.p_value >}}, and the 95% interval for the offers' rate runs
+  from {{< var li.offers.det.ci_lo >}} to {{< var li.offers.det.ci_hi >}}. The held-out offers'
+  {{< var li.offers_ho.det.rate >}} rests on {{< var li.offers_ho.det.events >}} events, below
+  the floor (interval {{< var li.offers_ho.det.ci_lo >}} to {{< var li.offers_ho.det.ci_hi >}}).
+
+## Offers by score band {#li-bands}
+
+`segments` over the book, as the portal shows it:
+
+{{< include ../../_generated/li-bands.md >}}
+
+Band D gets no offers: its lowest PD, {{< var li.band.D.pd_min >}}, is above the ceiling of
+{{< var li.offer_max_pd >}}, though {{< var li.band.D.amount_positive >}} of its accounts have
+an amount. Band B gets the most, {{< var li.band.B.offers >}} offers and
+\${{< var li.band.B.exposure >}} of assumed incremental exposure — the band in which the
+scorecard under-predicts on the booked (D4 finding 6, [8.4](assumptions.qmd#li-the-score)).
+
+## The economics of the offers {#li-economics}
+
+{{< include ../../_generated/li-economics.md >}}
+
+The offers clear the hurdle with little room on many: {{< var li.econ.n_near_hurdle >}} of
+the {{< var li.n_offered >}} are within one point of it, and the lowest is
+{{< var li.econ.roe_min >}}. The aggregate the gate tests is {{< var li.agg_roe >}}; with
+every increase fully drawn it would be {{< var li.econ.full_draw.agg_roe >}}
+([8.4](assumptions.qmd#li-drawdown)). The committed new limit,
+\${{< var li.econ.amount_total >}}, is what the bank would extend; the
+\${{< var li.econ.exposure_total >}} reported as exposure is that limit times today's
+utilisation (finding 5).
+
+## Offers on the Early Warning screen {#li-ews}
+
+The two modules do not read each other, but the customer-360 view shows an offered account's
+Early Warning tier and triggers beside the offer. Each measure on the offers, beside the same
+measure over the whole book, computed as D7 computes its own:
+
+{{< include ../../_generated/li-cohort-ews.md >}}
+
+What the table shows, and what it does not:
+
+- **By tier, the offers are flagged less than the book.** {{< var li.offers.ews.High.share >}}
+  of offers are High-tier against {{< var li.book.ews.High.share >}} of the book, and
+  {{< var li.offers.ews.high_or_medium.share >}} are High or Medium against
+  {{< var li.book.ews.high_or_medium.share >}}. None is on Early Warning's default watchlist of the riskiest
+  {{< var ews.watchlist.top_n_default >}}.
+- **By trigger, they are flagged more, and the excess is largely mechanical.**
+  {{< var li.offers.ews.any_trigger.share >}} carry at least one trigger against
+  {{< var li.book.ews.any_trigger.share >}} of the book. Most of that is the two rules on
+  utilisation: `HIGH_UTILIZATION` ({{< var li.offers.ews.trigger.high_utilization.share >}}
+  against {{< var li.book.ews.trigger.high_utilization.share >}}) and `RISING_UTILIZATION`
+  ({{< var li.offers.ews.trigger.rising_utilization.share >}} against
+  {{< var li.book.ews.trigger.rising_utilization.share >}}). The offers are selected for high
+  utilisation — an amount requires it — so they trip rules on utilisation by design.
+  Excluding those two, {{< var li.offers.ews.non_util_trigger.share >}} of offers carry a
+  trigger against {{< var li.book.ews.non_util_trigger.share >}} of the book. The triggers
+  that are still more frequent among offers, `FREQUENT_OVERDRAFTS` and `DEPOSIT_DECLINE`,
+  are drawn from utilisation in the generator too (`shared/data_generator.py`: overdrafts rise
+  with utilisation above a level, deposits fall near the limit). `DELINQUENCY`, the one
+  trigger the generator drives mainly by the true PD, fires
+  on fewer offers than accounts in the book ({{< var li.offers.ews.trigger.delinquency.share >}}
+  against {{< var li.book.ews.trigger.delinquency.share >}}).
+- **Their deterioration is not distinguishable from the book's** (above).
+
+The overlap is real and a reviewer will see it: an offer can arrive with a High tier or a
+trigger beside it. On this evidence it is not a finding that the module offers to
+deteriorating accounts; it is recorded as an observation, with the control that a reviewer
+reads the Early Warning screen before an offer goes out
+([8.7](limitations.qmd#li-observations)).
+
+## What the portal serves {#li-served}
+
+The portal's candidates endpoint serves the top {{< var li.served.portal.n >}} of
+`candidates()` by default, and the v1 page shows {{< var li.served.page.n >}}. Of the
+portal's {{< var li.served.portal.n >}}, {{< var li.served.portal.n_train >}} are training
+rows and their label rate is {{< var li.served.portal.rate >}}; of the page's
+{{< var li.served.page.n >}}, {{< var li.served.page.n_train >}} and
+{{< var li.served.page.rate >}}. Those rates are the model remembering labels it was fitted on
+(finding 2). The held-out offers' {{< var li.offers_ho.observed >}} is the figure to quote.
+
+## Stability
+
+No population stability index is computed for the model's features: the training and held-out
+accounts are a random partition of one book, so a PSI between them would measure sampling
+noise, and there is no second period (D4 finding 1). The share of held-out accounts above the
+threshold, {{< var li.thr.share_holdout >}} against {{< var li.thr.share_book >}} intended, is
+the one comparison of the in-sample calibration with new accounts; the monitoring plan carries
+stability over time ([8.8](monitoring.qmd)).

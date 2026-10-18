@@ -1,0 +1,174 @@
+---
+title: "8.2 Data and sample"
+order: 2
+---
+
+## Sources
+
+One file written by the platform's data generator ([D2](../d2-data.qmd)), for the booked book
+only, and two of the platform's own outputs:
+
+| Source | Grain | What it supplies |
+|---|---|---|
+| `shared/data/raw/portfolio.parquet` | one row per booked account: {{< var li.n_book >}} rows | the account's origination file (the applicant's columns), its on-book state (credit limit, current balance, on-book utilisation, tenure), its quoted rate and the label |
+| the Business Credit Score (D4), through `predict_score_pd` | one PD per account | `pd_score`: a model input, the risk-appetite clause and the PD the increment is priced at |
+| the pricing engine (D6), through `profit_waterfall` | one waterfall per increase | the incremental ROE that decides the fourth clause ([8.3](methodology.qmd#li-roe)) |
+
+Line Increase does not read the monthly panel. Its behavioural information is the on-book
+snapshot: limit, balance and utilisation now.
+
+## Features {#li-features}
+
+`compute_line_increase_features` (`line_increase/src/feature_engineering.py`) builds the
+{{< var li.n_features >}} columns of `LI_FEATURE_COLUMNS`, {{< var li.n_categorical >}} of them
+categorical:
+
+```python
+LI_FEATURE_COLUMNS = [                       # line_increase/src/feature_engineering.py
+    # on-book behavioral / capacity
+    "utilization_onbook", "util_headroom", "credit_limit", "current_balance", "tenure_months",
+    # firmographic / capacity
+    "years_in_business", "employees", "annual_revenue", "log_revenue",
+    # financial ratios
+    "dscr", "leverage", "current_ratio",
+    # bureau-like
+    "credit_history_months", "prior_delinquencies", "trade_lines", "public_records",
+    # reused modeled signal from Module 0
+    "pd_score",
+    # categorical (kept last)
+    "industry", "entity_type", "loan_purpose",
+]
+```
+
+Two are derived inside the function:
+
+```python
+out["util_headroom"] = (1.0 - out["utilization_onbook"]).clip(lower=0.0).round(4)
+out["log_revenue"] = np.log(np.maximum(out["annual_revenue"], 1.0)).round(4)
+```
+
+Both restate a column already in the list. `util_headroom` is one minus utilisation on
+{{< var li.inputs.headroom_identity >}} accounts and zero on the
+{{< var li.inputs.util_above_one >}} whose utilisation is above one; `log_revenue` never
+decreases as `annual_revenue` increases ({{< var li.inputs.log_revenue_monotone >}}), and a
+tree splits a column and any increasing transform of it identically. What that does to the
+importances is in [8.3](methodology.qmd#li-importance); it is recorded as an observation
+([8.7](limitations.qmd#li-observations)).
+
+Every non-categorical column is made numeric and any missing value becomes zero; the generated
+data have none. {{< var li.inputs.n_shared_ews >}} of the inputs are also Early Warning inputs
+({{< var li.inputs.shared_ews >}}), but no Early Warning output — probability, tier or trigger
+— is one ({{< var li.inputs.uses_ews_output >}}).
+
+## The label {#li-label}
+
+The target is `{{< var li.target >}}`, a 0/1 flag on every booked account. Over the book,
+{{< var li.n_events >}} accounts are flagged: a base rate of {{< var li.base_rate >}}. The
+generator draws it from a logit and a Bernoulli draw:
+
+```python
+# line_increase_good leans on OBSERVABLE drivers (on-book utilization, revenue)   # shared/data_generator.py
+# with modest Bernoulli noise, so a leakage-safe model can genuinely learn it.
+# The reference build's first version of this label was noise-capped below its
+# metric gate — the fix (and when such a fix is safe at all) is a Session 4 story.
+li_logit = (
+    -2.1
+    - 3.0 * pd_true
+    + 7.0 * np.clip(util_last3 - 0.5, 0, None)
+    + 1.2 * _z(np.log(book["annual_revenue"].to_numpy()))
+    - 0.4 * deterioration
+    + rng.normal(0, 0.18, m)
+)
+line_increase_good = rng.binomial(1, 1.0 / (1.0 + np.exp(-li_logit))).astype(int)
+```
+
+Four things follow, each used later in the chapter:
+
+- **Utilisation and revenue are the observable drivers, and both are inputs.**
+  `utilization_onbook` is `util_last3` rounded, and `annual_revenue` is in the list. That is
+  why single columns rank this label well on their own ([8.5](performance.qmd#li-baselines)).
+- **The true PD is a driver the bank cannot see.** It is on the leakage deny-list; the model
+  sees only the scorecard's estimate of it, `pd_score`.
+- **One driver is an outcome after the decision.** `deterioration` is Early Warning's label,
+  drawn over the same simulated months; a bank deciding today would not know it. Its weight is
+  small, and the ceiling with and without it is measured in
+  [8.5](performance.qmd#li-ceiling).
+- **No increase was ever granted.** The label is drawn for every booked account from the
+  account's state; nothing in the data records an increase being offered, taken up or repaid.
+  What "good" would mean on a real book, and who would ever be observed to be good, is
+  finding 6 ([8.7](limitations.qmd)).
+
+## Split and seed {#li-split}
+
+`train.py` draws its own split of the booked book, with the platform seed and stratified on
+the label:
+
+```python
+X_tr, X_te, y_tr, y_te = train_test_split(               # line_increase/src/train.py
+    X, y, test_size=0.2, random_state=SEED, stratify=y)
+```
+
+That gives {{< var li.n_train >}} training accounts and {{< var li.n_test >}} held-out
+accounts (the held-out {{< var li.test_share >}}), with {{< var li.n_events_holdout >}}
+positives among the held-out: a held-out base rate of {{< var li.base_rate_holdout >}}. It is
+not Early Warning's split, although both split the same book with the same seed: they
+stratify on different labels, so the rows differ, and
+{{< var li.baseline.ews.in_ews_train >}} of this model's held-out accounts are Early Warning
+training rows. `train.py` records only the model, not which rows were held out; the facts
+redraw the split with an indexed call, check it against an independent call with exactly
+`train.py`'s arguments, and check its sizes against `line_increase/docs/validation_report.md`
+(`wiki/facts/li_facts.py`), as D7 does. `verify.py` redraws the same split to recompute the
+gate ([8.9](gate.qmd)).
+
+## Leakage controls
+
+The deny-list (`shared/config.py::LEAKAGE_COLUMNS`, [D2](../d2-data.qmd#leakage-controls))
+includes the target itself, the generator's true PD and `deterioration_next_6_12mo`. It is
+enforced at two points:
+
+1. **At feature construction.** `compute_line_increase_features` raises if any column of
+   `LI_FEATURE_COLUMNS` is on the deny-list:
+
+   ```python
+   leaked = [c for c in LI_FEATURE_COLUMNS if c in LEAKAGE_COLUMNS]
+   if leaked:
+       raise ValueError(f"Leakage columns in feature set: {leaked}")
+   ```
+
+2. **At training.** `train.py` asserts the same before fitting:
+
+   ```python
+   assert set(LI_FEATURE_COLUMNS).isdisjoint(set(LEAKAGE_COLUMNS)), "leakage in features"
+   ```
+
+As for Early Warning, `tests/test_leakage.py` has no test of its own for this module; the two
+checks above run on every feature build, including every `verify.py` run.
+
+The quoted rate, `risk_based_rate`, is on the deny-list too, because the generator sets it
+from the true PD. It is not a feature here. The ROE test prices the increase at the account's
+own quoted rate, which a bank knows; that is the same reading of the rate D6 makes
+([D6.2](../pricing/data.qmd#pr-quoted-rate)), and what the quote inherits from the generator
+is D6 finding 1.
+
+## The score as an input {#li-score-input}
+
+`pd_score` is not data. `compute_line_increase_features` calls the scorecard's scoring function:
+
+```python
+sp = predict_score_pd(df)                     # line_increase/src/feature_engineering.py
+out["pd_score"] = sp["pd"].to_numpy()
+out["business_score"] = sp["business_score"].to_numpy()
+out["score_band"] = sp["score_band"].to_numpy()  # for segments/UI, not a model feature
+```
+
+The score reaches this module three times: as an input to the model, as the risk-appetite
+clause (`pd_score` at or below the ceiling) and as the PD the increase is priced at. A
+scorecard change therefore moves the model, the ceiling and every ROE
+([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)). The PD is in-sample for the
+scorecard on most booked accounts, as in D7 ([D7.2](../ews/data.qmd#ews-score-input)), and
+D4's findings arrive with it ([8.4](assumptions.qmd#li-the-score)).
+
+## Exclusions
+
+None. Every booked account is in the training or the held-out split, and every booked account
+is scored.

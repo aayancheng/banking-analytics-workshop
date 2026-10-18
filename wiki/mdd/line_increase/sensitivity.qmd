@@ -1,0 +1,71 @@
+---
+title: "8.6 Sensitivity and stress"
+order: 6
+---
+
+Line Increase has five settings a validator would move: the two quantiles that set the offer
+threshold and the PD ceiling, and three of the four amount settings (`round_to`, the rounding
+step, is not moved). Each was moved by {{< var li.sens.step >}} either way, one at a time, and the offered
+cohort rebuilt through `train.py`'s own cohort loop — `recommended_amount` with the stressed
+setting, `incremental_roe` with the committed market — over the whole booked book
+(`wiki/facts/li_facts.py`, `offer_run`). The model is not refitted; the quantile scenarios
+re-take the threshold or ceiling from the same probabilities.
+
+{{< include ../../_generated/li-sensitivity.md >}}
+
+## What moves the offers
+
+- **The quantiles move the volume most directly.** `offer_quantile` takes the offers from
+  {{< var li.n_offered >}} to {{< var li.sens.offer_quantile.down.n_offered >}} or
+  {{< var li.sens.offer_quantile.up.n_offered >}}, and `max_pd_quantile` to
+  {{< var li.sens.max_pd_quantile.down.n_offered >}} or
+  {{< var li.sens.max_pd_quantile.up.n_offered >}}. A looser PD ceiling raises the cohort's
+  mean PD, from {{< var li.cohort_pd >}} to {{< var li.sens.max_pd_quantile.up.cohort_pd >}},
+  still far below the book's {{< var li.book_pd >}}.
+- **`target_util` moves both who and how much.** It decides who has an amount at all
+  ([8.4](assumptions.qmd#li-caps)): offers go to {{< var li.sens.target_util.down.n_offered >}}
+  or {{< var li.sens.target_util.up.n_offered >}}, and the assumed incremental exposure swings
+  widest of all, from \${{< var li.econ.exposure_total >}} to
+  \${{< var li.sens.target_util.down.exposure >}} or
+  \${{< var li.sens.target_util.up.exposure >}}.
+- **The revenue ceiling moves the volume at the margin**, to
+  {{< var li.sens.revenue_mult_cap.down.n_offered >}} or
+  {{< var li.sens.revenue_mult_cap.up.n_offered >}} offers.
+- **`pct_cap` changes only the amounts.** The offers stay at
+  {{< var li.sens.pct_cap.down.n_offered >}} and {{< var li.sens.pct_cap.up.n_offered >}}:
+  where it binds, a different cap would still leave a positive amount, and the ROE does not
+  depend on the size of the increase.
+
+The aggregate incremental ROE stays between {{< var li.sens.max_pd_quantile.down.agg_roe >}}
+and {{< var li.sens.revenue_mult_cap.up.agg_roe >}} across the scenarios.
+
+## The cohort gates pass in every scenario
+
+Every scenario passes the four cohort gates. That is not evidence of robustness: {{< var li.cohort_gate.n_cannot_fail >}} of them
+cannot fail on this book whatever the settings in this range do (finding 1,
+[8.7](limitations.qmd)), and the fourth, at least one offer, is met by a wide margin. The
+table shows how the cohort's size and exposure respond to policy; it does not show that any
+setting would produce a worse cohort the gate would catch.
+
+## Sampling sensitivity of the model gates
+
+The bootstrap of the held-out accounts ([8.5](performance.qmd#how-firm-each-result-is)) puts
+{{< var li.boot.auc_below_gate >}} of resamples below the AUC gate and
+{{< var li.boot.lift_below_gate >}} below the lift gate, with the model held fixed. That is a
+sensitivity of the verdict to the sample, not of the model to its inputs; the AUC gate is met
+with a modest margin, {{< var li.gate.auc_margin >}}.
+
+## Not run
+
+- **Reduced-input refits.** No refit without the redundant inputs (`util_headroom`,
+  `log_revenue`) or without `pd_score`. Because trees split a column and its increasing
+  transform alike, dropping a restatement should change little; that is a reasoned
+  expectation, not a measurement ([8.7](limitations.qmd#li-observations)).
+- **A drawdown sweep.** Only two drawdown shapes are computed, today's utilisation and a full
+  draw ([8.4](assumptions.qmd#li-drawdown)). Neither changes who is offered; the exposure at
+  any other drawdown is not computed (finding 5).
+- **A hurdle sweep.** The hurdle is `MARKET`'s, and D6.6 moves it for pricing; its effect on
+  the offers is not computed here. Moving `LINE_INCREASE["roe_hurdle"]` would change nothing
+  (finding 4).
+- **The workbench.** There is no what-if for line increase: a reviewer cannot move a setting
+  and see the book re-scored ([8.1](purpose.qmd#who-consumes-it-and-how)).

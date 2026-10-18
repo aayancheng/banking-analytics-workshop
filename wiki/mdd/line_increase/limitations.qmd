@@ -1,0 +1,210 @@
+---
+title: "8.7 Limitations and compensating controls"
+order: 7
+---
+
+The chapter raises six open findings about its own model, rules and gate. Each has evidence
+drawn from the facts or the code, a compensating control and an owner. The same six, in the
+same words, are D8's open findings in the validation sign-off (D11, in the validation PDF).
+The model, the rules and the gate are not changed by this chapter: it documents them as
+committed.
+
+Two things are deliberately **not** findings. The model ranks well: it clears its AUC gate,
+beats every single input with paired intervals above zero, and gets
+{{< var ceiling.li.share_of_reach >}} of the way to the data's ceiling
+([8.5](performance.qmd)). And the overlap between the offers and Early Warning's flags,
+which a reviewer will see in the customer-360 view, is on this evidence mostly mechanical
+and not a sign that the module offers to deteriorating accounts; it is an observation
+([below](#li-observations)).
+
+| # | Finding | Evidence | Compensating control | Owner | Status |
+|--|--------------|----------------|------------------|-------|------|
+| 1 | {{< var li.cohort_gate.n_cannot_fail >}} of the {{< var li.gate.n_gates >}} training gates cannot fail — the aggregate ROE gate by construction, the PD and utilisation gates on this book — so no gate tests the quality of the offered cohort. | {{< var li.cohort_gate.n_cannot_fail >}} of {{< var li.gate.n_gates >}} gates. ROE: the aggregate is an equity-weighted mean of per-loan ROEs that each clear the hurdle (lowest {{< var li.cohort_gate.roe.min_offers >}}, hurdle {{< var li.gate.roe_hurdle >}}). PD: the ceiling, {{< var li.offer_max_pd >}}, is the book's median, below its mean {{< var li.book_pd >}}. Utilisation: an amount needs utilisation above `target_util` ({{< var li.config.target_util >}}), so every account with one is at {{< var li.cohort_gate.util.min_amount >}} or more, above the book mean {{< var li.book_util >}}. Every {{< var li.sens.step >}} scenario in 8.6 passes all four cohort gates. | Show beside each gate whether it can fail (the facts and the headline table do); at the next gate review, add cohort gates that can fail, measured on the held-out offers' outcomes against the floor; until then, read the cohort gates as checks that the rules ran, never as evidence that the offers are good. The gates are not relaxed. | Model developer, with the credit policy owner (proposed; to be named) | open |
+| 2 | The offer threshold is set on in-sample probabilities, and the offered cohort and the candidates the portal serves are mostly the model's training rows. | The threshold is the {{< var li.config.offer_quantile >}} quantile over all {{< var li.n_book >}} booked accounts, {{< var li.n_train >}} of them training rows (training AUC {{< var li.train.auc >}}). {{< var li.offers.n_train >}} of the {{< var li.n_offered >}} offers ({{< var li.offers.train_share >}}) are training rows; their label rate is {{< var li.offers.rate >}}, against {{< var li.offers_ho.observed >}} on the held-out offers. The portal's top {{< var li.served.portal.n >}} hold {{< var li.served.portal.n_train >}} training rows at a label rate of {{< var li.served.portal.rate >}}; the v1 page's top {{< var li.served.page.n >}}, {{< var li.served.page.n_train >}} at {{< var li.served.page.rate >}}. On held-out accounts the threshold passes {{< var li.thr.share_holdout >}}, against {{< var li.thr.share_book >}} intended. | Quote the held-out offers' figures only (the facts label every whole-book figure in-sample); at the next retrain, set the threshold on out-of-fold probabilities and score the book's training rows out of fold, as D7 findings 1 and 2 propose; until then, read the candidates list as a list to review, never as evidence of accuracy. | Model developer, with the portal owner (proposed; to be named) | open |
+| 3 | The lift gate does not distinguish the model from a sort on one column. | {{< var li.baseline.n_pass_lift >}} of the {{< var li.baseline.n_numeric >}} numeric inputs, sorted alone on the held-out accounts, reach the {{< var li.gate.lift_min >}}× lift gate (utilisation {{< var li.baseline.utilization.lift >}}×, revenue {{< var li.baseline.revenue.lift >}}×); none reaches the {{< var li.gate.auc_min >}} AUC gate (best {{< var li.baseline.best.auc >}}). The model beats the best with a paired interval of {{< var li.baseline.revenue.diff_lo >}} to {{< var li.baseline.revenue.diff_hi >}}. | Report the best single input beside both gates on every run (the facts do); at the next gate review, restate the lift gate relative to the best single input; until then, treat the AUC gate as the binding test of the model. The gate is not changed by this finding. | Model developer | open |
+| 4 | `LINE_INCREASE["roe_hurdle"]` is never read: the hurdle that decides offers is `MARKET`'s. | No file in `line_increase/src` reads the key ({{< var li.config.n_unread >}} unread key: `{{< var li.config.unread >}}`); `incremental_roe` and the aggregate gate use `MARKET["roe_hurdle"]` through the market argument. The two are equal today ({{< var li.config.roe_hurdle >}} and {{< var li.gate.roe_hurdle >}}); a change to the module's own key would change nothing. `MARKET` has no owner (D6 finding 5). | Remove the key, or make `incremental_roe` read it, with a test that a change to it moves the offers; until then, change the hurdle only in `MARKET`, and the facts list every unread key on each `verify.py` run. | Model developer | open |
+| 5 | The incremental exposure assumes the increase is drawn at today's utilisation, an assumption no data support, and it understates the limit committed. | The {{< var li.n_offered >}} offers commit \${{< var li.econ.amount_total >}} of new limit; the exposure reported is \${{< var li.econ.exposure_total >}}. Per loan the ROE does not depend on the drawdown ({{< var li.econ.ead_invariance >}}); the aggregate does, slightly: {{< var li.econ.full_draw.agg_roe >}} fully drawn against {{< var li.agg_roe >}}, with the same {{< var li.econ.full_draw.n_offered >}} offers. The generator never grants an increase, so no drawdown is observed. | Report the committed amount beside the assumed exposure (the facts do; the portal's segments show only the assumed exposure); size limits and capital on the committed amount, never on the assumed exposure; before any real use, measure drawdown on granted increases. | Model developer, with the portfolio owner (proposed; to be named) | open |
+| 6 | The label is constructed by the generator for every account, not observed after an increase, so what the model predicts has no real-world definition yet. | The generator draws `{{< var li.target >}}` from the true PD, utilisation above a level, revenue and later deterioration, plus noise, for all {{< var li.n_book >}} booked accounts; nothing in the data records an offer, a take-up, a drawdown or a repayment. | Before any real use, define the label as an observed outcome of an increase over a stated window, and plan for selection: the outcome exists only for accounts given increases (a randomised hold-out of offers is one design); until then, make no claim about how offered accounts would perform. | Model developer, with the credit policy owner (proposed; to be named) | open |
+
+## Finding 1 — The cohort gates cannot fail {#li-finding-1}
+
+**Finding.** `train.py` asserts six gates. Two test the model's ranking on held-out accounts
+and one that anything is offered. The other three compare the offered cohort with the book —
+lower mean PD, higher mean utilisation, an aggregate incremental ROE at the hurdle — and none
+of them can fail: one by construction, two on this book. The gate says nothing about whether
+the offers are good.
+
+**Evidence.** From [8.5](performance.qmd#li-headline):
+
+| Gate | Why it cannot fail | Evidence |
+|---|---|---|
+| Aggregate incremental ROE ≥ hurdle | by construction: total net income over total allocated equity is an equity-weighted mean of the offers' own ROEs, and every offer's ROE clears the hurdle or it is not an offer | lowest offer ROE {{< var li.cohort_gate.roe.min_offers >}} against {{< var li.gate.roe_hurdle >}}; every offer's allocated equity is the capital ratio times its EAD (asserted in the facts) |
+| Cohort mean PD < book mean PD | on this book: the ceiling is the book's median PD, every offer is at or below it, and on this book the median is below the mean | ceiling {{< var li.offer_max_pd >}}, book median {{< var li.cohort_gate.pd.book_median >}}, book mean {{< var li.book_pd >}}: a margin of {{< var li.cohort_gate.pd.margin >}}; highest offer PD {{< var li.cohort_gate.pd.max_offers >}} |
+| Cohort mean utilisation > book mean | on this book: an amount needs utilisation above `target_util`, and on this book `target_util` is above the mean | `target_util` {{< var li.config.target_util >}}; utilisation among accounts with an amount: lowest {{< var li.cohort_gate.util.min_amount >}}, median {{< var li.cohort_gate.util.median_amount >}}, mean {{< var li.cohort_gate.util.mean_amount >}}; book mean {{< var li.book_util >}}; only {{< var li.cohort_gate.util.book_share_above_target >}} of the book is above `target_util` |
+
+Every scenario in [8.6](sensitivity.qmd) passes them as well.
+
+**Impact.** The cohort gates read as quality checks and are reported as such in the
+validation report and on the portal's summary. They are checks that the rules ran: a
+deterioration in what the offers go on to do — more defaults, more deterioration, a lower
+label rate — would pass all three. What does measure the cohort is on held-out outcomes
+([8.5](performance.qmd#li-cohort)), and nothing gates on it. Neither "cannot fail on this
+book" is guaranteed elsewhere: a book whose PD distribution were skewed the other way, or
+whose mean utilisation were above `target_util`, could fail them.
+
+**Compensating control.** The headline table states for each gate whether it can fail, and
+the facts recompute the evidence on every `verify.py` run. At the next gate review, add cohort
+gates that can fail, measured on the held-out offers' outcomes — the observed label rate
+against the predicted, deterioration and default not above the book's — with the floor rule
+the monitoring plan applies. Until then, read the cohort gates as checks that the rules ran,
+never as evidence that the offers are good. The committed gates are not relaxed. **Owner:**
+model developer, with the credit policy owner (proposed; to be named).
+
+## Finding 2 — The threshold, the cohort and the served list are in-sample {#li-finding-2}
+
+**Finding.** The model scores the book it was fitted on. The offer threshold is a quantile of
+those scores, the offers are chosen from them, and the list the portal serves is their top.
+This is the cause behind D7 findings 1 and 2 ([D7.7](../ews/limitations.qmd)), arriving in a
+different module.
+
+**Evidence.** The threshold is the {{< var li.config.offer_quantile >}} quantile over all
+{{< var li.n_book >}} booked accounts, {{< var li.n_train >}} of them training rows on which
+the model's AUC is {{< var li.train.auc >}} ([8.3](methodology.qmd#li-threshold)).
+{{< var li.offers.n_train >}} of the {{< var li.n_offered >}} offers are training rows. Their
+label rate, {{< var li.offers.rate >}}, compares with {{< var li.offers_ho.observed >}} among
+the {{< var li.offers.n_holdout >}} held-out offers. The portal's candidates endpoint serves
+the top {{< var li.served.portal.n >}}: {{< var li.served.portal.n_train >}} training rows, all
+positive ({{< var li.served.portal.rate >}}); the v1 page's top {{< var li.served.page.n >}}
+are {{< var li.served.page.n_train >}} training rows at {{< var li.served.page.rate >}}.
+
+Unlike D7, the effect on the threshold's mechanics is small: on held-out accounts it passes
+{{< var li.thr.share_holdout >}}, close to the {{< var li.thr.share_book >}} intended, and the
+held-out accounts above it are calibrated within tolerance ([8.5](performance.qmd#li-cohort)).
+
+**Impact.** The visible numbers — the cohort's label rate, the candidates list's perfect hit
+rate — overstate what an offer to a new account will achieve. The ranking and the gate are
+unaffected; they are held out.
+
+**Compensating control.** Quote the held-out offers' figures only; the facts label every
+whole-book figure in-sample. At the next retrain, set the threshold on out-of-fold
+probabilities and score the book's training rows out of fold, the retrain control D7 proposes
+for the same cause. Until then, read the candidates list as a list to review, never as
+evidence of accuracy. **Owner:** model developer, with the portal owner (proposed; to be
+named).
+
+## Finding 3 — The lift gate is passed by a single column {#li-finding-3}
+
+**Finding.** The top-quintile lift gate is meant to show that the model concentrates good
+candidates at the top. On this data a sort on one column does that too.
+
+**Evidence.** On the held-out accounts ([8.5](performance.qmd#li-baselines)),
+{{< var li.baseline.n_pass_lift >}} of the {{< var li.baseline.n_numeric >}} numeric inputs,
+each sorted alone, reach the {{< var li.gate.lift_min >}}× gate: utilisation
+({{< var li.baseline.utilization.lift >}}×) and revenue ({{< var li.baseline.revenue.lift >}}×)
+among them. None reaches the AUC gate; the best single input,
+`{{< var li.baseline.best.feature >}}`, reaches {{< var li.baseline.best.auc >}}. The model's
+lead over it, {{< var li.baseline.revenue.diff >}}, has a paired interval of
+{{< var li.baseline.revenue.diff_lo >}} to {{< var li.baseline.revenue.diff_hi >}}.
+
+**Impact.** The lift gate is redundant with the AUC gate on this data: it would pass a model
+no better than a sort on revenue. The model is not weak — it beats every single input — but
+one of its two model gates does not show that. The label's observable drivers are inputs by
+design ([8.2](data.qmd#li-label)), so this is a property of the gate, not of the model.
+
+**Compensating control.** The facts report the best single input beside both gates on every
+run. At the next gate review, restate the lift gate relative to the best single input (for
+example, a lift above the best single input's on the same rows). Until then, treat the AUC
+gate as the binding test of the model. The committed gate is not changed by this finding.
+**Owner:** model developer.
+
+## Finding 4 — A configured hurdle that does nothing {#li-finding-4}
+
+**Finding.** `shared.config.LINE_INCREASE` carries a `roe_hurdle`. No line of the module reads
+it; the hurdle that decides every offer is `MARKET`'s.
+
+**Evidence.** A search of `line_increase/src` for every key the code reads from
+`LINE_INCREASE` finds all but {{< var li.config.n_unread >}}: `{{< var li.config.unread >}}`.
+`incremental_roe` compares with `market.roe_hurdle`, and `train.py`'s aggregate gate with
+`MARKET["roe_hurdle"]`:
+
+```python
+"clears_hurdle": bool(ead > 0 and w["roe"] >= market.roe_hurdle),       # amount_rules.py
+assert agg_incr_roe >= MARKET["roe_hurdle"], (                          # train.py
+```
+
+The two values are equal today ({{< var li.config.roe_hurdle >}} and
+{{< var li.gate.roe_hurdle >}}).
+
+**Impact.** A credit officer who raises the line-increase hurdle in the module's own
+configuration changes nothing, and nothing says so. The hurdle that does act is shared with
+pricing, and `MARKET` has no owner or change control beyond code
+review (D6 finding 5); a change made for pricing moves the offers too.
+
+**Compensating control.** Remove the key, or make `incremental_roe`'s caller pass it, with a
+test that changing it moves the offers. Until then, change the hurdle only in `MARKET`, under
+D6's control, and re-run [8.5](performance.qmd) after any change; the facts list every unread
+key of `LINE_INCREASE` on each `verify.py` run. **Owner:** model developer.
+
+## Finding 5 — The exposure rests on an unvalidated drawdown {#li-finding-5}
+
+**Finding.** Every exposure figure the module reports assumes that an increase is drawn at the
+account's current utilisation. Nothing supports that, and the limit the bank commits is
+larger.
+
+**Evidence.** From [8.4](assumptions.qmd#li-drawdown) and
+[8.5](performance.qmd#li-economics): the {{< var li.n_offered >}} offers commit
+\${{< var li.econ.amount_total >}}; the reported incremental exposure is
+\${{< var li.econ.exposure_total >}}. The ROE of each offer does not depend on the drawdown;
+the aggregate does, a little: {{< var li.econ.full_draw.agg_roe >}} if every increase were
+fully drawn, against {{< var li.agg_roe >}}, with the same
+{{< var li.econ.full_draw.n_offered >}} offers. The data hold no drawdown to measure.
+
+**Impact.** Who is offered does not change. What the offers add to the bank's exposure,
+capital and income does: a business near its limit may well draw more of new room than its
+current share, and an undrawn limit is still a commitment. The portal's segments show only the
+assumed exposure.
+
+**Compensating control.** Report the committed amount beside the assumed exposure (the facts
+and the economics table do). Size limits and capital on the committed amount, never on the
+assumed exposure. Before any real use, measure drawdown on granted increases and replace the
+assumption. **Owner:** model developer, with the portfolio owner (proposed; to be named).
+
+## Finding 6 — The label is constructed, not observed {#li-finding-6}
+
+**Finding.** `{{< var li.target >}}` is drawn by the generator for every booked account. No
+increase was offered or granted, so the label is not the outcome of one, and what "good" means
+has no definition outside the generator's code.
+
+**Evidence.** The generator draws the label from the true PD, utilisation above a level,
+revenue and later deterioration, with noise ([8.2](data.qmd#li-label)). The data record no
+offer, take-up, drawdown or repayment. The ceiling in [8.5](performance.qmd#li-ceiling) is the
+ceiling for ranking that construction.
+
+**Impact.** Every performance figure in this chapter measures how well the model recovers the
+generator's construction. On a real book the outcome of an increase is observed only for
+accounts that were given one, chosen by whatever policy chose them; a model trained on those
+alone learns that policy as well as the outcome. This is a property of the synthetic data, not
+a defect in the code, but it goes to what the model is for, so it is a finding, as D7's lead
+time is.
+
+**Compensating control.** Before any real use, define the label as an observed outcome of an
+increase over a stated window — for example, the increase taken up and the account performing
+over the following year — and plan for selection, for instance by offering to a randomised
+hold-out. Until then, make no claim about how offered accounts would perform (a prohibited
+use, [8.1](purpose.qmd#prohibited-uses)). **Owner:** model developer, with the credit policy
+owner (proposed; to be named).
+
+## Observations {#li-observations}
+
+Recorded but not raised as findings.
+
+| Observation | Evidence | Why not a finding | Action |
+|---|---|---|---|
+| Offers carry Early Warning flags | {{< var li.offers.ews.any_trigger.share >}} of offers carry a trigger against {{< var li.book.ews.any_trigger.share >}} of the book, and {{< var li.offers.ews.High.n >}} are High-tier ([8.5](performance.qmd#li-ews)) | By tier the offers are flagged less than the book ({{< var li.offers.ews.high_or_medium.share >}} High or Medium against {{< var li.book.ews.high_or_medium.share >}}); the trigger excess is mostly the two utilisation rules, which offers trip by selection ({{< var li.offers.ews.non_util_trigger.share >}} against {{< var li.book.ews.non_util_trigger.share >}} without them); deterioration is not distinguishable from the book (p = {{< var li.offers.det.p_value >}}) | A reviewer reads the account's Early Warning tier and triggers before an offer goes out; monitor the offers' deterioration against the book's |
+| Held-out offers' default and deterioration rest on too few events | {{< var li.offers_ho.default.events >}} defaults and {{< var li.offers_ho.det.events >}} deteriorations among {{< var li.offers.n_holdout >}} held-out offers ([8.5](performance.qmd#li-cohort)) | Below the floor of {{< var monitoring.min_band_defaults >}}: recorded, not measured | Count them in monitoring until a cohort reaches the floor |
+| Two inputs restate others | `util_headroom` is one minus utilisation (zero above one) and `log_revenue` an increasing transform of revenue ([8.2](data.qmd#li-features)) | Trees split a column and its increasing transform alike; the cost is importances and SHAP reasons split across a pair ([8.3](methodology.qmd#li-importance)) | Remove both at the next redevelopment |
+| The label includes an outcome after the decision | The generator's logit carries later deterioration; the ceiling moves from {{< var ceiling.li.latent_holdout >}} to {{< var ceiling.li.latent_no_det_holdout >}} without it | Its weight is small and the model does not use it; part of finding 6 | Define the real label without it (finding 6) |
+| Many offers clear the hurdle narrowly | {{< var li.econ.n_near_hurdle >}} of {{< var li.n_offered >}} offers are within one point of it ([8.5](performance.qmd#li-economics)) | Each clears it; the hurdle is a policy line | A change to `MARKET` moves these first: re-run [8.5](performance.qmd) after any change (finding 4) |
+| No leakage test of Line Increase's features in the test suite | `tests/test_leakage.py` checks the scorecard and adjudication only ([8.2](data.qmd#leakage-controls)) | The deny-list is enforced on every feature build and at training | Add the test at the next change to `line_increase/` |
+| No what-if for line increase in the workbench | The workbench explains the verdict but cannot re-score the book under another setting ([8.1](purpose.qmd#who-consumes-it-and-how)) | A tool's absence, not an error; [8.6](sensitivity.qmd) computes the settings' effects | Consider one when the workbench is next extended |
+| `pd_score` is in-sample for the scorecard on most booked accounts | The scorecard's training rows were drawn from all applicants ([8.2](data.qmd#li-score-input)) | As in D7: small, and not measured | Measure with out-of-fold scores at the next redevelopment of either model |

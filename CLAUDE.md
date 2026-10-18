@@ -275,6 +275,27 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   nothing, and a fact text markdown parses as structure (`>=` lost its `>`) must be a literal. D11 has a D7 subsection;
   `tests/test_wiki_site.py` pins it row-for-row, the tier floor rule, the prose conclusions and the
   code claims (hard-coded clause, unit test, verify's own capture lines).
+- **D8 (Line Increase) raises six open findings**; document only (`line_increase/src`, models,
+  `LINE_INCREASE`, app untouched). Not findings, on purpose: the model ranks well (held-out AUC 0.8128,
+  lift 2.66x, 93% of the way to the noise-free logit's 0.8349 on the same rows, beats every single
+  input with paired CIs above zero), and the offers' overlap with EWS flags is mostly mechanical
+  (observation: by tier offers are *less* flagged — High 7.4% vs 10.0%, High+Medium 25.3% vs 30.0%;
+  any trigger 90.5% vs 71.5%, but excluding HIGH_/RISING_UTILIZATION only 63.2% vs 58.5%, and offers
+  are selected for utilization; deterioration 21.1% vs 18.0%, exact binomial p 0.42). The six:
+  1. 3 of the 6 train.py gates cannot fail — say it precisely: aggregate ROE **by construction**
+     (equity-weighted mean of per-loan ROEs that each clear; lowest 0.1507); PD and utilization only
+     **on this book** (ceiling = book median 0.0741 < mean 0.1171; an amount needs util > target_util
+     0.65 > book mean 0.4714). Facts `li.cohort_gate.*`; never call all three "by construction".
+  2. Threshold set on whole-book (80% in-sample) probs; 79 of 95 offers are training rows (label rate
+     74.7% vs 68.8% held out); portal top 25 = 23 training rows at 100%. Same cause as D7 findings 1–2,
+     but here the share effect is small (23.6% held out vs 25.0%).
+  3. The lift gate is passed by single columns (5 of 17 numeric inputs; none reaches the AUC gate).
+  4. `LINE_INCREASE["roe_hurdle"]` is never read; the hurdle is `MARKET`'s (equal today, 0.15).
+  5. Incremental EAD = increase x current utilization, unvalidated: $3,392,000 committed vs
+     $2,874,152 reported; per-loan ROE invariant, aggregate 0.2153 -> 0.2156 fully drawn, same 95.
+  6. The label is constructed for every account; no increase was ever granted (selection on a real book).
+  Prose says "top-quintile lift" (the lint rejects a typed "20%"). D11 has a D8 subsection; tests pin it
+  row-for-row, the offers' floor rule, the prose conclusions and the code claims.
 
 ## The DGP, in numbers
 
@@ -321,7 +342,7 @@ repo is decoration.
 - Student-facing wording matters more than usual here: these people are choosing whether to
   trust the material.
 
-## Where things stand — updated 2026-10-17
+## Where things stand — updated 2026-10-18
 
 **v1.5** is the public release. **Session 1 ran Thu 10 Sep** (recording recut to 58:53 and a
 3:04 LinkedIn promo — see *Session recordings* below). **Session 2 ran Thu 17 Sep** at the
@@ -348,7 +369,10 @@ in `workshop/`. **D5 (Loan Adjudication) is complete and on `main` and `origin/m
 `wiki/facts/pricing_facts.py`, nine parts under `wiki/mdd/pricing/`, five findings in D6.7 and D11 — not yet merged or pushed.
 **D7 (Early Warning) is complete on branch `wiki-d7`** (2026-10-18), on top of `wiki-d6`: facts in
 `wiki/facts/ews_facts.py` (+ `ceiling.ews.*`), nine parts under `wiki/mdd/ews/`, findings in D7.7
-and D11 (eight after the fix round) — not merged or pushed. D8 remains a stub.
+and D11 (eight after the fix round) — not merged or pushed. **D8 (Line Increase) is complete on branch
+`wiki-d8`** (2026-10-18), on top of `wiki-d7`: facts in `wiki/facts/li_facts.py` (+ `ceiling.li.*`),
+nine parts under `wiki/mdd/line_increase/`, six findings in D8.7 and D11 — not merged or pushed.
+**All module chapters, D4–D8, are now complete.** Next: the course spine (S1, S3), E1–E10, book packaging.
 
 ### Recutting sessions into chapter videos — the house method
 
@@ -460,8 +484,8 @@ address (invariant 6).
 
 ### Open threads
 
-- **Wiki v1 leftovers:** D8 in full (the line increase chapter is a stub that follows the
-  template; D5 is done, on `main`, D6 on `wiki-d6` and D7 on `wiki-d7`), E1–E10 (explainers), book packaging (the EPUB/PDF is a stub:
+- **Wiki v1 leftovers:** D4–D8 are all complete (D5 on `main`; D6, D7 and D8 on stacked branches
+  `wiki-d6` → `wiki-d7` → `wiki-d8`, unmerged). Next: the course pages for S1 and S3, E1–E10 (explainers), book packaging (the EPUB/PDF is a stub:
   preface, Explain index, the template page and D10), and the Codespace test of the Quarto devcontainer
   (needs a push). Pages is live (above).
 

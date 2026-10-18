@@ -1,0 +1,142 @@
+---
+title: "8.9 Gate record"
+order: 9
+---
+
+::: {.callout-important}
+## The gates
+
+Six, asserted together at the end of training. **On the model**, measured on the held-out
+{{< var li.test_share >}} of the booked book ([8.2](data.qmd#li-split)): **AUC ≥
+{{< var li.gate.auc_min >}}** and **top-quintile lift ≥ {{< var li.gate.lift_min >}}×**; current
+values {{< var li.auc >}} and {{< var li.lift >}}×, both met. **On the offered cohort**, over
+the whole booked book: at least one account offered; the cohort's mean PD below the book's;
+its mean utilisation above the book's; and its aggregate incremental ROE at or above the
+hurdle, {{< var li.gate.roe_hurdle >}}. All met — and {{< var li.cohort_gate.n_cannot_fail >}}
+of them cannot fail: the ROE gate by construction, the PD and utilisation gates on this book
+(finding 1).
+:::
+
+{{< include ../../_generated/li-headline.md >}}
+
+## Where they are asserted
+
+At the end of `line_increase/src/train.py`, after the model, `metadata.json` and the
+validation report have been written:
+
+```python
+AUC_GATE = 0.78                                                   # line_increase/src/train.py
+LIFT_GATE = 2.0
+...
+assert auc >= AUC_GATE, f"GATE FAIL: AUC {auc:.4f} < {AUC_GATE}"
+assert lift >= LIFT_GATE, f"GATE FAIL: lift {lift:.2f} < {LIFT_GATE}"
+assert n_offered > 0, "GATE FAIL: no accounts offered"
+assert cohort_pd < book_pd, f"GATE FAIL: cohort PD {cohort_pd:.4f} !< book {book_pd:.4f}"
+assert cohort_util > book_util, f"GATE FAIL: cohort util {cohort_util:.4f} !> book {book_util:.4f}"
+assert agg_incr_roe >= MARKET["roe_hurdle"], (
+    f"GATE FAIL: agg incremental ROE {agg_incr_roe:.4f} < {MARKET['roe_hurdle']}")
+```
+
+`auc` and `lift` are computed on the held-out probabilities, lift by `top_ventile_lift`: the
+label rate among accounts at or above the 80th percentile of probability, over the base rate.
+The cohort is built by `train.py`'s own loop over the whole book, with the threshold and PD
+ceiling it has just set ([8.3](methodology.qmd#li-threshold)); `agg_incr_roe` is total
+incremental net income over total `capital_ratio` × incremental EAD. The hurdle is `MARKET`'s;
+`LINE_INCREASE["roe_hurdle"]` is never read (finding 4). The asserts are the script's last
+step, so a model that misses a gate still leaves its artifacts behind; the run fails, and
+`verify.py` then fails on those artifacts. The model gates are also written into
+`metadata.json` under `["gate"]["auc_min"]` and `["gate"]["lift_min"]`, and the cohort
+figures under `["cohort"]`.
+
+## Where they are recomputed, independently
+
+`verify.py` carries its own copies of the model gates:
+
+```python
+LI_AUC_GATE = 0.78                                                # verify.py
+LI_LIFT_GATE = 2.0
+```
+
+Its check, `check_line_increase`, reads no stored metric. It:
+
+1. fails at once, naming them, if `line_increase_model.pkl` or `metadata.json` is missing;
+2. loads the model, builds the features from the committed portfolio with
+   `compute_line_increase_features` — which recomputes the score through `predict_score_pd`
+   — and redraws the held-out split with the platform seed and stratification;
+3. recomputes AUC with `roc_auc_score` and lift **with its own lines**, not by importing
+   `top_ventile_lift`:
+
+   ```python
+   cut = np.quantile(p, 0.80)                                     # verify.py
+   lift = float(y_te[p >= cut].mean() / y_te.mean())
+   ```
+
+4. rebuilds the offered cohort with its own loop — `recommended_amount` and `incremental_roe`
+   on every account above the threshold and within the ceiling — and checks the four cohort
+   conditions:
+
+   ```python
+   ok_cohort = (bool(offered.any())                               # verify.py
+                and pd_score[offered].mean() < pd_score.mean()
+                and util[offered].mean() > util.mean()
+                and (net / eq if eq > 0 else 0.0) >= MARKET["roe_hurdle"])
+   ```
+
+5. fails if AUC or lift is below its own constant, or if the cohort check fails.
+
+Two things it takes from training rather than recomputing: the threshold and the PD ceiling,
+read from `metadata.json`. The facts recompute both from the quantiles and assert that they
+equal the stored values ([8.3](methodology.qmd#li-threshold)). And its cohort check inherits
+finding 1: it recomputes the three conditions that cannot fail. On `main`, `verify.py` then
+recomputes every fact in this chapter and fails, naming the key, if any page would print a
+stale value ([D9](../d9-implementation.qmd)).
+
+This is why **a relaxed local gate cannot pass** for the model gates: lowering `AUC_GATE` in
+`train.py` lets a weaker model finish training, but `verify.py` recomputes that model's AUC
+against the constant it carries itself, and fails.
+
+## The workbench explains the batch verdict {#li-workbench}
+
+Not a gate, but a control on what the workbench shows. The v2 line-increase tab spells out
+the four clauses of `eligible`; it must never disagree with the batch:
+
+- **`tests/test_app_v2.py`**: over the whole book, the verdict equals all four clauses
+  passing, and each clause agrees with the module that computed it — the probability and PD
+  clauses read the unrounded values, since the rounded columns flip a clause on a few accounts
+  — and `clears_hurdle` matches the batch on every account with an amount; on a sample, the
+  amount, the verdict and the incremental ROE match the v1 endpoint; the workbench's count of
+  eligible loans is the batch's {{< var li.n_offered >}}.
+- **The facts**: the scored book the facts build equals `score_population`'s column for
+  column (all but the SHAP reasons), and `candidates()` and `segments()` agree on both
+  (`tests/test_wiki_li_facts.py`).
+
+## What the gates do not cover
+
+- **The quality of the offers.** The cohort gates cannot fail (finding 1); the held-out
+  outcomes of the offers are not gated.
+- **Whether the model beats a single column.** The lift gate does not show it (finding 3); the
+  facts' baselines do.
+- **The in-sample threshold and list.** Every model gate figure is held out; nothing stops the
+  cohort's or the list's in-sample hit rate being quoted (finding 2).
+- **Calibration.** Both model gates are about ranking; calibration among offers is measured in
+  [8.5](performance.qmd#li-cohort), not gated.
+- **The exposure.** No gate looks at the committed amount or the drawdown (finding 5).
+
+## History
+
+| Version | Change | Gates |
+|---|---|---|
+| development, before `stage-4` | The generator's comment records that the reference build's first version of the label was noise-capped below its gate, and describes the committed label as leaning on observable drivers with modest noise: the fix was made to the label, not the gate (quoted in [8.2](data.qmd#li-label)). The commit history holds only the final label; how the change was made and approved is not recorded. | not committed |
+| `stage-4` (commit `dbca721`) | gates introduced with the line-increase model, in `train.py` and `verify.py` | AUC {{< var li.gate.auc_min >}}, lift {{< var li.gate.lift_min >}}×, the four cohort conditions |
+| `stage-5`, `v1.0` to `v1.5`, `main` | unchanged | as above |
+
+The committed gates have not changed since they were committed, and they are never relaxed to
+let a model pass ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
+The one change came before the first commit and went the other way from Early Warning's: there
+the gate was re-specified to fit the data, here the data's label was changed to fit the gate.
+A label redrawn until a model passes is the kind of change a validator should see recorded;
+the generator's comment is the only record, and it calls when such a fix is safe "a Session 4
+story". On the committed label the gate is reachable with room — the noise-free logit reaches
+{{< var ceiling.li.latent_holdout >}} on the held-out accounts ([8.5](performance.qmd#li-ceiling))
+— and the label's construction is finding 6. Any change now would be a change of the committed
+promise: made on `main`, recorded in a new version tag, and shown in this table.

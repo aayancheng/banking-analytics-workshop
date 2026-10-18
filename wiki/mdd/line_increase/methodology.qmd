@@ -1,0 +1,219 @@
+---
+title: "8.3 Methodology and alternatives"
+order: 3
+---
+
+Line Increase is one model and three rules, applied in a fixed order. A gradient-boosted
+model ranks the booked book on `{{< var li.target >}}`; a threshold on its probability, set
+once at training, picks the top of that ranking; a ceiling on the scorecard's PD keeps the
+offers inside the risk appetite; the amount rules size the increase; and the pricing engine
+decides whether the increase earns its capital. An account is offered only if it passes all
+four ([8.1](purpose.qmd#li-funnel)). They are described here in the order the code applies
+them.
+
+{{< yt S3-c6 >}}
+
+Session 3 walks through the four clauses and the three caps on two accounts, and then the
+funnel over the book. The counts on screen — the booked book, the accounts left after the
+probability and PD clauses, after a positive amount, and after the ROE test — are the
+funnel facts in [8.1](purpose.qmd#li-funnel): {{< var li.funnel.book.n >}},
+{{< var li.funnel.pd.n >}}, {{< var li.funnel.amount.n >}} and {{< var li.funnel.roe.n >}}.
+The "growth probability" the video names is the model's probability of
+`{{< var li.target >}}`, and the "origination PD" is the scorecard's PD on the booked
+account. The video's lesson is that a funnel which says no to most of the book is protecting
+it; this chapter adds that {{< var li.cohort_gate.n_cannot_fail >}} of the gates that
+check the cohort cannot fail on this book, so the restraint is the rules', and the gate does
+not test it (finding 1, [8.7](limitations.qmd)).
+
+## The model: LightGBM
+
+A gradient-boosted tree ensemble, fitted on the {{< var li.n_train >}} training accounts
+([8.2](data.qmd#li-split)) with fixed hyperparameters and the platform seed:
+
+```python
+model = LGBMClassifier(n_estimators=400, learning_rate=0.03, num_leaves=31,   # line_increase/src/train.py
+                       subsample=0.8, colsample_bytree=0.8, random_state=SEED,
+                       n_jobs=-1, verbose=-1)
+model.fit(X_tr, y_tr, categorical_feature=LI_CATEGORICAL)
+```
+
+The hyperparameters are constants, not the result of a search; there is no early stopping
+and no calibration step. With {{< var li.model.n_estimators >}} trees of up to
+{{< var li.model.num_leaves >}} leaves, the model **fits its training rows almost
+perfectly**: training AUC {{< var li.train.auc >}}, against {{< var li.auc >}} on the
+held-out accounts ([8.5](performance.qmd#li-held-out-vs-whole-book)). The held-out figures
+are sound; the gap matters wherever the model scores its own training rows — which is where
+the offer threshold is set and most offers are made (finding 2).
+
+### What the model uses {#li-importance}
+
+LightGBM's own importances, from the saved booster:
+
+{{< include ../../_generated/li-importance.md >}}
+
+By gain the top features are the label's observable drivers and their companions: the
+balance, revenue and utilisation. Because two inputs restate others
+([8.2](data.qmd#li-features)), each driver's credit is split between a pair: utilisation and
+`util_headroom` together carry {{< var li.importance.pair_gain_share >}} of the gain, and
+`annual_revenue` and `log_revenue` {{< var li.importance.revenue_gain_share >}}. Read as a
+ranking of single columns, the table understates both. `pd_score` ranks
+{{< var li.importance.gain.pd_score_rank >}}th by gain and
+{{< var li.importance.split.pd_score_rank >}}rd by split count. Importance says how the
+trees spread their splits, not what the model would lose without a feature; the single-column
+baselines in [8.5](performance.qmd#li-baselines) are the better guide.
+
+## The offer threshold, calibrated at training {#li-threshold}
+
+After fitting, `train.py` sets the threshold as a quantile of the model's probability over
+**all** {{< var li.n_book >}} booked accounts — training and held-out rows together — and
+writes it into `metadata.json`:
+
+```python
+prob_full = model.predict_proba(X)[:, 1]                        # line_increase/src/train.py
+threshold = float(round(np.quantile(prob_full, LINE_INCREASE["offer_quantile"]), 4))
+```
+
+With `offer_quantile` = {{< var li.config.offer_quantile >}}, the committed threshold is
+{{< var li.offer_threshold >}}, and {{< var li.thr.share_book >}} of the book clears it by
+construction. Like Early Warning's tier cutoffs ([D7.3](../ews/methodology.qmd#ews-tiers)),
+the threshold fixes a **share of the book**, not a probability: on a retrain it moves to keep
+the share. Because {{< var li.n_train >}} of the {{< var li.n_book >}} probabilities it is
+taken over are in-sample, it is set partly on probabilities the model has memorised; on this
+model the effect on the share is small — {{< var li.thr.share_holdout >}} of held-out accounts
+clear it, against {{< var li.thr.share_train >}} of training rows — but every offer is chosen
+from the same in-sample ranking (finding 2).
+
+## The risk-appetite ceiling {#li-pd-ceiling}
+
+The same run sets a ceiling on the scorecard's PD:
+
+```python
+max_pd = float(round(np.quantile(pd_score, LINE_INCREASE["max_pd_quantile"]), 4))   # train.py
+```
+
+With `max_pd_quantile` = {{< var li.config.max_pd_quantile >}}, the ceiling,
+{{< var li.offer_max_pd >}}, is the book's median PD: the module offers only to the
+lower-risk half of the book. It is a policy choice expressed as a quantile, so it too keeps a
+share of the book and not a level of risk. It is not fitted to the label, and it excludes
+every account in score band D, whose lowest PD is {{< var li.band.D.pd_min >}}
+([8.5](performance.qmd#li-bands)).
+
+## The amount rules {#li-amount}
+
+`recommended_amount` (`line_increase/src/amount_rules.py`) takes the lowest of three caps:
+
+```python
+target_limit = current_balance / cfg["target_util"]              # amount_rules.py
+raw_delta = target_limit - credit_limit
+pct_cap = cfg["pct_cap"] * credit_limit
+revenue_ceiling = cfg["revenue_mult_cap"] * annual_revenue - credit_limit
+delta = min(raw_delta, pct_cap, revenue_ceiling)
+if delta <= 0:
+    return 0.0
+rnd = cfg["round_to"]
+return float(round(delta / rnd) * rnd)
+```
+
+| Cap | Setting (`shared.config.LINE_INCREASE`) | What it says |
+|---|---|---|
+| Headroom to target utilisation | `target_util` = {{< var li.config.target_util >}} | raise the limit until today's balance uses only this share of it |
+| Share of the current limit | `pct_cap` = {{< var li.config.pct_cap >}} | never raise the limit by more than this share at once |
+| Revenue ceiling | `revenue_mult_cap` = {{< var li.config.revenue_mult_cap >}} | the new limit stays within this multiple of annual revenue |
+
+The amount is rounded to `round_to` = {{< var li.config.round_to >}}. The first cap is
+positive only when utilisation is above `target_util`, so **an amount requires a constrained
+account**: every account with one has utilisation of at least
+{{< var li.cohort_gate.util.min_amount >}}. Which cap binds, on the lowest of the three
+(`app/v2/li_amounts.py`, the first on a tie):
+
+{{< include ../../_generated/li-caps.md >}}
+
+Every cap binds somewhere: the count of caps that bind on no account with an amount is
+{{< var li.caps.n_dead >}}. Most of the book has no headroom at all: on {{< var li.caps.no_headroom >}} accounts
+the lowest cap is at or below zero, and on {{< var li.caps.rounds_to_zero >}} more a positive
+cap rounds to zero. The revenue ceiling is at or below zero on
+{{< var li.caps.revenue_negative >}} accounts, whose limit already exceeds
+`revenue_mult_cap` times their revenue.
+
+## The incremental ROE test {#li-roe}
+
+The increase is priced by the pricing engine, not by this module:
+
+```python
+def incremental_exposure(delta_amount, utilization_onbook):       # amount_rules.py
+    """EAD of the incremental limit: drawn at current on-book utilization (clipped 0-1)."""
+    util = min(max(float(utilization_onbook), 0.0), 1.0)
+    return float(delta_amount) * util
+...
+    ead = incremental_exposure(delta_amount, utilization_onbook)
+    w = waterfall_or_zero(pd_, ead, rate, market)
+    return {
+        "incremental_ead": ead,
+        "roe": w["roe"],
+        "clears_hurdle": bool(ead > 0 and w["roe"] >= market.roe_hurdle),
+```
+
+The increment is assumed drawn at the account's current utilisation
+([8.4](assumptions.qmd#li-drawdown)), and priced with `profit_waterfall` at the scorecard's PD
+and the account's own quoted rate, against `MARKET`'s hurdle of
+{{< var li.gate.roe_hurdle >}}. Two properties follow from D6's engine:
+
+- **The ROE does not depend on the size of the increase.** Every line of the waterfall is
+  proportional to EAD, so the ROE at the incremental EAD equals the ROE at an EAD of one: over
+  the offers the largest difference is {{< var li.econ.ead_invariance >}} ([8.4](assumptions.qmd#li-drawdown)).
+- **The test is therefore the pricing test on the loan itself.** On all
+  {{< var li.econ.pricing_agree >}} accounts with an amount, the increment's verdict equals
+  `price_loan`'s verdict on the existing loan at its quoted rate. An account is offered more
+  only if its existing loan already clears the hurdle at the rate it pays; D6's findings about
+  that verdict arrive here ([D6.7](../pricing/limitations.qmd)).
+
+Of the {{< var li.funnel.amount.n >}} accounts that pass the first three clauses, the ROE test
+removes {{< var li.funnel.roe.dropped >}}.
+
+The module's own configuration holds a hurdle too, `LINE_INCREASE["roe_hurdle"]`
+({{< var li.config.roe_hurdle >}}). No file in `line_increase/src` reads it: the hurdle that
+decides is `MARKET`'s, through `incremental_roe`'s `market` argument
+({{< var li.config.n_unread >}} unread key: `{{< var li.config.unread >}}`). Today the two
+are equal; finding 4.
+
+## Why a gradient-boosted model {#li-why-lightgbm}
+
+The label's drivers have thresholds (utilisation matters only above a level) and the output
+is an offer list for review, not a credit decision, so a flexible learner that finds
+thresholds without hand-binning fits the problem, and Tier 2 ([D0](../d0-summary.qmd#risk-tiering))
+makes the loss of an exact decomposition tolerable. The choice was made at development and is
+recorded here so it can be challenged. What the evidence says, from
+[8.5](performance.qmd#li-baselines):
+
+- **It beats every single input.** No single numeric input reaches the AUC gate; the best,
+  `{{< var li.baseline.best.feature >}}`, reaches {{< var li.baseline.best.auc >}}, and the
+  model's paired lead over it is {{< var li.baseline.revenue.diff_lo >}} to
+  {{< var li.baseline.revenue.diff_hi >}}.
+- **It sits close to the data's ceiling.** It gets {{< var ceiling.li.share_of_reach >}} of
+  the way from a coin toss to the noise-free logit on the same rows
+  ([8.5](performance.qmd#li-ceiling)).
+
+### Alternatives considered
+
+| Alternative | Status | What it would and would not give |
+|---|---|---|
+| Rank by utilisation or revenue alone | measured, not adopted | Both pass the lift gate alone; neither reaches the AUC gate, and the model beats both with paired intervals above zero ([8.5](performance.qmd#li-baselines)). |
+| Rank by the scorecard's PD alone | measured, not adopted | A weak ranking for this label ({{< var li.baseline.pd_score.auc >}}): low risk is not the same as a good candidate. |
+| A logistic or scorecard-style model | not built | Exact reasons and far less room to memorise the training rows (finding 2); whether it would rank as well is unmeasured. |
+| Rules alone: utilisation above `target_util`, PD within appetite, ROE clears | not measured | The three rules already decide most of the funnel; what the model adds to them on outcomes is not measured (finding 1). |
+
+## Reason codes: SHAP
+
+As in adjudication and Early Warning, the reasons come from SHAP: `score_population` runs
+`shap.TreeExplainer` over every booked account and keeps each account's top three features
+pushing the probability up, with the shared `top_adverse_shap` helper (here the "adverse"
+direction is towards an offer). The v2 workbench serves them; the v1 account endpoint does not.
+`train.py` runs
+the explainer on a few held-out rows as a sanity check only. They carry D5's caveats, and the
+redundant pairs split credit between restatements of one driver
+([8.2](data.qmd#li-features)).
+
+## Feature selection
+
+None, in the sense of a search: `LI_FEATURE_COLUMNS` is a fixed list. `colsample_bytree`
+draws a random subset of columns for each tree, which is regularisation, not selection.

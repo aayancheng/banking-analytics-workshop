@@ -62,8 +62,19 @@ findings about itself, among them a delinquency trigger whose configured thresho
 fire on this data.
 
 **Line Increase (D8).** A gradient-boosted candidate model plus amount rules and an incremental-ROE test,
-which offers more credit only to the lower-risk half of the book. Its headline figures
-arrive with the chapter.
+which offers more credit only to the lower-risk half of the book. On the held-out
+{{< var li.test_share >}} of the booked book the model scores AUC {{< var li.auc >}} against a
+gate of {{< var li.gate.auc_min >}}, with top-quintile lift {{< var li.lift >}}×; it gets
+{{< var ceiling.li.share_of_reach >}} of the way to the data's ceiling and beats every single
+input. Of the {{< var li.n_book >}} booked accounts, {{< var li.n_offered >}} are offered — an
+offer is `eligible`, not the {{< var li.n_amount_positive >}} with a positive recommended
+amount. Three things qualify the gate. {{< var li.cohort_gate.n_cannot_fail >}} of its
+{{< var li.gate.n_gates >}} conditions cannot fail — the aggregate ROE by construction, the
+cohort's PD and utilisation on this book — so nothing gates whether the offers are good. The
+offer threshold and most of the offers are in-sample: {{< var li.offers.n_train >}} of the
+offers are the model's own training rows. And the label is constructed by the generator for
+every account rather than observed after an increase. The chapter raises six open findings
+about itself, among them a configured ROE hurdle the module never reads.
 
 ## Inventory
 

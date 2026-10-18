@@ -1,0 +1,86 @@
+---
+title: "8.8 Monitoring plan"
+order: 8
+---
+
+## What is monitored
+
+Line Increase is monitored as three things: the **model's ranking**, the **offered cohort**
+and what it goes on to do, and the **settings** that shape the funnel. Each new scoring of the
+book is out-of-sample for accounts booked after training, unlike most of the development book.
+Outcomes — the label, deterioration and default — are read once they mature. The thresholds
+are policy constants (`wiki/facts/policy.py`) and the model's own gates. Events, for the
+calibration floor, are positives of `{{< var li.target >}}` unless the row says otherwise.
+
+| Metric | Population | Threshold | Frequency | Action on breach |
+|---|---|---|---|---|
+| AUC | new accounts with matured outcomes | below the gate, {{< var li.gate.auc_min >}} | when outcomes mature | One cohort below: review with the validator, reading the interval. Two consecutive: redevelopment ([8.9](gate.qmd)). |
+| Top-quintile lift, and the best single input's lift | the same | the model's lift below {{< var li.gate.lift_min >}}×, or not above the best single input's | when outcomes mature | Below the gate: as AUC. Not above the best input: review whether the model earns its place (finding 3). |
+| Observed / predicted label rate among offers | offers with matured outcomes, out-of-sample only | outside {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}}, on at least {{< var monitoring.min_band_defaults >}} positives | when outcomes mature | Below the floor: record and watch. At or above it: count toward trigger 3. |
+| Deterioration and default rate among offers, against the book's | offers with matured outcomes | above the book's rate, on at least {{< var monitoring.min_band_defaults >}} events of that kind, with an exact binomial test | when outcomes mature | Review with the credit policy owner (proposed; to be named): this is the outcome no gate measures (finding 1). |
+| Offer share and count | every scoring of the book | the share above the threshold moving away from {{< var li.thr.share_book >}} by more than {{< var monitoring.rule_hit_move >}} of it | every scoring run | Check the inputs before the threshold (finding 2). |
+| Funnel by clause | every scoring of the book | any clause's count moving by more than {{< var monitoring.rule_hit_move >}} of its development value | every scoring run | Report to the credit policy owner; a moved clause is a policy change in effect. |
+| Binding cap counts | accounts with an amount | any cap that binds on no account | every scoring run | Report as an untested control, as for a dead trigger clause in D7. |
+| Offers on the Early Warning screen | offers | share High or Medium, and share with a trigger other than the utilisation rules, against the book's | every scoring run | Above the book's on either: review with the Early Warning owner before offers go out ([8.7](limitations.qmd#li-observations)). |
+| Committed amount and assumed exposure | offers | reported, not thresholded | every scoring run | Size limits and capital on the committed amount (finding 5). |
+| Threshold and PD ceiling at a retrain | the retrained model | any change | every retrain | The share was held and the level moved: the policy owner signs off the new values before use ([8.4](assumptions.qmd#li-shares)). |
+| Unread configuration | `LINE_INCREASE` | any key no code reads | every `verify.py` run | Report (finding 4). |
+| Candidates list: share of training rows | the list served | reported, not thresholded | every scoring run | Any training row on the list makes its hit rate in-sample (finding 2). |
+
+The deterioration and default row is the control finding 1 needs until a gate measures the
+cohort; the offers-on-EWS row is the observation's control. The first reading of the label
+rate on offers that were actually made will also be the first evidence of what the label
+means on a real book (finding 6).
+
+## Development baselines {#li-development-baselines}
+
+What "no change" looks like, measured at development.
+
+| Metric | Development value | Population |
+|---|---|---|
+| AUC | {{< var li.auc >}} (interval {{< var li.boot.auc.lo >}}–{{< var li.boot.auc.hi >}}) | held-out accounts |
+| Top-quintile lift | {{< var li.lift >}}× (interval {{< var li.boot.lift.lo >}}×–{{< var li.boot.lift.hi >}}×) | held-out accounts |
+| Best single input: AUC / lift | {{< var li.baseline.best.auc >}} / {{< var li.baseline.revenue.lift >}}× (`{{< var li.baseline.best.feature >}}`) | held-out accounts |
+| Base rate | {{< var li.base_rate_holdout >}} | held-out accounts |
+| Share above the threshold | {{< var li.thr.share_holdout >}} (intended {{< var li.thr.share_book >}}) | held-out accounts |
+| Observed / predicted among offers | {{< var li.offers_ho.ratio >}} on {{< var li.offers_ho.events >}} positives | held-out offers |
+| Observed / predicted above the threshold | {{< var li.thr_ho.ratio >}} on {{< var li.thr_ho.events >}} positives | held-out accounts above the threshold |
+| Offers | {{< var li.n_offered >}} ({{< var li.offer_share >}} of the book) | the book |
+| Funnel: probability, PD, amount, ROE | {{< var li.funnel.prob.n >}} / {{< var li.funnel.pd.n >}} / {{< var li.funnel.amount.n >}} / {{< var li.funnel.roe.n >}} | the book |
+| Threshold / PD ceiling | {{< var li.offer_threshold >}} / {{< var li.offer_max_pd >}} | quantiles over the whole book |
+| Offers' deterioration / default rate | {{< var li.offers.det.rate >}} / {{< var li.offers.default.rate >}}, against the book's {{< var li.book.det.rate >}} / {{< var li.book.default.rate >}} | offers (mostly training rows) and the book |
+| Offers High or Medium on Early Warning; with a non-utilisation trigger | {{< var li.offers.ews.high_or_medium.share >}}; {{< var li.offers.ews.non_util_trigger.share >}} (book {{< var li.book.ews.high_or_medium.share >}}; {{< var li.book.ews.non_util_trigger.share >}}) | offers and the book |
+| Committed amount / assumed exposure | \${{< var li.econ.amount_total >}} / \${{< var li.econ.exposure_total >}} | offers |
+| Aggregate incremental ROE | {{< var li.agg_roe >}} (lowest offer {{< var li.econ.roe_min >}}) | offers |
+
+## Redevelopment triggers {#li-redevelopment-triggers}
+
+Any one of these starts a redevelopment, with the validator informed:
+
+1. AUC or lift below its gate in two consecutive cohorts with matured outcomes.
+2. The model's lift not above the best single input's in two consecutive cohorts (finding 3).
+3. Observed / predicted among offers outside the tolerance in two consecutive cohorts, each
+   with at least {{< var monitoring.min_band_defaults >}} positives behind it. Below that count
+   a breach is recorded and watched, not acted on.
+4. A change to any input's definition or source — including any change to the scorecard,
+   which supplies the PD three times over ([8.2](data.qmd#li-score-input)), and to `MARKET`,
+   whose hurdle decides the fourth clause.
+
+A change to any value in `LINE_INCREASE` goes to the credit policy owner (proposed; to be
+named) rather than to redevelopment, after which [8.5](performance.qmd) and
+[8.6](sensitivity.qmd) are re-run.
+
+A redevelopment is where the open findings are acted on: cohort gates that can fail
+(finding 1), an out-of-fold threshold (finding 2), a lift gate against the best single input
+(finding 3), a measured drawdown (finding 5) and a defined label (finding 6). Every
+redevelopment re-runs [8.5](performance.qmd) and passes the gate.
+
+## What is automated today
+
+This plan is documented, not yet automated. The platform has one booked book and one draw of
+outcomes, so there is no new cohort to compare. What runs today is the development side:
+`python verify.py` recomputes the held-out AUC and lift and the cohort gates against its own
+copies of the gates ([8.9](gate.qmd)), and on `main` recomputes every fact on these pages —
+the funnel, the caps, the cohort's outcomes and Early Warning flags, the baselines, the unread
+configuration key — from the committed model and data on every run
+([D9](../d9-implementation.qmd)).

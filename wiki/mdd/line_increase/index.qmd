@@ -3,12 +3,63 @@ title: "D8 Line Increase"
 order: 0
 ---
 
-**Status: in progress.**
+**Status: complete.** All nine parts of the template are written.
 
-The chapter will cover the candidate model over the booked book; the amount rules in
-`shared.config.LINE_INCREASE` and the risk-appetite cut on the scorecard's PD; the
-incremental-ROE test against the {{< var market.roe_hurdle >}} hurdle; the difference
-between a borrower with a recommended amount and one who is *eligible* for an offer,
-which is the authority; the cohort checks in its gate; and monitoring.
+::: {.callout-note}
+## D8 at a glance
 
-The chapter follows the [template](../index.qmd#the-template); D4 is the worked example.
+- **The model gates:** held-out AUC {{< var li.auc >}} against a gate of
+  {{< var li.gate.auc_min >}} (interval {{< var li.boot.auc.lo >}}–{{< var li.boot.auc.hi >}}),
+  and top-quintile lift {{< var li.lift >}}× against {{< var li.gate.lift_min >}}×, on the
+  held-out {{< var li.test_share >}} of the booked book. Both met; the model gets
+  {{< var ceiling.li.share_of_reach >}} of the way to the data's ceiling and beats every single
+  input with a paired interval above zero ([8.5](performance.qmd)).
+- **An offer is `eligible`:** {{< var li.n_offered >}} accounts, {{< var li.offer_share >}} of
+  the book — not the {{< var li.n_amount_positive >}} with a positive recommended amount
+  ([8.1](purpose.qmd#li-funnel)).
+- **The cohort gates cannot fail:** {{< var li.cohort_gate.n_cannot_fail >}} of the
+  {{< var li.gate.n_gates >}} training gates — the aggregate ROE by construction, the PD and
+  utilisation comparisons on this book — so no gate tests whether the offers are good
+  (finding 1, [8.7](limitations.qmd)).
+- **Quote the held-out offers:** {{< var li.offers.n_train >}} of the offers are the model's
+  training rows; the held-out offers' label rate is {{< var li.offers_ho.observed >}}
+  against a predicted {{< var li.offers_ho.predicted >}}, within tolerance (finding 2).
+- **Offers and Early Warning:** by tier the offers are flagged less than the book; by trigger
+  more, mostly through the utilisation rules they are selected on; their deterioration rate,
+  {{< var li.offers.det.rate >}} against {{< var li.book.det.rate >}}, is not distinguishable
+  from the book's ([8.5](performance.qmd#li-ews)).
+- **Six open findings** the chapter raises about its own model, rules and gate
+  ([8.7](limitations.qmd)).
+:::
+
+Line Increase looks over the booked book and decides which accounts to offer more credit
+before they ask ([8.1](purpose.qmd)). It is a gradient-boosted model (LightGBM) on
+{{< var li.n_features >}} features of each account's on-book state, its origination file and
+the Business Credit Score's PD ([8.2](data.qmd)), followed by three rules: a ceiling on the
+scorecard's PD, amount rules that cap the increase three ways, and an incremental-ROE test
+that prices the increase with the pricing engine ([8.3](methodology.qmd)). It proposes offers
+for a credit officer to review and changes no limit by itself, which makes it Tier 2
+([D0](../d0-summary.qmd#risk-tiering)).
+
+{{< include ../../_generated/li-headline.md >}}
+
+The model figures are measured on the held-out {{< var li.test_share >}} of the
+{{< var li.n_book >}} booked accounts: {{< var li.n_test >}} accounts the model never saw while
+it was fitted, redrawn exactly as `line_increase/src/train.py` drew them
+([8.2](data.qmd#li-split)). Every number in the chapter is a named fact, recomputed through the
+module's own functions — the saved model on `compute_line_increase_features`,
+`recommended_amount`, `incremental_roe`, `candidates` and `segments` — by `python verify.py`;
+the [fact index](../../reference/facts.qmd) gives each one's source and population. The
+chapter documents the model, rules and gate as committed: it changes none of them.
+
+| § | Part | What it establishes |
+|---|---|---|
+| 8.1 | [Purpose and use](purpose.qmd) | the question, the four clauses of an offer and the funnel, the consumers, prohibited uses |
+| 8.2 | [Data and sample](data.qmd) | the booked book, the features, the label and how it is drawn, the split, leakage controls, the score as an input |
+| 8.3 | [Methodology and alternatives](methodology.qmd) | LightGBM; the threshold and the PD ceiling as quantiles; the three caps; the ROE test as the pricing test; alternatives |
+| 8.4 | [Assumptions](assumptions.qmd) | the drawdown and the ROE's invariance to it, the caps as policy, the quantiles as shares, the score, the label |
+| 8.5 | [Performance](performance.qmd) | AUC and lift with intervals; the ceiling; single-input baselines; held out against whole book; the cohort's outcomes; bands; economics; Early Warning |
+| 8.6 | [Sensitivity and stress](sensitivity.qmd) | every setting moved by {{< var li.sens.step >}}, and what was not run |
+| 8.7 | [Limitations and compensating controls](limitations.qmd) | six open findings, each with a control and an owner |
+| 8.8 | [Monitoring plan](monitoring.qmd) | ranking, calibration and outcomes among offers, the funnel, the caps, the settings |
+| 8.9 | [Gate record](gate.qmd) | the six gates, where they are asserted and recomputed, which can fail, history |

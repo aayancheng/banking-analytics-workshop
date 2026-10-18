@@ -1,0 +1,96 @@
+---
+title: "8.1 Purpose and use"
+order: 1
+---
+
+## The question it answers
+
+A small business that is using most of its credit line is either growing into it or running
+out of room. Proactive Line Increase asks which booked accounts the bank should **offer more
+credit before they ask**: accounts that are good for it, constrained by the limit they have,
+and profitable to lend more to. It is the bank's only module that adds exposure on its own
+initiative, which is why most of what it does is say no.
+
+Its target is `{{< var li.target >}}`: whether an account is a good candidate for an
+increase, as the generator defines it ([8.2](data.qmd#li-label)). The model ranks the book on
+that label; three rules then decide who is actually offered anything, and how much.
+
+## The output
+
+`score_population` (`line_increase/src/candidates.py`) scores every booked account and
+returns, for each:
+
+| Output | What it is |
+|---|---|
+| `prob` | the candidate model's probability of `{{< var li.target >}}`, rounded for display; eligibility is decided on the unrounded value |
+| `recommended_amount` | the increase the amount rules give: the lowest of three caps, floored at zero and rounded ([8.3](methodology.qmd#li-amount)) |
+| `incremental_ead`, `incremental_roe`, `incremental_net_income`, `clears_hurdle` | the increase priced by the pricing engine: its assumed drawn exposure, its return on equity, and whether that return clears the hurdle ([8.3](methodology.qmd#li-roe)) |
+| `eligible` | **the offer**: the probability is above the offer threshold, the scorecard's PD is within the risk appetite, the amount is positive, and the increment clears the hurdle — all four |
+| `top_shap_reasons` | the three features pushing the probability up most, by SHAP value |
+
+`candidates` ranks the `eligible` accounts by probability and returns them; `segments` rolls
+offers and incremental exposure up by score band and industry.
+
+**An offer is `eligible`, never a positive amount.** Over the booked book
+{{< var li.n_amount_positive >}} accounts have `recommended_amount > 0`, and
+{{< var li.n_offered >}} are eligible: {{< var li.amount_offer_ratio >}} accounts with an
+amount for every offer. `candidates()` is the authority, and every count of offers in this
+chapter is its count.
+
+### The funnel {#li-funnel}
+
+The four clauses, in the order `score_population` ANDs them, over the
+{{< var li.n_book >}} booked accounts:
+
+{{< include ../../_generated/li-funnel.md >}}
+
+![The offer funnel over the booked book: each clause of `eligible`, in order.](fig/offer-funnel.svg){#fig-offer-funnel}
+
+The model's threshold removes most of the book, the PD ceiling and the amount rules most of
+the rest, and the ROE test removes {{< var li.funnel.roe.dropped >}} of the
+{{< var li.funnel.amount.n >}} that remain. What survives is
+{{< var li.offer_share >}} of the book.
+
+## The population it is for
+
+The booked book: the {{< var li.n_book >}} accounts the bank lent to
+([D2](../d2-data.qmd#two-populations-applicants-and-booked)). An applicant has no on-book
+utilisation and no limit to raise. The model is trained and gated on a split of that same
+book, and the portal then scores the whole book, including the {{< var li.n_train >}} accounts
+the model was fitted on; what that does to the offers is finding 2 ([8.7](limitations.qmd)).
+
+## Who consumes it, and how
+
+Every consumer reads the batch `score_population` computes once at start-up (`app/main.py`).
+None re-implements a clause, a cap or the ROE test.
+
+| Consumer | What it takes |
+|---|---|
+| Portal (v1), `/api/line-increase/summary` | the cohort figures and held-out metrics recorded at training (`metadata.json`), the offer threshold, and `segments` over the scored book |
+| Portal (v1), `/api/line-increase/candidates` | `candidates` over the scored book, with the endpoint's own default length (`n: int = 25`, the top {{< var li.portal_n >}}); the v1 page requests the top {{< var li.page_n >}} (`app/static/index.html`) |
+| Portal (v1), `/api/line-increase/{business_id}` | one account's probability, eligibility, amount and incremental economics |
+| Portal (v1), `/api/dashboard/summary` and `/api/customer/{business_id}` | the number offered and the aggregate incremental ROE recorded at training; one account's eligibility, amount and incremental ROE in the customer-360 view, beside its Early Warning tier |
+| Loan workbench (v2), `/api/v2/loan/{business_id}/line-increase` | the three caps with the binding one marked, the steps from the lowest cap to the amount, the four clauses of `eligible` each with its value and threshold, and the increment's profit waterfall (`app/v2/line_increase.py`, `app/v2/li_amounts.py`) |
+| Loan workbench (v2), `/api/v2/loans?li_eligible=` | the batch verdict as a facet: the loan list filtered to offers (`app/v2/loans.py`) |
+
+The workbench explains the verdict; it never decides it. Its clauses are recomputed from the
+unrounded probability and PD so that the clause it marks as failing is the one that failed,
+and `eligible` is always the batch's ([8.9](gate.qmd#li-workbench)). There is no what-if for
+line increase: a reviewer cannot move a threshold or a cap and see the book re-scored.
+
+Line Increase reads the scorecard's PD ([8.2](data.qmd#li-score-input)) and the pricing
+engine ([8.3](methodology.qmd#li-roe)). It does not read Early Warning; the two meet only in
+the customer-360 view, where an offered account can carry an Early Warning tier and triggers
+([8.5](performance.qmd#li-ews)).
+
+## Prohibited uses
+
+| Use | Why it is prohibited |
+|---|---|
+| Counting accounts with a positive `recommended_amount` as offers | An offer is `eligible`; {{< var li.n_amount_not_offered >}} accounts with an amount are not offered. |
+| Quoting the offered cohort's label rate, or the candidates list's, as evidence of accuracy | Most offers, and almost all of the list the portal serves, are the model's training rows (finding 2, [8.7](limitations.qmd)). Quote the held-out figures in [8.5](performance.qmd). |
+| Reading the cohort gates as evidence that the offers are good | {{< var li.cohort_gate.n_cannot_fail >}} of the {{< var li.gate.n_gates >}} gates cannot fail on this book (finding 1). |
+| Reading `incremental_ead` as the exposure the bank commits | It assumes the increase is drawn at today's utilisation; the committed increase is larger (finding 5). |
+| Raising a limit without a credit officer's review | The output is an offer list to review, not an approval; it was not validated as a credit decision. |
+| Changing `LINE_INCREASE["roe_hurdle"]` to change the hurdle | The module never reads it (finding 4). |
+| Any decision about a real business or a real book | The model was fitted to synthetic data, and its label has no real-world definition yet (finding 6; [D1](../d1-purpose.qmd#prohibited-uses)). |

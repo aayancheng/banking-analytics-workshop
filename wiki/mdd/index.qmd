@@ -25,10 +25,14 @@ OSFI E-23 (Canada) and PRA SS1/23 (UK).
 | D5 | [Loan Adjudication](adjudication/index.qmd) | complete |
 | D6 | [Pricing](pricing/index.qmd) | complete |
 | D7 | [Early Warning](ews/index.qmd) | complete |
-| D8 | [Line Increase](line_increase/index.qmd) | in progress |
+| D8 | [Line Increase](line_increase/index.qmd) | complete |
 | D9 | [Implementation and change control](d9-implementation.qmd) | drafted |
 | D10 | [Use of AI agents in development](d10-agents.qmd) | drafted |
 | D11 | Validation sign-off | in the validation PDF only |
+
+All five module chapters, D4 to D8, are complete: each has the nine parts of the template
+and its own open findings, carried word for word into D11. The platform chapters D0 to D3,
+D9 and D10 are drafted.
 
 ## The template
 

@@ -57,7 +57,10 @@ website:
           href: mdd/ews/index.qmd
           contents:
             - auto: "mdd/ews/*.qmd"
-        - mdd/line_increase/index.qmd
+        - section: "D8 Line Increase"
+          href: mdd/line_increase/index.qmd
+          contents:
+            - auto: "mdd/line_increase/*.qmd"
         - mdd/d9-implementation.qmd
         - mdd/d10-agents.qmd
     - id: explain
