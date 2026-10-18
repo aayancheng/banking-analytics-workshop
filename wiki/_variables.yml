@@ -345,40 +345,40 @@ ews:
     pr_auc_min: "the base rate"
   importance:
     gain:
-      1:
+      pd_score_rank: "13"
+      top1:
         feature: "leverage"
         share: "9.3%"
-      2:
+      top2:
         feature: "current_ratio"
         share: "7.1%"
-      3:
+      top3:
         feature: "dscr"
         share: "7.0%"
-      4:
+      top4:
         feature: "deposit_decline_pct"
         share: "6.9%"
-      5:
+      top5:
         feature: "deposit_recent"
         share: "6.8%"
-      pd_score_rank: "13"
     score_gain_share: "9.0%"
     split:
-      1:
+      pd_score_rank: "14"
+      top1:
         feature: "current_ratio"
         share: "7.8%"
-      2:
+      top2:
         feature: "deposit_decline_pct"
         share: "7.5%"
-      3:
+      top3:
         feature: "dscr"
         share: "7.4%"
-      4:
+      top4:
         feature: "deposit_recent"
         share: "7.3%"
-      5:
+      top5:
         feature: "util_volatility"
         share: "7.1%"
-      pd_score_rank: "14"
     top_n: "5"
   lift: "2.16"
   model:
@@ -574,6 +574,16 @@ ews:
     n_holdout: "2"
     n_train: "98"
     no_trigger_n: "1"
+    page:
+      events: "10"
+      n: "10"
+      n_train: "10"
+      rate: "100.0%"
+    portal:
+      events: "25"
+      n: "25"
+      n_train: "25"
+      rate: "100.0%"
     rate: "99.0%"
     top_n_default: "100"
   whole:

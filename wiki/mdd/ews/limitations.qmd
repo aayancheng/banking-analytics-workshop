@@ -3,15 +3,18 @@ title: "7.7 Limitations and compensating controls"
 order: 7
 ---
 
-The chapter raises seven open findings about its own model, tiers and triggers. Each has
+The chapter raises eight open findings about its own model, tiers and triggers. Each has
 evidence drawn from the facts or the code, a compensating control and an owner. The same
-seven, in the same words, are D7's open findings in the validation sign-off (D11, in the
+eight, in the same words, are D7's open findings in the validation sign-off (D11, in the
 validation PDF). The model, the tiers and the triggers are not changed by this chapter: it
 documents them as committed.
 
-One thing is deliberately **not** a finding: that the model's AUC is low. It sits a hair
-below the strongest model the observable columns support, and the data's noise puts that
-limit where it is ([7.5](performance.qmd#ews-ceiling)). Gating on top-decile capture, with
+One thing is deliberately **not** a finding: that the model's AUC is low. It is
+indistinguishable from a reference LightGBM, configured as the committed one and given every
+observable column, and even the generator's noise-free logit reaches only
+{{< var ceiling.ews.latent_holdout >}} on the same accounts ([7.5](performance.qmd#ews-ceiling)).
+That does not show that no better model exists; it shows the data's noise puts a low ceiling on
+any ranking. Gating on top-decile capture, with
 AUC reported against the ceiling, is the design answer to that, not a weakness of it
 ([7.9](gate.qmd)). The findings are about what the platform does with the model's output,
 and how firmly the gate it does have is met.
@@ -19,12 +22,13 @@ and how firmly the gate it does have is met.
 | # | Finding | Evidence | Compensating control | Owner | Status |
 |--|--------------|----------------|------------------|-------|------|
 | 1 | The tier cutoffs are quantiles of in-sample probabilities, so on accounts the model has not seen the High tier holds far fewer accounts than it was set for and captures little. | `t_high` and `t_med` are the {{< var ews.q_high >}} and {{< var ews.q_med >}} quantiles over all {{< var ews.n_book >}} booked accounts, {{< var ews.n_train >}} of them training rows (training AUC {{< var ews.train.auc >}}). The book is {{< var ews.tier.High.share >}} High by construction; the held-out accounts are {{< var ews.tier_ho.High.share >}} High ({{< var ews.tier_ho.High.n >}} accounts), and the High tier catches {{< var ews.tier_ho.High.recall >}} of held-out deteriorations. PSI between the two tier mixes {{< var ews.tier_ho.psi_vs_book >}}. | At the next retrain, set the cutoffs from out-of-sample probabilities (cross-validated predictions on the training rows) and confirm the mix on the held-out accounts; until then, plan review capacity from the held-out mix, never from the book's tier counts, and monitor the tier mix of each new cohort against the intended one. | Model developer | open |
-| 2 | The whole-book capture and AUC, and the portal's default watchlist, are in-sample and must never be quoted as performance. | Over the whole book, capture {{< var ews.whole.capture >}} and AUC {{< var ews.whole.auc >}}, against {{< var ews.capture >}} and {{< var ews.auc >}} held out; {{< var ews.n_train >}} of the {{< var ews.n_book >}} accounts are training rows. The default watchlist of {{< var ews.watchlist.n >}} holds {{< var ews.watchlist.n_train >}} training rows and {{< var ews.watchlist.n_holdout >}} held-out accounts; its deterioration rate, {{< var ews.watchlist.rate >}}, is the model remembering its training labels. | Quote held-out figures only (the portal's summary does; the facts label every whole-book figure in-sample); at the next retrain, score the book's training accounts with out-of-fold probabilities, so that the watchlist and tier counts on the existing book are out-of-sample; until then, read the watchlist as a list to review, never as evidence of accuracy. | Model developer, with the portal owner (proposed; to be named) | open |
-| 3 | The capture gate is met narrowly: a quarter of bootstrap resamples fall below it. | {{< var ews.capture_events >}} of {{< var ews.n_events_holdout >}} held-out deteriorations in the top decile, where the gate needs {{< var ews.gate.capture_events_needed >}}: a margin of {{< var ews.gate.capture_events_margin >}} accounts. Bootstrap 95% interval {{< var ews.boot.capture.lo >}}–{{< var ews.boot.capture.hi >}} against the {{< var ews.gate.capture_min >}} gate; {{< var ews.boot.capture_below_gate >}} of {{< var ews.boot.n >}} resamples below it. | Report the interval and the margin beside the gate on every run (the facts do); in monitoring, treat one cohort below the gate as a review and two consecutive as a redevelopment trigger; at redevelopment, estimate capture over repeated splits rather than one. The gate itself is not changed. | Model developer | open |
+| 2 | The whole-book capture and AUC, and the module's default watchlist, are in-sample and must never be quoted as performance. | Over the whole book, capture {{< var ews.whole.capture >}} and AUC {{< var ews.whole.auc >}}, against {{< var ews.capture >}} and {{< var ews.auc >}} held out; {{< var ews.n_train >}} of the {{< var ews.n_book >}} accounts are training rows. The module's default watchlist of {{< var ews.watchlist.n >}} holds {{< var ews.watchlist.n_train >}} training rows and {{< var ews.watchlist.n_holdout >}} held-out accounts; its deterioration rate, {{< var ews.watchlist.rate >}}, is the model remembering its training labels. The portal serves the top {{< var ews.watchlist.portal.n >}} of the same ranking and the v1 page shows {{< var ews.watchlist.page.n >}}: all training rows ({{< var ews.watchlist.portal.n_train >}} and {{< var ews.watchlist.page.n_train >}}), with deterioration rates of {{< var ews.watchlist.portal.rate >}} and {{< var ews.watchlist.page.rate >}}. | Quote held-out figures only (the portal's summary does; the facts label every whole-book figure in-sample); at the next retrain, score the book's training accounts with out-of-fold probabilities, so that the watchlist and tier counts on the existing book are out-of-sample; until then, read the watchlist as a list to review, never as evidence of accuracy. | Model developer, with the portal owner (proposed; to be named) | open |
+| 3 | The capture gate is met narrowly: about a quarter of bootstrap resamples fall below it. | {{< var ews.capture_events >}} of {{< var ews.n_events_holdout >}} held-out deteriorations in the top decile, where the gate needs {{< var ews.gate.capture_events_needed >}}: a margin of {{< var ews.gate.capture_events_margin >}} accounts. Bootstrap 95% interval {{< var ews.boot.capture.lo >}}–{{< var ews.boot.capture.hi >}} against the {{< var ews.gate.capture_min >}} gate; {{< var ews.boot.capture_below_gate >}} of {{< var ews.boot.n >}} resamples below it, with the model held fixed. The level was re-specified before the first commit, with results in view (7.9). | Report the interval and the margin beside the gate on every run (the facts do); in monitoring, treat one cohort below the gate as a review and two consecutive as a redevelopment trigger; at redevelopment, estimate capture over repeated splits rather than one. The gate itself is not changed. | Model developer | open |
 | 4 | On AUC, the model is not distinguishable from the scorecard's PD alone. | Held-out AUC {{< var ews.auc >}} against {{< var ews.pd_score.auc >}} for `pd_score` alone; paired difference {{< var ews.pd_score.diff >}}, 95% interval {{< var ews.pd_score.diff_lo >}} to {{< var ews.pd_score.diff_hi >}}, which contains zero. `pd_score` alone captures {{< var ews.pd_score.capture >}}, below the gate — one measurement, with no paired interval. | Report the benchmark on every run (the facts do); at redevelopment, compare capture and AUC against `pd_score` with paired intervals and refit without the score, before keeping the behavioural model; until then, make no claim that the model ranks better than the score alone. | Model developer | open |
 | 5 | The Low tier under-predicts deterioration on the held-out accounts. | Observed {{< var ews.tier_ho.Low.observed >}} against a mean probability of {{< var ews.tier_ho.Low.predicted >}}: observed / predicted {{< var ews.tier_ho.Low.ratio >}} on {{< var ews.tier_ho.Low.events >}} deteriorations, outside the {{< var monitoring.ratio_lo >}}–{{< var monitoring.ratio_hi >}} tolerance (the monitoring floor is {{< var monitoring.min_band_defaults >}}). The Low tier holds {{< var ews.tier_ho.Low.recall >}} of held-out deteriorations. | Calibrate the probability at the next retrain on rows the trees were not fitted on; until then, never read `prob` as a deterioration rate, and monitor observed / predicted by tier on each cohort against the floor. | Model developer | open |
-| 6 | The `DELINQUENCY` trigger's configured clause can never fire on this data; the trigger is in effect a hard-coded "any days past due". | `dpd_max >=` {{< var ews.trigger.delinquency.clause.dpd_max.threshold >}} (`EWS_TRIGGERS["{{< var ews.trigger.delinquency.clause.dpd_max.config_key >}}"]`) fires by itself on {{< var ews.trigger.delinquency.clause.dpd_max.n_alone >}} accounts: `dpd_max` peaks at {{< var ews.trigger.delinquency.clause.dpd_max.feature_max >}}. All {{< var ews.trigger.delinquency.n >}} flags ({{< var ews.trigger.delinquency.share >}} of the book) come from `dpd_recent >` {{< var ews.trigger.delinquency.clause.dpd_recent.threshold >}}, a threshold written in `triggers.py`, not in the configuration. The only unit test of the trigger exercises the dead clause. | At the next policy review, restate the severe-delinquency threshold on this data's scale or remove it, move the `dpd_recent` threshold into `EWS_TRIGGERS`, and add a unit test in which `dpd_recent` alone fires; until then, the facts count every clause's firings alone on each `verify.py` run, and monitoring flags any clause that fires on no account. | Monitoring policy owner (proposed; to be named), with the model developer | open |
-| 7 | The triggers barely beat the base rate and together fire on most of the book. | Any trigger on {{< var ews.trigger.any.share >}} of the book; a flagged held-out account deteriorates at {{< var ews.trigger.any.precision >}} against a base rate of {{< var ews.base_rate >}}. Single-trigger lifts over the base rate run from {{< var ews.trigger.delinquency.lift >}}× to {{< var ews.trigger.high_utilization.lift >}}×, against {{< var ews.tier_ho.High.lift >}}× for the High tier; `DELINQUENCY` alone fires on {{< var ews.trigger.delinquency.share >}} of the book. | At the next policy review, re-set each threshold against this book's distribution with a stated precision or lift target, from a threshold sweep (not yet run, 7.6); until then, present triggers as reasons attached to a tier, never as a standalone alert list, and monitor each trigger's fire rate and precision. | Monitoring policy owner (proposed; to be named) | open |
+| 6 | The `DELINQUENCY` trigger's configured clause can never fire on this data; the trigger is in effect a hard-coded "any days past due". | `dpd_max >=` {{< var ews.trigger.delinquency.clause.dpd_max.threshold >}} (`EWS_TRIGGERS["{{< var ews.trigger.delinquency.clause.dpd_max.config_key >}}"]`) fires by itself on {{< var ews.trigger.delinquency.clause.dpd_max.n_alone >}} accounts: `dpd_max` peaks at {{< var ews.trigger.delinquency.clause.dpd_max.feature_max >}}. All {{< var ews.trigger.delinquency.n >}} flags ({{< var ews.trigger.delinquency.share >}} of the book) come from `dpd_recent >` {{< var ews.trigger.delinquency.clause.dpd_recent.threshold >}}, a clause that appears in `shared/config.py` only in a comment: its threshold is written in `triggers.py`, is not a key, and no configuration can change it. The only unit test of the trigger exercises the dead clause. | At the next policy review, restate the severe-delinquency threshold on this data's scale or remove it, move the `dpd_recent` threshold into `EWS_TRIGGERS`, and add a unit test in which `dpd_recent` alone fires; until then, the facts count every clause's firings alone on each `verify.py` run, and monitoring flags any clause that fires on no account. | Monitoring policy owner (proposed; to be named), with the model developer | open |
+| 7 | The triggers beat the base rate only modestly and together fire on most of the book. | Any trigger on {{< var ews.trigger.any.share >}} of the book; a flagged held-out account deteriorates at {{< var ews.trigger.any.precision >}} against a base rate of {{< var ews.base_rate >}}. Single-trigger lifts over the base rate run from {{< var ews.trigger.delinquency.lift >}}× to {{< var ews.trigger.high_utilization.lift >}}×: all below {{< var ews.gate.lift_min >}}×, against {{< var ews.tier_ho.High.lift >}}× for the High tier; `DELINQUENCY` alone fires on {{< var ews.trigger.delinquency.share >}} of the book. | At the next policy review, re-set each threshold against this book's distribution with a stated precision or lift target, from a threshold sweep (not yet run, 7.6); until then, present triggers as reasons attached to a tier, never as a standalone alert list, and monitor each trigger's fire rate and precision. | Monitoring policy owner (proposed; to be named) | open |
+| 8 | The label is drawn over the same months as the features, so the model's lead time — its stated purpose — is unmeasured. | The generator draws `{{< var ews.target >}}` from the true PD, utilisation over the panel's last quarter, the rise in utilisation over the panel and leverage, with no later period; `util_recent`, `utilization_onbook` and `util_drift` measure the same quantities. Train and held-out are random splits of one cohort, so no out-of-time sample exists. | Before any claim that the model warns ahead of a missed payment, measure capture out of time on the first cohort whose outcomes mature after its features were taken; until then, treat every performance figure as same-window classification, never as lead time. | Model developer | open |
 
 ## Finding 1 — The tier cutoffs are set on in-sample probabilities {#ews-finding-1}
 
@@ -66,21 +70,33 @@ accounts before use. Until then, plan review capacity from the held-out mix in
 cohort's tier mix against the intended one ([7.8](monitoring.qmd)). **Owner:** model
 developer.
 
+Findings 1 and 2 share a cause — the model scores the book it was fitted on — and a retrain
+control, out-of-fold probabilities. They are kept apart because they reach different consumers
+and need different interim controls: the tiers are a policy parameter that sizes the review
+workload, whereas the whole-book figures and the watchlist are numbers people quote
+([finding 2](#ews-finding-2)).
+
 ## Finding 2 — The whole-book figures and the watchlist are in-sample {#ews-finding-2}
 
-**Finding.** The portal scores the whole booked book with the model fitted on most of it.
+**Finding.** The portal scores the whole booked book with the model fitted on most of it (the
+same cause as [finding 1](#ews-finding-1), split from it for the reason given there).
 Every whole-book figure — capture, AUC, the tier counts, the watchlist and its hit rate — is
 therefore largely the model grading its own training rows.
 
 **Evidence.** Over the whole book, capture {{< var ews.whole.capture >}} (lift
 {{< var ews.whole.lift >}}×) and AUC {{< var ews.whole.auc >}}; on the held-out accounts,
 {{< var ews.capture >}} and {{< var ews.auc >}} ([7.5](performance.qmd#ews-held-out-vs-whole-book)).
-`watchlist`, with its default length of {{< var ews.watchlist.top_n_default >}}, returns
-{{< var ews.watchlist.n_train >}} training rows and {{< var ews.watchlist.n_holdout >}}
-held-out accounts; {{< var ews.watchlist.events >}} of the {{< var ews.watchlist.n >}}
-deteriorate ({{< var ews.watchlist.rate >}}). Of the {{< var ews.watchlist.n_holdout >}}
-held-out members, {{< var ews.watchlist.holdout_events >}} deteriorates — too few to measure
-anything. The portal's `/api/ews/summary` quotes the held-out metrics recorded at training,
+The module's default watchlist of {{< var ews.watchlist.top_n_default >}} (the portal serves the
+top {{< var ews.watchlist.portal.n >}} of the same ranking; the v1 page shows
+{{< var ews.watchlist.page.n >}}) holds {{< var ews.watchlist.n_train >}} training rows and
+{{< var ews.watchlist.n_holdout >}} held-out accounts; {{< var ews.watchlist.events >}} of the
+{{< var ews.watchlist.n >}} deteriorate ({{< var ews.watchlist.rate >}}). Of the
+{{< var ews.watchlist.n_holdout >}} held-out members, {{< var ews.watchlist.holdout_events >}}
+deteriorates — too few to measure anything. What the portal actually serves is wholly
+in-sample: the top {{< var ews.watchlist.portal.n >}} are {{< var ews.watchlist.portal.n_train >}}
+training rows with a deterioration rate of {{< var ews.watchlist.portal.rate >}}, and the top
+{{< var ews.watchlist.page.n >}} the v1 page shows are {{< var ews.watchlist.page.n_train >}}
+training rows at {{< var ews.watchlist.page.rate >}}. The portal's `/api/ews/summary` quotes the held-out metrics recorded at training,
 which is right, beside tier counts over the whole book.
 
 **Impact.** The watchlist's hit rate is the most visible in-sample number on the platform and
@@ -101,7 +117,7 @@ model developer, with the portal owner (proposed; to be named).
 ## Finding 3 — The capture gate is met narrowly {#ews-finding-3}
 
 **Finding.** The model clears its binding gate by a handful of accounts, and on resampling the
-held-out accounts a quarter of the time it would not.
+held-out accounts about a quarter of the time it would not.
 
 **Evidence.** On the held-out accounts ([7.5](performance.qmd#how-firm-each-result-is)): the
 top decile holds {{< var ews.capture_events >}} of the {{< var ews.n_events_holdout >}}
@@ -111,7 +127,7 @@ percentage points. The bootstrap 95% interval, {{< var ews.boot.capture.lo >}} t
 {{< var ews.boot.capture.hi >}}, contains the {{< var ews.gate.capture_min >}} gate, and
 {{< var ews.boot.capture_below_gate >}} of {{< var ews.boot.n >}} resamples fall below it.
 
-The gate was also set at development, with the model's performance in view. The design brief
+The gate was also set at development, with the model's performance in view. The master spec
 asked for more; `ews/docs/enhancement_notes.md` records what it asked for and why it was not
 kept:
 
@@ -123,14 +139,18 @@ rate**, with AUC reported (not gated).
 
 The ceiling bears that out: on the held-out accounts even the generator's noise-free logit
 reaches AUC {{< var ceiling.ews.latent_holdout >}} and captures
-{{< var ceiling.ews.latent_capture_holdout >}}, below both of the brief's targets
-([7.5](performance.qmd#ews-ceiling)). Setting the gate where the data allows was right; it
-also means the committed gate sits close to what the committed model achieved.
+{{< var ceiling.ews.latent_capture_holdout >}}, below both of the master spec's targets
+([7.5](performance.qmd#ews-ceiling)). Re-specifying was necessary; the level is not derived from
+the ceiling and sits close to what the model achieved, which is why the narrow margin is a
+finding. The record names no approver or date for the decision ([7.9](gate.qmd#history)).
 
 **Impact.** The gate's verdict is sensitive to the sample. A retrain on a fresh draw of the
 same book, or the first cohorts in monitoring, could fall below the gate with nothing wrong
 with the model, and a single-cohort breach rule would then fire on noise. Conversely, the
-pass is not strong evidence that the model would pass again. The PR-AUC gate, which is met
+pass is not strong evidence that the model would pass again. The bootstrap understates the
+spread: it resamples the held-out rows with the model held fixed, so the variation from drawing
+a different split and refitting the model is not in the {{< var ews.boot.capture_below_gate >}}.
+The PR-AUC gate, which is met
 firmly, does not compensate: it asks only for a ranking better than none
 ([7.7](limitations.qmd#ews-observations)).
 
@@ -229,9 +249,12 @@ that never fires and not the one that always does. The workbench shows a slider 
 `dpd_severe` ([7.6](sensitivity.qmd#trigger-thresholds)); moving it anywhere above the data's
 maximum changes nothing.
 
-**Impact.** An untested control and an unconfigurable one in the same rule. A reviewer reading
-`EWS_TRIGGERS` would take delinquency to be flagged at a month past due; on this data it is
-flagged at a day, on half the book, and changing the configuration cannot change that. The
+**Impact.** An untested control and an unconfigurable one in the same rule. The live clause is
+not hidden — `shared/config.py` mentions it in a comment beside `dpd_severe`, and the workbench
+shows both clauses — but it appears there only in a comment: its threshold is not a key in
+`EWS_TRIGGERS`, and no configuration can change it. A reviewer adjusting the configuration can
+move only the clause that never fires; on this data delinquency is flagged at a day past due,
+on half the book. The
 trigger loses most of its meaning as a warning sign, which finding 7 measures.
 
 **Compensating control.** At the next policy review, restate the severe-delinquency threshold
@@ -243,9 +266,9 @@ plan flags any clause that fires on no account ([7.8](monitoring.qmd#ews-trigger
 **Owner:** monitoring policy owner (proposed; to be named), with the model developer for the
 code.
 
-## Finding 7 — The triggers barely beat the base rate and fire on most of the book {#ews-finding-7}
+## Finding 7 — The triggers beat the base rate only modestly and fire on most of the book {#ews-finding-7}
 
-**Finding.** Each trigger flags accounts that deteriorate only a little more often than
+**Finding.** Each trigger flags accounts that deteriorate only modestly more often than
 average, and together they flag most of the book. As an alert, a trigger carries little
 information; as a reason attached to a tier, it still names something real.
 
@@ -255,7 +278,8 @@ base rate of {{< var ews.base_rate >}}:
 - precision from {{< var ews.trigger.delinquency.precision >}} (`DELINQUENCY`, lift
   {{< var ews.trigger.delinquency.lift >}}×) to {{< var ews.trigger.high_utilization.precision >}}
   (`HIGH_UTILIZATION`, lift {{< var ews.trigger.high_utilization.lift >}}×) on the held-out
-  accounts, against {{< var ews.tier_ho.High.lift >}}× for the High tier;
+  accounts — all below {{< var ews.gate.lift_min >}}×, against {{< var ews.tier_ho.High.lift >}}×
+  for the High tier;
 - any trigger fires on {{< var ews.trigger.any.n >}} accounts, {{< var ews.trigger.any.share >}}
   of the book; a flagged held-out account deteriorates at {{< var ews.trigger.any.precision >}},
   an unflagged one at {{< var ews.trigger.none.rate >}};
@@ -276,6 +300,34 @@ the portal and the workbench show them — never as a standalone alert list, and
 trigger's fire rate and precision ([7.8](monitoring.qmd#ews-trigger-monitoring)).
 **Owner:** monitoring policy owner (proposed; to be named).
 
+## Finding 8 — The label shares the features' window, so lead time is unmeasured {#ews-finding-8}
+
+**Finding.** Early Warning exists to warn before trouble shows — before a missed payment
+([7.1](purpose.qmd)). On this data the label is drawn over the same months the features
+summarise, so how far ahead the model warns has never been measured.
+
+**Evidence.** The generator draws `{{< var ews.target >}}` once, from the true PD, utilisation
+over the panel's last quarter, the rise in utilisation from the panel's first month to its last,
+and leverage ([7.2](data.qmd#ews-label)); there is no period after the panel. Several features
+measure the label's own drivers over the same months: `util_recent` and `utilization_onbook` are
+the recent utilisation, and `util_drift` measures the same rise. Train and held-out are random
+splits of one cohort, so there is no out-of-time sample either — the same gap D4 finding 1
+records for the scorecard ([7.4](assumptions.qmd#ews-the-label-looks-forward)).
+
+**Impact.** Every performance figure in [7.5](performance.qmd) measures same-window
+classification, not early warning. On a real book the label would come after the features, part
+of the behaviour driving it would happen in that gap, and capture across a real horizon would
+plausibly be lower; it is not measured. A claim that the model gives a review team months of
+notice rests on nothing in this chapter. This is a property of the synthetic data, not a defect
+in the code, but it goes to the model's stated purpose, so it is a finding, as D4's equivalent
+is.
+
+**Compensating control.** Before any claim of lead time, measure capture out of time on the
+first cohort whose outcomes mature after its features were taken; the monitoring plan's first
+capture reading is that test ([7.8](monitoring.qmd)). Until then, treat every figure as
+same-window classification, and never claim that the model warns ahead of a missed payment (a
+prohibited use, [7.1](purpose.qmd#prohibited-uses)). **Owner:** model developer.
+
 ## Observations {#ews-observations}
 
 Recorded but not raised as findings. Each is a design choice stated here so it can be
@@ -284,11 +336,11 @@ above.
 
 | Observation | Evidence | Why not a finding | Action |
 |---|---|---|---|
-| AUC is low in absolute terms | Held-out AUC {{< var ews.auc >}}; the oracle model on every observable column reaches {{< var ceiling.ews.oracle_model.auc >}} on the same accounts, and the noise-free logit {{< var ceiling.ews.latent_holdout >}} ([7.5](performance.qmd#ews-ceiling)) | The model is at the limit the observable columns support; the data's noise sets it. Gating on capture with AUC reported is the design answer ([7.9](gate.qmd)) | Keep reporting AUC beside the ceiling on every run; never compare it with an origination model's AUC |
+| AUC is low in absolute terms | Held-out AUC {{< var ews.auc >}}; a reference LightGBM, configured as the committed one and given every observable column, reaches {{< var ceiling.ews.oracle_model.auc >}} on the same accounts, and the noise-free logit {{< var ceiling.ews.latent_holdout >}} ([7.5](performance.qmd#ews-ceiling)) | The model is indistinguishable from the reference model, and even the noise-free logit is low: the data's noise caps any ranking. That does not show no better model exists. Gating on capture with AUC reported is the design answer ([7.9](gate.qmd)) | Keep reporting AUC beside the ceiling on every run; never compare it with an origination model's AUC |
 | The PR-AUC gate asks only for a ranking better than none | A ranking without information scores about the base rate; the gate is PR-AUC above the base rate, met by {{< var ews.pr_auc_over_base >}} times, with {{< var ews.boot.pr_auc_at_or_below_base >}} of resamples at or below it ([7.5](performance.qmd#how-firm-each-result-is)) | Firmly met; capture is the binding gate | Report PR-AUC as a multiple of the base rate, so a fall shows before the gate fails |
 | Some High-tier accounts carry no trigger | {{< var ews.overlap.high_no_trigger.n >}} of the {{< var ews.tier.High.n >}} High-tier accounts on the book; {{< var ews.overlap.high_no_trigger_ho.n >}} among the held-out ([7.5](performance.qmd#ews-tiers-and-triggers)) | The layers are independent by design; those accounts still carry SHAP reasons in the v1 account view and the workbench | Review them on their SHAP reasons and history; count them in monitoring |
-| The label is drawn from the same months as the features | The generator draws deterioration from recent utilisation, its trend, leverage and the true PD, with no later period ([7.4](assumptions.qmd#ews-the-label-looks-forward)); train and held-out are random splits of one cohort | A property of the synthetic data, not of the model, and the same gap D4 finding 1 records; no control inside the model can change it | Measure capture on each new cohort with matured outcomes: the first out-of-time test ([7.8](monitoring.qmd)) |
 | Two features are structural zeros for this target | `industry` and `entity_type` play no part in how the generator draws deterioration; neither is in the top {{< var ews.importance.top_n >}} by gain ([7.3](methodology.qmd#ews-importance)) | Present but inert, as in D4 (D4 finding 3) | Remove at the next redevelopment |
-| A missing panel reads as a quiet account | Missing features become zero in `compute_ews_features`; zero fires no trigger ([7.6](sensitivity.qmd#reduced-input-refits-not-run)) | The generated data have a full history for every account | Refer an account with missing history to a reviewer in any production use, rather than score it |
+| A missing panel fires no trigger | Missing features become zero in `compute_ews_features`; with the committed thresholds zero fires no trigger; the model's probability for such an account is not computed ([7.6](sensitivity.qmd#reduced-input-refits-not-run)) | The generated data have a full history for every account | Refer an account with missing history to a reviewer in any production use, rather than score it |
 | No leakage test of Early Warning's features in the test suite | `tests/test_leakage.py` checks the scorecard and adjudication only ([7.2](data.qmd#leakage-controls)) | The deny-list is enforced on every feature build and at training, so every `verify.py` run checks it | Add the test at the next change to `ews/` |
 | `pd_score` is in-sample for the scorecard on most booked accounts | The scorecard's training rows were drawn from all applicants, without regard to booking ([7.2](data.qmd#ews-score-input)) | Fitted on a different label by a binned additive model with little room to memorise; small, and not measured | Measure with out-of-fold scores at the next redevelopment of either model |
+| No check ties the panel cache to `panel.parquet` | `verify.py`, the portal and the facts score the model on the committed `ews/models/panel_features.parquet`; nothing re-aggregates `panel.parquet` and compares ([7.9](gate.qmd#where-they-are-recomputed-independently)) | The cache is a committed artifact, so any change to it shows in a commit's diff | Add a check that re-aggregates the panel and compares it with the cache, under `verify.py --full`, at the next change to `ews/` |

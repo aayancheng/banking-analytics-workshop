@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 
 from shared.config import ROOT
 from wiki.facts import (adj_facts, ceiling, ews_facts, figures, policy, pricing_facts,
@@ -27,6 +28,7 @@ FIG_DIR = WIKI / "mdd" / "score" / "fig"
 PRICING_FIG_DIR = WIKI / "mdd" / "pricing" / "fig"
 EWS_FIG_DIR = WIKI / "mdd" / "ews" / "fig"
 FACT_INDEX = WIKI / "reference" / "facts.qmd"
+KEY_SEGMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")   # also enforced by wiki/tools/lint.py
 SLOW_PREFIXES = ("score.stress.", "ceiling.ews.oracle_model.")
 
 
@@ -59,6 +61,9 @@ def main(argv: list[str] | None = None) -> None:
     missing = [p for p in SLOW_PREFIXES if not any(k.startswith(p) for k in facts)]
     if missing:
         raise SystemExit(f"No cached slow refits for {missing} yet. Run once: make wiki-facts-full")
+    bad = [k for k in facts if not all(KEY_SEGMENT.match(seg) for seg in k.split("."))]
+    if bad:   # Quarto's {{< var >}} cannot address a segment like "1" (a YAML integer key)
+        raise SystemExit(f"Fact keys Quarto cannot print, rename them: {bad}")
     dump_facts(facts, FACTS_JSON)
     text = {k: f.text() for k, f in facts.items()}
     tables.write_all(text, load_facts(FACTS_JSON), WIKI)

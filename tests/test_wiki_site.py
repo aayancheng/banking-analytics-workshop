@@ -89,7 +89,7 @@ def test_signoff_open_findings_are_d6_limitations_word_for_word():
 
 def test_signoff_lists_every_finding_row_once():
     text = (WIKI / "mdd" / "d11-signoff.qmd").read_text()
-    assert len(_finding_rows(text)) == 6 + 6 + 5 + 7
+    assert len(_finding_rows(text)) == 6 + 6 + 5 + 8
 
 
 def test_d5_has_an_index_and_the_nine_parts_in_order():
@@ -352,7 +352,7 @@ def test_d6_aaa_calibration_miss_reads_as_noise():
 
 def test_signoff_open_findings_are_d7_limitations_word_for_word():
     d11 = _finding_rows(_signoff_section("D7"))
-    assert len(d11) == 7
+    assert len(d11) == 8
     assert d11 == _finding_rows((WIKI / "mdd" / "ews" / "limitations.qmd").read_text())
 
 
@@ -425,10 +425,10 @@ def test_d7_prose_conclusions_hold_on_the_facts():
     assert _num(f["ews.pd_score.diff_lo"]) < 0 < _num(f["ews.pd_score.diff_hi"])
     assert _num(f["ews.pd_score.capture"]) < gate
     # importance: no feature dominates; pd_score not in the top five by gain or split
-    assert _num(f["ews.importance.gain.1.share"]) < 15
+    assert _num(f["ews.importance.gain.top1.share"]) < 15
     assert _num(f["ews.importance.gain.pd_score_rank"]) > 5
     assert _num(f["ews.importance.split.pd_score_rank"]) > 5
-    gain_top = {f[f"ews.importance.gain.{i}.feature"] for i in range(1, 6)}
+    gain_top = {f[f"ews.importance.gain.top{i}.feature"] for i in range(1, 6)}
     assert not gain_top & {"industry", "entity_type", "pd_score", "business_score"}
     # whole book far stronger than held out ("severalfold", finding 2)
     assert _num(f["ews.whole.capture"]) > 2 * _num(f["ews.capture"])
@@ -448,6 +448,17 @@ def test_d7_prose_conclusions_hold_on_the_facts():
     assert f["ews.watchlist.high_n"] == f["ews.watchlist.n"]
     assert _num(f["ews.watchlist.rate"]) > 90
     assert _num(f["ews.watchlist.n_holdout"]) < 10
+    # what the portal serves (top 25) and the v1 page shows (top 10): all training rows, every
+    # one deteriorated (finding 2: "wholly in-sample")
+    for slug in ("portal", "page"):
+        assert f[f"ews.watchlist.{slug}.n_train"] == f[f"ews.watchlist.{slug}.n"], slug
+        assert f[f"ews.watchlist.{slug}.rate"] == "100.0%", slug
+    assert (f["ews.watchlist.portal.n"], f["ews.watchlist.page.n"]) == ("25", "10")
+    # finding 7: "only modestly — all below the capture gate's lift"
+    # (checked below with the lifts); finding 3: "about a quarter"
+    # finding 8 / limitations intro: the reference model is level with the committed one and the
+    # noise-free logit is "low": below the origination gate
+    assert _num(f["ceiling.ews.latent_holdout"]) < _num(f["score.gate"])
     # triggers: none dead, exactly one dead clause, and it is dpd_max; DELINQUENCY is
     # dpd_recent alone, "about half the book"; deposit decline "very few"
     assert f["ews.trigger.n_dead"] == "0" and f["ews.trigger.n_dead_clauses"] == "1"
@@ -471,7 +482,8 @@ def test_d7_prose_conclusions_hold_on_the_facts():
     lifts = {t: _num(f[f"ews.trigger.{t}.lift"]) for t in slugs}
     assert min(lifts, key=lifts.get) == "delinquency"
     assert max(lifts, key=lifts.get) == "high_utilization"
-    assert all(1 < v < 2 and v < _num(f["ews.tier_ho.High.lift"]) for v in lifts.values())
+    assert all(1 < v < _num(f["ews.gate.lift_min"]) and v < _num(f["ews.tier_ho.High.lift"])
+               for v in lifts.values())
     assert _num(f["ews.trigger.any.share"]) > 50
     assert _num(f["ews.trigger.any.precision"]) > _num(f["ews.trigger.none.rate"])
     # most High accounts carry a trigger, some none; most triggered accounts are not High
@@ -511,6 +523,21 @@ def test_d7_code_claims_hold():
     # watchlist default length 100; the v1 endpoint's 25 (7.1)
     assert inspect.signature(watchlist.watchlist).parameters["top_n"].default == 100
     assert "def ews_watchlist_endpoint(n: int = 25):" in (ROOT / "app" / "main.py").read_text()
+    assert 'fetch("/api/ews/watchlist?n=10")' in (ROOT / "app" / "static" / "index.html").read_text()
+    from wiki.facts.ews_facts import PAGE_WATCHLIST_N, PORTAL_WATCHLIST_N
+    assert (PORTAL_WATCHLIST_N, PAGE_WATCHLIST_N) == (25, 10)
+    # the dpd_recent clause is mentioned in shared/config.py only in a comment (finding 6)
+    cfg = (ROOT / "shared" / "config.py").read_text()
+    assert '"dpd_severe": 30,            # dpd_max >= this (or dpd_recent > 0)' in cfg
+    # the gate's re-specification and Option A are recorded where 7.9 says (finding 3, 7.9)
+    notes = (ROOT / "ews" / "docs" / "enhancement_notes.md").read_text()
+    assert "Option A" in notes and "Why deferred" in notes
+    assert "escalated exactly this decision to a human, twice" in \
+        (ROOT / "tools" / "build_doc_pack.py").read_text()
+    # the label is drawn once from the panel, with no later period (finding 8)
+    gen = (ROOT / "shared" / "data_generator.py").read_text()
+    assert "util_last3 = util_path[:, -3:].mean(axis=1)" in gen
+    assert "util_trend = util_path[:, -1] - util_path[:, 0]" in gen
     # verify.py computes capture with its own lines and gates on the three (7.9)
     v = (ROOT / "verify.py").read_text()
     assert "capture = float(y_te[np.argsort(p)[::-1][:k]].sum() / y_te.sum())" in v

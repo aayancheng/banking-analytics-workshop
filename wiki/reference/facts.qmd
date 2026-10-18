@@ -278,29 +278,29 @@ title: "Every number in this documentation"
 | `ews.gate.capture_min` | 20% | policy constant (gate, measured on the held-out 20% of the booked book) | `ews.src.train.CAPTURE_GATE` |
 | `ews.gate.lift_min` | 2.0 | policy constant (gate, measured on the held-out 20% of the booked book) | `ews.src.train.CAPTURE_GATE / 0.10` |
 | `ews.gate.pr_auc_min` | the base rate | policy constant (gate, measured on the held-out 20% of the booked book) | `ews.src.train (assert pr_auc > base)` |
-| `ews.importance.gain.1.feature` | leverage | module constant | `ews_model.pkl booster feature_importance (gain)` |
-| `ews.importance.gain.1.share` | 9.3% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
-| `ews.importance.gain.2.feature` | current_ratio | module constant | `ews_model.pkl booster feature_importance (gain)` |
-| `ews.importance.gain.2.share` | 7.1% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
-| `ews.importance.gain.3.feature` | dscr | module constant | `ews_model.pkl booster feature_importance (gain)` |
-| `ews.importance.gain.3.share` | 7.0% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
-| `ews.importance.gain.4.feature` | deposit_decline_pct | module constant | `ews_model.pkl booster feature_importance (gain)` |
-| `ews.importance.gain.4.share` | 6.9% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
-| `ews.importance.gain.5.feature` | deposit_recent | module constant | `ews_model.pkl booster feature_importance (gain)` |
-| `ews.importance.gain.5.share` | 6.8% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
 | `ews.importance.gain.pd_score_rank` | 13 | module constant | `ews_model.pkl booster feature_importance (gain)` |
+| `ews.importance.gain.top1.feature` | leverage | module constant | `ews_model.pkl booster feature_importance (gain)` |
+| `ews.importance.gain.top1.share` | 9.3% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
+| `ews.importance.gain.top2.feature` | current_ratio | module constant | `ews_model.pkl booster feature_importance (gain)` |
+| `ews.importance.gain.top2.share` | 7.1% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
+| `ews.importance.gain.top3.feature` | dscr | module constant | `ews_model.pkl booster feature_importance (gain)` |
+| `ews.importance.gain.top3.share` | 7.0% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
+| `ews.importance.gain.top4.feature` | deposit_decline_pct | module constant | `ews_model.pkl booster feature_importance (gain)` |
+| `ews.importance.gain.top4.share` | 6.9% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
+| `ews.importance.gain.top5.feature` | deposit_recent | module constant | `ews_model.pkl booster feature_importance (gain)` |
+| `ews.importance.gain.top5.share` | 6.8% | module constant | `ews_model.pkl booster feature_importance (gain), share of total` |
 | `ews.importance.score_gain_share` | 9.0% | module constant | `ews_model.pkl booster feature_importance (gain), pd_score + business_score` |
-| `ews.importance.split.1.feature` | current_ratio | module constant | `ews_model.pkl booster feature_importance (split)` |
-| `ews.importance.split.1.share` | 7.8% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
-| `ews.importance.split.2.feature` | deposit_decline_pct | module constant | `ews_model.pkl booster feature_importance (split)` |
-| `ews.importance.split.2.share` | 7.5% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
-| `ews.importance.split.3.feature` | dscr | module constant | `ews_model.pkl booster feature_importance (split)` |
-| `ews.importance.split.3.share` | 7.4% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
-| `ews.importance.split.4.feature` | deposit_recent | module constant | `ews_model.pkl booster feature_importance (split)` |
-| `ews.importance.split.4.share` | 7.3% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
-| `ews.importance.split.5.feature` | util_volatility | module constant | `ews_model.pkl booster feature_importance (split)` |
-| `ews.importance.split.5.share` | 7.1% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
 | `ews.importance.split.pd_score_rank` | 14 | module constant | `ews_model.pkl booster feature_importance (split)` |
+| `ews.importance.split.top1.feature` | current_ratio | module constant | `ews_model.pkl booster feature_importance (split)` |
+| `ews.importance.split.top1.share` | 7.8% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
+| `ews.importance.split.top2.feature` | deposit_decline_pct | module constant | `ews_model.pkl booster feature_importance (split)` |
+| `ews.importance.split.top2.share` | 7.5% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
+| `ews.importance.split.top3.feature` | dscr | module constant | `ews_model.pkl booster feature_importance (split)` |
+| `ews.importance.split.top3.share` | 7.4% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
+| `ews.importance.split.top4.feature` | deposit_recent | module constant | `ews_model.pkl booster feature_importance (split)` |
+| `ews.importance.split.top4.share` | 7.3% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
+| `ews.importance.split.top5.feature` | util_volatility | module constant | `ews_model.pkl booster feature_importance (split)` |
+| `ews.importance.split.top5.share` | 7.1% | module constant | `ews_model.pkl booster feature_importance (split), share of total` |
 | `ews.importance.top_n` | 5 | module constant | `wiki.facts.ews_facts.TOP_FEATURES` |
 | `ews.lift` | 2.16 | held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts) | `ews.src.train.top_decile_capture / 0.10 (as train.py)` |
 | `ews.model.n_estimators` | 500 | module constant | `ews/models/ews_model.pkl` |
@@ -458,6 +458,14 @@ title: "Every number in this documentation"
 | `ews.watchlist.n_holdout` | 2 | held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts) | `ews.src.train split (train_test_split, test_size 0.2, seed 42, stratified)` |
 | `ews.watchlist.n_train` | 98 | booked book, all 8,336 accounts (as the portal scores it) | `ews.src.train split (train_test_split, test_size 0.2, seed 42, stratified)` |
 | `ews.watchlist.no_trigger_n` | 1 | booked book, all 8,336 accounts (as the portal scores it) | `ews.src.watchlist.watchlist (default top_n) over the scored book` |
+| `ews.watchlist.page.events` | 10 | the top 10 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them | `portfolio.deterioration_next_6_12mo` |
+| `ews.watchlist.page.n` | 10 | the top 10 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them | `ews.src.watchlist.watchlist(top_n=10) over the scored book` |
+| `ews.watchlist.page.n_train` | 10 | the top 10 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them | `ews.src.watchlist.watchlist(top_n=10) over the scored book` |
+| `ews.watchlist.page.rate` | 100.0% | the top 10 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them | `portfolio.deterioration_next_6_12mo` |
+| `ews.watchlist.portal.events` | 25 | the top 25 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them | `portfolio.deterioration_next_6_12mo` |
+| `ews.watchlist.portal.n` | 25 | the top 25 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them | `ews.src.watchlist.watchlist(top_n=25) over the scored book` |
+| `ews.watchlist.portal.n_train` | 25 | the top 25 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them | `ews.src.watchlist.watchlist(top_n=25) over the scored book` |
+| `ews.watchlist.portal.rate` | 100.0% | the top 25 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them | `portfolio.deterioration_next_6_12mo` |
 | `ews.watchlist.rate` | 99.0% | the 100 watchlist accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure | `portfolio.deterioration_next_6_12mo` |
 | `ews.watchlist.top_n_default` | 100 | module constant | `ews.src.watchlist.watchlist signature` |
 | `ews.whole.auc` | 0.9476 | whole booked book, 8,336 accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure | `ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)` |

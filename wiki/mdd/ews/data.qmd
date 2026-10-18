@@ -55,8 +55,9 @@ The panel aggregation is slow, so `train.py` writes its result to
 `ews/models/panel_features.parquet`, committed with the model; the portal, the facts and
 `verify.py` read that cache rather than re-aggregating. Every non-categorical column is
 made numeric and any missing value becomes zero. The generated data have none, so on this
-data the rule changes nothing; on a real book it would make an account with no history look
-like one with no problems ([7.7](limitations.qmd#ews-observations)).
+data the rule changes nothing; on a real book an account with no history would fire no
+trigger, and what the model would make of it is untested
+([7.7](limitations.qmd#ews-observations)).
 
 `industry` and `entity_type` have no role in how the generator draws deterioration; they are
 structural zeros for this target, as `industry` and `entity_type` are for default in D4
@@ -128,8 +129,8 @@ assert (len(tr), len(te)) == report_sizes(), "EWS split no longer reproduces tra
 ## Leakage controls
 
 The platform's deny-list (`shared/config.py::LEAKAGE_COLUMNS`,
-[D2](../d2-data.qmd#leakage-controls)) holds the target itself, `booked`, and the
-generator's true PD. It is enforced for Early Warning at two points:
+[D2](../d2-data.qmd#leakage-controls)) holds, among others, the target itself, `booked`, and
+the generator's true PD. It is enforced for Early Warning at two points:
 
 1. **At feature construction.** `compute_ews_features` raises before returning if any column
    of `EWS_FEATURE_COLUMNS` is on the deny-list:

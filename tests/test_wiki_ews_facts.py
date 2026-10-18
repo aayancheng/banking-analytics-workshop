@@ -215,7 +215,7 @@ def test_score_dependency(ef):
     assert ef["ews.pd_score.auc"].population == ef["ews.auc"].population
     assert ef["ews.pd_score.diff_lo"].value < ef["ews.pd_score.diff"].value < \
         ef["ews.pd_score.diff_hi"].value
-    names = {ef[f"ews.importance.gain.{i}.feature"].value for i in range(1, 6)}
+    names = {ef[f"ews.importance.gain.top{i}.feature"].value for i in range(1, 6)}
     from ews.src.feature_engineering import EWS_FEATURE_COLUMNS
     assert names <= set(EWS_FEATURE_COLUMNS)
 

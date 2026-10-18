@@ -58,7 +58,7 @@ Because the data are generated, the best ranking any model could achieve is know
 accounts by the generator's own deterioration logit without its noise term
 (`wiki/facts/ceiling.py`, the only code in this documentation that reads the generator's
 truth; it grades the data, not a model). A second reference point is a model, not the truth:
-the strongest learner the documentation trains on **every observable column** —
+a reference LightGBM, configured as the committed one, given **every observable column** —
 {{< var ceiling.ews.oracle_model.n_columns >}} columns: the portfolio's columns outside the
 deny-list and the aggregated panel features — fitted on the same training accounts, as the workshop's
 `oracle_ceiling.py` does.
@@ -74,27 +74,31 @@ noise-free logit reaches {{< var ceiling.ews.latent_holdout >}}, and the model f
 it by {{< var ceiling.ews.gap_holdout >}}: it gets {{< var ceiling.ews.share_of_reach >}} of
 the way from a coin toss to the ceiling.
 
-**The model is at the limit of what can be observed.** The oracle model, with every
-observable column, reaches {{< var ceiling.ews.oracle_model.auc >}} on the same accounts: the
-committed model is a hair below it, well inside the AUC interval above. The rest of the
-distance to the noise-free logit is information no observable column holds. The generator's
-strongest driver of deterioration is the true PD ([7.2](data.qmd#ews-label)), and the bank
-sees only the scorecard's estimate of it. That attribution is a reading of the generator's
-code, not a decomposition.
+**The model is indistinguishable from the reference model.** The reference LightGBM, with
+every observable column, reaches {{< var ceiling.ews.oracle_model.auc >}} on the same
+accounts: the committed model is a hair below it, well inside the AUC interval above. That is
+one learner with one configuration, fitted once; it shows that more columns of the same data
+did not help a model like this one, not that no better model exists. Much of the remaining
+distance to the noise-free logit plausibly lies in information no observable column holds:
+the generator's strongest driver of deterioration is the true PD ([7.2](data.qmd#ews-label)),
+and the bank sees only the scorecard's estimate of it. That attribution is a reading of the
+generator's code, not a decomposition.
 
 ### Why this is the reason the gate is on capture
 
 An AUC gate set where the origination models are gated, {{< var score.gate >}}
 ([D4.9](../score/gate.qmd)), would be unreachable here: not by this model only, but by any
 model, even one ranking by the generator's noise-free logit, which reaches
-{{< var ceiling.ews.latent_holdout >}} on these accounts. A gate no honest model can pass invites one of two failures: a
-model that is never accepted, or a gate quietly lowered until one is. Early Warning was
-instead gated, from its first commit, on what its use needs and the data supports: does the
-riskiest decile, the accounts a review team can actually call, hold well more than its share
-of the trouble? Even the noise-free logit captures only {{< var ceiling.ews.latent_capture_holdout >}}
-in its top decile on these accounts (PR-AUC {{< var ceiling.ews.latent_pr_auc_holdout >}}), so
-the {{< var ews.gate.capture_min >}} gate asks for most of what is possible, not all of it.
-AUC stays on the page, reported against the ceiling, so no reader has to take its absence on
+{{< var ceiling.ews.latent_holdout >}} on these accounts. A gate no honest model can pass invites
+one of two failures: a model that is never accepted, or a gate quietly lowered until one is.
+Early Warning was instead gated, from its first commit, on what its use needs: does the riskiest
+decile, the accounts a review team can actually call, hold well more than its share of the
+trouble? Even the noise-free logit captures only {{< var ceiling.ews.latent_capture_holdout >}}
+in its top decile on these accounts (PR-AUC {{< var ceiling.ews.latent_pr_auc_holdout >}}), so a
+capture gate at the {{< var ews.gate.capture_min >}} level is reachable where the design brief's
+was not. The level itself was not derived from the ceiling, and it sits close to what the
+committed model achieved — which is why the narrow margin is a finding (finding 3,
+[7.9](gate.qmd#history)). AUC stays on the page, reported against the ceiling, so no reader has to take its absence on
 trust. That is the honest-gate design ([7.9](gate.qmd)), and it is not a limitation of the
 model; how narrowly the committed model clears the gate is (finding 3).
 
@@ -198,7 +202,7 @@ What the table shows:
   exceeds {{< var ews.trigger.delinquency.clause.dpd_max.feature_max >}}. The trigger is, in
   effect, `dpd_recent` above {{< var ews.trigger.delinquency.clause.dpd_recent.threshold >}}
   (finding 6).
-- **The triggers barely discriminate.** Their precision runs from
+- **The triggers discriminate only modestly.** Their precision runs from
   {{< var ews.trigger.delinquency.precision >}} (`DELINQUENCY`) to
   {{< var ews.trigger.high_utilization.precision >}} (`HIGH_UTILIZATION`), against a base rate
   of {{< var ews.base_rate >}}: lifts of {{< var ews.trigger.delinquency.lift >}}× to
@@ -230,7 +234,9 @@ without a trigger is recorded as an observation ([7.7](limitations.qmd#ews-obser
 ## The watchlist {#ews-watchlist}
 
 `watchlist` returns the top {{< var ews.watchlist.top_n_default >}} accounts of the scored
-book by probability. Over the book as the portal scores it:
+book by probability: the module's default watchlist. The portal serves the top
+{{< var ews.watchlist.portal.n >}} of the same ranking by default (`/api/ews/watchlist`), and the
+v1 page shows {{< var ews.watchlist.page.n >}}. Over the book as the portal scores it:
 
 | | Value | Population |
 |---|---|---|
@@ -241,9 +247,12 @@ book by probability. Over the book as the portal scores it:
 | … that are held-out accounts | {{< var ews.watchlist.n_holdout >}} | the watchlist |
 | Deterioration rate on the list | {{< var ews.watchlist.rate >}} ({{< var ews.watchlist.events >}} accounts) | the watchlist: **in-sample, not a performance measure** |
 | Deterioration rate, held-out members only | {{< var ews.watchlist.holdout_rate >}} ({{< var ews.watchlist.holdout_events >}} of {{< var ews.watchlist.n_holdout >}}) | far too few to measure anything |
+| Top {{< var ews.watchlist.portal.n >}}, the portal's default: training rows, deterioration rate | {{< var ews.watchlist.portal.n_train >}}; {{< var ews.watchlist.portal.rate >}} | the portal's watchlist: **in-sample** |
+| Top {{< var ews.watchlist.page.n >}}, the v1 page: training rows, deterioration rate | {{< var ews.watchlist.page.n_train >}}; {{< var ews.watchlist.page.rate >}} | the v1 page's watchlist: **in-sample** |
 
-The watchlist is almost entirely accounts the model was fitted on, and its near-perfect hit
-rate is the model remembering their labels. It is the most visible in-sample number on the
+The module's watchlist is almost entirely accounts the model was fitted on, and what the portal
+and the v1 page show is entirely so; their near-perfect hit rates are the model remembering
+those accounts' labels. It is the most visible in-sample number on the
 platform and the easiest to misread: finding 2 ([7.7](limitations.qmd)). The honest guide to
 what a call list of the riskiest accounts will find is the held-out top decile's rate,
 {{< var ews.top_decile_rate >}}.

@@ -63,6 +63,8 @@ SRC_IMP = "ews_model.pkl booster feature_importance"
 TIERS = ["High", "Medium", "Low"]
 Q_HIGH, Q_MED = 0.90, 0.70        # the quantiles train.py calibrates t_high / t_med at
 TOP_FEATURES = 5
+PORTAL_WATCHLIST_N = 25   # app/main.py: def ews_watchlist_endpoint(n: int = 25)
+PAGE_WATCHLIST_N = 10     # app/static/index.html: fetch("/api/ews/watchlist?n=10")
 
 # (trigger name flag_triggers writes, fact slug, clauses: (feature, config key or None,
 # what the rule compares)). DELINQUENCY's second clause is hard-coded in triggers.py: > 0.
@@ -402,6 +404,20 @@ def compute(es: EwsSplit | None = None) -> dict[str, Fact]:
     put("ews.watchlist.holdout_rate", float(y[pos[in_te]].mean()), ".1%", SRC_LABEL,
         HOLDOUT + " -- watchlist members only")
 
+    # --- what the portal actually serves: the top of the same ranking (app/main.py's
+    # /api/ews/watchlist default n=25; the v1 page, app/static/index.html, fetches n=10) ---
+    for slug, k_wl in (("portal", PORTAL_WATCHLIST_N), ("page", PAGE_WATCHLIST_N)):
+        sub = wl.watchlist(scored, top_n=k_wl)
+        sp = pd.Series(np.arange(len(port)), index=port["business_id"].astype(str)) \
+            .loc[[r["business_id"] for r in sub]].to_numpy()
+        pop = (f"the top {k_wl} of the module's watchlist ranking, in-sample: training rows "
+               "are scored by the model fitted on them")
+        src = f"ews.src.watchlist.watchlist(top_n={k_wl}) over the scored book"
+        put(f"ews.watchlist.{slug}.n", len(sub), ",d", src, pop)
+        put(f"ews.watchlist.{slug}.n_train", int((~np.isin(sp, te)).sum()), ",d", src, pop)
+        put(f"ews.watchlist.{slug}.events", int(y[sp].sum()), ",d", SRC_LABEL, pop)
+        put(f"ews.watchlist.{slug}.rate", float(y[sp].mean()), ".1%", SRC_LABEL, pop)
+
     # --- dependence on the score ---
     pd_te = feats["pd_score"].to_numpy()[te]
     s_auc = float(roc_auc_score(y_te, pd_te))
@@ -423,8 +439,8 @@ def compute(es: EwsSplit | None = None) -> dict[str, Fact]:
     for kind, s in (("gain", gain), ("split", split)):
         s = s.sort_values(ascending=False, kind="stable")
         for i, (feat, v) in enumerate(s.head(TOP_FEATURES).items(), 1):
-            put(f"ews.importance.{kind}.{i}.feature", feat, "", SRC_IMP + f" ({kind})", MODULE_POP)
-            put(f"ews.importance.{kind}.{i}.share", float(v / s.sum()), ".1%",
+            put(f"ews.importance.{kind}.top{i}.feature", feat, "", SRC_IMP + f" ({kind})", MODULE_POP)
+            put(f"ews.importance.{kind}.top{i}.share", float(v / s.sum()), ".1%",
                 SRC_IMP + f" ({kind}), share of total", MODULE_POP)
         put(f"ews.importance.{kind}.pd_score_rank", int(list(s.index).index("pd_score")) + 1, "d",
             SRC_IMP + f" ({kind})", MODULE_POP)

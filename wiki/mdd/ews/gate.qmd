@@ -32,11 +32,13 @@ Two reasons, both measured in [7.5](performance.qmd#ews-ceiling):
 
 - **The data caps AUC, for every model.** The label is drawn with noise twice over
   ([7.2](data.qmd#ews-label)). On the held-out accounts the generator's own noise-free logit
-  reaches {{< var ceiling.ews.latent_holdout >}}, and the strongest model on every observable
-  column {{< var ceiling.ews.oracle_model.auc >}}; the committed model, {{< var ews.auc >}}, is a
-  hair below the second. An AUC gate set where the origination models' is would be failed by
-  every honest model, and the only way to "pass" it would be to lower it until something did —
-  which this platform never does (invariant: gates are never relaxed, [D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
+  reaches {{< var ceiling.ews.latent_holdout >}}, below the {{< var score.gate >}} at which the
+  origination models are gated; a reference LightGBM, configured as the committed one and given
+  every observable column, reaches {{< var ceiling.ews.oracle_model.auc >}}, and the committed
+  model, {{< var ews.auc >}}, is indistinguishable from it. An AUC gate at the origination level
+  would be failed even by the generator's own noise-free logit, and the only way to "pass" it
+  would be to lower it until something did — which this platform never does with a committed
+  gate ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
 - **Capture is what the use needs.** A review team works the top of the list. The question
   that decides whether the model is useful is how much of the coming trouble sits in the
   accounts it can call, not how well the model orders the quiet accounts at the bottom.
@@ -102,8 +104,11 @@ fails, naming the key, if any page would print a stale value ([D9](../d9-impleme
 
 This is why **a relaxed local gate cannot pass.** Lowering `CAPTURE_GATE` in `train.py` lets a
 weaker model finish training, but `verify.py` recomputes that model's capture against the
-constant it carries itself, and fails. The panel cache cannot be edited around the gate either:
-the model's predictions move with it, and the recomputed gate moves with them.
+constant it carries itself, and fails. The panel cache is a weaker point. `verify.py` scores
+the model on `ews/models/panel_features.parquet`, a committed artifact written by `train.py`,
+and nothing re-derives it from `panel.parquet` and compares the two: an edited cache would move
+the recomputed gate with it. The control is that the cache is committed, so any change to it
+shows in the diff of the commit that makes it ([7.7](limitations.qmd#ews-observations)).
 
 ## The what-if equals the batch {#ews-whatif}
 
@@ -133,8 +138,8 @@ the batch does not: fix the drift, never the test.
   being quoted (finding 2).
 - **Calibration.** All three measures are about ranking; the Low tier's under-prediction
   passes them (finding 5).
-- **The triggers.** No gate measures them; one clause cannot fire and the rest barely beat the
-  base rate (findings 6 and 7).
+- **The triggers.** No gate measures them; one clause cannot fire and the rest beat the base rate
+  only modestly (findings 6 and 7).
 - **The score.** Passing the gate does not show the model ranks better than `pd_score` alone
   (finding 4).
 
@@ -142,14 +147,30 @@ the batch does not: fix the drift, never the test.
 
 | Version | Change | Gates |
 |---|---|---|
-| development, before `stage-4` | the design brief's gate (an AUC minimum and a higher capture) found unreachable on this data and replaced, before the module was first committed (`ews/docs/enhancement_notes.md`) | not committed |
+| development, before `stage-4` | The master spec's targets (an AUC minimum and a higher capture multiple, quoted in finding 3) were measured as out of reach on this data and the gate re-specified as below. The alternative, Option A — reduce the label's noise in the generator and restore the stronger gate — was documented and deferred because it would regenerate data the scorecard, adjudication and pricing modules already consume (`ews/docs/enhancement_notes.md`). The project records the choice as escalated to a human decision (`tools/build_doc_pack.py`); the record names no approver or date. | not committed |
 | `stage-4` (commit `dbca721`) | gates introduced with the Early Warning model, in `train.py` and `verify.py` | capture {{< var ews.gate.capture_min >}}, PR-AUC above the base rate, AUC floor {{< var ews.gate.auc_floor >}} |
 | `stage-5`, `v1.0` to `v1.5`, `main` | unchanged | as above |
 
-The gates have not changed since they were committed, and they are never relaxed to let a
-model pass ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
-The pre-commit change is recorded because it was made with the model's result in view, which is
-part of why finding 3 matters. The brief's stronger gate is not unreachable for want of a
-better model: on the held-out accounts not even the generator's noise-free logit meets it
-([7.7](limitations.qmd#ews-finding-3)). A change to any gate would be a change of the committed
-promise: made on `main`, recorded in a new version tag, and shown in this table.
+The committed gates have not changed since they were committed, and they are never relaxed to
+let a model pass ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
+The one change came before the first commit, with the model's results in view. It is not the
+relaxation that rule forbids, for three reasons: the targets were re-specified on measured
+evidence that no model could reach them — on the held-out accounts not even the generator's
+noise-free logit meets them ([7.7](limitations.qmd#ews-finding-3)); the reason and the rejected
+alternative were written down in the same commit; and AUC stayed on every report. What the record
+does not show is how the new level was chosen or who approved it. Re-specifying was necessary;
+the level is not derived from the ceiling and sits close to what the model achieved, which is
+why the narrow margin is a finding (finding 3). The project's own account of the decision, in
+the documentation pack it generates:
+
+```text
+The early-warning gate is the platform's governance exhibit: when a target's measured
+oracle ceiling sits below the aspirational gate, the honest resolution is to gate on
+what the data supports and report the rest — never to quietly tune the number, and
+never to regenerate data a downstream model already consumes. (The reference build
+escalated exactly this decision to a human, twice, with opposite resolutions — see
+`ews/docs/enhancement_notes.md` for the deferred Option A.)
+```
+
+Any change now would be a change of the committed promise: made on `main`, recorded in a new
+version tag, and shown in this table.

@@ -14,21 +14,26 @@ order: 0
   {{< var ews.pr_auc >}} against a base rate of {{< var ews.base_rate >}}. Both met, the
   capture gate narrowly: {{< var ews.boot.capture_below_gate >}} of bootstrap resamples fall
   below it ([7.5](performance.qmd)).
-- **AUC is reported, not gated:** held-out AUC {{< var ews.auc >}}, within a whisker of the
-  {{< var ceiling.ews.oracle_model.auc >}} that the strongest model on every observable column
-  reaches on the same rows. The data's noise caps AUC; capture is what the review workflow
+- **AUC is reported, not gated:** held-out AUC {{< var ews.auc >}}, indistinguishable from the
+  {{< var ceiling.ews.oracle_model.auc >}} a reference LightGBM, configured as the committed one
+  and given every observable column, reaches on the same rows; even the generator's noise-free
+  logit reaches only {{< var ceiling.ews.latent_holdout >}} there. The data's noise caps AUC; capture is what the review workflow
   uses, so capture is what is gated ([7.9](gate.qmd)).
 - **Quote the held-out number:** over the whole book the same model shows capture
   {{< var ews.whole.capture >}} and AUC {{< var ews.whole.auc >}}, but most of the book is
-  the model's own training rows. That figure, and the portal's default watchlist, are
-  in-sample (finding 2, [7.7](limitations.qmd)).
+  the model's own training rows. That figure, and the module's default watchlist of
+  {{< var ews.watchlist.n >}} (the portal serves the top {{< var ews.watchlist.portal.n >}} of
+  the same ranking; the v1 page shows {{< var ews.watchlist.page.n >}}), are in-sample
+  (finding 2, [7.7](limitations.qmd)).
 - **The tiers do not hold their mix on new accounts:** the cutoffs are quantiles of in-sample
   probabilities, so the High tier, {{< var ews.tier.High.share >}} of the book by construction,
   holds {{< var ews.tier_ho.High.share >}} of held-out accounts (finding 1).
 - **No better than the score alone on AUC:** the paired interval for the difference,
   {{< var ews.pd_score.diff_lo >}} to {{< var ews.pd_score.diff_hi >}}, contains zero
   ([7.5](performance.qmd#ews-benchmark)).
-- **Seven open findings** the chapter raises about its own model, tiers and triggers
+- **Lead time is unmeasured:** the label is drawn over the same months as the features,
+  so how far ahead the model warns has not been tested (finding 8).
+- **Eight open findings** the chapter raises about its own model, tiers and triggers
   ([7.7](limitations.qmd)).
 :::
 
@@ -59,6 +64,6 @@ chapter documents the model, tiers and triggers as committed: it changes none of
 | 7.4 | [Assumptions](assumptions.qmd) | the label as a forward view, tiers as a fixed mix, triggers on generic scales, the score, the generator |
 | 7.5 | [Performance](performance.qmd) | capture, PR-AUC and AUC with intervals; the ceiling; the benchmark; held out against whole book; tiers; triggers; the watchlist |
 | 7.6 | [Sensitivity and stress](sensitivity.qmd) | what the facts show about the cutoffs and thresholds, and what was not run |
-| 7.7 | [Limitations and compensating controls](limitations.qmd) | seven open findings, each with a control and an owner |
+| 7.7 | [Limitations and compensating controls](limitations.qmd) | eight open findings, each with a control and an owner |
 | 7.8 | [Monitoring plan](monitoring.qmd) | capture and PR-AUC on new cohorts, tier mix and calibration, trigger fire rates and dead clauses |
 | 7.9 | [Gate record](gate.qmd) | the capture and PR-AUC gates, the AUC floor, where each is asserted and recomputed, history |

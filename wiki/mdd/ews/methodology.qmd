@@ -117,7 +117,7 @@ rules = [                                                   # ews/src/triggers.p
 The thresholds are policy values, not estimates: none was set from this book's
 distribution ([7.4](assumptions.qmd#ews-trigger-thresholds-are-generic)). `DELINQUENCY` is the
 only compound rule, and its second clause has a threshold written into the code rather than
-the configuration. On this data the configured clause never fires and the hard-coded one
+the configuration (`shared/config.py` mentions it only in a comment). On this data the configured clause never fires and the hard-coded one
 does all the work — finding 6 ([7.7](limitations.qmd)). How often each trigger fires, and how
 well, is in [7.5](performance.qmd#ews-trigger-performance).
 
@@ -125,8 +125,9 @@ well, is in [7.5](performance.qmd#ews-trigger-performance).
 
 The model and the triggers answer different questions, and neither consults the other:
 
-- **The tier ranks.** It uses every feature at once, including the score, and it is the
-  part the gate measures ([7.9](gate.qmd)). It cannot say what is wrong with an account;
+- **The tier ranks.** It is cut from a probability that uses every feature at once,
+  including the score; the gate measures that probability's ranking, not the tiers cut from
+  it ([7.9](gate.qmd)). It cannot say what is wrong with an account;
   its SHAP reasons are an attribution, and a reason like "the score" is not one a
   relationship manager can raise with a customer.
 - **The triggers explain.** Each names one observable fact about the account in the
@@ -151,10 +152,11 @@ so it can be challenged.
 
 What the evidence says about it, from [7.5](performance.qmd):
 
-- **There is little left to find.** On the held-out accounts the model ranks within a
-  whisker of the strongest model the observable columns support
-  ([7.5](performance.qmd#ews-ceiling)). A different learner on the same columns would not do
-  much better.
+- **A reference model does no better.** On the held-out accounts the model is
+  indistinguishable from a reference LightGBM, configured as the committed one and given every
+  observable column ([7.5](performance.qmd#ews-ceiling)). That is one comparison with one
+  learner; it does not show that no better model exists, only that more columns of the same
+  data did not help this one.
 - **It is not distinguishable from the score it consumes.** On AUC, the paired interval for
   the model's lead over `pd_score` alone contains zero
   ([7.5](performance.qmd#ews-benchmark)). What it does do that the score alone does not is
@@ -168,7 +170,7 @@ What the evidence says about it, from [7.5](performance.qmd):
 |---|---|---|
 | Rank the book by the scorecard's `pd_score` alone | measured, not adopted | Nearly the same AUC on the held-out accounts, and no model to maintain; but it misses the capture gate on this sample, and it would never react to behaviour after booking (finding 4). |
 | A logistic or scorecard-style model on the panel features | not built | Exact reason codes, as D4 has, and far less room to memorise the training rows; whether it would rank as well is unmeasured. |
-| Triggers alone, without a model | measured as part of [7.5](performance.qmd#ews-trigger-performance), not adopted | Exact reasons, but on this book the triggers fire on most accounts and barely beat the base rate (finding 7). |
+| Triggers alone, without a model | measured as part of [7.5](performance.qmd#ews-trigger-performance), not adopted | Exact reasons, but on this book the triggers fire on most accounts and beat the base rate only modestly (finding 7). |
 
 None has been rejected on evidence that it ranks worse. The open question — whether the
 behavioural layer adds enough over the score to justify a model — is carried to the next

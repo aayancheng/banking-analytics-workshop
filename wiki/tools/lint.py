@@ -1,7 +1,9 @@
 """Wiki lint — the rule that keeps every number traceable.
 
 Fails on: a hand-typed metric (a decimal with 3+ places, or a percentage) in page prose;
-an unknown {{< var key >}}; an unknown {{< yt ID >}}; a same-page @fig-/@tbl-/@sec- reference
+an unknown {{< var key >}}; a var key with a segment Quarto cannot address (it must match
+KEY_SEGMENT: a YAML integer key like "1" silently fails to print); a var whose fact text
+markdown would parse as structure (a leading ">", "#", "|", an HTML tag, a list marker); an unknown {{< yt ID >}}; a same-page @fig-/@tbl-/@sec- reference
 without its anchor; a relative link to a .qmd that does not exist; a ```{mermaid} cell (it
 needs a browser to render for the PDF -- use _assets/<name>.mmd and `make wiki-diagrams`); a
 diagram PNG whose recorded source hash no longer matches its .mmd.
@@ -34,6 +36,11 @@ VAR = re.compile(r"\{\{<\s*var\s+([\w.]+)\s*>\}\}")
 YT = re.compile(r"\{\{<\s*yt\s+([\w-]+)\s*>\}\}")
 XREF = re.compile(r"(?<![\w])@((?:fig|tbl|sec)-[\w-]+)")
 ANCHOR = re.compile(r"\{#((?:fig|tbl|sec)-[\w-]+)")
+KEY_SEGMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
+# Fact text that, printed at the start of a var, markdown reads as structure: a blockquote,
+# heading or table pipe, an HTML tag, a bullet or an ordered-list marker. A bare "<" followed by
+# a space ("< 1e-12", D6) is not a tag and renders as text, so only "<" + a tag character counts.
+STRUCTURAL_TEXT = re.compile(r"^\s*([>#|]|<[A-Za-z/!?]|[-*+]\s|\d+[.)]\s)")
 LINK = re.compile(r"\]\((?!https?:|mailto:|#)([^)#\s]+\.qmd)(?:#[^)]*)?\)")
 
 
@@ -57,14 +64,22 @@ def _line(text: str, pos: int) -> int:
 
 
 def lint_text(rel: str, text: str, keys: set[str], videos: dict,
-              page_path: Path | None = None) -> list[str]:
+              page_path: Path | None = None, texts: dict[str, str] | None = None) -> list[str]:
     problems = []
     live = text                          # what renders: no front matter, code or comments
     for rx in (FRONT, FENCE, COMMENT, INLINE):
         live = rx.sub(_BLANK, live)
     for m in VAR.finditer(live):
-        if m.group(1) not in keys:
-            problems.append(f"{rel}:{_line(live, m.start())}: unknown fact '{m.group(1)}'")
+        key = m.group(1)
+        if not all(KEY_SEGMENT.match(seg) for seg in key.split(".")):
+            problems.append(f"{rel}:{_line(live, m.start())}: fact key '{key}' has a segment "
+                            "Quarto's var lookup cannot address")
+        if key not in keys:
+            problems.append(f"{rel}:{_line(live, m.start())}: unknown fact '{key}'")
+        elif texts and STRUCTURAL_TEXT.match(texts.get(key, "")):
+            problems.append(f"{rel}:{_line(live, m.start())}: fact '{key}' prints "
+                            f"'{texts[key]}', which markdown parses as structure -- write it "
+                            "as a literal in inline code")
     for m in YT.finditer(live):
         if m.group(1) not in videos:
             problems.append(f"{rel}:{_line(live, m.start())}: unknown video '{m.group(1)}'")
@@ -107,7 +122,8 @@ def lint_diagrams(wiki: Path = WIKI) -> list[str]:
 
 def lint_all(wiki: Path = WIKI, files: list[Path] | None = None,
              strict: bool = False) -> list[str]:
-    keys = set(json.loads(FACTS_JSON.read_text())) if FACTS_JSON.exists() else set()
+    facts = json.loads(FACTS_JSON.read_text()) if FACTS_JSON.exists() else {}
+    keys, texts = set(facts), {k: str(v.get("text", "")) for k, v in facts.items()}
     videos = json.loads(VIDEOS_JSON.read_text()) if VIDEOS_JSON.exists() else {}
     pages = files or sorted(p for p in wiki.rglob("*.qmd")
                             if not any(part.startswith("_") for part in p.relative_to(wiki).parts)
@@ -118,7 +134,7 @@ def lint_all(wiki: Path = WIKI, files: list[Path] | None = None,
         if rel == "reference/facts.qmd":
             continue                     # generated from facts.json; checked by tables.stale
         text = p.read_text()
-        problems += lint_text(rel, text, keys, videos, page_path=p)
+        problems += lint_text(rel, text, keys, videos, page_path=p, texts=texts)
         for m in MERMAID.finditer(text):
             problems.append(f"{rel}:{_line(text, m.start())}: a {{mermaid}} cell needs a browser to render "
                             "for the PDF -- move it to _assets/<name>.mmd and run `make wiki-diagrams`")

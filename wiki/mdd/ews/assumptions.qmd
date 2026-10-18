@@ -23,7 +23,8 @@ generator has no calendar beyond the panel, so no out-of-time sample exists eith
 the scorecard, train and held-out are random splits of one cohort (D4 finding 1).
 
 The assumption **holds only nominally**. The model is a contemporaneous classifier of a
-label drawn from the panel's own months, not a forecast across a gap in time.
+label drawn from the panel's own months, not a forecast across a gap in time — finding 8
+([7.7](limitations.qmd)).
 
 **What breaks if it fails.** On a real book the label would be observed over a window after
 the features, the behaviour driving it would partly happen in that gap, and some of
@@ -94,15 +95,16 @@ book. At the other end, the deposit-decline threshold sits close to the largest 
 the data, so that trigger fires on very few accounts.
 
 The assumption **holds in part**: four configured thresholds can fire, deposit decline only
-rarely; one is unreachable; and the clause doing the delinquency trigger's work is not in the
-configuration —
-finding 6 ([7.7](limitations.qmd)). Whether the live thresholds pick out accounts that
+rarely; one is unreachable; and the clause doing the delinquency trigger's work appears in
+`shared/config.py` only as a comment, with a threshold that is not a key and that no
+configuration can change — finding 6 ([7.7](limitations.qmd)). Whether the live thresholds pick out accounts that
 deteriorate more often than the rest is a question of performance, not scale: finding 7.
 
 **What breaks if it fails.** A threshold on the wrong scale is a control that appears in the
 configuration, in the workbench's trigger panel and in this chapter, and does nothing — or
-does something no one configured. A reviewer reading `EWS_TRIGGERS` would believe delinquency
-is flagged at a month past due; on this data it is flagged at a day.
+does something no configuration controls. A reviewer can move `dpd_severe` and change nothing;
+on this data delinquency is flagged at a day past due, by the clause the configuration only
+mentions in a comment.
 
 ## The score is a valid input {#ews-the-score-is-a-valid-input}
 

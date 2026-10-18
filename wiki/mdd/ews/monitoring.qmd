@@ -21,7 +21,7 @@ gate, printed here by name. Events, for the calibration floor, are deterioration
 | Tier mix: PSI over High / Medium / Low | new accounts against the intended mix ({{< var ews.tier.High.share >}} / {{< var ews.tier.Medium.share >}} / {{< var ews.tier.Low.share >}}) | below {{< var monitoring.psi_watch >}} stable; {{< var monitoring.psi_watch >}} to {{< var monitoring.psi_act >}} watch; above {{< var monitoring.psi_act >}} act | every cohort | Watch: tell the review team its High-tier volume will differ from plan. Act: review with the validator (finding 1). |
 | Observed / predicted deterioration rate, by tier | accounts with matured outcomes | outside {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}}, on at least {{< var monitoring.min_band_defaults >}} deteriorations | when outcomes mature | Below the floor: record and watch. At or above it: count toward trigger 3. |
 | Observed deterioration rate, by tier | accounts with matured outcomes | High not above Medium, or Medium not above Low | when outcomes mature | The tiers no longer rank: review with the validator. |
-| Trigger fire share, each trigger | every account scored | any trigger's share moving by more than {{< var monitoring.rule_hit_move >}} of its development share | every scoring run | Check the feature's source before the rule; report to the monitoring policy owner. |
+| Trigger fire share, each trigger | every account scored | any trigger's share moving by more than {{< var monitoring.rule_hit_move >}} of its development share | every scoring run | Check the feature's source before the rule; report to the monitoring policy owner (proposed; to be named). |
 | Trigger clauses firing alone | every account scored | any clause that fires on no account by itself | every scoring run | Report as an untested control (finding 6). |
 | Trigger precision, each trigger | accounts with matured outcomes | reported against the base rate, not thresholded | when outcomes mature | Read with finding 7's threshold review. |
 | Tier cutoffs at a retrain | the retrained model | any change | every retrain | The workload was held and the risk accepted moved: the policy owner signs off the new cutoffs before use ([7.4](assumptions.qmd#ews-tiers-as-a-fixed-mix)). |
@@ -30,7 +30,9 @@ gate, printed here by name. Events, for the calibration floor, are deterioration
 The capture row is the gate carried into production, with the one-and-two-cohorts rule that
 finding 3 needs: on the development sample, {{< var ews.boot.capture_below_gate >}} of
 bootstrap resamples fall below the gate with nothing wrong, so a single breach is evidence to
-read, not yet a verdict. The tier-mix row is the control for finding 1, the calibration row
+read, not yet a verdict. The first capture reading on a cohort whose outcomes mature after its
+features were taken is also the model's first out-of-time test, and the first measurement of
+lead time (finding 8). The tier-mix row is the control for finding 1, the calibration row
 for finding 5, the trigger rows for findings 6 and 7, the watchlist row for finding 2 and the
 benchmark row for finding 4.
 
@@ -94,7 +96,7 @@ Any one of these starts a redevelopment, with the validator informed:
    which supplies two inputs ([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)),
    and to the panel.
 
-Two further events go to the monitoring policy owner rather than to redevelopment: a change to
+Two further events go to the monitoring policy owner (proposed; to be named) rather than to redevelopment: a change to
 any value in `EWS_TRIGGERS`, after which [7.5](performance.qmd#ews-trigger-performance) is
 re-run; and a clause that fires on no account (above).
 

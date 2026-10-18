@@ -39,3 +39,35 @@ def test_unknown_video_is_flagged():
 def test_same_page_xref_must_resolve():
     assert lint("See @fig-roc.\n") == ["mdd/x.qmd:1: cross-reference @fig-roc has no anchor on this page"]
     assert lint("See @fig-roc.\n\n![r](a.svg){#fig-roc}\n") == []
+
+
+def test_var_key_segment_quarto_cannot_address_is_flagged():
+    keys = KEYS | {"ews.importance.gain.1.share"}
+    out = lint_text("mdd/x.qmd", "{{< var ews.importance.gain.1.share >}}\n", keys, VIDEOS)
+    assert out == ["mdd/x.qmd:1: fact key 'ews.importance.gain.1.share' has a segment "
+                   "Quarto's var lookup cannot address"]
+    assert lint_text("mdd/x.qmd", "{{< var ews.importance.gain.top1.share >}}\n",
+                     {"ews.importance.gain.top1.share"}, VIDEOS) == []
+
+
+def test_var_whose_text_markdown_parses_as_structure_is_flagged():
+    texts = {"a.op": ">=", "a.h": "# x", "a.pipe": "| x", "a.tag": "<b>x", "a.list": "- x",
+             "a.num": "1. x", "a.ok": "< 1e-12", "a.pct": "21.6%", "a.neg": "-0.0132"}
+    for k, t in texts.items():
+        out = lint_text("mdd/x.qmd", f"{{{{< var {k} >}}}}\n", set(texts), VIDEOS, texts=texts)
+        if k in ("a.ok", "a.pct", "a.neg"):
+            assert out == [], k
+        else:
+            assert out == [f"mdd/x.qmd:1: fact '{k}' prints '{t}', which markdown parses as "
+                           "structure -- write it as a literal in inline code"], k
+
+
+def test_build_facts_refuses_a_key_quarto_cannot_address():
+    from wiki.facts.build_facts import KEY_SEGMENT
+    from wiki.tools.lint import KEY_SEGMENT as LINT_SEGMENT
+    assert KEY_SEGMENT.pattern == LINT_SEGMENT.pattern
+    assert not KEY_SEGMENT.match("1") and KEY_SEGMENT.match("top1")
+    import json
+    from pathlib import Path
+    facts = json.loads((Path(__file__).parents[1] / "wiki/facts/facts.json").read_text())
+    assert all(KEY_SEGMENT.match(seg) for k in facts for seg in k.split("."))

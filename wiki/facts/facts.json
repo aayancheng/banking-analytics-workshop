@@ -1889,82 +1889,82 @@
     "text": "the base rate",
     "value": "the base rate"
   },
-  "ews.importance.gain.1.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain)",
-    "text": "leverage",
-    "value": "leverage"
-  },
-  "ews.importance.gain.1.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain), share of total",
-    "text": "9.3%",
-    "value": 0.093311
-  },
-  "ews.importance.gain.2.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain)",
-    "text": "current_ratio",
-    "value": "current_ratio"
-  },
-  "ews.importance.gain.2.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain), share of total",
-    "text": "7.1%",
-    "value": 0.070984
-  },
-  "ews.importance.gain.3.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain)",
-    "text": "dscr",
-    "value": "dscr"
-  },
-  "ews.importance.gain.3.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain), share of total",
-    "text": "7.0%",
-    "value": 0.069809
-  },
-  "ews.importance.gain.4.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain)",
-    "text": "deposit_decline_pct",
-    "value": "deposit_decline_pct"
-  },
-  "ews.importance.gain.4.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain), share of total",
-    "text": "6.9%",
-    "value": 0.069022
-  },
-  "ews.importance.gain.5.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain)",
-    "text": "deposit_recent",
-    "value": "deposit_recent"
-  },
-  "ews.importance.gain.5.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (gain), share of total",
-    "text": "6.8%",
-    "value": 0.067926
-  },
   "ews.importance.gain.pd_score_rank": {
     "fmt": "d",
     "population": "module constant",
     "source": "ews_model.pkl booster feature_importance (gain)",
     "text": "13",
     "value": 13
+  },
+  "ews.importance.gain.top1.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "leverage",
+    "value": "leverage"
+  },
+  "ews.importance.gain.top1.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "9.3%",
+    "value": 0.093311
+  },
+  "ews.importance.gain.top2.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "current_ratio",
+    "value": "current_ratio"
+  },
+  "ews.importance.gain.top2.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "7.1%",
+    "value": 0.070984
+  },
+  "ews.importance.gain.top3.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "dscr",
+    "value": "dscr"
+  },
+  "ews.importance.gain.top3.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "7.0%",
+    "value": 0.069809
+  },
+  "ews.importance.gain.top4.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "deposit_decline_pct",
+    "value": "deposit_decline_pct"
+  },
+  "ews.importance.gain.top4.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "6.9%",
+    "value": 0.069022
+  },
+  "ews.importance.gain.top5.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "deposit_recent",
+    "value": "deposit_recent"
+  },
+  "ews.importance.gain.top5.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "6.8%",
+    "value": 0.067926
   },
   "ews.importance.score_gain_share": {
     "fmt": ".1%",
@@ -1973,82 +1973,82 @@
     "text": "9.0%",
     "value": 0.090332
   },
-  "ews.importance.split.1.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split)",
-    "text": "current_ratio",
-    "value": "current_ratio"
-  },
-  "ews.importance.split.1.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split), share of total",
-    "text": "7.8%",
-    "value": 0.077933
-  },
-  "ews.importance.split.2.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split)",
-    "text": "deposit_decline_pct",
-    "value": "deposit_decline_pct"
-  },
-  "ews.importance.split.2.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split), share of total",
-    "text": "7.5%",
-    "value": 0.074867
-  },
-  "ews.importance.split.3.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split)",
-    "text": "dscr",
-    "value": "dscr"
-  },
-  "ews.importance.split.3.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split), share of total",
-    "text": "7.4%",
-    "value": 0.073667
-  },
-  "ews.importance.split.4.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split)",
-    "text": "deposit_recent",
-    "value": "deposit_recent"
-  },
-  "ews.importance.split.4.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split), share of total",
-    "text": "7.3%",
-    "value": 0.073467
-  },
-  "ews.importance.split.5.feature": {
-    "fmt": "",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split)",
-    "text": "util_volatility",
-    "value": "util_volatility"
-  },
-  "ews.importance.split.5.share": {
-    "fmt": ".1%",
-    "population": "module constant",
-    "source": "ews_model.pkl booster feature_importance (split), share of total",
-    "text": "7.1%",
-    "value": 0.070933
-  },
   "ews.importance.split.pd_score_rank": {
     "fmt": "d",
     "population": "module constant",
     "source": "ews_model.pkl booster feature_importance (split)",
     "text": "14",
     "value": 14
+  },
+  "ews.importance.split.top1.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "current_ratio",
+    "value": "current_ratio"
+  },
+  "ews.importance.split.top1.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.8%",
+    "value": 0.077933
+  },
+  "ews.importance.split.top2.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "deposit_decline_pct",
+    "value": "deposit_decline_pct"
+  },
+  "ews.importance.split.top2.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.5%",
+    "value": 0.074867
+  },
+  "ews.importance.split.top3.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "dscr",
+    "value": "dscr"
+  },
+  "ews.importance.split.top3.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.4%",
+    "value": 0.073667
+  },
+  "ews.importance.split.top4.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "deposit_recent",
+    "value": "deposit_recent"
+  },
+  "ews.importance.split.top4.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.3%",
+    "value": 0.073467
+  },
+  "ews.importance.split.top5.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "util_volatility",
+    "value": "util_volatility"
+  },
+  "ews.importance.split.top5.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.1%",
+    "value": 0.070933
   },
   "ews.importance.top_n": {
     "fmt": "d",
@@ -3148,6 +3148,62 @@
     "source": "ews.src.watchlist.watchlist (default top_n) over the scored book",
     "text": "1",
     "value": 1
+  },
+  "ews.watchlist.page.events": {
+    "fmt": ",d",
+    "population": "the top 10 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "10",
+    "value": 10
+  },
+  "ews.watchlist.page.n": {
+    "fmt": ",d",
+    "population": "the top 10 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them",
+    "source": "ews.src.watchlist.watchlist(top_n=10) over the scored book",
+    "text": "10",
+    "value": 10
+  },
+  "ews.watchlist.page.n_train": {
+    "fmt": ",d",
+    "population": "the top 10 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them",
+    "source": "ews.src.watchlist.watchlist(top_n=10) over the scored book",
+    "text": "10",
+    "value": 10
+  },
+  "ews.watchlist.page.rate": {
+    "fmt": ".1%",
+    "population": "the top 10 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "100.0%",
+    "value": 1.0
+  },
+  "ews.watchlist.portal.events": {
+    "fmt": ",d",
+    "population": "the top 25 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "25",
+    "value": 25
+  },
+  "ews.watchlist.portal.n": {
+    "fmt": ",d",
+    "population": "the top 25 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them",
+    "source": "ews.src.watchlist.watchlist(top_n=25) over the scored book",
+    "text": "25",
+    "value": 25
+  },
+  "ews.watchlist.portal.n_train": {
+    "fmt": ",d",
+    "population": "the top 25 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them",
+    "source": "ews.src.watchlist.watchlist(top_n=25) over the scored book",
+    "text": "25",
+    "value": 25
+  },
+  "ews.watchlist.portal.rate": {
+    "fmt": ".1%",
+    "population": "the top 25 of the module's watchlist ranking, in-sample: training rows are scored by the model fitted on them",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "100.0%",
+    "value": 1.0
   },
   "ews.watchlist.rate": {
     "fmt": ".1%",

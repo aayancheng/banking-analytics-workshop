@@ -78,8 +78,10 @@ What can be said without one:
 - **A missing panel is not an alert.** If an account's monthly history were missing, the
   left join in `compute_ews_features` would leave its panel features empty, and they would
   become zero: no utilisation, no drift, no days past due, no overdrafts. Zero fires no
-  trigger, and the model would score the account as quiet. The generated data have a full
-  panel for every account, so this is untested ([7.7](limitations.qmd#ews-observations)).
+  trigger — that much follows from `flag_triggers` with the committed thresholds, where every rule needs a value above a
+  positive threshold or above zero. What the model's probability would be for such an account
+  has not been computed. The generated data have a full panel for every account, so neither is
+  exercised ([7.7](limitations.qmd#ews-observations)).
 
 Both refits — without the score, and without the panel, with an account missing its history
 referred rather than scored — are listed for the next redevelopment
