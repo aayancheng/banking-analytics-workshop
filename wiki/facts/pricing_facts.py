@@ -45,6 +45,7 @@ SENS_FMT = {"cost_of_funds": ".2%", "lgd": ".1%", "opex_rate": ".1%", "tax_rate"
             "capital_ratio": ".1%", "roe_hurdle": ".1%"}
 SENS_CHECK = ("cost_of_funds", "up")   # the one scenario re-run through price_population
 PD_SCALES = [("down", 0.9), ("up", 1.1)]
+FEE_PROBE = 0.005           # a non-zero fee_rate at which the rate identities are re-checked
 BANDS = ["D", "C", "B", "A", "AAA"]
 WATERFALL = ["interest_income", "cost_of_funds", "expected_loss", "operating_cost",
              "pre_tax_profit", "tax", "net_income", "allocated_equity"]
@@ -86,6 +87,11 @@ def price_with_pd(inp: pd.DataFrame, pd_scale: float, market: MarketAssumptions)
     return pd.DataFrame(rows)
 
 
+def _printed_share(x: float) -> float:
+    """x as its .1% text prints it, back as a fraction (round(x, 3) via the formatter)."""
+    return float(f"{x:.1%}"[:-1]) / 100
+
+
 def n_engine_tests() -> int:
     tree = ast.parse((ROOT / "tests" / "test_engine.py").read_text())
     return sum(isinstance(n, ast.FunctionDef) and n.name.startswith("test_") for n in tree.body)
@@ -97,6 +103,13 @@ def engine_test_tolerance() -> float:
                                          (ROOT / "tests" / "test_engine.py").read_text())}
     assert len(tols) == 1, f"tests/test_engine.py uses several tolerances: {tols}"
     return tols.pop()
+
+
+def verify_tolerance() -> float:
+    """verify.py's relative tolerance on the committed pricing summary, read from its source."""
+    m = re.search(r"^PRICING_TOLERANCE\s*=\s*([0-9.]+)", (ROOT / "verify.py").read_text(), re.M)
+    assert m, "verify.py no longer defines PRICING_TOLERANCE"
+    return float(m.group(1))
 
 
 def market_facts() -> dict[str, Fact]:
@@ -252,6 +265,24 @@ def compute() -> dict[str, Fact]:
             raise AssertionError(f"pricing identity {k} residual {res[k]:.3e} >= {tol:.0e}")
         put(f"pricing.identity.{k}", bound, "",
             f"pricing.src.engine, max over the booked book of {lab}{src_bound}", BOOKED)
+    # --- the same two rate identities with a non-zero fee_rate (no unit test sets one) ---
+    mf = m.replace(fee_rate=FEE_PROBE)
+    fee_res = 0.0
+    for p, e in inp[["pd", "ead"]].itertuples(index=False):
+        fee_res = max(fee_res,
+                      abs(profit_waterfall(p, e, break_even_rate(p, e, mf), mf)["roe"]),
+                      abs(profit_waterfall(p, e, hurdle_clearing_rate(p, e, mf), mf)["roe"]
+                          - mf.roe_hurdle))
+    if not fee_res < tol:
+        raise AssertionError(f"fee_rate identity residual {fee_res:.3e} >= {tol:.0e}")
+    put("pricing.fee_probe", FEE_PROBE, ".1%", "wiki.facts.pricing_facts.FEE_PROBE", MODULE_POP)
+    put("pricing.identity.fee", bound, "",
+        "pricing.src.engine with fee_rate = wiki.facts.pricing_facts.FEE_PROBE, max over the "
+        "booked book of |ROE at break_even_rate - 0| and |ROE at hurdle_clearing_rate - "
+        "roe_hurdle|" + src_bound, BOOKED)
+    put("pricing.verify_tolerance", verify_tolerance(), ".0%",
+        "verify.py PRICING_TOLERANCE (relative drift of n, share_clears and mispriced_ead "
+        "against the committed pricing summary)", MODULE_POP)
     put("pricing.n_engine_tests", n_engine_tests(), "d",
         "tests/test_engine.py (test_ functions, counted with ast)", MODULE_POP)
     put("pricing.test_tolerance", tol, ".0e",
@@ -265,7 +296,9 @@ def compute() -> dict[str, Fact]:
         "pricing.src.engine.break_even_rate vs the quoted rate", BOOKED)
     put("pricing.below_break_even.ead", float(inp.loc[below, "ead"].sum()), ",.0f",
         "pricing.src.engine.break_even_rate vs the quoted rate", BOOKED)
-    put("pricing.negative_roe.n", int((df["roe_at_quoted"] < 0).sum()), ",d", SRC_PP, BOOKED)
+    negative = (df["roe_at_quoted"] < 0).to_numpy()
+    assert np.array_equal(below, negative), "below break-even is no longer the negative-ROE set"
+    put("pricing.negative_roe.n", int(negative.sum()), ",d", SRC_PP, BOOKED)
 
     # --- the what-if equals the batch: the portal's v2 price_one vs price_population ---
     from app.v2.pricing import price_one
@@ -337,7 +370,10 @@ def compute() -> dict[str, Fact]:
             put(f"{key}.n_clears", s2["n_clears"], ",d", src, pop)
             put(f"{key}.median_roe", s2["median_roe"], ".1%", src, pop)
             put(f"{key}.mispriced_ead", s2["mispriced_ead"], ",.0f", src, pop)
-            put(f"{key}.swing", share - base_share, "+.1%", src + " (unrounded shares)", pop)
+            # the swing is built from the shares as printed (to 0.1%), so the page's
+            # "share - base = swing" holds by construction, not by luck of rounding
+            put(f"{key}.swing", _printed_share(share) - _printed_share(base_share), "+.1%",
+                src + " (printed shares: each rounded to 0.1% before subtracting)", pop)
     swing = {fd: abs(f[f"pricing.sens.{fd}.up.n_clears"].value
                      - f[f"pricing.sens.{fd}.down.n_clears"].value) for fd in SENS_FIELDS}
     top = sorted(SENS_FIELDS, key=lambda fd: (-swing[fd], fd))[0]

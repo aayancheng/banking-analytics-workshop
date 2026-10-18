@@ -32,6 +32,15 @@ book:
     - mdd/adjudication/monitoring.qmd
     - mdd/adjudication/gate.qmd
     - mdd/pricing/index.qmd
+    - mdd/pricing/purpose.qmd
+    - mdd/pricing/data.qmd
+    - mdd/pricing/methodology.qmd
+    - mdd/pricing/assumptions.qmd
+    - mdd/pricing/performance.qmd
+    - mdd/pricing/sensitivity.qmd
+    - mdd/pricing/limitations.qmd
+    - mdd/pricing/monitoring.qmd
+    - mdd/pricing/gate.qmd
     - mdd/ews/index.qmd
     - mdd/line_increase/index.qmd
     - mdd/d9-implementation.qmd

@@ -1749,6 +1749,13 @@
     "text": "10",
     "value": 10
   },
+  "monitoring.pricing_share_move": {
+    "fmt": "d",
+    "population": "policy constant",
+    "source": "wiki.facts.policy (documented monitoring policy)",
+    "text": "5",
+    "value": 5
+  },
   "monitoring.psi_act": {
     "fmt": ".2f",
     "population": "policy constant",
@@ -2288,6 +2295,13 @@
     "text": "132",
     "value": 131.851887
   },
+  "pricing.fee_probe": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "wiki.facts.pricing_facts.FEE_PROBE",
+    "text": "0.5%",
+    "value": 0.005
+  },
   "pricing.fee_rate": {
     "fmt": ".1%",
     "population": "platform assumption",
@@ -2306,6 +2320,13 @@
     "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
     "source": "pricing.src.engine, max over the booked book of |ROE at the loan's EAD - ROE at EAD 1| -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
+  },
+  "pricing.identity.fee": {
+    "fmt": "",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.engine with fee_rate = wiki.facts.pricing_facts.FEE_PROBE, max over the booked book of |ROE at break_even_rate - 0| and |ROE at hurdle_clearing_rate - roe_hurdle| -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
     "text": "< 1e-12",
     "value": "< 1e-12"
   },
@@ -2739,9 +2760,9 @@
   "pricing.sens.capital_ratio.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 0.90 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 0.90 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "+5.9%",
-    "value": 0.059141
+    "value": 0.059
   },
   "pricing.sens.capital_ratio.down.value": {
     "fmt": ".1%",
@@ -2781,9 +2802,9 @@
   "pricing.sens.capital_ratio.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 1.10 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 1.10 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "-4.8%",
-    "value": -0.047985
+    "value": -0.048
   },
   "pricing.sens.capital_ratio.up.value": {
     "fmt": ".1%",
@@ -2823,9 +2844,9 @@
   "pricing.sens.cost_of_funds.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 0.90 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 0.90 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "+9.2%",
-    "value": 0.09249
+    "value": 0.092
   },
   "pricing.sens.cost_of_funds.down.value": {
     "fmt": ".2%",
@@ -2865,9 +2886,9 @@
   "pricing.sens.cost_of_funds.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 1.10 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 1.10 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "-6.6%",
-    "value": -0.065859
+    "value": -0.066
   },
   "pricing.sens.cost_of_funds.up.value": {
     "fmt": ".2%",
@@ -2914,9 +2935,9 @@
   "pricing.sens.lgd.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 0.90 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 0.90 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "+5.8%",
-    "value": 0.058301
+    "value": 0.058
   },
   "pricing.sens.lgd.down.value": {
     "fmt": ".1%",
@@ -2956,9 +2977,9 @@
   "pricing.sens.lgd.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 1.10 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 1.10 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "-5.1%",
-    "value": -0.051104
+    "value": -0.051
   },
   "pricing.sens.lgd.up.value": {
     "fmt": ".1%",
@@ -2998,9 +3019,9 @@
   "pricing.sens.opex_rate.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 0.90 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 0.90 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "+2.1%",
-    "value": 0.021473
+    "value": 0.021
   },
   "pricing.sens.opex_rate.down.value": {
     "fmt": ".1%",
@@ -3040,9 +3061,9 @@
   "pricing.sens.opex_rate.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 1.10 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 1.10 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "-2.1%",
-    "value": -0.020513
+    "value": -0.021
   },
   "pricing.sens.opex_rate.up.value": {
     "fmt": ".1%",
@@ -3082,9 +3103,9 @@
   "pricing.sens.roe_hurdle.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 0.90 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 0.90 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "+5.9%",
-    "value": 0.059141
+    "value": 0.059
   },
   "pricing.sens.roe_hurdle.down.value": {
     "fmt": ".1%",
@@ -3124,9 +3145,9 @@
   "pricing.sens.roe_hurdle.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 1.10 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 1.10 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "-4.8%",
-    "value": -0.047985
+    "value": -0.048
   },
   "pricing.sens.roe_hurdle.up.value": {
     "fmt": ".1%",
@@ -3173,9 +3194,9 @@
   "pricing.sens.tax_rate.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 0.90 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 0.90 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "+1.6%",
-    "value": 0.016195
+    "value": 0.016
   },
   "pricing.sens.tax_rate.down.value": {
     "fmt": ".1%",
@@ -3215,9 +3236,9 @@
   "pricing.sens.tax_rate.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
-    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 1.10 (unrounded shares)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 1.10 (printed shares: each rounded to 0.1% before subtracting)",
     "text": "-1.8%",
-    "value": -0.017874
+    "value": -0.018
   },
   "pricing.sens.tax_rate.up.value": {
     "fmt": ".1%",
@@ -3253,6 +3274,13 @@
     "source": "pricing.src.portfolio.price_population",
     "text": "1,799,730,000",
     "value": 1799730000.0
+  },
+  "pricing.verify_tolerance": {
+    "fmt": ".0%",
+    "population": "module constant",
+    "source": "verify.py PRICING_TOLERANCE (relative drift of n, share_clears and mispriced_ead against the committed pricing summary)",
+    "text": "2%",
+    "value": 0.02
   },
   "pricing.whatif.flips": {
     "fmt": ",d",

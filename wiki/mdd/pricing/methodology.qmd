@@ -1,0 +1,158 @@
+---
+title: "6.3 Methodology"
+order: 3
+---
+
+The engine is a short file of arithmetic, `pricing/src/engine.py`. This page walks
+through it in the order it runs, on one loan, and then states the identities the rates
+satisfy. There is no fitting step and nothing to choose at run time: the choices are in
+the formula, and are listed at the end with the alternatives.
+
+## The profit waterfall
+
+`profit_waterfall` turns a PD, an exposure, a rate and the market assumptions into one
+year's profit on the loan and the equity held against it:
+
+```python
+interest_income = (rate + m.fee_rate) * ead            # pricing/src/engine.py
+cost_of_funds = m.cost_of_funds * ead
+expected_loss = pd_ * m.lgd * ead
+operating_cost = m.opex_rate * ead
+pre_tax = interest_income - cost_of_funds - expected_loss - operating_cost
+net_income = pre_tax * (1 - m.tax_rate)
+allocated_equity = m.capital_ratio * ead
+...
+    "roe": net_income / allocated_equity,
+    "raroc": pre_tax / allocated_equity,
+```
+
+Each line is a rate on EAD times EAD: what the loan earns (interest, plus any fee), what
+the money costs to raise, the loss expected from default, the cost of running the loan,
+and tax on what is left. The equity is a flat share of EAD. ROE is net income over that
+equity; RAROC is the same before tax. Both are ratios, so EAD cancels out of them
+([6.2](data.qmd#ead-is-the-requested-amount)).
+
+### One loan, step by step {#pr-worked-example}
+
+The worked example is the loan in the middle of the booked book's PD ranking:
+{{< var pricing.example.rule >}} — `{{< var pricing.example.business_id >}}`, band
+{{< var pricing.example.band >}}, {{< var pricing.example.industry >}}. It was quoted
+{{< var pricing.example.quoted_rate >}} on an EAD of \${{< var pricing.example.ead >}}, and its PD
+from the scorecard is {{< var pricing.example.pd >}}.
+
+{{< include ../../_generated/pricing-waterfall.md >}}
+
+Read down the table. At the quoted rate the loan earns \${{< var pricing.example.wf.interest_income >}}
+of interest. Funding costs \${{< var pricing.example.wf.cost_of_funds >}}, expected loss —
+PD × LGD × EAD — is \${{< var pricing.example.wf.expected_loss >}}, and operating cost
+\${{< var pricing.example.wf.operating_cost >}}, leaving \${{< var pricing.example.wf.pre_tax_profit >}}
+before tax and \${{< var pricing.example.wf.net_income >}} after it. The bank holds
+\${{< var pricing.example.wf.allocated_equity >}} of equity against the loan, so the ROE at
+the quoted rate is {{< var pricing.example.roe >}} (RAROC {{< var pricing.example.raroc >}}):
+profitable, but well short of the {{< var market.roe_hurdle >}} hurdle. The loan
+{{< var pricing.example.clears >}} the hurdle, by {{< var pricing.example.shortfall_bps >}}
+basis points of rate.
+
+## Three rates
+
+The engine solves the waterfall backwards for three rates. Each is a closed form, not a
+search, and none of them depends on the quoted rate or on EAD.
+
+### Break-even {#pr-break-even}
+
+`break_even_rate` is the rate at which ROE is zero: the rate that just
+covers funding, expected loss and operating cost.
+
+```
+break_even = cost_of_funds + PD × lgd + opex_rate − fee_rate
+```
+
+For the example, {{< var pricing.example.break_even >}}. A loan quoted below its break-even
+rate loses money at its own quote ([6.5](performance.qmd#pr-headline)).
+
+### Hurdle-clearing {#pr-hurdle-clearing}
+
+`hurdle_clearing_rate` is the rate at which ROE equals the hurdle.
+Setting `roe = roe_hurdle` in the waterfall and solving for the rate gives break-even plus
+one more term:
+
+```
+hurdle_clearing = break_even + roe_hurdle × capital_ratio / (1 − tax_rate)
+```
+
+The added term is the **capital charge**: the pre-tax return the loan must earn on its
+allocated equity so that, after tax, the equity earns the hurdle. With the committed
+assumptions it is {{< var pricing.capital_charge >}} of EAD, the same for every loan,
+because the equity is a flat share of EAD. For the example the hurdle-clearing rate is
+{{< var pricing.example.hurdle_clearing >}}.
+
+### Recommended {#pr-recommended}
+
+`recommended_rate` is the hurdle-clearing rate plus the base margin, {{< var market.base_margin >}}:
+
+```
+recommended = hurdle_clearing + base_margin
+```
+
+For the example, {{< var pricing.example.recommended >}}. The base margin sits *on top of*
+a rate that already earns the hurdle, so the recommended rate earns well above it: the
+example's ROE at its recommended rate is {{< var pricing.example.roe_at_recommended >}},
+against the {{< var market.roe_hurdle >}} hurdle. The engine's docstring calls the margin a
+"cushion". It is a design choice, not an error, but it means the recommended rate is not the
+price that clears the hurdle — the hurdle-clearing rate is ([6.7](limitations.qmd#pr-observations)).
+
+## The identities the rates satisfy {#pr-identity}
+
+Because the waterfall is linear in the rate, three identities hold exactly, for every loan:
+
+1. **ROE at the break-even rate is zero.**
+2. **ROE at the hurdle-clearing rate is the hurdle.** Written out, the ROE at a rate `r` is
+   `(r + fee_rate − cost_of_funds − PD × lgd − opex_rate) × (1 − tax_rate) / capital_ratio`;
+   substituting the hurdle-clearing rate leaves `roe_hurdle × capital_ratio / (1 − tax_rate)
+   × (1 − tax_rate) / capital_ratio`, which is `roe_hurdle`.
+3. **The recommended rate is the hurdle-clearing rate plus the base margin.**
+
+And two properties follow from the form of the waterfall: the line items add up, and ROE
+does not depend on EAD. The unit tests assert each on one loan; the facts assert each on
+every booked loan, to within the tests' tolerance ([6.5](performance.qmd#pr-identities)).
+
+## The verdict and the shortfall
+
+`price_loan` solves the hurdle-clearing and recommended rates, runs the waterfall at the
+quoted rate and at the recommended rate, and decides:
+
+```python
+clears = w_quoted["roe"] >= market.roe_hurdle             # pricing/src/engine.py
+...
+    "clears_hurdle": bool(clears),
+    "mispriced": bool(not clears),
+    "rate_shortfall": max(0.0, hc - quoted_rate),
+```
+
+Because ROE rises with the rate (the factor `(1 − tax_rate) / capital_ratio` is positive),
+a loan clears exactly when its quoted rate is at or above its hurdle-clearing rate. The
+shortfall is the gap in rate, and zero for a loan that clears. The example's shortfall is
+{{< var pricing.example.shortfall_bps >}} basis points: its hurdle-clearing rate less its
+quote.
+
+`price_population` calls `price_loan` once per booked loan, in a plain loop, and keeps the
+scalars; `portfolio_summary` counts the loans that clear, takes the median ROE, sums the EAD
+of the mispriced loans and groups the mispriced share by band and by industry. The v2
+workbench calls the same `price_loan` for one loan and keeps the whole waterfall
+([6.1](purpose.qmd#who-consumes-it-and-how)).
+
+{{< yt S3-c3 >}}
+
+## Choices in the formula, and the alternatives
+
+| Choice | Alternative | Why this one, and what it costs |
+|---|---|---|
+| A hurdle on ROE, after tax | A hurdle on RAROC, before tax | The two differ only by the factor `1 − tax_rate`, so they rank loans identically; ROE is the measure a bank's capital is managed to. The engine reports RAROC beside it. |
+| Price to the cost of capital: break-even plus a capital charge | Price to expected loss only: break-even plus a margin | Pricing to expected loss ignores what the equity behind the loan costs. It is what the data generator's quotes do, and why most of the book misses the hurdle (finding 1, [6.7](limitations.qmd)). |
+| Allocated equity a flat share of EAD | Risk-sensitive capital, rising with the PD (for example an internal-ratings formula) | Simple and transparent, at a cost: every loan carries the same {{< var pricing.capital_charge >}} capital charge, so a low-PD loan is charged as much capital as a high-PD one. A risk-sensitive charge would tend to lower the hurdle-clearing rate in the best bands and raise it in band D ([6.4](assumptions.qmd#pr-simplifications)). |
+| One period: a year of income and cost | A multi-period cash-flow model over the term, with amortisation and prepayment | Enough to answer "does this rate earn the hurdle"; it cannot value a loan whose balance or rate changes over its life ([6.4](assumptions.qmd#pr-simplifications)). |
+| A recommended rate with a margin above the hurdle | Recommend the hurdle-clearing rate itself | The margin gives the pricing desk room to negotiate; but the name invites reading it as the minimum acceptable rate, which it is not (above). |
+
+None of these choices is estimated, and none changes at run time. Each is a property of the
+code, and a change to any of them is a change to `pricing/src/engine.py`, reviewed and
+recorded like any other ([D9](../d9-implementation.qmd#stage-tags-and-change-control)).

@@ -1,0 +1,97 @@
+---
+title: "6.2 Data and inputs"
+order: 2
+---
+
+Pricing has no training sample, no split and no target. What it has are four inputs per
+loan and seven assumptions for the book. This page covers the inputs; the assumptions are
+in [6.4](assumptions.qmd).
+
+## The booked book
+
+`price_population` (`pricing/src/portfolio.py`) reads `shared/data/raw/businesses.parquet`,
+the file every module reads ([D2](../d2-data.qmd)), and keeps the rows the bank booked:
+
+```python
+biz = pd.read_parquet(RAW / "businesses.parquet")        # pricing/src/portfolio.py
+booked = biz[biz["booked"] == True].copy()  # noqa: E712
+sp = predict_score_pd(booked)
+```
+
+That gives {{< var pricing.n >}} loans, out of {{< var score.n_applicants >}} applicants.
+There is no sample and no exclusion: every booked loan is priced, once, and every figure in
+this chapter is over all of them unless it names a band or an industry.
+
+## The four inputs, per loan
+
+| Input | Column it comes from | What it is |
+|---|---|---|
+| PD | `pd` from `predict_score_pd` | the Business Credit Score's probability of default (D4), computed when the book is priced |
+| EAD | `requested_amount` | exposure at default: the amount the business asked for, taken as fully drawn |
+| Quoted rate | `risk_based_rate` | the annual rate the loan was booked at: the bank's observed quote |
+| Segment | `score_band` from `predict_score_pd`, `industry` from the data | used only to break the results down, never in the arithmetic |
+
+### The PD comes from the saved scorecard
+
+`price_population` calls `predict_score_pd`, the scorecard's own scoring function, on the
+booked rows, and passes each loan's `pd` to the engine. It never reads the generator's true
+PD, `pd_default_origination`. That is the dependency drawn in
+[D3](../d3-dependencies.qmd): a change to the scorecard changes every rate in this chapter,
+and forces pricing to be re-run ([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)).
+
+Two properties of that PD carry into pricing:
+
+- **It is in-sample for most of the book.** The scorecard was fitted on every applicant
+  outside its held-out {{< var score.test_share >}}, booked or not
+  ([D4.2](../score/data.qmd)). A booked loan whose row was among the training rows is priced
+  on a PD the scorecard was fitted to. That is how a bank prices its book in practice —
+  with the score it has — and it is recorded so that no one reads the book's PD as
+  out-of-sample.
+- **Its calibration is uneven by band on the booked.** D4 finds band B under-predicting
+  default on the held-out booked (D4 finding 6), and bands A and AAA outside the tolerance
+  on too few defaults to count (D4.7, observations). A PD that is too low makes every rate in
+  this chapter too low for that loan; finding 3 ([6.7](limitations.qmd)) follows it through.
+
+### EAD is the requested amount
+
+The engine takes EAD as a positive scale factor. Every rate and every ROE is a ratio to it,
+so EAD changes no verdict: it only weights a loan in the dollar totals (mispriced EAD,
+below-break-even EAD). That invariance is tested ([6.5](performance.qmd#pr-identities)).
+Taking the requested amount as fully drawn is a simplification ([6.4](assumptions.qmd#pr-simplifications)).
+
+### The quoted rate is an observation, not a feature {#pr-quoted-rate}
+
+`risk_based_rate` is on the platform's leakage deny-list
+(`shared/config.py::LEAKAGE_COLUMNS`), with the comment `# priced from the true PD`
+([D2](../d2-data.qmd#leakage-controls)). Pricing reads it anyway. That does not break the
+deny-list, for three reasons:
+
+1. **The deny-list governs model features.** It exists so that no model learns from a
+   column that would not exist when its decision is made. It is enforced where features are
+   built and models are trained ([D2](../d2-data.qmd#leakage-controls)). Pricing builds no
+   features and trains nothing.
+2. **At pricing time, the quoted rate exists.** Pricing looks at loans already booked, each
+   at the rate it was quoted. That rate is the outcome of the bank's historical pricing, and
+   the question the tool asks is about it: did that rate earn the hurdle? Asking the question
+   without the quote is impossible.
+3. **The quote never sets a rate the engine produces.** The break-even, hurdle-clearing and
+   recommended rates depend on the PD and the market assumptions alone
+   ([6.3](methodology.qmd)). The quote enters in exactly one place: the ROE at the quoted
+   rate, and with it the verdict and the shortfall.
+
+D2 records the same use: some denied columns are used "as facts about the book, never as
+inputs to a model". What the deny-list's comment warns about does still matter here, for
+a different reason. The quote was generated from the true PD, which the bank's scorecard does
+not have; so a comparison between that quote and a rate built from the scorecard's PD
+measures, in part, the gap between the two PDs. That is how the generator, rather than any
+pricing practice, sets the headline mispricing share: finding 1 ([6.7](limitations.qmd)).
+
+## What is not an input
+
+- **The outcome.** `default` is never read. Pricing prices expected loss, from the PD, not
+  realised loss; whether the booked loans defaulted plays no part.
+- **The term.** `term_months` is not read: the waterfall is one year of income and cost
+  ([6.4](assumptions.qmd#pr-simplifications)).
+- **Collateral.** `collateral_flag` is not read: one LGD applies to every loan.
+- **The adjudication model's PD.** Pricing takes the scorecard's PD, not the adjudication
+  model's (D5.1), so D5's calibration findings do not reach the rate; D4's do.

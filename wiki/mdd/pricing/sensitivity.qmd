@@ -1,0 +1,121 @@
+---
+title: "6.6 Sensitivity"
+order: 6
+---
+
+Pricing's output moves only when an input moves. There are two kinds of input to move:
+the market assumptions, and the PD. Each scenario below changes one thing, re-prices the
+whole booked book through the engine and leaves everything else as committed — the quoted
+rates, the EADs, the other assumptions (`wiki/facts/pricing_facts.py`):
+
+```python
+m2 = m.replace(**{field: getattr(m, field) * factor})   # wiki/facts/pricing_facts.py
+priced = price_with_pd(inp, 1.0, m2)
+```
+
+`price_with_pd` is `price_population`'s own loop over the booked rows, with the inputs read
+once; the facts assert that it reproduces `price_population` exactly, unstressed and in one
+stressed scenario run through `price_population(market=...)` itself.
+
+## Each market assumption ±{{< var pricing.sens.step >}} {#pr-market-sensitivity}
+
+Each assumption moved by {{< var pricing.sens.step >}} of its own value, down and up:
+
+{{< include ../../_generated/pricing-sensitivity.md >}}
+
+All rows are over the {{< var pricing.n >}} booked loans. The change in the share clearing,
+in percentage points against the committed {{< var pricing.share_clears >}}:
+
+| Assumption | −{{< var pricing.sens.step >}} | +{{< var pricing.sens.step >}} |
+|---|---|---|
+| `cost_of_funds` | {{< var pricing.sens.cost_of_funds.down.swing >}} | {{< var pricing.sens.cost_of_funds.up.swing >}} |
+| `lgd` | {{< var pricing.sens.lgd.down.swing >}} | {{< var pricing.sens.lgd.up.swing >}} |
+| `capital_ratio` | {{< var pricing.sens.capital_ratio.down.swing >}} | {{< var pricing.sens.capital_ratio.up.swing >}} |
+| `roe_hurdle` | {{< var pricing.sens.roe_hurdle.down.swing >}} | {{< var pricing.sens.roe_hurdle.up.swing >}} |
+| `opex_rate` | {{< var pricing.sens.opex_rate.down.swing >}} | {{< var pricing.sens.opex_rate.up.swing >}} |
+| `tax_rate` | {{< var pricing.sens.tax_rate.down.swing >}} | {{< var pricing.sens.tax_rate.up.swing >}} |
+
+Each change is the printed share less the printed committed share, so the two tables agree
+to the digit. `base_margin` is not stressed: it enters only the recommended rate, never the
+verdict, so no scenario on it could move a loan across the hurdle.
+
+### Reading the table
+
+**`{{< var pricing.sens.dominant >}}` dominates.** A {{< var pricing.sens.step >}} move in the
+cost of funds moves the share clearing furthest, both ways: down to
+{{< var pricing.sens.cost_of_funds.up.share_clears >}} or up to
+{{< var pricing.sens.cost_of_funds.down.share_clears >}}, with mispriced EAD between
+\${{< var pricing.sens.cost_of_funds.down.mispriced_ead >}} and
+\${{< var pricing.sens.cost_of_funds.up.mispriced_ead >}}. The reason is in the
+formula ([6.3](methodology.qmd#pr-break-even)): a relative move in an assumption moves each
+loan's hurdle-clearing rate by that share of the term the assumption contributes to it.
+
+- `cost_of_funds` contributes its full {{< var market.cost_of_funds >}} to every loan, so a
+  {{< var pricing.sens.step >}} move shifts every hurdle-clearing rate by the same amount, and
+  every loan near the hurdle moves with it.
+- `lgd` contributes PD × LGD, which differs by loan. For the median-PD loan
+  ([6.3](methodology.qmd#pr-worked-example)) PD × LGD is below the cost of funds, so for at
+  least half the book a move in LGD shifts the rate by less than the same move in the cost of
+  funds. Only for the loans whose PD × LGD exceeds the cost of funds does it shift the rate
+  by more. The measured swings put it second.
+- `capital_ratio` and `roe_hurdle` contribute the {{< var pricing.capital_charge >}} capital
+  charge, smaller than the cost of funds, to every loan.
+- `opex_rate` contributes {{< var market.opex_rate >}}, and `tax_rate` reaches the rate only
+  through the `1 / (1 − tax_rate)` factor on the capital charge: the two smallest swings.
+
+**The hurdle moves the verdict, not the ROE.** Moving `roe_hurdle` leaves the median ROE at
+{{< var pricing.sens.roe_hurdle.up.median_roe >}} in both directions, because ROE at the
+quoted rate does not depend on the hurdle; only the bar it is compared with moves.
+
+**`capital_ratio` and `roe_hurdle` give the same verdicts.** Their rows clear the same
+{{< var pricing.sens.capital_ratio.up.n_clears >}} loans at +{{< var pricing.sens.step >}} and
+{{< var pricing.sens.capital_ratio.down.n_clears >}} at −{{< var pricing.sens.step >}}, with the
+same mispriced EAD. A loan clears when its net income reaches `roe_hurdle × capital_ratio ×
+EAD`; the two enter the test only as a product ([6.4](assumptions.qmd#what-a-change-to-one-moves)).
+The median ROE differs, because the capital ratio is the ROE's denominator and the hurdle is
+not in it.
+
+**Every move goes the expected way.** Raising any cost, or the hurdle, never raises the
+share clearing or lowers the mispriced EAD; lowering one never lowers the share clearing or
+raises the mispriced EAD. The facts'
+tests assert this for every scenario.
+
+## PD scaled {#pd-scaled}
+
+The PD comes from the scorecard, whose calibration D4 measures by band. A uniform error in
+it is the simplest stress: every loan's PD multiplied by
+{{< var pricing.pd_scale.down.factor >}} or {{< var pricing.pd_scale.up.factor >}}, everything
+else as committed. `price_population` takes no PD override, so the facts repeat its loop with
+the scaled PD.
+
+{{< include ../../_generated/pricing-pd-scaling.md >}}
+
+The rows are **identical to the LGD rows** in the table above —
+{{< var pricing.pd_scale.down.share_clears >}} and {{< var pricing.pd_scale.up.share_clears >}}
+clearing, the same counts, median ROE and mispriced EAD. That is algebra, not coincidence.
+The PD enters the engine in exactly one place, expected loss, and only as the product PD ×
+LGD: in `profit_waterfall` (`pd_ * m.lgd * ead`), in `break_even_rate` and in
+`hurdle_clearing_rate` (`pd_ * m.lgd`). Multiplying PD by a factor and multiplying LGD by the
+same factor give the same product on every loan, so the same rates, the same ROE and the
+same verdicts. A {{< var pricing.sens.step >}} error in the scorecard's calibration is, for
+pricing, a {{< var pricing.sens.step >}} error in LGD.
+
+What that means for a validator: a PD that over- or under-predicts by
+{{< var pricing.sens.step >}} across the book moves the share clearing by roughly as much as
+the same error in LGD, and less than the same error in the cost of funds. A miscalibration
+confined to some bands, which is what D4 finds, moves only the loans in those bands; this
+chapter does not stress band by band. Finding 3 ([6.7](limitations.qmd)) carries that.
+
+## What is not stressed
+
+- **Several assumptions at once.** Each scenario moves one value. A rate environment that
+  moves the cost of funds and the hurdle together would move the book further than either
+  row shows. The v2 what-if lets a reviewer move all eight values together and see the
+  whole book's share clearing on each slider move ([6.1](purpose.qmd#who-consumes-it-and-how));
+  this chapter records only the scenarios fixed in code, which `python verify.py` re-runs
+  identically.
+- **The fee.** `fee_rate` is not stressed here: it is zero in the batch. Its effect is
+  arithmetic — a fee of `f` lowers every break-even and hurdle-clearing rate by exactly `f` —
+  and the identities hold with a non-zero fee ([6.5](performance.qmd#pr-identities)).
+- **The quoted rates.** They are data, not assumptions. Regenerating them would test the
+  generator, not the tool (finding 1).

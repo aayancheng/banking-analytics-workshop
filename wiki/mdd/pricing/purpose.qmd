@@ -1,0 +1,78 @@
+---
+title: "6.1 Purpose and use"
+order: 1
+---
+
+## The question it answers
+
+Pricing answers the question origination leaves open once a loan is booked: **does the rate
+this loan was quoted earn the bank its required return, and if not, what rate would?** For
+every booked loan it returns:
+
+| Output | What it is |
+|---|---|
+| `roe_at_quoted` | the loan's return on equity at the rate it was quoted, from a one-period profit waterfall ([6.3](methodology.qmd)) |
+| hurdle-clearing rate | the rate at which that ROE equals the hurdle, {{< var market.roe_hurdle >}} |
+| `recommended_rate` | the hurdle-clearing rate plus a base margin of {{< var market.base_margin >}} |
+| `clears_hurdle` / `mispriced` | whether the ROE at the quoted rate reaches the hurdle; `mispriced` is its negation |
+| `rate_shortfall` | how far the quoted rate is below the hurdle-clearing rate, and zero for a loan that clears |
+
+The **mispricing measure** is the share of booked loans, and the share of their exposure,
+quoted below the hurdle-clearing rate. It is what the portal reports for the book
+([6.5](performance.qmd)). A loan is mispriced in this sense whenever it earns less than the
+hurdle, by one basis point or by enough to lose money; finding 2 ([6.7](limitations.qmd))
+is about the difference.
+
+Pricing estimates nothing. The same PD, exposure, quoted rate and assumptions always give the
+same answer, which is why it is inventoried as a tool, not a model
+([D0](../d0-summary.qmd#why-pricing-is-listed-as-a-tool-not-a-model)). The answer is only
+as good as two inputs: the score's PD and the market assumptions. This chapter documents the
+arithmetic, and spends most of its length on those two inputs.
+
+## The population it is for
+
+The booked book: the {{< var pricing.n >}} loans the bank booked out of
+{{< var score.n_applicants >}} applicants ([D2](../d2-data.qmd#two-populations-applicants-and-booked)).
+Pricing runs on booked loans only, because only a booked loan has a quoted rate. An applicant
+the bank did not book has no price, and the portal answers with nothing rather than a number
+([6.2](data.qmd)).
+
+The booked population was not chosen by any model on this platform: the generator draws
+`booked` from the true PD with noise, standing in for the bank's historical lending decision
+(D2). Its quoted rates were also set by the generator, not by this engine; how they were set
+is the subject of finding 1 ([6.7](limitations.qmd)).
+
+## Who consumes it, and how
+
+Every consumer calls the engine in `pricing/src/engine.py`, through `price_population` for
+the book or `price_one` for a single loan. None re-implements the waterfall.
+
+| Consumer | What it takes |
+|---|---|
+| Portal (v1), `/api/pricing/summary` | `portfolio_summary` of the priced book, computed once at start-up by `price_population` (`app/main.py`): loans priced, loans clearing, share clearing, median ROE, mispriced EAD, mispriced share by band and by industry |
+| Portal (v1), `/api/pricing/{business_id}` | one loan's row of the same batch: PD, EAD, quoted and recommended rates, ROE and RAROC at the quoted rate, the verdict and the shortfall |
+| Portal (v1), `/api/customer/{business_id}` | from the same row: the ROE at the quoted rate, the verdict and the recommended rate |
+| Portal (v1), `/api/dashboard/summary` | the share clearing and the mispriced EAD |
+| Loan workbench (v2), `/api/v2/loan/{business_id}/pricing` | the full waterfall in dollars and basis points, the rate ladder (quoted, break-even, hurdle-clearing, recommended) and the verdict, from `app/v2/pricing.py::price_one` |
+| Loan workbench (v2), `.../pricing/whatif` | `price_one` re-run with the reviewer's quoted rate and any of the eight market values — the seven in `MARKET` and `fee_rate` — each on a slider; and the whole book re-priced under the same values (`_book_under`, `app/v2/whatif.py`). With no overrides it must equal the batch ([6.5](performance.qmd#pr-whatif)) |
+| Line Increase (D8) | not pricing's output, but its engine: the line-increase amount rules and incremental-ROE test import `MarketAssumptions`, `profit_waterfall` and `hurdle_clearing_rate`, and D8's gate is set at `MARKET`'s hurdle |
+
+Pricing's output reaches no other module: it is a read-out for the portal, not an input to a
+decision elsewhere on the platform. Its engine and its assumptions do reach line increase, so
+a change to either is a change there too ([6.4](assumptions.qmd)).
+
+`fee_rate` deserves a note here because it is easy to miss: it is not in `MARKET`, the engine
+defaults it to {{< var pricing.fee_rate >}}, and the batch never sets it. The workbench is the
+only place it can be moved, and none of the engine's unit tests moves it (finding 4,
+[6.7](limitations.qmd)).
+
+## Prohibited uses
+
+| Use | Why it is prohibited |
+|---|---|
+| Reading the mispriced share as evidence about how a bank prices | The quoted rates were generated without a capital charge, so most loans miss the hurdle by construction (finding 1, [6.7](limitations.qmd)). The share tests the measure; it does not describe a pricing practice. |
+| Quoting the recommended rate to a customer as the price | It is the hurdle-clearing rate plus a base margin, so it earns well above the hurdle ([6.3](methodology.qmd#pr-recommended)); and it rests on a PD that under-predicts in the best bands on the booked (finding 3). It is a reference point for a pricing decision, not the decision. |
+| Pricing an applicant the bank has not booked | There is no quoted rate to test. The hurdle-clearing rate can be computed for anyone with a PD, but the tool was built and checked on booked loans only. |
+| Changing a market assumption in the what-if and reading the result as the bank's position | The what-if is for exploring one loan and the book's response; the committed assumptions are the ones in `MARKET`, changed only through change control (finding 5, [6.7](limitations.qmd)). |
+| Running the engine with a PD from anywhere but the saved scorecard | The validated chain is `predict_score_pd` into the engine ([D3](../d3-dependencies.qmd)); a PD from another model, or the generator's true PD, is not what was documented. |
+| Any decision about a real business or a real book | The assumptions were set for a synthetic book ([D1](../d1-purpose.qmd#prohibited-uses)). |

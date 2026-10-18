@@ -49,7 +49,10 @@ website:
           href: mdd/adjudication/index.qmd
           contents:
             - auto: "mdd/adjudication/*.qmd"
-        - mdd/pricing/index.qmd
+        - section: "D6 Pricing"
+          href: mdd/pricing/index.qmd
+          contents:
+            - auto: "mdd/pricing/*.qmd"
         - mdd/ews/index.qmd
         - mdd/line_increase/index.qmd
         - mdd/d9-implementation.qmd

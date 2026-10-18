@@ -23,7 +23,7 @@ OSFI E-23 (Canada) and PRA SS1/23 (UK).
 | D3 | [Model dependencies](d3-dependencies.qmd) | drafted |
 | D4 | [Business Credit Score](score/index.qmd) | complete: the worked example of the template |
 | D5 | [Loan Adjudication](adjudication/index.qmd) | complete |
-| D6 | [Pricing](pricing/index.qmd) | in progress |
+| D6 | [Pricing](pricing/index.qmd) | complete |
 | D7 | [Early Warning](ews/index.qmd) | in progress |
 | D8 | [Line Increase](line_increase/index.qmd) | in progress |
 | D9 | [Implementation and change control](d9-implementation.qmd) | drafted |

@@ -13,6 +13,16 @@ Booked
   synthetic data give every applicant one, which is how these pages can compare the two
   populations.
 
+Break-even rate
+: The rate at which a loan's return on equity is zero: it covers the cost of funds, the
+  expected loss and the operating cost, and earns nothing on the equity. A loan quoted below
+  it loses money at its own rate (D6.3).
+
+Capital charge
+: The pre-tax return a loan must earn on the equity allocated to it for that equity to earn
+  the ROE hurdle after tax: hurdle × capital ratio / (1 − tax rate), as a rate on exposure.
+  The difference between the break-even and the hurdle-clearing rate (D6.3).
+
 EAD (exposure at default)
 : The amount owed if the borrower defaults. Pricing here uses the requested amount.
 
@@ -24,6 +34,11 @@ Gate
 Holdout
 : The share of the data set aside before fitting and used only to measure the model. A
   held-out metric estimates how the model ranks applicants it has not seen.
+
+Hurdle-clearing rate
+: The rate at which a loan's return on equity equals the hurdle: the break-even rate plus the
+  capital charge. A loan quoted at or above it clears the hurdle; below it, it is mispriced
+  (D6.3).
 
 IV (information value)
 : A single-variable measure of how well a feature separates defaulters from non-defaulters,
@@ -47,6 +62,10 @@ Lift
 : The default rate among the riskiest share of a population, ranked by a model, divided by
   the default rate of the whole population. A lift of 2 means the riskiest group defaults at
   twice the average rate. It depends on the share chosen, so these pages always name it.
+
+Mispriced EAD
+: The total exposure of the booked loans whose quoted rate is below their hurdle-clearing
+  rate. It weights the mispricing measure by money rather than by loan count (D6.5).
 
 PD (probability of default)
 : The model's estimate that a borrower defaults over the outcome window. The scorecard's PD

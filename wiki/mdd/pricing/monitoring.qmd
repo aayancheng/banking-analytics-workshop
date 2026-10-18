@@ -1,0 +1,81 @@
+---
+title: "6.8 Monitoring plan"
+order: 8
+---
+
+## What is monitored
+
+A tool does not drift the way a model does: the same inputs always give the same output.
+What moves is the inputs — the book, the PD the scorecard gives it, and the market
+assumptions — and with them what the tool reports. The plan therefore watches three things:
+**the book's position against the hurdle**, **where the mispricing sits**, and **every change
+to an input the tool does not compute itself**. The thresholds are policy constants
+(`wiki/facts/policy.py`), printed here by name; "points" are percentage points of the book.
+
+| Metric | Population | Threshold | Frequency | Action on breach |
+|---|---|---|---|---|
+| Share clearing the hurdle at the quoted rate | the booked book, and each new cohort of bookings | moving by more than {{< var monitoring.pricing_share_move >}} points from development | every pricing run | Find the input that moved, in this order: `MARKET`, the scorecard (a retrain or recalibration), the mix of new bookings. Report to the pricing tool owner. |
+| Below-break-even share and EAD | the same | the share moving by more than {{< var monitoring.pricing_share_move >}} points from development; any rise in a cohort of new bookings | every pricing run | Report to the pricing committee as loss-making business, by band (finding 2). |
+| Mispriced share and mispriced EAD, by score band | the same | a band's share moving by more than {{< var monitoring.pricing_share_move >}} points from development | every pricing run | Read beside D4's band calibration on the booked (finding 3): a move in the bands the PD under-predicts is checked against the PD before the price. |
+| Median ROE at the quoted rate | the same | reported, not thresholded | every pricing run | Read against the hurdle and the share clearing. |
+| Market assumptions | `shared.config.MARKET` | any change to any value | every change | Owner's sign-off, a dated entry in the change log, then re-run 6.5, 6.6 and D8's gate before the value is used (finding 5). |
+| The PD's calibration by band | booked loans with outcomes (D4's check) | D4's tolerance, {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}}, on at least {{< var monitoring.min_band_defaults >}} defaults | when outcomes mature | A breach in D4 is a pricing event too: re-run pricing after the recalibration (finding 3). |
+| Arithmetic identities and what-if equals batch | every booked loan | any residual at or above {{< var pricing.test_tolerance >}}; any verdict flip | every `verify.py` run and every test run | The build fails. Fix the cause in the code; never loosen the check ([6.9](gate.qmd)). |
+| Book summary against the committed summary | the booked book | relative drift above {{< var pricing.verify_tolerance >}} in `n`, `share_clears` or `mispriced_ead` | every `verify.py` run | `verify.py` fails: the data, the scorecard or `MARKET` changed. Rebuild the priced book deliberately, or restore the checkpoint ([6.9](gate.qmd)). |
+
+The share rows are the control for findings 2 and 3 and the context for finding 1: a move in
+the share clearing is read against the inputs that can cause it, never as a change in pricing
+discipline while the quotes are generated. The {{< var monitoring.pricing_share_move >}}-point
+threshold is smaller than the swing of a {{< var pricing.sens.step >}} move in the cost of
+funds ([6.6](sensitivity.qmd)) and larger than that of the same move in the operating cost or
+tax rate: a change in the dominant assumption always shows, and a small one in a minor
+assumption does not raise a false alarm.
+
+## Development baselines {#pr-development-baselines}
+
+What "no change" looks like, measured at development on the booked book.
+
+| Metric | Development value | Population |
+|---|---|---|
+| Share clearing the hurdle | {{< var pricing.share_clears >}} ({{< var pricing.n_clears >}} loans) | booked book, {{< var pricing.n >}} loans |
+| Mispriced EAD | \${{< var pricing.mispriced_ead >}} ({{< var pricing.mispriced_ead_share >}} of EAD) | booked book |
+| Below break-even | {{< var pricing.below_break_even.share >}} ({{< var pricing.below_break_even.n >}} loans, \${{< var pricing.below_break_even.ead >}}) | booked book |
+| Median ROE at the quoted rate | {{< var pricing.median_roe >}} | booked book |
+| Median quoted / recommended rate | {{< var pricing.median_quoted_rate >}} / {{< var pricing.median_recommended_rate >}} | booked book |
+
+| Score band | Mispriced share | Mispriced EAD ($) | Population |
+|---|---|---|---|
+| D | {{< var pricing.band.D.mispriced_rate >}} | {{< var pricing.band.D.mispriced_ead >}} | booked book, band D |
+| C | {{< var pricing.band.C.mispriced_rate >}} | {{< var pricing.band.C.mispriced_ead >}} | booked book, band C |
+| B | {{< var pricing.band.B.mispriced_rate >}} | {{< var pricing.band.B.mispriced_ead >}} | booked book, band B |
+| A | {{< var pricing.band.A.mispriced_rate >}} | {{< var pricing.band.A.mispriced_ead >}} | booked book, band A |
+| AAA | {{< var pricing.band.AAA.mispriced_rate >}} | {{< var pricing.band.AAA.mispriced_ead >}} | booked book, band AAA |
+
+The market assumptions at development are the table in [6.4](assumptions.qmd#pr-market);
+they are the first entry of the change log finding 5 asks for.
+
+## Events that trigger a re-run and review
+
+Pricing is not redeveloped; it is re-run. Any one of these re-runs the pricing of the book,
+re-reads [6.5](performance.qmd) and [6.6](sensitivity.qmd), and informs the validator:
+
+1. Any change to a value in `MARKET`, or to `fee_rate`'s use.
+2. Any change to the scorecard: a retrain, a recalibration, a new band boundary — every rate
+   moves with the PD ([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)).
+3. Any change to `pricing/src/`: the engine or the book-level functions.
+4. A share threshold above breached on two consecutive pricing runs with no input change to
+   explain it.
+
+The open findings of [6.7](limitations.qmd) are acted on at the first of these that touches
+them: finding 3 at D4's recalibration, findings 2 and 4 at the next change to `pricing/`,
+finding 5 before the next change to `MARKET`.
+
+## What is automated today
+
+This plan is documented, not yet automated. The platform has one booked book and one set of
+quotes, so there is no new cohort to compare. What runs today is the development side, on
+every `python verify.py`: the summary comparison and the facts — every figure on these pages,
+the identities and the what-if check included — recomputed through the engine from the
+committed data, scorecard and `MARKET` ([6.9](gate.qmd), [D9](../d9-implementation.qmd)). A
+change to `MARKET` is caught there today, because the facts recomputed from it no longer match
+the committed ones; nothing yet asks for the owner's sign-off.

@@ -222,3 +222,23 @@ def test_tables_render_from_the_facts(t):
     assert t["pricing.example.business_id"] in files["_generated/pricing-waterfall.md"]
     assert t["pricing.sens.cost_of_funds.up.share_clears"] in \
         files["_generated/pricing-sensitivity.md"]
+
+
+def test_rate_identities_hold_at_a_non_zero_fee(pf, t):
+    """No unit test sets fee_rate, though the v2 what-if exposes it (D6.7): the facts
+    re-check break-even and hurdle-clearing at FEE_PROBE on every booked loan."""
+    from pricing.src.engine import (MarketAssumptions, break_even_rate,
+                                    hurdle_clearing_rate, profit_waterfall)
+    assert pf["pricing.fee_probe"].value > 0
+    assert t["pricing.identity.fee"] == "< 1e-12"
+    m = MarketAssumptions.from_market(MARKET).replace(fee_rate=pf["pricing.fee_probe"].value)
+    for p in (0.001, 0.05, 0.4):
+        assert profit_waterfall(p, 5e4, break_even_rate(p, 5e4, m), m)["roe"] == \
+            pytest.approx(0.0, abs=1e-12)
+        assert profit_waterfall(p, 5e4, hurdle_clearing_rate(p, 5e4, m), m)["roe"] == \
+            pytest.approx(m.roe_hurdle, abs=1e-12)
+
+
+def test_verify_tolerance_is_read_from_verify_py(pf):
+    import verify
+    assert pf["pricing.verify_tolerance"].value == verify.PRICING_TOLERANCE

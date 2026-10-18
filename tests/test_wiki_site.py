@@ -81,9 +81,15 @@ def test_signoff_open_findings_are_d5_limitations_word_for_word():
     assert d11 == _finding_rows((WIKI / "mdd" / "adjudication" / "limitations.qmd").read_text())
 
 
+def test_signoff_open_findings_are_d6_limitations_word_for_word():
+    d11 = _finding_rows(_signoff_section("D6"))
+    assert len(d11) == 5
+    assert d11 == _finding_rows((WIKI / "mdd" / "pricing" / "limitations.qmd").read_text())
+
+
 def test_signoff_lists_every_finding_row_once():
     text = (WIKI / "mdd" / "d11-signoff.qmd").read_text()
-    assert len(_finding_rows(text)) == 6 + 6
+    assert len(_finding_rows(text)) == 6 + 6 + 5
 
 
 def test_d5_has_an_index_and_the_nine_parts_in_order():
@@ -95,9 +101,19 @@ def test_d5_has_an_index_and_the_nine_parts_in_order():
         assert "TEMPLATE" not in text, f"{part}: template brief not replaced"
 
 
+def test_d6_has_an_index_and_the_nine_parts_in_order():
+    index = (WIKI / "mdd" / "pricing" / "index.qmd").read_text()
+    assert "order: 0" in index and "Status: complete" in index
+    assert "How the template is adapted for a tool" in index
+    for i, part in enumerate(TEMPLATE_PARTS, 1):
+        text = (WIKI / "mdd" / "pricing" / f"{part}.qmd").read_text()
+        assert f'title: "6.{i} ' in text and f"order: {i}" in text, part
+        assert "TEMPLATE" not in text, f"{part}: template brief not replaced"
+
+
 def test_validation_book_lists_every_model_chapter_page():
     book = (WIKI / "_quarto-validation.yml").read_text()
-    for chapter in ("score", "adjudication"):
+    for chapter in ("score", "adjudication", "pricing"):
         pos = [book.index(f"mdd/{chapter}/{p}.qmd") for p in ["index"] + TEMPLATE_PARTS]
         assert pos == sorted(pos), chapter
 
@@ -212,3 +228,108 @@ def test_d5_prose_conclusions_hold_on_the_facts():
     assert _num(f["adj.pop.booked.auc_ci_hi"]) < _num(f["adj.gate_auc"])
     # booked lift "still clears its gate"
     assert _num(f["adj.pop.booked.lift"]) >= _num(f["adj.gate_lift"])
+
+
+def test_d6_prose_conclusions_hold_on_the_facts():
+    """Sentences in D6 that state a conclusion about a fact: if the fact moves, the prose must."""
+    f = _facts()
+    n = _num(f["pricing.n"])
+    # "the capital charge exceeds the base margin" (6.4, finding 1)
+    assert _num(f["pricing.capital_charge"]) > _num(f["market.base_margin"])
+    assert _num(f["pricing.capital_charge_less_margin"]) > 0
+    # "smaller than the cost of funds" (6.6)
+    assert _num(f["pricing.capital_charge"]) < _num(f["market.cost_of_funds"])
+    # most of the book misses at its own quote (index, 6.5, finding 1)
+    assert _num(f["pricing.share_mispriced"]) > 50
+    assert _num(f["pricing.median_roe"]) < _num(f["market.roe_hurdle"])
+    assert _num(f["pricing.median_quoted_rate"]) < _num(f["pricing.median_recommended_rate"])
+    # below break-even is exactly the negative-ROE set, and part of the mispriced (6.5, finding 2)
+    assert f["pricing.below_break_even.n"] == f["pricing.negative_roe.n"]
+    assert _num(f["pricing.below_break_even.n"]) < _num(f["pricing.n_mispriced"])
+    # "no flips"; every identity and the what-if held to a bound (6.5, 6.9)
+    assert f["pricing.whatif.flips"] == "0"
+    for k in ("break_even", "hurdle", "recommended", "waterfall", "ead_invariance", "max", "fee"):
+        assert f[f"pricing.identity.{k}"] == "< " + f["pricing.test_tolerance"], k
+    for k in ("max_diff", "pd_max_diff"):
+        assert f[f"pricing.whatif.{k}"] == "< " + f["pricing.test_tolerance"], k
+    # by band: highest share AAA then A, lowest C; D the most mispriced EAD and lowest
+    # median ROE, with a share below the book's (6.5, finding 3)
+    bands = ("D", "C", "B", "A", "AAA")
+    rate = {b: _num(f[f"pricing.band.{b}.mispriced_rate"]) for b in bands}
+    order = sorted(bands, key=lambda b: -rate[b])
+    assert order[:2] == ["AAA", "A"] and order[-1] == "C"
+    assert (f["pricing.worst_band"], f["pricing.second_band"], f["pricing.best_band"]) == \
+        ("AAA", "A", "C")
+    ead = {b: _num(f[f"pricing.band.{b}.mispriced_ead"]) for b in bands}
+    roe = {b: _num(f[f"pricing.band.{b}.median_roe"]) for b in bands}
+    assert max(ead, key=ead.get) == "D" and min(roe, key=roe.get) == "D"
+    assert rate["D"] < _num(f["pricing.share_mispriced"])
+    # finding 3: AAA, A, B over-default on the booked; only B on enough defaults; D inside
+    lo, hi = _num(f["monitoring.ratio_lo"]), _num(f["monitoring.ratio_hi"])
+    floor = _num(f["monitoring.min_band_defaults"])
+    for b in ("B", "A", "AAA"):
+        assert _num(f[f"score.band_booked.{b}.ratio"]) > hi, b
+    assert _num(f["score.band_booked.B.defaults"]) >= floor
+    for b in ("A", "AAA"):
+        assert _num(f[f"score.band_booked.{b}.defaults"]) < floor, b
+    for k in ("score.band.D.ratio", "score.band_booked.D.ratio"):
+        assert lo <= _num(f[k]) <= hi, k
+    # sensitivity: cost_of_funds dominates; LGD second; capital ratio and hurdle tie; opex
+    # and tax the two smallest (6.6, finding 5)
+    fields = ("cost_of_funds", "lgd", "capital_ratio", "roe_hurdle", "opex_rate", "tax_rate")
+    rng = {fd: _num(f[f"pricing.sens.{fd}.down.n_clears"]) - _num(f[f"pricing.sens.{fd}.up.n_clears"])
+           for fd in fields}
+    assert f["pricing.sens.dominant"] == "cost_of_funds"
+    assert sorted(fields, key=lambda fd: -rng[fd])[:2] == ["cost_of_funds", "lgd"]
+    assert rng["capital_ratio"] == rng["roe_hurdle"]
+    assert set(sorted(fields, key=lambda fd: rng[fd])[:2]) == {"opex_rate", "tax_rate"}
+    for name in ("up", "down"):
+        for c in ("n_clears", "mispriced_ead", "share_clears"):
+            assert f[f"pricing.sens.capital_ratio.{name}.{c}"] == f[f"pricing.sens.roe_hurdle.{name}.{c}"]
+        # "the hurdle moves the verdict, not the ROE"
+        assert f[f"pricing.sens.roe_hurdle.{name}.median_roe"] == f["pricing.median_roe"]
+        # "identical to the LGD rows": PD enters only as PD x LGD
+        for c in ("share_clears", "n_clears", "median_roe", "mispriced_ead"):
+            assert f[f"pricing.pd_scale.{name}.{c}"] == f[f"pricing.sens.lgd.{name}.{c}"]
+    # "for the median-PD loan PD x LGD is below the cost of funds", and it is the upper
+    # median, so that holds for at least half the book (6.6)
+    assert _num(f["pricing.example.pd"]) * _num(f["market.lgd"]) / 100 < _num(f["market.cost_of_funds"])
+    pos = int(f["pricing.example.rule"].split()[1].replace(",", ""))
+    assert pos >= n / 2
+    # the worked example: profitable but short of the hurdle; its recommended rate earns more
+    assert f["pricing.example.clears"] == "misses"
+    assert 0 < _num(f["pricing.example.roe"]) < _num(f["market.roe_hurdle"])
+    assert _num(f["pricing.example.roe_at_recommended"]) > _num(f["market.roe_hurdle"])
+    # monitoring threshold (6.8): below the cost-of-funds swings, above opex's and tax's
+    move = _num(f["monitoring.pricing_share_move"])
+    for fd in ("cost_of_funds",):
+        for name in ("up", "down"):
+            assert abs(_num(f[f"pricing.sens.{fd}.{name}.swing"])) > move
+    for fd in ("opex_rate", "tax_rate"):
+        for name in ("up", "down"):
+            assert abs(_num(f[f"pricing.sens.{fd}.{name}.swing"])) < move
+
+
+def test_d6_code_claims_hold():
+    """D6 statements about the code, not the facts."""
+    import pandas as pd
+    from shared.config import MARKET
+    from pricing.src.engine import MarketAssumptions, price_loan
+    from pricing.src.portfolio import portfolio_summary
+    m = MarketAssumptions.from_market(MARKET)
+    # the quote never sets a rate the engine produces (6.2, 6.3)
+    a, b = price_loan(0.05, 1e5, 0.02, m), price_loan(0.05, 1e5, 0.30, m)
+    assert a["recommended_rate"] == b["recommended_rate"]
+    assert a["hurdle_clearing_rate"] == b["hurdle_clearing_rate"]
+    # fee_rate is outside MARKET and no engine test sets it (6.1, finding 4)
+    assert "fee_rate" not in MARKET and m.fee_rate == 0.0
+    assert "fee_rate" not in (ROOT / "tests" / "test_engine.py").read_text()
+    # the summary has no break-even measure (finding 2)
+    df = pd.DataFrame({"clears_hurdle": [True, False], "mispriced": [False, True],
+                       "roe_at_quoted": [0.2, -0.1], "ead": [1.0, 2.0],
+                       "score_band": ["A", "D"], "industry": ["Retail", "Retail"]})
+    assert set(portfolio_summary(df)) == {"n", "n_clears", "share_clears", "median_roe",
+                                          "mispriced_ead", "by_band", "by_industry"}
+    # verify.py compares exactly these three figures (6.9)
+    src = (ROOT / "verify.py").read_text()
+    assert 'for k in ("n", "share_clears", "mispriced_ead"):' in src

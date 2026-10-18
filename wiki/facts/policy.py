@@ -15,6 +15,7 @@ RATIO_HI = 1.25     # ... upper edge
 IV_USELESS = 0.02   # information value below this: conventionally unpredictive
 MIN_BAND_DEFAULTS = 10  # a band's calibration breach counts toward a trigger only on this many defaults
 RULE_HIT_MOVE = 0.5     # a policy rule's hit share moving by more than this fraction of its development share
+PRICING_SHARE_MOVE = 5  # pricing (D6.8): a book share moving by more than this many percentage points
 
 
 def compute() -> dict[str, Fact]:
@@ -22,4 +23,5 @@ def compute() -> dict[str, Fact]:
         ("psi_watch", PSI_WATCH), ("psi_act", PSI_ACT),
         ("ratio_lo", RATIO_LO), ("ratio_hi", RATIO_HI), ("iv_useless", IV_USELESS)]} | {
         "monitoring.min_band_defaults": Fact(MIN_BAND_DEFAULTS, "d", SRC, POP),
-        "monitoring.rule_hit_move": Fact(RULE_HIT_MOVE, ".0%", SRC, POP)}
+        "monitoring.rule_hit_move": Fact(RULE_HIT_MOVE, ".0%", SRC, POP),
+        "monitoring.pricing_share_move": Fact(PRICING_SHARE_MOVE, "d", SRC, POP)}

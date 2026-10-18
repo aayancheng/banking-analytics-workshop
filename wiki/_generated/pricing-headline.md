@@ -7,5 +7,5 @@
 | Quoted below the hurdle-clearing rate (mispriced) | 5,802 (69.6%) |
 | Quoted below break-even (negative ROE) | 1,547 (18.6%) |
 | Median ROE at the quoted rate | 10.9% |
-| Mispriced EAD | $1,276,148,000 of $1,799,730,000 (70.9%) |
+| Mispriced EAD | \$1,276,148,000 of \$1,799,730,000 (70.9%) |
 | Median quoted / recommended rate | 9.42% / 12.23% |

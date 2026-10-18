@@ -162,7 +162,7 @@ def pricing_headline_table(t: dict[str, str]) -> str:
         ["Quoted below break-even (negative ROE)",
          f"{t['pricing.below_break_even.n']} ({t['pricing.below_break_even.share']})"],
         ["Median ROE at the quoted rate", t["pricing.median_roe"]],
-        ["Mispriced EAD", f"${t['pricing.mispriced_ead']} of ${t['pricing.total_ead']} "
+        ["Mispriced EAD", f"\\${t['pricing.mispriced_ead']} of \\${t['pricing.total_ead']} "
                           f"({t['pricing.mispriced_ead_share']})"],
         ["Median quoted / recommended rate",
          f"{t['pricing.median_quoted_rate']} / {t['pricing.median_recommended_rate']}"],
@@ -171,7 +171,7 @@ def pricing_headline_table(t: dict[str, str]) -> str:
 
 def pricing_band_table(t: dict[str, str]) -> str:
     return _table(["Band", "n", "Mispriced", "Median ROE", "Mean PD", "Mean quoted rate",
-                   "Mean recommended rate", "EAD ($)", "Mispriced EAD ($)"],
+                   "Mean recommended rate", "EAD (\\$)", "Mispriced EAD (\\$)"],
                   [[b] + [t[f"pricing.band.{b}.{c}"] for c in
                           ("n", "mispriced_rate", "median_roe", "mean_pd", "mean_quoted",
                            "mean_recommended", "ead", "mispriced_ead")] for b in BANDS])
@@ -196,7 +196,7 @@ def pricing_sensitivity_table(t: dict[str, str]) -> str:
             rows.append([f"`{fd}` {sign}{step}", t[f"{k}.value"], t[f"{k}.share_clears"],
                          t[f"{k}.n_clears"], t[f"{k}.median_roe"], t[f"{k}.mispriced_ead"]])
     return _table(["Scenario", "Assumption becomes", "Clear the hurdle", "n clearing",
-                   "Median ROE", "Mispriced EAD ($)"], rows)
+                   "Median ROE", "Mispriced EAD (\\$)"], rows)
 
 
 def pricing_pd_table(t: dict[str, str]) -> str:
@@ -207,24 +207,24 @@ def pricing_pd_table(t: dict[str, str]) -> str:
         rows.append([f"Score PD × {t[f'{k}.factor']}", t[f"{k}.share_clears"],
                      t[f"{k}.n_clears"], t[f"{k}.median_roe"], t[f"{k}.mispriced_ead"]])
     return _table(["PD fed to the engine", "Clear the hurdle", "n clearing", "Median ROE",
-                   "Mispriced EAD ($)"], rows)
+                   "Mispriced EAD (\\$)"], rows)
 
 
 def pricing_waterfall_table(t: dict[str, str]) -> str:
     e = "pricing.example"
     labels = [("interest_income", "Interest income"), ("cost_of_funds", "− Cost of funds"),
               ("expected_loss", "− Expected loss (PD × LGD × EAD)"),
-              ("operating_cost", "− Operating cost"), ("pre_tax_profit", "= Pre-tax profit"),
-              ("tax", "− Tax"), ("net_income", "= Net income"),
+              ("operating_cost", "− Operating cost"), ("pre_tax_profit", "**Pre-tax profit**"),
+              ("tax", "− Tax"), ("net_income", "**Net income**"),
               ("allocated_equity", "Allocated equity (capital ratio × EAD)")]
-    rows = [[lab, f"${t[f'{e}.wf.{k}']}"] for k, lab in labels]
+    rows = [[lab, f"\\${t[f'{e}.wf.{k}']}"] for k, lab in labels]
     rows += [["ROE at the quoted rate (net income / equity)", t[f"{e}.roe"]],
              ["Quoted rate", t[f"{e}.quoted_rate"]],
              ["Break-even rate (ROE 0)", t[f"{e}.break_even"]],
              [f"Hurdle-clearing rate (ROE {t['market.roe_hurdle']})", t[f"{e}.hurdle_clearing"]],
              ["Recommended rate (hurdle-clearing + base margin)", t[f"{e}.recommended"]]]
     return _table([f"`{t[f'{e}.business_id']}` (band {t[f'{e}.band']}, PD {t[f'{e}.pd']}, "
-                   f"EAD ${t[f'{e}.ead']})", "At the quoted rate"], rows)
+                   f"EAD \\${t[f'{e}.ead']})", "At the quoted rate"], rows)
 
 
 def fact_index(meta: dict[str, dict]) -> str:

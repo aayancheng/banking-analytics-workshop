@@ -3,18 +3,78 @@ title: "D6 Pricing"
 order: 0
 ---
 
-**Status: in progress.**
+**Status: complete.** All nine parts of the template are written, adapted for a tool.
 
-Pricing is inventoried as a deterministic calculation tool, not a model
-([D0](../d0-summary.qmd#why-pricing-is-listed-as-a-tool-not-a-model)). It still gets a
-chapter, because its output drives decisions and its inputs need governing.
+::: {.callout-note}
+## D6 at a glance
 
-The chapter will cover the profit waterfall and the rate that clears the
-{{< var market.roe_hurdle >}} ROE hurdle; the market assumptions in
-`shared.config.MARKET` and how a change to one is controlled; the PD it takes from the
-scorecard (D3); the mispricing measure over the booked book and where it concentrates;
-the engine's unit tests in place of a performance section; and how the portal's what-if
-equals the batch run.
+- **A tool, not a model:** pricing estimates nothing. It is arithmetic on the scorecard's PD
+  and seven market assumptions ([D0](../d0-summary.qmd#why-pricing-is-listed-as-a-tool-not-a-model)),
+  and the arithmetic holds to within {{< var pricing.test_tolerance >}} on every booked loan
+  ([6.5](performance.qmd)).
+- **The headline:** {{< var pricing.share_clears >}} of the {{< var pricing.n >}} booked loans
+  clear the {{< var market.roe_hurdle >}} ROE hurdle at the rate they were quoted; median ROE
+  {{< var pricing.median_roe >}}; mispriced EAD \${{< var pricing.mispriced_ead >}} of
+  \${{< var pricing.total_ead >}}.
+- **What the headline measures:** the generator quotes each loan without the
+  {{< var pricing.capital_charge >}} capital charge the hurdle needs, so most of the book
+  misses it by construction. The share is a test of the measure on synthetic quotes, not a
+  finding about any pricing practice (finding 1, [6.7](limitations.qmd)).
+- **Loss-making at its own quote:** {{< var pricing.below_break_even.n >}} loans
+  ({{< var pricing.below_break_even.share >}}) are quoted below break-even, and the tool's
+  summary does not show them (finding 2).
+- **One assumption dominates:** a {{< var pricing.sens.step >}} move in
+  `{{< var pricing.sens.dominant >}}` moves the share clearing from
+  {{< var pricing.share_clears >}} to between {{< var pricing.sens.cost_of_funds.up.share_clears >}}
+  and {{< var pricing.sens.cost_of_funds.down.share_clears >}} ([6.6](sensitivity.qmd)).
+- **Five open findings** the chapter raises about the tool and its inputs
+  ([6.7](limitations.qmd)).
+:::
 
-The chapter follows the [template](../index.qmd#the-template), with the parts that assume
-estimated parameters replaced by the tests that pin the arithmetic.
+Pricing answers two questions for every booked loan: **what rate would clear the bank's
+return hurdle, and was the loan quoted below it?** ([6.1](purpose.qmd)). It takes the PD
+from the Business Credit Score ([D4](../score/index.qmd), [D3](../d3-dependencies.qmd)), the
+loan's exposure, the rate the loan was quoted and the market assumptions in
+`shared.config.MARKET`, and runs a one-period profit waterfall
+([6.3](methodology.qmd)). It is inventoried as a deterministic calculation tool, not a
+model ([D0](../d0-summary.qmd#risk-tiering)): it has no estimated parameters. It still gets
+a chapter, because its output drives decisions and its inputs need governing.
+
+{{< include ../../_generated/pricing-headline.md >}}
+
+Measured on the booked book: the {{< var pricing.n >}} loans the bank booked, each priced with
+the scorecard's PD, its requested amount as EAD and the rate it was quoted
+([6.2](data.qmd)). Every number in the chapter is a named fact, recomputed through the
+module's own functions — `price_population`, `portfolio_summary` and the engine in
+`pricing/src/engine.py` — by `python verify.py`; the [fact index](../../reference/facts.qmd)
+gives each one's source and population. The chapter documents the tool as committed: it
+changes neither the engine nor the assumptions.
+
+## How the template is adapted for a tool
+
+The nine-part [template](../index.qmd#the-template) was written for models: parts 5, 6 and
+9 assume estimated parameters, a performance to measure and a statistical gate. Pricing has
+none of the three. Each part is kept, in the same place, and answers the question a
+validator would ask of a tool instead:
+
+| Template part | For a model | Here, for a tool | Why |
+|---|---|---|---|
+| 5 Performance | discrimination, calibration, stability | **Accuracy and outcomes**: the arithmetic identities over the whole book, the what-if equal to the batch, and the outcome the tool reports | There is nothing estimated to be accurate *about*. What can be wrong is the arithmetic, the implementation that serves it, and how its output is read. |
+| 6 Sensitivity | refits on reduced inputs | each market assumption moved by {{< var pricing.sens.step >}}, and the PD scaled | The tool's output moves only when an input does; the inputs are where its risk lives. |
+| 9 Gate record | a committed metric minimum | **Controls in place of a gate**: unit tests, the facts' identity checks, `verify.py`'s summary comparison and the what-if tests | A tool has no metric to gate; it has invariants to assert. |
+
+The other six parts keep their questions. Methodology has no fitting step, so it documents
+the formula and the choices in it; Assumptions covers the market values and the
+simplifications in the waterfall; Limitations, Monitoring and Purpose read as for a model.
+
+| § | Part | What it establishes |
+|---|---|---|
+| 6.1 | [Purpose and use](purpose.qmd) | the hurdle-clearing rate, the mispricing measure, the consumers, prohibited uses |
+| 6.2 | [Data and inputs](data.qmd) | the booked book, the score's PD, EAD, the quoted rate and why reading it is not leakage |
+| 6.3 | [Methodology](methodology.qmd) | the profit waterfall step by step on one loan; break-even, hurdle-clearing and recommended rates |
+| 6.4 | [Assumptions](assumptions.qmd) | each market value, what it means and who should own it; the simplifications |
+| 6.5 | [Accuracy and outcomes](performance.qmd) | identities, what-if equals batch, the headline, mispricing by band and industry |
+| 6.6 | [Sensitivity](sensitivity.qmd) | each assumption ±{{< var pricing.sens.step >}}; PD scaled, and why it equals LGD |
+| 6.7 | [Limitations and compensating controls](limitations.qmd) | five open findings, each with a control and an owner |
+| 6.8 | [Monitoring plan](monitoring.qmd) | book shares, mispricing by band, the assumption change log |
+| 6.9 | [Controls in place of a gate](gate.qmd) | the tests and checks that stand in for a gate, and their history |

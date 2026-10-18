@@ -1,0 +1,243 @@
+---
+title: "6.7 Limitations and compensating controls"
+order: 7
+---
+
+The chapter raises five open findings about the tool and its inputs. Each has evidence
+drawn from the facts or the code, a compensating control and an owner. The same five, in
+the same words, are D6's open findings in the validation sign-off (D11, in the validation
+PDF). The engine and the assumptions are not changed by this chapter: it documents them as
+committed.
+
+None of the findings is an error in the arithmetic, which holds on every loan
+([6.5](performance.qmd#pr-identities)). They are about what the tool's output means, what
+it leaves out, what is untested, and who governs its inputs.
+
+| # | Finding | Evidence | Compensating control | Owner | Status |
+|--|--------------|----------------|------------------|-------|------|
+| 1 | The headline mispricing share measures the data generator's quotes, not a pricing practice. | The generator quotes each loan at break-even on its true PD plus `base_margin` ({{< var market.base_margin >}}), with no capital charge; clearing the hurdle needs the capital charge, {{< var pricing.capital_charge >}}, which exceeds the margin by {{< var pricing.capital_charge_less_margin >}}. A loan clears only where the scorecard's PD sits far enough below the quote's, or the quote's noise covers the gap: {{< var pricing.share_mispriced >}} of the {{< var pricing.n >}} booked loans do not. | Report the mispriced share as a demonstration of the measure on generated quotes, never as a finding about a book, wherever it is shown; before any use on real loans, measure against the bank's actual quoted rates. | Pricing tool owner | open |
+| 2 | The tool's summary does not separate loans that lose money from loans that only miss the hurdle. | {{< var pricing.below_break_even.n >}} booked loans ({{< var pricing.below_break_even.share >}}), with \${{< var pricing.below_break_even.ead >}} of EAD, are quoted below break-even and have negative ROE; `portfolio_summary` returns one mispriced flag, its share and mispriced EAD, with no break-even measure, so they are counted among the {{< var pricing.n_mispriced >}} mispriced loans and not shown as such. | Report the below-break-even count and EAD beside the mispriced share (the facts recompute both on every `verify.py` run) and monitor them; add both to `portfolio_summary` at the next change to `pricing/`. | Pricing tool owner | open |
+| 3 | Mispricing is highest in the best score bands, where the PD the rates are built on is least supported. | Mispriced share {{< var pricing.band.AAA.mispriced_rate >}} in band AAA and {{< var pricing.band.A.mispriced_rate >}} in band A, against {{< var pricing.best_band_rate >}} in band {{< var pricing.best_band >}}. On the held-out booked the scorecard's observed / predicted is {{< var score.band_booked.B.ratio >}} in band B (D4 finding 6) and {{< var score.band_booked.A.ratio >}} and {{< var score.band_booked.AAA.ratio >}} in bands A and AAA (below the floor of {{< var monitoring.min_band_defaults >}} defaults). Where the PD under-predicts, the hurdle-clearing and recommended rates are too low. | Re-run pricing after D4's band-B recalibration; until then, monitor the mispriced share and EAD by band beside D4's band calibration on the booked, and do not set a band's price floor from the recommended rates in bands AAA to B. | Pricing tool owner, with the model developer (D4) | open |
+| 4 | `fee_rate` can be moved in the workbench but no test sets it, and the book-level functions have no unit tests. | `fee_rate` defaults to {{< var pricing.fee_rate >}} outside `MARKET`; none of the {{< var pricing.n_engine_tests >}} engine tests sets it, yet the v2 what-if accepts it and shows a slider for it. `price_population` and `portfolio_summary` are exercised only through the portal tests, the facts tests and `verify.py`'s comparison with the committed summary. | Add an engine test at a non-zero fee and unit tests of `price_population` and `portfolio_summary` at the next change to `pricing/`; until then, the facts re-check both rate identities at a fee of {{< var pricing.fee_probe >}} on every booked loan on every `verify.py` run ({{< var pricing.identity.fee >}}). | Pricing tool developer | open |
+| 5 | The market assumptions have no owner or change control beyond code review, and the cost of funds alone moves the outcome most. | `MARKET` is a dict in `shared/config.py` with no owner, effective date or change log. A {{< var pricing.sens.step >}} move in `cost_of_funds` takes the share clearing from {{< var pricing.share_clears >}} to {{< var pricing.sens.cost_of_funds.up.share_clears >}} or {{< var pricing.sens.cost_of_funds.down.share_clears >}}, the widest swing of the six assumptions; the same dict sets the generator's quotes and line increase's gate. | Name an owner for each assumption (6.4), keep a dated change log, and re-run 6.5, 6.6 and D8's gate before a change is used; until then, `verify.py` fails on any change to `MARKET` until the facts are rebuilt, and every change is reviewed and recorded as code (D9). | Pricing tool owner, with Treasury and Finance | open |
+
+## Finding 1 — The headline mispricing share measures the generator's quotes {#pr-finding-1}
+
+**Finding.** Most of the booked book misses the hurdle at its quoted rate. That is not
+evidence about how a bank prices: it is a consequence of how the data generator built the
+quotes, together with the difference between the PD the quotes were built on and the PD the
+engine uses.
+
+**Evidence.** The quoted rate, `risk_based_rate`, is set in `shared/data_generator.py`:
+
+```python
+risk_based_rate = (                                     # shared/data_generator.py
+    MARKET["cost_of_funds"]
+    + pd_true * MARKET["lgd"]
+    + MARKET["opex_rate"]
+    + MARKET["base_margin"]
+    + rng.normal(0.0, 0.003, n)
+).round(4)
+```
+
+That is break-even ([6.3](methodology.qmd#pr-break-even)) at the generator's true PD, plus
+the base margin, plus noise. The engine's hurdle-clearing rate is break-even at the
+scorecard's PD plus the capital charge ([6.3](methodology.qmd#pr-hurdle-clearing)). Subtract
+one from the other and the cost of funds and operating cost cancel:
+
+```
+quoted − hurdle_clearing = (true PD − score PD) × lgd + noise − (capital charge − base_margin)
+```
+
+The capital charge, `roe_hurdle × capital_ratio / (1 − tax_rate)`, is
+{{< var pricing.capital_charge >}}; the base margin is {{< var market.base_margin >}}; the
+last term is therefore {{< var pricing.capital_charge_less_margin >}}
+([6.4](assumptions.qmd#pr-capital-charge)). So, apart from the rounding of the quote to four
+decimal places, a loan clears only where the true PD exceeds the scorecard's by enough, or
+the noise is large enough, to make up that gap. On the committed data,
+{{< var pricing.n_mispriced >}} of the {{< var pricing.n >}} booked loans
+({{< var pricing.share_mispriced >}}) do not.
+
+This page quotes the generator's code, not its truth: no figure in this chapter is computed
+from the generator's true PD (the only place facts may use it is the ceiling in D4). The
+argument needs only the code and the market facts.
+
+**Impact.** The level of the headline — {{< var pricing.share_mispriced >}} mispriced,
+\${{< var pricing.mispriced_ead >}} of EAD — is set by the generator's choice to quote without
+a capital charge. A reader who takes it as a finding about pricing discipline is reading a
+property of synthetic data. Two things are still valid: the arithmetic, and the measure
+itself, which does exactly what [6.1](purpose.qmd) says. What the share does carry is a
+second, real lesson: a quote built on information the bank's scorecard does not have (here,
+the true PD) can only be judged against the scorecard's view, and part of what the measure
+reports is the gap between the two views — which is also why the quoted rate is on the
+leakage deny-list for models ([6.2](data.qmd#pr-quoted-rate)).
+
+**Compensating control.** Wherever the mispriced share is shown — the portal, this
+documentation, the workshop material — present it as a demonstration of the measure on
+generated quotes, not as a finding about a book; this record and the prohibited use in
+[6.1](purpose.qmd#prohibited-uses) are the control today. Before any use on real loans,
+measure against the rates the bank actually quoted, and re-derive the share before acting on
+it ([D1](../d1-purpose.qmd#prohibited-uses)). **Owner:** pricing tool owner.
+
+{{< yt S3-c4 >}}
+
+## Finding 2 — Loss-making loans are not separated from loans that miss the hurdle {#pr-finding-2}
+
+**Finding.** The verdict is one flag: a loan clears the hurdle or it is mispriced. A loan
+one basis point short and a loan that loses money at its own quote carry the same flag, and
+the tool's summary reports nothing that tells them apart.
+
+**Evidence.** Over the booked book ([6.5](performance.qmd#pr-headline)):
+{{< var pricing.below_break_even.n >}} loans ({{< var pricing.below_break_even.share >}}),
+with \${{< var pricing.below_break_even.ead >}} of EAD, are quoted below their break-even
+rate; the facts assert they are exactly the {{< var pricing.negative_roe.n >}} loans with
+negative ROE. `portfolio_summary` returns `n`, `n_clears`, `share_clears`, `median_roe`,
+`mispriced_ead` and the mispriced share by band and by industry: no break-even count and no
+break-even EAD. The v1 portal serves that summary; the v2 workbench shows a loan's break-even
+rate on its rate ladder, one loan at a time. The book-level break-even figures in this
+chapter come from the facts, not from the tool.
+
+**Impact.** The summary understates the most actionable part of its own result. Missing the
+hurdle is a question of return on capital; pricing below break-even is a loss on every such
+loan, before any capital is charged. A reader of the portal's summary sees
+{{< var pricing.share_mispriced >}} mispriced and cannot tell how much of it is loss-making.
+On this data the level is set by the generator (finding 1); the gap in the summary would be
+the same on a real book.
+
+**Compensating control.** Report the below-break-even count and EAD beside the mispriced
+share: the facts recompute both through the engine's `break_even_rate` on every `verify.py`
+run, and the monitoring plan tracks them ([6.8](monitoring.qmd)). At the next change to
+`pricing/`, add both to `portfolio_summary`, so that the portal shows them too.
+**Owner:** pricing tool owner.
+
+## Finding 3 — Mispricing is highest where the PD is least supported {#pr-finding-3}
+
+**Finding.** The mispriced share is highest in the best score bands, AAA and then A. Those
+bands, with band B, are where D4 finds the scorecard's PD least well calibrated on the loans
+the bank books. The rates the engine produces there rest on the weakest part of its input.
+
+**Evidence.** By score band, over the booked book ([6.5](performance.qmd#pr-by-band)):
+band AAA {{< var pricing.band.AAA.mispriced_rate >}} mispriced
+({{< var pricing.band.AAA.n >}} loans), band A {{< var pricing.band.A.mispriced_rate >}}
+({{< var pricing.band.A.n >}}), against the lowest, band {{< var pricing.best_band >}}, at
+{{< var pricing.best_band_rate >}}. On the scorecard's held-out booked applicants
+([D4.5](../score/performance.qmd#held-out-booked-applicants)), observed default over mean
+predicted PD is {{< var score.band_booked.B.ratio >}} in band B, on
+{{< var score.band_booked.B.defaults >}} defaults — D4 finding 6, which clears the monitoring
+floor of {{< var monitoring.min_band_defaults >}} defaults — and
+{{< var score.band_booked.A.ratio >}} in band A and {{< var score.band_booked.AAA.ratio >}}
+in band AAA, on {{< var score.band_booked.A.defaults >}} and
+{{< var score.band_booked.AAA.defaults >}} defaults, below the floor and so D4 observations,
+not findings. All three are above the tolerance's upper edge,
+{{< var monitoring.ratio_hi >}}: more default than the PD predicts.
+
+What the two facts do and do not say together:
+
+- **Under-prediction does not cause the concentration.** A PD that is too low makes the
+  hurdle-clearing rate too low, which makes a loan *more* likely to clear, not less. The
+  concentration in the best bands comes from finding 1: where PD × LGD is small, little
+  stands between the quote and the {{< var pricing.capital_charge_less_margin >}} gap
+  ([6.5](performance.qmd#pr-by-band)).
+- **It does mean the measured shortfall there is, if anything, too small,** and the
+  recommended rates too low. D4 finding 6 says it of band B in so many words: band B loans
+  are priced too cheaply.
+
+**Impact.** The bands where the tool reports the most mispricing are the bands where its
+recommended rates are least reliable, in the direction of being too low. A price floor or a
+rate card set from the recommended rates in bands AAA to B would inherit that. Band D, by
+contrast, carries the most mispriced exposure (\${{< var pricing.band.D.mispriced_ead >}})
+on a PD that D4 finds inside the tolerance on all held-out applicants
+({{< var score.band.D.ratio >}}) and on the held-out booked ({{< var score.band_booked.D.ratio >}}).
+
+**Compensating control.** When D4 finding 6's control is applied — a recalibration of band B,
+or an overlay on its PD — re-run pricing and re-read [6.5](performance.qmd) and
+[6.6](sensitivity.qmd). Until then, monitor the mispriced share and EAD by band beside D4's
+band calibration on the booked ([6.8](monitoring.qmd)), and do not set a band's price floor
+from the engine's recommended rates in bands AAA to B. **Owner:** pricing tool owner, with
+the model developer (D4).
+
+## Finding 4 — The fee and the book-level functions are untested {#pr-finding-4}
+
+**Finding.** Two parts of the code the portal relies on have no test of their own: the
+engine with a non-zero fee, and the two functions that price and summarise the book.
+
+**Evidence.**
+
+- **`fee_rate`.** It is a field of `MarketAssumptions` with a default of
+  {{< var pricing.fee_rate >}}, and it is not in `MARKET`, so the batch never sets it. It
+  enters interest income and is subtracted in the break-even and hurdle-clearing rates
+  ([6.3](methodology.qmd)). None of the {{< var pricing.n_engine_tests >}} tests in
+  `tests/test_engine.py` sets it. The workbench tests send it only at its default, and the one
+  test that moves it is the facts' own check, added with this chapter as the interim control
+  below.
+  Yet the v2 what-if accepts it (`PricingOverrides.fee_rate`, from 0 to 1) and the
+  workbench's pricing tab has a slider for it.
+- **`price_population` and `portfolio_summary`.** No test calls either directly to check its
+  behaviour. They are exercised indirectly: the portal runs them at start-up, so the portal
+  and workbench tests use their output; the facts tests pin their result against the
+  committed summary; and `verify.py` compares the live summary with the committed one
+  ([6.9](gate.qmd)). The notebook test only checks that a notebook cell calls
+  `price_population`.
+
+**Impact.** The engine's identities are pinned on one loan with no fee; a defect that only
+appears with a fee — a sign error, a fee counted twice — would reach the workbench untested.
+A defect in the book-level functions that left the three compared summary figures within
+tolerance would pass `verify.py`. Neither is known to exist: the identities hold with a fee
+on every booked loan ([6.5](performance.qmd#pr-identities)), and the summary matches. The
+finding is that nothing *designed* to catch them is in place.
+
+**Compensating control.** At the next change to `pricing/`, add an engine test at a non-zero
+fee (break-even and hurdle identities, and the fee's effect on interest income) and unit tests
+of `price_population` and `portfolio_summary` on a small fixed book. Until then, the facts
+re-check both rate identities at a fee of {{< var pricing.fee_probe >}} on every booked loan,
+on every `verify.py` run, and fail if a residual reaches the unit tests' tolerance
+({{< var pricing.identity.fee >}}). **Owner:** pricing tool developer.
+
+## Finding 5 — The market assumptions have no owner, and one dominates {#pr-finding-5}
+
+**Finding.** The seven values that set every rate in this chapter are a dict in a
+configuration file. Nothing records who owns each, when it was set, or why; and the one with
+the largest effect on the outcome, the cost of funds, is the one most exposed to the funding
+market.
+
+**Evidence.** `shared/config.py::MARKET` holds the seven values with a one-line comment each,
+and no owner, effective date or change log ([6.4](assumptions.qmd#pr-market)). The values
+have not changed since `stage-1` ([6.9](gate.qmd)). Of the six assumptions stressed by
+{{< var pricing.sens.step >}} ([6.6](sensitivity.qmd)), `cost_of_funds` moves the share
+clearing furthest: from {{< var pricing.share_clears >}} to
+{{< var pricing.sens.cost_of_funds.up.share_clears >}} (+{{< var pricing.sens.step >}}) or
+{{< var pricing.sens.cost_of_funds.down.share_clears >}} (−{{< var pricing.sens.step >}}). The
+same dict also feeds the data generator's quotes and line increase's gate
+([6.4](assumptions.qmd#what-a-change-to-one-moves)).
+
+**Impact.** Pricing has no estimated parameters ([D0](../d0-summary.qmd#why-pricing-is-listed-as-a-tool-not-a-model));
+its risk lives in its inputs, and these are the inputs it owns. D0 says they are "set and
+changed through change control (D9) like any other policy value". The control that exists
+is code review of `shared/config.py`: it would show *that* a value changed, not who decided
+it, on what evidence, or what it moved. A change to the cost of funds of the size a funding
+market can deliver moves several percentage points of the book across the hurdle, and moves
+D8's gate at the same time.
+
+**Compensating control.** Name an owner for each assumption — the proposals are in
+[6.4](assumptions.qmd#pr-market) — and keep a dated change log with the reason for each
+change. Before a changed value is used, re-run [6.5](performance.qmd) and
+[6.6](sensitivity.qmd) and D8's gate, and have the owner sign off the result. Until then two
+controls apply: `verify.py` recomputes the `market.*` facts from `MARKET` on every run and
+fails until the facts are rebuilt, so no change reaches `main` unseen
+([D9](../d9-implementation.qmd)); and every change is a commit that states what was verified
+([D9](../d9-implementation.qmd#stage-tags-and-change-control)). **Owner:** pricing tool
+owner, with Treasury and Finance.
+
+## Observations {#pr-observations}
+
+Recorded but not raised as findings. Each is a design choice stated here so it can be
+challenged, minor on this data, or covered by a control above.
+
+| Observation | Evidence | Why not a finding | Action |
+|---|---|---|---|
+| The workbench and the batch price on PDs computed over different rows | The workbench scores all {{< var score.n_applicants >}} applicants at start-up; `price_population` scores the {{< var pricing.n >}} booked alone. The PDs differ by {{< var pricing.whatif.pd_max_diff >}}, and the verdicts differ on {{< var pricing.whatif.flips >}} loans ([6.5](performance.qmd#pr-whatif)) | Bounded below the engine tests' tolerance, with no verdict changed; a property of the scorecard's batch prediction, not of pricing | The facts assert the bound and the flip count on every run; a breach fails `verify.py` |
+| The recommended rate earns well above the hurdle | It is the hurdle-clearing rate plus the base margin; the worked example's ROE at its recommended rate is {{< var pricing.example.roe_at_recommended >}} against a {{< var market.roe_hurdle >}} hurdle ([6.3](methodology.qmd#pr-recommended)) | A design choice, documented in the code as a "cushion" | Read the hurdle-clearing rate, not the recommended rate, as the minimum that earns the hurdle (a prohibited use, [6.1](purpose.qmd#prohibited-uses)) |
+| `capital_ratio` and `roe_hurdle` are one assumption for the verdict | Moving either by {{< var pricing.sens.step >}} gives the same clearing count, {{< var pricing.sens.capital_ratio.up.n_clears >}} up and {{< var pricing.sens.capital_ratio.down.n_clears >}} down ([6.6](sensitivity.qmd)) | Algebra: they enter the test only as a product | Their owners agree a change to either together (finding 5) |
+| The mispriced share varies by industry | From {{< var pricing.worst_industry_rate >}} ({{< var pricing.worst_industry >}}) to {{< var pricing.best_industry_rate >}} ({{< var pricing.best_industry >}}) ([6.5](performance.qmd#by-industry)) | Industry is a structural zero in the generator: the spread is noise | None. Do not act on industry-level mispricing from this data |
+| A loss is credited tax at the full rate | `tax = pre_tax × tax_rate`, negative for a loss ([6.4](assumptions.qmd#pr-simplifications)) | Changes how negative a loss-making loan's ROE is, not whether it is negative or whether a loan clears | Revisit with the other simplifications before any real use |
+| The quoted rate is on the leakage deny-list and pricing reads it | `risk_based_rate` is in `LEAKAGE_COLUMNS`; pricing compares it with the engine's rates ([6.2](data.qmd#pr-quoted-rate)) | The deny-list governs model features; pricing has none, and the quote never sets a rate the engine produces | None; what the quote inherits from the generator is finding 1 |

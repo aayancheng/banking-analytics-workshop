@@ -213,6 +213,25 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   Declines (9.8%) get an empty rule-hit list from v1 `/api/adjudicate`. D11 has a D4 and a D5
   subsection; `tests/test_wiki_site.py` pins each row-for-row, the D5 floor rule and every prose
   conclusion that rests on a fact (opposite zones 0, order breaks 0, decisions rank, etc.).
+- **D6 (Pricing) is a tool's chapter** — the template adapted (6.5 "Accuracy and outcomes", 6.6
+  sensitivity to inputs, 6.9 "Controls in place of a gate"); document only, `pricing/src` and `MARKET`
+  untouched. Five open findings:
+  1. The headline (30.4% clear, 69.6% mispriced, $1.276bn mispriced EAD) measures the generator: it
+     quotes break-even at the *true* PD + `base_margin` 2.0% with no capital charge, while the hurdle
+     needs `roe_hurdle × capital_ratio / (1 − tax)` = 2.4% (`pricing.capital_charge`). A loan clears
+     only if (true PD − score PD) × LGD + noise ≥ 0.4%. Prose quotes generator code, never DGP-truth facts.
+  2. 1,547 loans (18.6%, $251m EAD) are below break-even; `portfolio_summary` has no break-even measure.
+  3. Mispricing is highest in AAA (80.4%) then A (73.1%), lowest C — where D4's PD under-predicts on the
+     booked (B is D4 finding 6; A/AAA observations). Under-prediction does *not* cause the concentration
+     (it pushes the other way); it means the recommended rates there are too low. D carries the most
+     mispriced EAD ($353.8m) and the lowest median ROE.
+  4. `fee_rate` (not in `MARKET`) is a v2 slider but no engine test sets it; `price_population` /
+     `portfolio_summary` have no unit tests. Interim: facts re-check the identities at `FEE_PROBE` 0.5%.
+  5. `MARKET` has no owner/change log; `cost_of_funds` ±10% moves share clearing to 39.6% / 23.8%.
+  PD × k ≡ LGD × k exactly (PD enters only as PD × LGD); `capital_ratio` ≡ `roe_hurdle` for the verdict.
+  Identities and what-if residuals print as the bound `< 1e-12` (platform-stable), flips 0. Sensitivity
+  swings are built from the *printed* shares. D11 has a D6 subsection; `tests/test_wiki_site.py` pins it
+  row-for-row and the prose conclusions (cost_of_funds dominates, AAA then A, no flips, etc.).
 
 ## The DGP, in numbers
 
@@ -280,9 +299,10 @@ being asked.
 https://aayancheng.github.io/banking-analytics-workshop/, republished on every push to `main` that
 touches `wiki/`. It holds D4 and D5 in full, the platform chapters, two navigation spines, the
 template, the validation PDF and the agent homework with its self-checker; the S4 finale materials are
-in `workshop/`. **D5 (Loan Adjudication) is complete on branch `wiki-d5`** (2026-10-17): facts in
-`wiki/facts/adj_facts.py`, nine parts under `wiki/mdd/adjudication/`, six findings in D5.7 and D11 —
-not yet merged or pushed. D6–D8 remain stubs.
+in `workshop/`. **D5 (Loan Adjudication) is complete and on `main` and `origin/main`** (2026-10-17): facts in
+`wiki/facts/adj_facts.py`, nine parts under `wiki/mdd/adjudication/`, six findings in D5.7 and D11.
+**D6 (Pricing) is complete on branch `wiki-d6`** (2026-10-18), branched from that `main`: facts in
+`wiki/facts/pricing_facts.py`, nine parts under `wiki/mdd/pricing/`, five findings in D6.7 and D11 — not yet merged or pushed. D7–D8 remain stubs.
 
 ### Recutting sessions into chapter videos — the house method
 
@@ -394,8 +414,8 @@ address (invariant 6).
 
 ### Open threads
 
-- **Wiki v1 leftovers:** D6–D8 in full (pricing, EWS, line increase chapters are stubs that follow
-  the template; D5 is done, on `wiki-d5`), E1–E10 (explainers), book packaging (the EPUB/PDF is a stub:
+- **Wiki v1 leftovers:** D7–D8 in full (EWS and line increase chapters are stubs that follow
+  the template; D5 is done, on `main`, and D6 on `wiki-d6`), E1–E10 (explainers), book packaging (the EPUB/PDF is a stub:
   preface, Explain index, the template page and D10), and the Codespace test of the Quarto devcontainer
   (needs a push). Pages is live (above).
 

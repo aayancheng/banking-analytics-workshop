@@ -9,6 +9,7 @@ from wiki.facts import policy
     ("monitoring.psi_watch", "0.10"), ("monitoring.psi_act", "0.25"),
     ("monitoring.ratio_lo", "0.75"), ("monitoring.ratio_hi", "1.25"),
     ("monitoring.iv_useless", "0.02"), ("monitoring.min_band_defaults", "10"),
+    ("monitoring.pricing_share_move", "5"),
 ])
 def test_documented_policy_values(key, text):
     f = policy.compute()[key]

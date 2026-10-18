@@ -33,7 +33,13 @@ fire on this data.
 **Pricing (D6).** A deterministic return-on-equity calculation: given the score's PD and
 the market assumptions, it solves for the rate that clears a
 {{< var market.roe_hurdle >}} ROE hurdle and flags booked loans quoted below it. It
-estimates nothing.
+estimates nothing, and its arithmetic holds on every booked loan. At their quoted rates
+{{< var pricing.share_clears >}} of the {{< var pricing.n >}} booked loans clear the hurdle,
+and {{< var pricing.below_break_even.share >}} are quoted below break-even. That level
+describes the synthetic quotes, not a pricing practice: the data generator quotes without the
+capital charge the hurdle needs, which is the first of five open findings the chapter raises.
+The outcome is most sensitive to the cost of funds, one of seven market assumptions that no
+one is yet recorded as owning.
 
 **Early Warning (D7).** A behavioural model over the booked book's monthly history that
 places loans in risk tiers and names the triggers that fired. It is gated on how many

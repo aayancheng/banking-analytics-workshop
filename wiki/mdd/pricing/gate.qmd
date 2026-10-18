@@ -1,0 +1,105 @@
+---
+title: "6.9 Controls in place of a gate"
+order: 9
+---
+
+::: {.callout-important}
+## No statistical gate
+
+A model on this platform has a gate: a committed minimum on a held-out metric, asserted at
+training and recomputed by `verify.py` (D4.9, D5.9). Pricing has no metric to gate — it
+estimates nothing — and no training step to assert one in. What stands in for a gate is a set
+of invariants, each asserted in code and each failing the build when broken: **the
+arithmetic identities**, **the what-if equal to the batch**, and **the book's summary equal to
+the committed one**. All three hold on the committed book.
+:::
+
+## The engine's unit tests
+
+`tests/test_engine.py` has {{< var pricing.n_engine_tests >}} tests, each on one made-up loan
+with the committed `MARKET`:
+
+| Test | What it pins |
+|---|---|
+| `test_waterfall_identities` | pre-tax profit is income less the three costs; net income is pre-tax less tax; ROE and RAROC are the right ratios |
+| `test_break_even_rate_gives_zero_roe` | ROE at the break-even rate is zero, to {{< var pricing.test_tolerance >}} |
+| `test_hurdle_clearing_rate_hits_hurdle_exactly` | ROE at the hurdle-clearing rate is the hurdle, to {{< var pricing.test_tolerance >}} |
+| `test_roe_is_ead_invariant` | the same ROE at very different exposures |
+| `test_price_loan_flags_mispricing` | a quote below the hurdle-clearing rate is mispriced, one above is not; the shortfall; the recommended rate is hurdle-clearing plus the base margin |
+| `test_ead_must_be_positive` | the waterfall refuses a zero exposure |
+
+They test the formula, not the book, and none sets `fee_rate` (finding 4,
+[6.7](limitations.qmd)).
+
+## The identities on every loan
+
+The facts behind this chapter extend the unit tests from one loan to every booked loan, and
+to a non-zero fee: break-even, hurdle-clearing, recommended, the waterfall's sums and EAD
+invariance ([6.5](performance.qmd#pr-identities)). `wiki/facts/pricing_facts.py` raises if any
+residual reaches the unit tests' tolerance, which it reads from `tests/test_engine.py` itself
+— so loosening the tolerance there cannot loosen it here without the change showing in
+`pricing.test_tolerance`. `verify.py` runs that computation on every run on `main`.
+
+## The book's summary against the committed one
+
+`verify.py`'s portal check, `check_apps`, starts the portal in-process, reads
+`/api/pricing/summary` — `portfolio_summary` of `price_population`, as served — and compares
+three of its figures with `pricing/docs/summary.json`, committed when the book was last
+priced:
+
+```python
+PRICING_TOLERANCE = 0.02  # relative drift allowed vs the committed pricing summary
+...
+for k in ("n", "share_clears", "mispriced_ead"):                # verify.py, check_apps
+    want, got = committed[k], live[k]
+    if abs(got - want) > PRICING_TOLERANCE * max(abs(want), 1e-9):
+        return (False, f"pricing {k} drifted: {got} vs committed {want}", ...)
+```
+
+It fails if the loan count, the share clearing or the mispriced EAD moves by more than
+{{< var pricing.verify_tolerance >}} of its committed value: a change to the data, the
+scorecard or `MARKET` large enough to move the book shows here at every stage from
+`stage-3`. A smaller change, or a change to a figure it does not compare (the median ROE, the
+by-band shares), passes this check. On `main` the facts check covers that gap: every figure in
+this chapter is recomputed and compared at its printed precision, and `verify.py` fails, naming
+the key, if any page would print a different value ([D9](../d9-implementation.qmd)). The facts
+tests also pin the recomputed headline to the committed summary's own figures.
+
+## The what-if equals the batch
+
+The v2 workbench re-prices a loan with `price_one` and the book with `_book_under`; with the
+committed values both must reproduce the batch ([6.1](purpose.qmd#who-consumes-it-and-how)).
+Three layers check it:
+
+- **`tests/test_app_v2.py`**: on a sample of booked loans, the workbench's read path and its
+  what-if with an empty body equal the v1 batch row; the book-level what-if equals the
+  portal's batch summary; out-of-range values (an LGD above one, a zero capital ratio, a tax rate of
+  one) are refused.
+- **`tests/test_app_v2_ui_bodies.py`**: what the browser actually sends after the first slider
+  move — the quoted rate and all eight market values, explicitly — must return the same
+  payload as the empty body (on a sample of loans), and, priced with those explicit values,
+  must reproduce the batch's ROE and verdict on every booked loan and its count of loans
+  clearing.
+- **The facts**: `price_one` against `price_population` on every booked loan
+  ([6.5](performance.qmd#pr-whatif)): {{< var pricing.whatif.flips >}} verdicts differ, and
+  every number agrees to {{< var pricing.whatif.max_diff >}}.
+
+`verify.py`'s own v2 smoke check asserts the what-if for adjudication, not for pricing; the
+pricing what-if is covered by the tests and the facts above. If any of them fails, the
+workbench is showing a number the batch does not: fix the drift, never the test
+([D9](../d9-implementation.qmd#tests)).
+
+## History
+
+| Version | Change | Controls |
+|---|---|---|
+| `stage-1` (commit `e37a49d`) | `MARKET` introduced with the data generator | none on pricing yet |
+| `stage-3` (commit `dfbd30e`) | engine, `price_population`, unit tests and `verify.py`'s summary comparison introduced | {{< var pricing.n_engine_tests >}} unit tests; summary within {{< var pricing.verify_tolerance >}} |
+| `stage-4`, `stage-5`, `v1.0` to `v1.4` | unchanged | as above |
+| `v1.5`, with the v2 workbench | what-if tests added | plus the what-if tests |
+| `main`, with this chapter | facts recompute the identities on every loan, at a non-zero fee, and the what-if on every loan | plus the facts' checks |
+
+`MARKET`, the engine and its unit tests have not changed since they were introduced. As with
+a model's gate, a change to any invariant above — a looser tolerance, a dropped comparison —
+is a change of a committed promise: made on `main`, recorded in a new version tag, and shown
+in this table ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).

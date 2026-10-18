@@ -1,0 +1,94 @@
+---
+title: "6.4 Assumptions"
+order: 4
+---
+
+A tool's assumptions are of two kinds. The **market assumptions** are values: seven numbers
+in `shared.config.MARKET`, plus one engine default. The **simplifications** are in the
+formula: what the waterfall leaves out. Neither is estimated from data, so neither has
+evidence in the statistical sense. What each needs instead is a meaning, an owner, and a
+record of what moves when it changes.
+
+## The market assumptions {#pr-market}
+
+{{< include ../../_generated/pricing-market.md >}}
+
+All seven are read from one dict, `shared/config.py::MARKET`, by
+`MarketAssumptions.from_market`. `fee_rate` is not in the dict: the engine defaults it to
+{{< var pricing.fee_rate >}}, and only the v2 what-if can change it.
+
+| Assumption | What it means | Where it enters | Who should own it |
+|---|---|---|---|
+| `cost_of_funds`, {{< var market.cost_of_funds >}} | the rate the bank pays to fund a dollar of loan for a year — in a bank, the funds-transfer-pricing rate | break-even, in full, on every loan | Treasury (funds transfer pricing) |
+| `lgd`, {{< var market.lgd >}} | the share of EAD lost if the borrower defaults; one value for every loan | expected loss, as PD × LGD | Credit risk (the LGD model owner) |
+| `opex_rate`, {{< var market.opex_rate >}} | the annual cost of originating and servicing a loan, as a rate on EAD | break-even, in full, on every loan | Finance (cost allocation) |
+| `tax_rate`, {{< var market.tax_rate >}} | the marginal tax rate on loan profit | net income; and the capital charge, through `1 − tax_rate` | Finance (tax) |
+| `capital_ratio`, {{< var market.capital_ratio >}} | equity held per dollar of EAD | allocated equity; the capital charge | Capital management |
+| `roe_hurdle`, {{< var market.roe_hurdle >}} | the after-tax return the bank requires on that equity | the verdict; the capital charge | The CFO or the asset–liability committee (the bank's cost of equity) |
+| `base_margin`, {{< var market.base_margin >}} | a margin added above the hurdle-clearing rate | the recommended rate only — never the verdict | The pricing committee |
+| `fee_rate`, {{< var pricing.fee_rate >}} (engine default) | fees earned, as an annual rate on EAD | interest income; subtracted in break-even | The pricing committee, if it is ever used |
+
+The owners are this chapter's proposal: no owner is recorded anywhere in the code, and the
+dict carries no effective date or change log. That is finding 5 ([6.7](limitations.qmd)).
+
+### What a change to one moves
+
+`MARKET` is read by more than the pricing engine, which makes a change to it wider than it
+looks:
+
+- **Pricing.** Every rate and every verdict ([6.6](sensitivity.qmd) measures by how much).
+- **Line increase (D8).** The amount rules and the incremental-ROE test call the same engine
+  with the same `MarketAssumptions`, and D8's gate is that the aggregate incremental ROE
+  clears `MARKET`'s hurdle (`line_increase/src/train.py`). A change to the hurdle or to any
+  cost moves that gate.
+- **The data generator.** `shared/data_generator.py` builds the quoted rates from the same
+  dict (finding 1, [6.7](limitations.qmd)). The committed data were generated once and are
+  frozen in the parquet, so changing `MARKET` today changes the engine's rates but not the
+  quotes they are compared with. Regenerating the data after a change would move both.
+
+Two assumptions are, for the verdict, one. The hurdle and the capital ratio enter the
+clear-or-miss test only as their product (a loan clears when its net income reaches
+`roe_hurdle × capital_ratio × EAD`), so moving either by the same proportion gives the same
+verdict on every loan ([6.6](sensitivity.qmd)). They differ in what they do to the reported
+ROE, which the capital ratio changes and the hurdle does not.
+
+### The capital charge exceeds the base margin {#pr-capital-charge}
+
+One relation between the values carries most of this chapter's headline. The capital charge
+the hurdle needs, `roe_hurdle × capital_ratio / (1 − tax_rate)`, is
+{{< var pricing.capital_charge >}}. The base margin is {{< var market.base_margin >}}. The
+difference, {{< var pricing.capital_charge_less_margin >}}, is how far a rate set at
+break-even plus the base margin falls short of the hurdle-clearing rate. The engine does not
+set rates that way; the data generator does. Finding 1 ([6.7](limitations.qmd)) follows the
+consequence.
+
+## The simplifications {#pr-simplifications}
+
+Each is a property of the formula in [6.3](methodology.qmd). For each: what it leaves out,
+and which way leaving it out pushes the result.
+
+| Simplification | What it leaves out | Effect on this book |
+|---|---|---|
+| **Capital is a flat share of EAD** (risk-weighted assets = EAD) | Risk-sensitive capital: a riskier loan needs more equity | Every loan carries the same {{< var pricing.capital_charge >}} capital charge. Against a capital measure that rises with the PD, low-PD loans are charged more capital and high-PD loans less, so the hurdle-clearing rate tends to be higher in the best bands, and lower in band D, than such a measure would make it. |
+| **One period** | The term (`term_months` is not read), amortisation, the time value of money | The ROE is a first-year ROE on a fully drawn balance. For a loan that amortises, later years earn interest on less, so a one-period ROE overstates lifetime income. |
+| **No prepayment** | Borrowers repaying early, usually the best ones | Income on the loans most likely to prepay is overstated. |
+| **`fee_rate` is zero** | Origination and servicing fees | Interest is the only income. If fees exist, every loan's ROE is understated. The engine supports a fee, but it is never set and never tested (finding 4). |
+| **EAD is the requested amount** | Undrawn balances, partial draws, credit conversion | Every loan is fully drawn. Because ROE is a ratio to EAD this changes no verdict; it changes the dollar totals. |
+| **One LGD for every loan** | Collateral (`collateral_flag` is not read), seniority, industry recovery | Secured and unsecured loans carry the same expected loss for the same PD. |
+| **Tax is symmetric** | Limits on using a loss for tax | A loan that loses money is credited tax at the full rate (`tax = pre_tax × tax_rate`, negative when `pre_tax` is), which makes a negative ROE less negative than an unrelieved loss would be. |
+| **Expected loss only** | Unexpected loss beyond the capital charge; concentration | The capital charge stands in for unexpected loss at a flat rate. |
+
+None of these is wrong for a teaching tool that answers "does this rate earn the hurdle on
+a one-year view?" Each would need replacing before the engine priced a real book
+([D1](../d1-purpose.qmd#prohibited-uses)).
+
+## The PD is valid
+
+The one input that is not a value or a formula is the PD. The assumption is that the
+scorecard's PD is a good enough estimate of each booked loan's default probability to price
+on. D4 documents it: its ranking on the held-out booked (D4 finding 2) and its calibration
+by band (D4 finding 6 and the observations beside it). Pricing uses the PD as a probability,
+not as a ranking — expected loss is PD × LGD × EAD — so calibration, not discrimination, is
+what matters here. **Holds in part**, with D4's calibration findings carried into finding 3
+([6.7](limitations.qmd)). How much a uniform error in the PD would move the book is measured
+in [6.6](sensitivity.qmd#pd-scaled).
