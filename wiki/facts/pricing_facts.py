@@ -32,7 +32,8 @@ BOOKED = ("booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_a
           "quoted rate = risk_based_rate)")
 ASSUMPTION = "platform assumption"
 MODULE_POP = "module constant"
-EXAMPLE = "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)"
+EXAMPLE = ("one booked loan: the upper-median-PD loan of the booked book "
+           "(see pricing.example.rule)")
 
 SRC_PP = "pricing.src.portfolio.price_population"
 SRC_SUM = "pricing.src.portfolio.portfolio_summary"
@@ -42,6 +43,7 @@ SENS_STEP = 0.10            # each market assumption moved by +-10% (relative)
 SENS_FIELDS = ["cost_of_funds", "lgd", "opex_rate", "tax_rate", "capital_ratio", "roe_hurdle"]
 SENS_FMT = {"cost_of_funds": ".2%", "lgd": ".1%", "opex_rate": ".1%", "tax_rate": ".1%",
             "capital_ratio": ".1%", "roe_hurdle": ".1%"}
+SENS_CHECK = ("cost_of_funds", "up")   # the one scenario re-run through price_population
 PD_SCALES = [("down", 0.9), ("up", 1.1)]
 BANDS = ["D", "C", "B", "A", "AAA"]
 WATERFALL = ["interest_income", "cost_of_funds", "expected_loss", "operating_cost",
@@ -127,7 +129,8 @@ def compute() -> dict[str, Fact]:
     put("pricing.n", s["n"], ",d", SRC_SUM, BOOKED)
     put("pricing.n_clears", s["n_clears"], ",d", SRC_SUM, BOOKED)
     put("pricing.n_mispriced", int(df["mispriced"].sum()), ",d", SRC_PP, BOOKED)
-    put("pricing.share_clears", s["share_clears"], ".1%", SRC_SUM, BOOKED)
+    put("pricing.share_clears", s["n_clears"] / s["n"], ".1%", SRC_SUM + " (n_clears / n, unrounded)",
+        BOOKED)
     put("pricing.share_mispriced", float(df["mispriced"].mean()), ".1%", SRC_PP, BOOKED)
     put("pricing.median_roe", s["median_roe"], ".1%", SRC_SUM, BOOKED)
     put("pricing.mispriced_ead", s["mispriced_ead"], ",.0f", SRC_SUM, BOOKED)
@@ -177,7 +180,7 @@ def compute() -> dict[str, Fact]:
         put(f"pricing.{tag}_rate", by_ind[name]["mispriced_rate"], ".1%", SRC_SUM,
             f"booked book, industry {name}")
 
-    # --- the arithmetic, worked on one loan: the median-PD loan, chosen deterministically ---
+    # --- the arithmetic, worked on one loan: the upper-median-PD loan, chosen deterministically ---
     inp = _booked_inputs()
     order = inp.sort_values(["pd", "business_id"], kind="stable").index
     ex = inp.loc[order[len(order) // 2]]
@@ -236,14 +239,22 @@ def compute() -> dict[str, Fact]:
         "waterfall": "waterfall sums (per $ of EAD) and ROE = net income / equity",
         "ead_invariance": "|ROE at the loan's EAD - ROE at EAD 1|",
     }
+    # Residuals are ~1e-16 and their last digits depend on the platform, so each is
+    # asserted below the engine tests' tolerance and printed as that bound.
+    tol = engine_test_tolerance()
+    bound = f"< {tol:.0e}"
+    src_bound = (" -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) "
+                 "in wiki.facts.pricing_facts.compute")
+    labels["max"] = "the largest of the pricing.identity.* residuals"
+    res["max"] = max(res.values())
     for k, lab in labels.items():
-        put(f"pricing.identity.{k}", float(res[k]), ".1e",
-            f"pricing.src.engine, max over the booked book of {lab}", BOOKED)
-    put("pricing.identity.max", float(max(res.values())), ".1e",
-        "pricing.src.engine, largest of the pricing.identity.* residuals", BOOKED)
+        if not res[k] < tol:
+            raise AssertionError(f"pricing identity {k} residual {res[k]:.3e} >= {tol:.0e}")
+        put(f"pricing.identity.{k}", bound, "",
+            f"pricing.src.engine, max over the booked book of {lab}{src_bound}", BOOKED)
     put("pricing.n_engine_tests", n_engine_tests(), "d",
         "tests/test_engine.py (test_ functions, counted with ast)", MODULE_POP)
-    put("pricing.test_tolerance", engine_test_tolerance(), ".0e",
+    put("pricing.test_tolerance", tol, ".0e",
         "tests/test_engine.py (pytest.approx abs= for the rate solvers)", MODULE_POP)
 
     # --- loss-making at its own quoted rate: quoted below break-even ---
@@ -262,10 +273,12 @@ def compute() -> dict[str, Fact]:
     state = SimpleNamespace(profiles=biz.set_index("business_id"),
                             scores=predict_score_pd(biz).set_axis(biz["business_id"], axis=0))
     pd_batch = df.set_index("business_id")["pd"]
-    n_pd = int((state.scores.loc[pd_batch.index, "pd"] != pd_batch).sum())
-    put("pricing.whatif.n_pd_differ", n_pd, ",d",
+    pd_diff = float((state.scores.loc[pd_batch.index, "pd"] - pd_batch).abs().max())
+    if not pd_diff < tol:
+        raise AssertionError(f"portal and batch PDs differ by {pd_diff:.3e} >= {tol:.0e}")
+    put("pricing.whatif.pd_max_diff", bound, "",
         "predict_score_pd on all 12,000 applicants (the portal) vs on the booked rows alone "
-        "(price_population): loans whose PD differs in any bit", BOOKED)
+        "(price_population): max abs PD difference" + src_bound, BOOKED)
     worst = 0.0
     flips = 0
     for row in df.itertuples(index=False):
@@ -274,9 +287,11 @@ def compute() -> dict[str, Fact]:
                     abs(v["rates"]["recommended"] - row.recommended_rate),
                     abs(v["rates"]["quoted"] - row.quoted_rate))
         flips += v["verdict"]["clears_hurdle"] != row.clears_hurdle
-    put("pricing.whatif.max_diff", float(worst), ".1e",
+    if not worst < tol:
+        raise AssertionError(f"what-if and batch differ by {worst:.3e} >= {tol:.0e}")
+    put("pricing.whatif.max_diff", bound, "",
         "app.v2.pricing.price_one (the portal's what-if path) vs price_population, max abs "
-        "difference in ROE, recommended and quoted rate", BOOKED)
+        "difference in ROE, recommended and quoted rate" + src_bound, BOOKED)
     put("pricing.whatif.flips", int(flips), ",d",
         "app.v2.pricing.price_one vs price_population (clears_hurdle disagreements)", BOOKED)
 
@@ -287,6 +302,7 @@ def compute() -> dict[str, Fact]:
     assert base[cols].equals(df[cols]), "price_with_pd(1.0) no longer reproduces price_population"
     for name, k in PD_SCALES:
         s2 = portfolio_summary(price_with_pd(inp, k, m))
+        s2["share_clears"] = s2["n_clears"] / s2["n"]      # unrounded
         src = f"price_loan over the booked rows with predict_score_pd's pd x {k}"
         pop = BOOKED + f" -- PD scaled x {k}"
         put(f"pricing.pd_scale.{name}.factor", k, ".1f", "wiki.facts.pricing_facts.PD_SCALES",
@@ -296,21 +312,32 @@ def compute() -> dict[str, Fact]:
         put(f"pricing.pd_scale.{name}.median_roe", s2["median_roe"], ".1%", src, pop)
         put(f"pricing.pd_scale.{name}.mispriced_ead", s2["mispriced_ead"], ",.0f", src, pop)
 
-    # --- sensitivity to each market assumption, +-10% relative, via price_population ---
+    # --- sensitivity to each market assumption, +-10% relative ---
+    # Priced through price_with_pd (price_population's per-row price_loan loop over inputs
+    # read once) with the stressed MarketAssumptions; one stressed scenario is checked
+    # against a real price_population(market=...) call, which must match exactly.
     put("pricing.sens.step", SENS_STEP, ".0%", "wiki.facts.pricing_facts.SENS_STEP", MODULE_POP)
+    base_share = s["n_clears"] / s["n"]
     for field in SENS_FIELDS:
         for name, factor in (("down", 1 - SENS_STEP), ("up", 1 + SENS_STEP)):
             m2 = m.replace(**{field: getattr(m, field) * factor})
-            s2 = portfolio_summary(price_population(market=m2))
-            src = f"{SRC_PP}(market=MARKET with {field} x {factor:.2f})"
+            priced = price_with_pd(inp, 1.0, m2)
+            if (field, name) == SENS_CHECK:
+                assert priced[cols].equals(price_population(market=m2)[cols]), \
+                    f"price_with_pd no longer reproduces price_population(market=...) ({field} {name})"
+            s2 = portfolio_summary(priced)
+            share = s2["n_clears"] / s2["n"]
+            src = (f"price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, "
+                   f"checked equal to {SRC_PP}(market=...) on {SENS_CHECK[0]} {SENS_CHECK[1]}) "
+                   f"with MARKET's {field} x {factor:.2f}")
             pop = BOOKED + f" -- {field} x {factor:.2f}"
             key = f"pricing.sens.{field}.{name}"
             put(f"{key}.value", float(getattr(m2, field)), SENS_FMT[field], src, ASSUMPTION)
-            put(f"{key}.share_clears", s2["share_clears"], ".1%", src, pop)
+            put(f"{key}.share_clears", share, ".1%", src, pop)
             put(f"{key}.n_clears", s2["n_clears"], ",d", src, pop)
             put(f"{key}.median_roe", s2["median_roe"], ".1%", src, pop)
             put(f"{key}.mispriced_ead", s2["mispriced_ead"], ",.0f", src, pop)
-            put(f"{key}.swing", s2["share_clears"] - s["share_clears"], "+.1%", src, pop)
+            put(f"{key}.swing", share - base_share, "+.1%", src + " (unrounded shares)", pop)
     swing = {fd: abs(f[f"pricing.sens.{fd}.up.n_clears"].value
                      - f[f"pricing.sens.{fd}.down.n_clears"].value) for fd in SENS_FIELDS}
     top = sorted(SENS_FIELDS, key=lambda fd: (-swing[fd], fd))[0]

@@ -86,12 +86,49 @@ def test_counts_add_up(t, pf):
     assert t["pricing.below_break_even.n"] == t["pricing.negative_roe.n"]
 
 
-def test_identities_hold_to_machine_precision(pf):
+BOUND_KEYS = [f"pricing.identity.{k}" for k in
+              ("break_even", "hurdle", "recommended", "waterfall", "ead_invariance", "max")] + \
+             ["pricing.whatif.max_diff", "pricing.whatif.pd_max_diff"]
+
+
+def test_residuals_print_as_the_test_tolerance_bound(pf):
+    """compute() raises if any residual reaches the tolerance; the page prints the bound,
+    so the text is the same on every platform."""
     tol = pf["pricing.test_tolerance"].value
-    assert tol == 1e-12
-    for k in ("break_even", "hurdle", "recommended", "waterfall", "ead_invariance", "max"):
-        assert pf[f"pricing.identity.{k}"].value < tol, k
-    assert pf["pricing.n_engine_tests"].value == 6
+    assert tol == 1e-12 and pf["pricing.n_engine_tests"].value == 6
+    for k in BOUND_KEYS:
+        assert pf[k].text() == "< 1e-12" and pf[k].fmt == "", k
+        assert "tests/test_engine.py" in pf[k].source and "asserted" in pf[k].source, k
+    assert "pricing.whatif.n_pd_differ" not in pf
+
+
+def test_identity_residuals_are_below_the_tolerance_on_every_booked_loan():
+    """The real values behind the bounds, recomputed here, not trusted from compute()."""
+    os.chdir(ROOT)
+    from pricing.src.engine import (MarketAssumptions, break_even_rate,
+                                    hurdle_clearing_rate, profit_waterfall, recommended_rate)
+    from wiki.facts.pricing_facts import _booked_inputs, engine_test_tolerance
+    m, tol = MarketAssumptions.from_market(MARKET), engine_test_tolerance()
+    worst = 0.0
+    for p, e, q in _booked_inputs()[["pd", "ead", "quoted_rate"]].itertuples(index=False):
+        hc = hurdle_clearing_rate(p, e, m)
+        worst = max(worst, abs(profit_waterfall(p, e, break_even_rate(p, e, m), m)["roe"]),
+                    abs(profit_waterfall(p, e, hc, m)["roe"] - m.roe_hurdle),
+                    abs(recommended_rate(p, e, m) - hc - m.base_margin),
+                    abs(profit_waterfall(p, e, q, m)["roe"] - profit_waterfall(p, 1.0, q, m)["roe"]))
+    assert worst < tol
+
+
+def test_portal_and_batch_pds_agree_below_the_tolerance():
+    os.chdir(ROOT)
+    import pandas as pd
+    from score.src.predict import predict_score_pd
+    from shared.config import RAW
+    from wiki.facts.pricing_facts import _booked_inputs, engine_test_tolerance
+    biz = pd.read_parquet(RAW / "businesses.parquet")
+    portal = predict_score_pd(biz).set_axis(biz["business_id"], axis=0)["pd"]
+    batch = _booked_inputs().set_index("business_id")["pd"]
+    assert (portal.loc[batch.index] - batch).abs().max() < engine_test_tolerance()
 
 
 def test_worked_example_adds_up(pf):
@@ -108,7 +145,30 @@ def test_worked_example_adds_up(pf):
 
 def test_whatif_equals_batch(pf):
     assert pf["pricing.whatif.flips"].value == 0
-    assert pf["pricing.whatif.max_diff"].value < 1e-12
+
+
+SCENARIOS = [(fd, n) for fd in ("cost_of_funds", "lgd", "opex_rate", "tax_rate",
+                                "capital_ratio", "roe_hurdle") for n in ("down", "up")]
+
+
+@pytest.mark.parametrize("field,name", SCENARIOS)
+def test_printed_swing_is_printed_share_minus_printed_base(t, field, name):
+    k = f"pricing.sens.{field}.{name}"
+    share, base = float(t[f"{k}.share_clears"].rstrip("%")), float(t["pricing.share_clears"].rstrip("%"))
+    assert float(t[f"{k}.swing"].rstrip("%")) == pytest.approx(round(share - base, 1), abs=1e-9)
+
+
+def test_shares_are_unrounded_counts_over_n(pf):
+    n = pf["pricing.n"].value
+    assert pf["pricing.share_clears"].value == pf["pricing.n_clears"].value / n
+    for fd, name in SCENARIOS:
+        k = f"pricing.sens.{fd}.{name}"
+        assert pf[f"{k}.share_clears"].value == pf[f"{k}.n_clears"].value / n
+
+
+def test_worked_example_is_the_upper_median_loan(t, pf):
+    assert t["pricing.example.rule"].startswith("position 4,169 of 8,336")
+    assert "upper-median" in pf["pricing.example.business_id"].population
 
 
 def _v(pf, field, name, col):

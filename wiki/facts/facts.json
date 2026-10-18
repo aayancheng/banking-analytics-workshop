@@ -2129,161 +2129,161 @@
   },
   "pricing.example.band": {
     "fmt": "",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "predict_score_pd",
     "text": "C",
     "value": "C"
   },
   "pricing.example.break_even": {
     "fmt": ".2%",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.break_even_rate",
     "text": "7.83%",
     "value": 0.078347
   },
   "pricing.example.business_id": {
     "fmt": "",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.portfolio.price_population",
     "text": "BIZ101719",
     "value": "BIZ101719"
   },
   "pricing.example.clears": {
     "fmt": "",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.price_loan (clears_hurdle)",
     "text": "misses",
     "value": "misses"
   },
   "pricing.example.ead": {
     "fmt": ",.0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "businesses.requested_amount",
     "text": "57,000",
     "value": 57000.0
   },
   "pricing.example.hurdle_clearing": {
     "fmt": ".2%",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.hurdle_clearing_rate",
     "text": "10.23%",
     "value": 0.102347
   },
   "pricing.example.industry": {
     "fmt": "",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "businesses.industry",
     "text": "Healthcare",
     "value": "Healthcare"
   },
   "pricing.example.pd": {
     "fmt": ".2%",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "predict_score_pd",
     "text": "7.41%",
     "value": 0.074105
   },
   "pricing.example.quoted_rate": {
     "fmt": ".2%",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "businesses.risk_based_rate",
     "text": "8.76%",
     "value": 0.0876
   },
   "pricing.example.raroc": {
     "fmt": ".1%",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "7.7%",
     "value": 0.077106
   },
   "pricing.example.recommended": {
     "fmt": ".2%",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.recommended_rate",
     "text": "12.23%",
     "value": 0.122347
   },
   "pricing.example.roe": {
     "fmt": ".1%",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "5.8%",
     "value": 0.05783
   },
   "pricing.example.roe_at_recommended": {
     "fmt": ".1%",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.price_loan",
     "text": "27.5%",
     "value": 0.275
   },
   "pricing.example.rule": {
     "fmt": "",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "wiki.facts.pricing_facts (worked-example selection)",
     "text": "position 4,169 of 8,336 when the booked book is ordered by score PD, then business_id",
     "value": "position 4,169 of 8,336 when the booked book is ordered by score PD, then business_id"
   },
   "pricing.example.shortfall_bps": {
     "fmt": ".0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.price_loan (rate_shortfall, in basis points)",
     "text": "147",
     "value": 147.47236
   },
   "pricing.example.wf.allocated_equity": {
     "fmt": ",.0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "6,840",
     "value": 6840.0
   },
   "pricing.example.wf.cost_of_funds": {
     "fmt": ",.0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "1,995",
     "value": 1995.0
   },
   "pricing.example.wf.expected_loss": {
     "fmt": ",.0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "1,901",
     "value": 1900.792452
   },
   "pricing.example.wf.interest_income": {
     "fmt": ",.0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "4,993",
     "value": 4993.2
   },
   "pricing.example.wf.net_income": {
     "fmt": ",.0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "396",
     "value": 395.555661
   },
   "pricing.example.wf.operating_cost": {
     "fmt": ",.0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "570",
     "value": 570.0
   },
   "pricing.example.wf.pre_tax_profit": {
     "fmt": ",.0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "527",
     "value": 527.407548
   },
   "pricing.example.wf.tax": {
     "fmt": ",.0f",
-    "population": "one booked loan: the median-PD loan of the booked book (see pricing.example.rule)",
+    "population": "one booked loan: the upper-median-PD loan of the booked book (see pricing.example.rule)",
     "source": "pricing.src.engine.profit_waterfall at the quoted rate",
     "text": "132",
     "value": 131.851887
@@ -2296,46 +2296,46 @@
     "value": 0.0
   },
   "pricing.identity.break_even": {
-    "fmt": ".1e",
+    "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
-    "source": "pricing.src.engine, max over the booked book of |ROE at break_even_rate - 0|",
-    "text": "4.9e-16",
-    "value": 0.0
+    "source": "pricing.src.engine, max over the booked book of |ROE at break_even_rate - 0| -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
   },
   "pricing.identity.ead_invariance": {
-    "fmt": ".1e",
+    "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
-    "source": "pricing.src.engine, max over the booked book of |ROE at the loan's EAD - ROE at EAD 1|",
-    "text": "4.4e-16",
-    "value": 0.0
+    "source": "pricing.src.engine, max over the booked book of |ROE at the loan's EAD - ROE at EAD 1| -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
   },
   "pricing.identity.hurdle": {
-    "fmt": ".1e",
+    "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
-    "source": "pricing.src.engine, max over the booked book of |ROE at hurdle_clearing_rate - roe_hurdle|",
-    "text": "6.7e-16",
-    "value": 0.0
+    "source": "pricing.src.engine, max over the booked book of |ROE at hurdle_clearing_rate - roe_hurdle| -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
   },
   "pricing.identity.max": {
-    "fmt": ".1e",
+    "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
-    "source": "pricing.src.engine, largest of the pricing.identity.* residuals",
-    "text": "6.7e-16",
-    "value": 0.0
+    "source": "pricing.src.engine, max over the booked book of the largest of the pricing.identity.* residuals -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
   },
   "pricing.identity.recommended": {
-    "fmt": ".1e",
+    "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
-    "source": "pricing.src.engine, max over the booked book of |recommended_rate - hurdle_clearing_rate - base_margin|",
-    "text": "1.7e-17",
-    "value": 0.0
+    "source": "pricing.src.engine, max over the booked book of |recommended_rate - hurdle_clearing_rate - base_margin| -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
   },
   "pricing.identity.waterfall": {
-    "fmt": ".1e",
+    "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
-    "source": "pricing.src.engine, max over the booked book of waterfall sums (per $ of EAD) and ROE = net income / equity",
-    "text": "0.0e+00",
-    "value": 0.0
+    "source": "pricing.src.engine, max over the booked book of waterfall sums (per $ of EAD) and ROE = net income / equity -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
   },
   "pricing.industry.agriculture.mispriced_rate": {
     "fmt": ".1%",
@@ -2657,7 +2657,7 @@
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 0.9",
     "source": "price_loan over the booked rows with predict_score_pd's pd x 0.9",
     "text": "36.2%",
-    "value": 0.3623
+    "value": 0.362284
   },
   "pricing.pd_scale.up.factor": {
     "fmt": ".1f",
@@ -2692,7 +2692,7 @@
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- PD scaled x 1.1",
     "source": "price_loan over the booked rows with predict_score_pd's pd x 1.1",
     "text": "25.3%",
-    "value": 0.2529
+    "value": 0.252879
   },
   "pricing.second_band": {
     "fmt": "",
@@ -2711,168 +2711,168 @@
   "pricing.sens.capital_ratio.down.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 0.90",
     "text": "12.1%",
     "value": 0.1207
   },
   "pricing.sens.capital_ratio.down.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 0.90",
     "text": "1,131,421,000",
     "value": 1131421000.0
   },
   "pricing.sens.capital_ratio.down.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 0.90",
     "text": "3,027",
     "value": 3027
   },
   "pricing.sens.capital_ratio.down.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 0.90",
     "text": "36.3%",
-    "value": 0.3631
+    "value": 0.363124
   },
   "pricing.sens.capital_ratio.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 0.90 (unrounded shares)",
     "text": "+5.9%",
-    "value": 0.0591
+    "value": 0.059141
   },
   "pricing.sens.capital_ratio.down.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 0.90",
     "text": "10.8%",
     "value": 0.108
   },
   "pricing.sens.capital_ratio.up.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 1.10",
     "text": "9.9%",
     "value": 0.0988
   },
   "pricing.sens.capital_ratio.up.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 1.10",
     "text": "1,370,953,000",
     "value": 1370953000.0
   },
   "pricing.sens.capital_ratio.up.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 1.10",
     "text": "2,134",
     "value": 2134
   },
   "pricing.sens.capital_ratio.up.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 1.10",
     "text": "25.6%",
-    "value": 0.256
+    "value": 0.255998
   },
   "pricing.sens.capital_ratio.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- capital_ratio x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 1.10 (unrounded shares)",
     "text": "-4.8%",
-    "value": -0.048
+    "value": -0.047985
   },
   "pricing.sens.capital_ratio.up.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with capital_ratio x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's capital_ratio x 1.10",
     "text": "13.2%",
     "value": 0.132
   },
   "pricing.sens.cost_of_funds.down.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 0.90",
     "text": "13.1%",
     "value": 0.1305
   },
   "pricing.sens.cost_of_funds.down.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 0.90",
     "text": "1,056,177,000",
     "value": 1056177000.0
   },
   "pricing.sens.cost_of_funds.down.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 0.90",
     "text": "3,305",
     "value": 3305
   },
   "pricing.sens.cost_of_funds.down.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 0.90",
     "text": "39.6%",
-    "value": 0.3965
+    "value": 0.396473
   },
   "pricing.sens.cost_of_funds.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
-    "text": "+9.3%",
-    "value": 0.0925
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 0.90 (unrounded shares)",
+    "text": "+9.2%",
+    "value": 0.09249
   },
   "pricing.sens.cost_of_funds.down.value": {
     "fmt": ".2%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 0.90",
     "text": "3.15%",
     "value": 0.0315
   },
   "pricing.sens.cost_of_funds.up.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 1.10",
     "text": "8.7%",
     "value": 0.0868
   },
   "pricing.sens.cost_of_funds.up.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 1.10",
     "text": "1,411,217,000",
     "value": 1411217000.0
   },
   "pricing.sens.cost_of_funds.up.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 1.10",
     "text": "1,985",
     "value": 1985
   },
   "pricing.sens.cost_of_funds.up.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 1.10",
     "text": "23.8%",
-    "value": 0.2381
+    "value": 0.238124
   },
   "pricing.sens.cost_of_funds.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- cost_of_funds x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 1.10 (unrounded shares)",
     "text": "-6.6%",
-    "value": -0.0659
+    "value": -0.065859
   },
   "pricing.sens.cost_of_funds.up.value": {
     "fmt": ".2%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with cost_of_funds x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's cost_of_funds x 1.10",
     "text": "3.85%",
     "value": 0.0385
   },
@@ -2886,252 +2886,252 @@
   "pricing.sens.lgd.down.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 0.90",
     "text": "12.3%",
     "value": 0.1231
   },
   "pricing.sens.lgd.down.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 0.90",
     "text": "1,165,315,000",
     "value": 1165315000.0
   },
   "pricing.sens.lgd.down.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 0.90",
     "text": "3,020",
     "value": 3020
   },
   "pricing.sens.lgd.down.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 0.90",
     "text": "36.2%",
-    "value": 0.3623
+    "value": 0.362284
   },
   "pricing.sens.lgd.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 0.90 (unrounded shares)",
     "text": "+5.8%",
-    "value": 0.0583
+    "value": 0.058301
   },
   "pricing.sens.lgd.down.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 0.90",
     "text": "40.5%",
     "value": 0.405
   },
   "pricing.sens.lgd.up.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 1.10",
     "text": "9.4%",
     "value": 0.0944
   },
   "pricing.sens.lgd.up.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 1.10",
     "text": "1,358,662,000",
     "value": 1358662000.0
   },
   "pricing.sens.lgd.up.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 1.10",
     "text": "2,108",
     "value": 2108
   },
   "pricing.sens.lgd.up.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 1.10",
     "text": "25.3%",
-    "value": 0.2529
+    "value": 0.252879
   },
   "pricing.sens.lgd.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- lgd x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 1.10 (unrounded shares)",
     "text": "-5.1%",
-    "value": -0.0511
+    "value": -0.051104
   },
   "pricing.sens.lgd.up.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with lgd x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's lgd x 1.10",
     "text": "49.5%",
     "value": 0.495
   },
   "pricing.sens.opex_rate.down.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 0.90",
     "text": "11.5%",
     "value": 0.1149
   },
   "pricing.sens.opex_rate.down.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 0.90",
     "text": "1,223,433,000",
     "value": 1223433000.0
   },
   "pricing.sens.opex_rate.down.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 0.90",
     "text": "2,713",
     "value": 2713
   },
   "pricing.sens.opex_rate.down.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
-    "text": "32.6%",
-    "value": 0.3255
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 0.90",
+    "text": "32.5%",
+    "value": 0.325456
   },
   "pricing.sens.opex_rate.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
-    "text": "+2.2%",
-    "value": 0.0215
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 0.90 (unrounded shares)",
+    "text": "+2.1%",
+    "value": 0.021473
   },
   "pricing.sens.opex_rate.down.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 0.90",
     "text": "0.9%",
     "value": 0.009
   },
   "pricing.sens.opex_rate.up.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 1.10",
     "text": "10.2%",
     "value": 0.1024
   },
   "pricing.sens.opex_rate.up.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 1.10",
     "text": "1,319,806,000",
     "value": 1319806000.0
   },
   "pricing.sens.opex_rate.up.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 1.10",
     "text": "2,363",
     "value": 2363
   },
   "pricing.sens.opex_rate.up.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 1.10",
     "text": "28.3%",
-    "value": 0.2835
+    "value": 0.283469
   },
   "pricing.sens.opex_rate.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- opex_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 1.10 (unrounded shares)",
     "text": "-2.1%",
-    "value": -0.0205
+    "value": -0.020513
   },
   "pricing.sens.opex_rate.up.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with opex_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's opex_rate x 1.10",
     "text": "1.1%",
     "value": 0.011
   },
   "pricing.sens.roe_hurdle.down.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 0.90",
     "text": "10.9%",
     "value": 0.1087
   },
   "pricing.sens.roe_hurdle.down.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 0.90",
     "text": "1,131,421,000",
     "value": 1131421000.0
   },
   "pricing.sens.roe_hurdle.down.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 0.90",
     "text": "3,027",
     "value": 3027
   },
   "pricing.sens.roe_hurdle.down.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 0.90",
     "text": "36.3%",
-    "value": 0.3631
+    "value": 0.363124
   },
   "pricing.sens.roe_hurdle.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 0.90 (unrounded shares)",
     "text": "+5.9%",
-    "value": 0.0591
+    "value": 0.059141
   },
   "pricing.sens.roe_hurdle.down.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 0.90",
     "text": "13.5%",
     "value": 0.135
   },
   "pricing.sens.roe_hurdle.up.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 1.10",
     "text": "10.9%",
     "value": 0.1087
   },
   "pricing.sens.roe_hurdle.up.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 1.10",
     "text": "1,370,953,000",
     "value": 1370953000.0
   },
   "pricing.sens.roe_hurdle.up.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 1.10",
     "text": "2,134",
     "value": 2134
   },
   "pricing.sens.roe_hurdle.up.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 1.10",
     "text": "25.6%",
-    "value": 0.256
+    "value": 0.255998
   },
   "pricing.sens.roe_hurdle.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- roe_hurdle x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 1.10 (unrounded shares)",
     "text": "-4.8%",
-    "value": -0.048
+    "value": -0.047985
   },
   "pricing.sens.roe_hurdle.up.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with roe_hurdle x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's roe_hurdle x 1.10",
     "text": "16.5%",
     "value": 0.165
   },
@@ -3145,93 +3145,93 @@
   "pricing.sens.tax_rate.down.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 0.90",
     "text": "11.2%",
     "value": 0.1123
   },
   "pricing.sens.tax_rate.down.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 0.90",
     "text": "1,233,152,000",
     "value": 1233152000.0
   },
   "pricing.sens.tax_rate.down.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 0.90",
     "text": "2,669",
     "value": 2669
   },
   "pricing.sens.tax_rate.down.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 0.90",
     "text": "32.0%",
-    "value": 0.3202
+    "value": 0.320178
   },
   "pricing.sens.tax_rate.down.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 0.90",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 0.90 (unrounded shares)",
     "text": "+1.6%",
-    "value": 0.0162
+    "value": 0.016195
   },
   "pricing.sens.tax_rate.down.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 0.90)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 0.90",
     "text": "22.5%",
     "value": 0.225
   },
   "pricing.sens.tax_rate.up.median_roe": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 1.10",
     "text": "10.5%",
     "value": 0.105
   },
   "pricing.sens.tax_rate.up.mispriced_ead": {
     "fmt": ",.0f",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 1.10",
     "text": "1,315,196,000",
     "value": 1315196000.0
   },
   "pricing.sens.tax_rate.up.n_clears": {
     "fmt": ",d",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 1.10",
     "text": "2,385",
     "value": 2385
   },
   "pricing.sens.tax_rate.up.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 1.10",
     "text": "28.6%",
-    "value": 0.2861
+    "value": 0.286108
   },
   "pricing.sens.tax_rate.up.swing": {
     "fmt": "+.1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) -- tax_rate x 1.10",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 1.10 (unrounded shares)",
     "text": "-1.8%",
-    "value": -0.0179
+    "value": -0.017874
   },
   "pricing.sens.tax_rate.up.value": {
     "fmt": ".1%",
     "population": "platform assumption",
-    "source": "pricing.src.portfolio.price_population(market=MARKET with tax_rate x 1.10)",
+    "source": "price_loan over the booked rows (wiki.facts.pricing_facts.price_with_pd, checked equal to pricing.src.portfolio.price_population(market=...) on cost_of_funds up) with MARKET's tax_rate x 1.10",
     "text": "27.5%",
     "value": 0.275
   },
   "pricing.share_clears": {
     "fmt": ".1%",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
-    "source": "pricing.src.portfolio.portfolio_summary",
+    "source": "pricing.src.portfolio.portfolio_summary (n_clears / n, unrounded)",
     "text": "30.4%",
-    "value": 0.304
+    "value": 0.303983
   },
   "pricing.share_mispriced": {
     "fmt": ".1%",
@@ -3262,18 +3262,18 @@
     "value": 0
   },
   "pricing.whatif.max_diff": {
-    "fmt": ".1e",
+    "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
-    "source": "app.v2.pricing.price_one (the portal's what-if path) vs price_population, max abs difference in ROE, recommended and quoted rate",
-    "text": "3.1e-16",
-    "value": 0.0
+    "source": "app.v2.pricing.price_one (the portal's what-if path) vs price_population, max abs difference in ROE, recommended and quoted rate -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
   },
-  "pricing.whatif.n_pd_differ": {
-    "fmt": ",d",
+  "pricing.whatif.pd_max_diff": {
+    "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
-    "source": "predict_score_pd on all 12,000 applicants (the portal) vs on the booked rows alone (price_population): loans whose PD differs in any bit",
-    "text": "20",
-    "value": 20
+    "source": "predict_score_pd on all 12,000 applicants (the portal) vs on the booked rows alone (price_population): max abs PD difference -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
   },
   "pricing.worst_band": {
     "fmt": "",

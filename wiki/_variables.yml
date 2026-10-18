@@ -406,12 +406,12 @@ pricing:
       tax: "132"
   fee_rate: "0.0%"
   identity:
-    break_even: "4.9e-16"
-    ead_invariance: "4.4e-16"
-    hurdle: "6.7e-16"
-    max: "6.7e-16"
-    recommended: "1.7e-17"
-    waterfall: "0.0e+00"
+    break_even: "< 1e-12"
+    ead_invariance: "< 1e-12"
+    hurdle: "< 1e-12"
+    max: "< 1e-12"
+    recommended: "< 1e-12"
+    waterfall: "< 1e-12"
   industry:
     agriculture:
       mispriced_rate: "72.3%"
@@ -502,7 +502,7 @@ pricing:
         mispriced_ead: "1,056,177,000"
         n_clears: "3,305"
         share_clears: "39.6%"
-        swing: "+9.3%"
+        swing: "+9.2%"
         value: "3.15%"
       up:
         median_roe: "8.7%"
@@ -532,8 +532,8 @@ pricing:
         median_roe: "11.5%"
         mispriced_ead: "1,223,433,000"
         n_clears: "2,713"
-        share_clears: "32.6%"
-        swing: "+2.2%"
+        share_clears: "32.5%"
+        swing: "+2.1%"
         value: "0.9%"
       up:
         median_roe: "10.2%"
@@ -579,8 +579,8 @@ pricing:
   total_ead: "1,799,730,000"
   whatif:
     flips: "0"
-    max_diff: "3.1e-16"
-    n_pd_differ: "20"
+    max_diff: "< 1e-12"
+    pd_max_diff: "< 1e-12"
   worst_band: "AAA"
   worst_band_rate: "80.4%"
   worst_industry: "Construction"
