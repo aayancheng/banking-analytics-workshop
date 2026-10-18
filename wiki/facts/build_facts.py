@@ -31,7 +31,7 @@ def compute(full: bool) -> tuple[dict[str, Fact], dict]:
     os.chdir(ROOT)
     split = score_split()
     facts, exhibits = score_facts.compute(split)
-    facts.update(adj_facts.compute())
+    facts.update(adj_facts.compute(split))
     facts.update(ceiling.compute(split))
     facts.update(policy.compute())
     if full:

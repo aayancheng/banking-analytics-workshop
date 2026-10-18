@@ -9,7 +9,7 @@ headline below is already live.
 {{< include ../../_generated/adj-headline.md >}}
 
 Measured on the held-out {{< var adj.test_share >}} of the {{< var adj.n_applicants >}}
-applicants, as adjudication's own metadata records its split — the same rows the scorecard
+applicants, as adjudication's training script draws its split — the same rows the scorecard
 uses, split with the same seed.
 
 The chapter will cover the gradient-boosted model and the policy layer that turns its PD

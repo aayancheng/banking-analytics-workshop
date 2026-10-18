@@ -2,100 +2,1486 @@
   "adj.auc": {
     "fmt": ".4f",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
-    "source": "adjudication/models/metadata.json",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
     "text": "0.8096",
-    "value": 0.8096
+    "value": 0.809613
+  },
+  "adj.auc_ci_half": {
+    "fmt": ".2f",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "0.02",
+    "value": 0.022573
+  },
+  "adj.auc_ci_hi": {
+    "fmt": ".4f",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "0.8319",
+    "value": 0.831936
+  },
+  "adj.auc_ci_lo": {
+    "fmt": ".4f",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "0.7868",
+    "value": 0.78679
+  },
+  "adj.dec.booked.Approve.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "23",
+    "value": 23
+  },
+  "adj.dec.booked.Approve.dr": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "3.8%",
+    "value": 0.037767
+  },
+  "adj.dec.booked.Approve.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "609",
+    "value": 609
+  },
+  "adj.dec.booked.Approve.pd": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "2.6%",
+    "value": 0.025593
+  },
+  "adj.dec.booked.Approve.share": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "37.0%",
+    "value": 0.370438
+  },
+  "adj.dec.booked.Decline.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "79",
+    "value": 79
+  },
+  "adj.dec.booked.Decline.dr": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "18.1%",
+    "value": 0.181193
+  },
+  "adj.dec.booked.Decline.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "436",
+    "value": 436
+  },
+  "adj.dec.booked.Decline.pd": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "16.7%",
+    "value": 0.167474
+  },
+  "adj.dec.booked.Decline.share": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "26.5%",
+    "value": 0.265207
+  },
+  "adj.dec.booked.Refer.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "81",
+    "value": 81
+  },
+  "adj.dec.booked.Refer.dr": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "13.5%",
+    "value": 0.135225
+  },
+  "adj.dec.booked.Refer.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "599",
+    "value": 599
+  },
+  "adj.dec.booked.Refer.pd": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "13.9%",
+    "value": 0.139325
+  },
+  "adj.dec.booked.Refer.share": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "36.4%",
+    "value": 0.364355
+  },
+  "adj.dec.everyone.Approve.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "24",
+    "value": 24
+  },
+  "adj.dec.everyone.Approve.dr": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "3.3%",
+    "value": 0.03252
+  },
+  "adj.dec.everyone.Approve.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "738",
+    "value": 738
+  },
+  "adj.dec.everyone.Approve.pd": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "2.6%",
+    "value": 0.0255
+  },
+  "adj.dec.everyone.Approve.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "30.8%",
+    "value": 0.3075
+  },
+  "adj.dec.everyone.Decline.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "231",
+    "value": 231
+  },
+  "adj.dec.everyone.Decline.dr": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "29.7%",
+    "value": 0.296915
+  },
+  "adj.dec.everyone.Decline.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "778",
+    "value": 778
+  },
+  "adj.dec.everyone.Decline.pd": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "28.3%",
+    "value": 0.282733
+  },
+  "adj.dec.everyone.Decline.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "32.4%",
+    "value": 0.324167
+  },
+  "adj.dec.everyone.Refer.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "146",
+    "value": 146
+  },
+  "adj.dec.everyone.Refer.dr": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "16.5%",
+    "value": 0.165158
+  },
+  "adj.dec.everyone.Refer.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "884",
+    "value": 884
+  },
+  "adj.dec.everyone.Refer.pd": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "15.9%",
+    "value": 0.15854
+  },
+  "adj.dec.everyone.Refer.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "36.8%",
+    "value": 0.368333
+  },
+  "adj.dec.rejected.Approve.defaults": {
+    "fmt": ",d",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "1",
+    "value": 1
+  },
+  "adj.dec.rejected.Approve.dr": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "0.8%",
+    "value": 0.007752
+  },
+  "adj.dec.rejected.Approve.n": {
+    "fmt": ",d",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "129",
+    "value": 129
+  },
+  "adj.dec.rejected.Approve.pd": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "2.5%",
+    "value": 0.025061
+  },
+  "adj.dec.rejected.Approve.share": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "17.1%",
+    "value": 0.170635
+  },
+  "adj.dec.rejected.Decline.defaults": {
+    "fmt": ",d",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "152",
+    "value": 152
+  },
+  "adj.dec.rejected.Decline.dr": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "44.4%",
+    "value": 0.444444
+  },
+  "adj.dec.rejected.Decline.n": {
+    "fmt": ",d",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "342",
+    "value": 342
+  },
+  "adj.dec.rejected.Decline.pd": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "43.0%",
+    "value": 0.429671
+  },
+  "adj.dec.rejected.Decline.share": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "45.2%",
+    "value": 0.452381
+  },
+  "adj.dec.rejected.Refer.defaults": {
+    "fmt": ",d",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "65",
+    "value": 65
+  },
+  "adj.dec.rejected.Refer.dr": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "22.8%",
+    "value": 0.22807
+  },
+  "adj.dec.rejected.Refer.n": {
+    "fmt": ",d",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "285",
+    "value": 285
+  },
+  "adj.dec.rejected.Refer.pd": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "19.9%",
+    "value": 0.198927
+  },
+  "adj.dec.rejected.Refer.share": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "37.7%",
+    "value": 0.376984
+  },
+  "adj.decline.knockout_share": {
+    "fmt": ".1%",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "90.2%",
+    "value": 0.902314
+  },
+  "adj.decline.n": {
+    "fmt": ",d",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "778",
+    "value": 778
+  },
+  "adj.decline.rule1.key": {
+    "fmt": "",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "dscr_floor",
+    "value": "dscr_floor"
+  },
+  "adj.decline.rule1.n": {
+    "fmt": ",d",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "501",
+    "value": 501
+  },
+  "adj.decline.rule1.reason": {
+    "fmt": "",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "dscr<1.0",
+    "value": "dscr<1.0"
+  },
+  "adj.decline.rule1.share": {
+    "fmt": ".1%",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "64.4%",
+    "value": 0.643959
+  },
+  "adj.decline.rule2.key": {
+    "fmt": "",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "public_records",
+    "value": "public_records"
+  },
+  "adj.decline.rule2.n": {
+    "fmt": ",d",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "211",
+    "value": 211
+  },
+  "adj.decline.rule2.reason": {
+    "fmt": "",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "public_records present",
+    "value": "public_records present"
+  },
+  "adj.decline.rule2.share": {
+    "fmt": ".1%",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "27.1%",
+    "value": 0.271208
+  },
+  "adj.decline.rule3.key": {
+    "fmt": "",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "weak_score",
+    "value": "weak_score"
+  },
+  "adj.decline.rule3.n": {
+    "fmt": ",d",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "60",
+    "value": 60
+  },
+  "adj.decline.rule3.reason": {
+    "fmt": "",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "weak credit score",
+    "value": "weak credit score"
+  },
+  "adj.decline.rule3.share": {
+    "fmt": ".1%",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "7.7%",
+    "value": 0.077121
+  },
+  "adj.decline.rule_share": {
+    "fmt": ".1%",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "adjudication.src.policy.decide",
+    "text": "90.2%",
+    "value": 0.902314
+  },
+  "adj.decline.shap1.feature": {
+    "fmt": "",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
+    "text": "pd_score",
+    "value": "pd_score"
+  },
+  "adj.decline.shap1.n": {
+    "fmt": ",d",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
+    "text": "575",
+    "value": 575
+  },
+  "adj.decline.shap1.share": {
+    "fmt": ".1%",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
+    "text": "73.9%",
+    "value": 0.739075
+  },
+  "adj.decline.shap2.feature": {
+    "fmt": "",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
+    "text": "business_score",
+    "value": "business_score"
+  },
+  "adj.decline.shap2.n": {
+    "fmt": ",d",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
+    "text": "558",
+    "value": 558
+  },
+  "adj.decline.shap2.share": {
+    "fmt": ".1%",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
+    "text": "71.7%",
+    "value": 0.717224
+  },
+  "adj.decline.shap3.feature": {
+    "fmt": "",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
+    "text": "dscr",
+    "value": "dscr"
+  },
+  "adj.decline.shap3.n": {
+    "fmt": ",d",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
+    "text": "157",
+    "value": 157
+  },
+  "adj.decline.shap3.share": {
+    "fmt": ".1%",
+    "population": "held-out Declines (adjudication split, seed 42)",
+    "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
+    "text": "20.2%",
+    "value": 0.201799
   },
   "adj.gate_auc": {
     "fmt": ".2f",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
-    "source": "adjudication/models/metadata.json",
+    "source": "adjudication.src.train.AUC_GATE",
     "text": "0.78",
     "value": 0.78
   },
   "adj.gate_lift": {
     "fmt": ".1f",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
-    "source": "adjudication/models/metadata.json",
+    "source": "adjudication.src.train.LIFT_GATE",
     "text": "2.0",
     "value": 2.0
   },
   "adj.lift": {
     "fmt": ".2f",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
-    "source": "adjudication/models/metadata.json",
+    "source": "adjudication.src.train.top_ventile_lift",
     "text": "2.86",
-    "value": 2.8554
+    "value": 2.855362
+  },
+  "adj.lift_function": {
+    "fmt": "",
+    "population": "function name",
+    "source": "adjudication.src.train.top_ventile_lift",
+    "text": "top_ventile_lift",
+    "value": "top_ventile_lift"
+  },
+  "adj.lift_top_share": {
+    "fmt": ".0%",
+    "population": "measured on the function (one default among 10,000 ranked rows)",
+    "source": "adjudication.src.train.top_ventile_lift",
+    "text": "20%",
+    "value": 0.2
+  },
+  "adj.max_leverage": {
+    "fmt": ".2f",
+    "population": "all 12,000 applicants",
+    "source": "businesses.leverage",
+    "text": "0.80",
+    "value": 0.8
+  },
+  "adj.max_req_to_rev": {
+    "fmt": ".2f",
+    "population": "all 12,000 applicants",
+    "source": "requested_amount / annual_revenue, as decide() computes it",
+    "text": "0.50",
+    "value": 0.5
   },
   "adj.mix.Approve": {
     "fmt": ".1%",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
-    "source": "adjudication/models/metadata.json",
+    "source": "adjudication.src.policy.decide",
     "text": "30.8%",
-    "value": 0.308
+    "value": 0.3075
   },
   "adj.mix.Decline": {
     "fmt": ".1%",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
-    "source": "adjudication/models/metadata.json",
+    "source": "adjudication.src.policy.decide",
     "text": "32.4%",
-    "value": 0.324
+    "value": 0.324167
   },
   "adj.mix.Refer": {
     "fmt": ".1%",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
-    "source": "adjudication/models/metadata.json",
+    "source": "adjudication.src.policy.decide",
     "text": "36.8%",
-    "value": 0.368
+    "value": 0.368333
   },
   "adj.n_applicants": {
     "fmt": ",d",
-    "population": "all applicants (adjudication split, seed 42)",
-    "source": "adjudication/models/metadata.json",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.train split (train_test_split, seed 42, stratified)",
     "text": "12,000",
     "value": 12000
   },
   "adj.n_features": {
     "fmt": "d",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
-    "source": "adjudication/models/metadata.json",
+    "source": "adjudication.src.feature_engineering.ADJ_FEATURE_COLUMNS",
     "text": "21",
     "value": 21
   },
   "adj.n_test": {
     "fmt": ",d",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
-    "source": "adjudication/models/metadata.json",
+    "source": "adjudication.src.train split (train_test_split, seed 42, stratified)",
     "text": "2,400",
     "value": 2400
   },
   "adj.n_train": {
     "fmt": ",d",
-    "population": "training 80% of applicants",
-    "source": "adjudication/models/metadata.json",
+    "population": "training 80% of applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.train split (train_test_split, seed 42, stratified)",
     "text": "9,600",
     "value": 9600
   },
+  "adj.policy.dscr_floor": {
+    "fmt": ".1f",
+    "population": "policy constant",
+    "source": "adjudication/models/policy_config.json",
+    "text": "1.0",
+    "value": 1.0
+  },
+  "adj.policy.dscr_refer_hi": {
+    "fmt": ".1f",
+    "population": "policy constant",
+    "source": "adjudication/models/policy_config.json",
+    "text": "1.2",
+    "value": 1.2
+  },
+  "adj.policy.leverage_cap": {
+    "fmt": ".1f",
+    "population": "policy constant",
+    "source": "adjudication/models/policy_config.json",
+    "text": "6.0",
+    "value": 6.0
+  },
+  "adj.policy.prior_delinq_cap": {
+    "fmt": "d",
+    "population": "policy constant",
+    "source": "adjudication/models/policy_config.json",
+    "text": "3",
+    "value": 3
+  },
+  "adj.policy.public_records_cap": {
+    "fmt": "d",
+    "population": "policy constant",
+    "source": "adjudication/models/policy_config.json",
+    "text": "0",
+    "value": 0
+  },
+  "adj.policy.req_to_rev_cap": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "adjudication/models/policy_config.json",
+    "text": "0.75",
+    "value": 0.75
+  },
+  "adj.policy.score_floor": {
+    "fmt": "d",
+    "population": "policy constant",
+    "source": "adjudication/models/policy_config.json",
+    "text": "600",
+    "value": 600
+  },
+  "adj.pop.booked.auc": {
+    "fmt": ".4f",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "0.7355",
+    "value": 0.735539
+  },
+  "adj.pop.booked.dr": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "11.1%",
+    "value": 0.111314
+  },
+  "adj.pop.booked.lift": {
+    "fmt": ".2f",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.train.top_ventile_lift",
+    "text": "2.35",
+    "value": 2.348298
+  },
+  "adj.pop.booked.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.booked",
+    "text": "1,644",
+    "value": 1644
+  },
+  "adj.pop.everyone.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "0.8096",
+    "value": 0.809613
+  },
+  "adj.pop.everyone.dr": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "16.7%",
+    "value": 0.167083
+  },
+  "adj.pop.everyone.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.train.top_ventile_lift",
+    "text": "2.86",
+    "value": 2.855362
+  },
+  "adj.pop.everyone.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.booked",
+    "text": "2,400",
+    "value": 2400
+  },
+  "adj.pop.rejected.auc": {
+    "fmt": ".4f",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "0.8348",
+    "value": 0.834811
+  },
+  "adj.pop.rejected.dr": {
+    "fmt": ".1%",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "28.8%",
+    "value": 0.28836
+  },
+  "adj.pop.rejected.lift": {
+    "fmt": ".2f",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.train.top_ventile_lift",
+    "text": "2.40",
+    "value": 2.395582
+  },
+  "adj.pop.rejected.n": {
+    "fmt": ",d",
+    "population": "held-out rejected applicants (adjudication split, seed 42)",
+    "source": "businesses.booked",
+    "text": "756",
+    "value": 756
+  },
+  "adj.q_high": {
+    "fmt": ".0%",
+    "population": "policy constant",
+    "source": "adjudication.src.train (quantile for t_high)",
+    "text": "90%",
+    "value": 0.9
+  },
+  "adj.q_low": {
+    "fmt": ".0%",
+    "population": "policy constant",
+    "source": "adjudication.src.train (quantile for t_low)",
+    "text": "55%",
+    "value": 0.55
+  },
+  "adj.rule.any.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "994",
+    "value": 994
+  },
+  "adj.rule.any_knockout.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "702",
+    "value": 702
+  },
+  "adj.rule.any_knockout.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "29.2%",
+    "value": 0.2925
+  },
+  "adj.rule.any_override.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "354",
+    "value": 354
+  },
+  "adj.rule.any_override.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "14.8%",
+    "value": 0.1475
+  },
+  "adj.rule.dscr_floor.kind": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy (decision order)",
+    "text": "knockout",
+    "value": "knockout"
+  },
+  "adj.rule.dscr_floor.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "501",
+    "value": 501
+  },
+  "adj.rule.dscr_floor.n_all": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.policy.decide",
+    "text": "2,529",
+    "value": 2529
+  },
+  "adj.rule.dscr_floor.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "20.9%",
+    "value": 0.20875
+  },
+  "adj.rule.dscr_floor.text": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide",
+    "text": "dscr<1.0",
+    "value": "dscr<1.0"
+  },
+  "adj.rule.knockout_overturns.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "593",
+    "value": 593
+  },
+  "adj.rule.large_request.kind": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy (decision order)",
+    "text": "override",
+    "value": "override"
+  },
+  "adj.rule.large_request.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "0",
+    "value": 0
+  },
+  "adj.rule.large_request.n_all": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.policy.decide",
+    "text": "0",
+    "value": 0
+  },
+  "adj.rule.large_request.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "0.0%",
+    "value": 0.0
+  },
+  "adj.rule.large_request.text": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide",
+    "text": "large request vs revenue",
+    "value": "large request vs revenue"
+  },
+  "adj.rule.leverage.kind": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy (decision order)",
+    "text": "knockout",
+    "value": "knockout"
+  },
+  "adj.rule.leverage.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "0",
+    "value": 0
+  },
+  "adj.rule.leverage.n_all": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.policy.decide",
+    "text": "0",
+    "value": 0
+  },
+  "adj.rule.leverage.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "0.0%",
+    "value": 0.0
+  },
+  "adj.rule.leverage.text": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide",
+    "text": "leverage>6.0",
+    "value": "leverage>6.0"
+  },
+  "adj.rule.prior_delinquencies.kind": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy (decision order)",
+    "text": "knockout",
+    "value": "knockout"
+  },
+  "adj.rule.prior_delinquencies.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "41",
+    "value": 41
+  },
+  "adj.rule.prior_delinquencies.n_all": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.policy.decide",
+    "text": "263",
+    "value": 263
+  },
+  "adj.rule.prior_delinquencies.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "1.7%",
+    "value": 0.017083
+  },
+  "adj.rule.prior_delinquencies.text": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide",
+    "text": "prior_delinquencies>=3",
+    "value": "prior_delinquencies>=3"
+  },
+  "adj.rule.public_records.kind": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy (decision order)",
+    "text": "knockout",
+    "value": "knockout"
+  },
+  "adj.rule.public_records.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "211",
+    "value": 211
+  },
+  "adj.rule.public_records.n_all": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.policy.decide",
+    "text": "959",
+    "value": 959
+  },
+  "adj.rule.public_records.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "8.8%",
+    "value": 0.087917
+  },
+  "adj.rule.public_records.text": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide",
+    "text": "public_records present",
+    "value": "public_records present"
+  },
+  "adj.rule.thin_dscr.kind": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy (decision order)",
+    "text": "override",
+    "value": "override"
+  },
+  "adj.rule.thin_dscr.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "129",
+    "value": 129
+  },
+  "adj.rule.thin_dscr.n_all": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.policy.decide",
+    "text": "716",
+    "value": 716
+  },
+  "adj.rule.thin_dscr.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "5.4%",
+    "value": 0.05375
+  },
+  "adj.rule.thin_dscr.text": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide",
+    "text": "thin affordability margin (dscr)",
+    "value": "thin affordability margin (dscr)"
+  },
+  "adj.rule.weak_score.kind": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy (decision order)",
+    "text": "override",
+    "value": "override"
+  },
+  "adj.rule.weak_score.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "261",
+    "value": 261
+  },
+  "adj.rule.weak_score.n_all": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.policy.decide",
+    "text": "1,549",
+    "value": 1549
+  },
+  "adj.rule.weak_score.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide",
+    "text": "10.9%",
+    "value": 0.10875
+  },
+  "adj.rule.weak_score.text": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide",
+    "text": "weak credit score",
+    "value": "weak credit score"
+  },
+  "adj.score_zone.differ.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "PD-zone rule on predict_score_pd's pd vs the LightGBM PD",
+    "text": "345",
+    "value": 345
+  },
+  "adj.score_zone.differ.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "PD-zone rule on predict_score_pd's pd vs the LightGBM PD",
+    "text": "14.4%",
+    "value": 0.14375
+  },
+  "adj.score_zone.opposite.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "PD-zone rule on predict_score_pd's pd vs the LightGBM PD",
+    "text": "0",
+    "value": 0
+  },
+  "adj.sens.step": {
+    "fmt": ".0%",
+    "population": "policy constant",
+    "source": "wiki.facts.adj_facts.SENS_STEP",
+    "text": "10%",
+    "value": 0.1
+  },
+  "adj.sens.t_high_down.Approve": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_high x 0.90",
+    "text": "30.8%",
+    "value": 0.3075
+  },
+  "adj.sens.t_high_down.Decline": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_high x 0.90",
+    "text": "33.1%",
+    "value": 0.330833
+  },
+  "adj.sens.t_high_down.Refer": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_high x 0.90",
+    "text": "36.2%",
+    "value": 0.361667
+  },
+  "adj.sens.t_high_down.changed": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_high x 0.90",
+    "text": "16",
+    "value": 16
+  },
+  "adj.sens.t_high_down.t": {
+    "fmt": ".4f",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide with t_high x 0.90",
+    "text": "0.4449",
+    "value": 0.44487
+  },
+  "adj.sens.t_high_up.Approve": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_high x 1.10",
+    "text": "30.8%",
+    "value": 0.3075
+  },
+  "adj.sens.t_high_up.Decline": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_high x 1.10",
+    "text": "31.8%",
+    "value": 0.3175
+  },
+  "adj.sens.t_high_up.Refer": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_high x 1.10",
+    "text": "37.5%",
+    "value": 0.375
+  },
+  "adj.sens.t_high_up.changed": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_high x 1.10",
+    "text": "16",
+    "value": 16
+  },
+  "adj.sens.t_high_up.t": {
+    "fmt": ".4f",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide with t_high x 1.10",
+    "text": "0.5437",
+    "value": 0.54373
+  },
+  "adj.sens.t_low_down.Approve": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_low x 0.90",
+    "text": "30.6%",
+    "value": 0.30625
+  },
+  "adj.sens.t_low_down.Decline": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_low x 0.90",
+    "text": "32.4%",
+    "value": 0.324167
+  },
+  "adj.sens.t_low_down.Refer": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_low x 0.90",
+    "text": "37.0%",
+    "value": 0.369583
+  },
+  "adj.sens.t_low_down.changed": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_low x 0.90",
+    "text": "3",
+    "value": 3
+  },
+  "adj.sens.t_low_down.t": {
+    "fmt": ".4f",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide with t_low x 0.90",
+    "text": "0.0859",
+    "value": 0.08595
+  },
+  "adj.sens.t_low_up.Approve": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_low x 1.10",
+    "text": "31.0%",
+    "value": 0.309583
+  },
+  "adj.sens.t_low_up.Decline": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_low x 1.10",
+    "text": "32.4%",
+    "value": 0.324167
+  },
+  "adj.sens.t_low_up.Refer": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_low x 1.10",
+    "text": "36.6%",
+    "value": 0.36625
+  },
+  "adj.sens.t_low_up.changed": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with t_low x 1.10",
+    "text": "5",
+    "value": 5
+  },
+  "adj.sens.t_low_up.t": {
+    "fmt": ".4f",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide with t_low x 1.10",
+    "text": "0.1051",
+    "value": 0.10505
+  },
   "adj.t_high": {
     "fmt": ".4f",
-    "population": "calibrated at train time",
-    "source": "adjudication/models/policy_config.json",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.train calibration (np.quantile of model PD, rounded 4dp)",
     "text": "0.4943",
     "value": 0.4943
   },
   "adj.t_low": {
     "fmt": ".4f",
-    "population": "calibrated at train time",
-    "source": "adjudication/models/policy_config.json",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.train calibration (np.quantile of model PD, rounded 4dp)",
     "text": "0.0955",
     "value": 0.0955
   },
   "adj.test_share": {
     "fmt": ".0%",
-    "population": "all applicants (adjudication split, seed 42)",
-    "source": "adjudication/models/metadata.json",
+    "population": "all 12,000 applicants",
+    "source": "adjudication.src.train split (train_test_split, seed 42, stratified)",
     "text": "20%",
     "value": 0.2
+  },
+  "adj.trainonly.changed": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with thresholds from training-row PDs only",
+    "text": "7",
+    "value": 7
+  },
+  "adj.trainonly.mix.Approve": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with thresholds from training-row PDs only",
+    "text": "30.8%",
+    "value": 0.3075
+  },
+  "adj.trainonly.mix.Decline": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with thresholds from training-row PDs only",
+    "text": "32.1%",
+    "value": 0.32125
+  },
+  "adj.trainonly.mix.Refer": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication.src.policy.decide with thresholds from training-row PDs only",
+    "text": "37.1%",
+    "value": 0.37125
+  },
+  "adj.trainonly.t_high": {
+    "fmt": ".4f",
+    "population": "training 80% of applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.train calibration (np.quantile of model PD, rounded 4dp)",
+    "text": "0.5117",
+    "value": 0.5117
+  },
+  "adj.trainonly.t_low": {
+    "fmt": ".4f",
+    "population": "training 80% of applicants (adjudication split, seed 42)",
+    "source": "adjudication.src.train calibration (np.quantile of model PD, rounded 4dp)",
+    "text": "0.0939",
+    "value": 0.0939
+  },
+  "adj.zone.booked.Approve.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "60",
+    "value": 60
+  },
+  "adj.zone.booked.Approve.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "1,024",
+    "value": 1024
+  },
+  "adj.zone.booked.Approve.observed": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "5.9%",
+    "value": 0.058594
+  },
+  "adj.zone.booked.Approve.predicted": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "3.5%",
+    "value": 0.03527
+  },
+  "adj.zone.booked.Approve.ratio": {
+    "fmt": ".2f",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "1.66",
+    "value": 1.661275
+  },
+  "adj.zone.booked.Decline.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "15",
+    "value": 15
+  },
+  "adj.zone.booked.Decline.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "33",
+    "value": 33
+  },
+  "adj.zone.booked.Decline.observed": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "45.5%",
+    "value": 0.454545
+  },
+  "adj.zone.booked.Decline.predicted": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "62.5%",
+    "value": 0.625454
+  },
+  "adj.zone.booked.Decline.ratio": {
+    "fmt": ".2f",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "0.73",
+    "value": 0.726745
+  },
+  "adj.zone.booked.Refer.defaults": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "108",
+    "value": 108
+  },
+  "adj.zone.booked.Refer.n": {
+    "fmt": ",d",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "587",
+    "value": 587
+  },
+  "adj.zone.booked.Refer.observed": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "businesses.default",
+    "text": "18.4%",
+    "value": 0.183986
+  },
+  "adj.zone.booked.Refer.predicted": {
+    "fmt": ".1%",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "19.6%",
+    "value": 0.196429
+  },
+  "adj.zone.booked.Refer.ratio": {
+    "fmt": ".2f",
+    "population": "held-out booked applicants (adjudication split, seed 42)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "0.94",
+    "value": 0.936658
+  },
+  "adj.zone.everyone.Approve.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "66",
+    "value": 66
+  },
+  "adj.zone.everyone.Approve.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "1,260",
+    "value": 1260
+  },
+  "adj.zone.everyone.Approve.observed": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "5.2%",
+    "value": 0.052381
+  },
+  "adj.zone.everyone.Approve.predicted": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "3.6%",
+    "value": 0.036414
+  },
+  "adj.zone.everyone.Approve.ratio": {
+    "fmt": ".2f",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "1.44",
+    "value": 1.438468
+  },
+  "adj.zone.everyone.Decline.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "120",
+    "value": 120
+  },
+  "adj.zone.everyone.Decline.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "185",
+    "value": 185
+  },
+  "adj.zone.everyone.Decline.observed": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "64.9%",
+    "value": 0.648649
+  },
+  "adj.zone.everyone.Decline.predicted": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "68.0%",
+    "value": 0.679989
+  },
+  "adj.zone.everyone.Decline.ratio": {
+    "fmt": ".2f",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "0.95",
+    "value": 0.95391
+  },
+  "adj.zone.everyone.Refer.defaults": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "215",
+    "value": 215
+  },
+  "adj.zone.everyone.Refer.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "955",
+    "value": 955
+  },
+  "adj.zone.everyone.Refer.observed": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "businesses.default",
+    "text": "22.5%",
+    "value": 0.225131
+  },
+  "adj.zone.everyone.Refer.predicted": {
+    "fmt": ".1%",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "21.7%",
+    "value": 0.217021
+  },
+  "adj.zone.everyone.Refer.ratio": {
+    "fmt": ".2f",
+    "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
+    "source": "adjudication_model.pkl predict_proba on compute_adjudication_features",
+    "text": "1.04",
+    "value": 1.037371
   },
   "ceiling.gap_holdout": {
     "fmt": ".3f",

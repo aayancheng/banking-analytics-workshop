@@ -74,13 +74,81 @@ def adj_table(t: dict[str, str]) -> str:
     ])
 
 
+ADJ_DECISIONS = ["Approve", "Refer", "Decline"]
+ADJ_POPS = {"everyone": "Held-out applicants (the gate)", "booked": "Held-out booked",
+            "rejected": "Held-out rejected"}
+ADJ_RULES = ["dscr_floor", "public_records", "prior_delinquencies", "leverage",
+             "thin_dscr", "weak_score", "large_request"]
+
+
+def _pass(value: str, gate: str) -> str:
+    return "pass" if float(value) >= float(gate) else "**fail**"
+
+
+def adj_population_table(t: dict[str, str]) -> str:
+    return _table(["Population", "n", "Default rate", "AUC", f"AUC gate {t['adj.gate_auc']}",
+                   "Top-20% lift", f"Lift gate {t['adj.gate_lift']}×"],
+                  [[name, t[f"adj.pop.{p}.n"], t[f"adj.pop.{p}.dr"], t[f"adj.pop.{p}.auc"],
+                    _pass(t[f"adj.pop.{p}.auc"], t["adj.gate_auc"]),
+                    t[f"adj.pop.{p}.lift"] + "×",
+                    _pass(t[f"adj.pop.{p}.lift"], t["adj.gate_lift"])]
+                   for p, name in ADJ_POPS.items()])
+
+
+def adj_decision_table(t: dict[str, str]) -> str:
+    rows = []
+    for p, name in ADJ_POPS.items():
+        for k in ADJ_DECISIONS:
+            rows.append([name, k] + [t[f"adj.dec.{p}.{k}.{c}"] for c in
+                                     ("n", "share", "defaults", "dr", "pd")])
+    return _table(["Population", "Decision", "n", "Share", "Defaults",
+                   "Observed default rate", "Mean model PD"], rows)
+
+
+def adj_cutoff_table(t: dict[str, str]) -> str:
+    def row(label, low, high, key):
+        return [label, low, high] + [t[f"{key}.{k}"] for k in ADJ_DECISIONS]
+    s = "adj.sens"
+    return _table(["Scenario", "Approve if PD ≤", "Decline if PD ≥", "Approve", "Refer",
+                   "Decline", "Files that change decision"], [
+        row("Committed", t["adj.t_low"], t["adj.t_high"], "adj.mix") + ["—"],
+        row(f"t_low −{t['adj.sens.step']}", t[f"{s}.t_low_down.t"], t["adj.t_high"],
+            f"{s}.t_low_down") + [t[f"{s}.t_low_down.changed"]],
+        row(f"t_low +{t['adj.sens.step']}", t[f"{s}.t_low_up.t"], t["adj.t_high"],
+            f"{s}.t_low_up") + [t[f"{s}.t_low_up.changed"]],
+        row(f"t_high −{t['adj.sens.step']}", t["adj.t_low"], t[f"{s}.t_high_down.t"],
+            f"{s}.t_high_down") + [t[f"{s}.t_high_down.changed"]],
+        row(f"t_high +{t['adj.sens.step']}", t["adj.t_low"], t[f"{s}.t_high_up.t"],
+            f"{s}.t_high_up") + [t[f"{s}.t_high_up.changed"]],
+        row("Thresholds from training rows only", t["adj.trainonly.t_low"],
+            t["adj.trainonly.t_high"], "adj.trainonly.mix") + [t["adj.trainonly.changed"]],
+    ])
+
+
+def adj_rule_table(t: dict[str, str]) -> str:
+    return _table(["Rule", "Kind", "Reason string", "Held-out files hit", "Share of held-out",
+                   "All applicants hit"],
+                  [[f"`{r}`", t[f"adj.rule.{r}.kind"], f"`{t[f'adj.rule.{r}.text']}`",
+                    t[f"adj.rule.{r}.n"], t[f"adj.rule.{r}.share"], t[f"adj.rule.{r}.n_all"]]
+                   for r in ADJ_RULES])
+
+
+def adj_calibration_table(t: dict[str, str]) -> str:
+    return _table(["Population", "PD zone", "n", "Defaults", "Observed default rate",
+                   "Mean predicted PD", "Observed / predicted"],
+                  [[ADJ_POPS[p], k] + [t[f"adj.zone.{p}.{k}.{c}"] for c in
+                                       ("n", "defaults", "observed", "predicted", "ratio")]
+                   for p in ("everyone", "booked") for k in ADJ_DECISIONS])
+
+
 def fact_index(meta: dict[str, dict]) -> str:
     rows = [[f"`{k}`", d["text"], d["population"], f"`{d['source']}`"]
             for k, d in sorted(meta.items())]
     return ("---\ntitle: \"Every number in this documentation\"\n---\n\n" + HEADER +
             "`python verify.py` recomputes each value below through the modules' own functions, "
             "or reads it from the committed artifact named under Source (the `adj.*` facts "
-            "come from adjudication's `metadata.json` and `policy_config.json`); the "
+            "are recomputed through the saved model and `policy.decide`, exactly as the "
+            "platform scores adjudication); the "
             "`score.stress.*` refits are recomputed only under `python verify.py --full`. "
             "Pages print these through `{{</* var key */>}}`; none is typed by hand.\n\n" +
             _table(["Key", "Value", "Population", "Source"], rows))
@@ -98,6 +166,11 @@ def render_all(t: dict[str, str], meta: dict[str, dict]) -> dict[str, str]:
         "_generated/score-iv.md": iv_table(t),
         "_generated/score-ceiling.md": ceiling_table(t),
         "_generated/adj-headline.md": adj_table(t),
+        "_generated/adj-populations.md": adj_population_table(t),
+        "_generated/adj-decisions.md": adj_decision_table(t),
+        "_generated/adj-cutoffs.md": adj_cutoff_table(t),
+        "_generated/adj-rules.md": adj_rule_table(t),
+        "_generated/adj-calibration.md": adj_calibration_table(t),
         "reference/facts.qmd": fact_index(meta),
     }
     if "score.stress.no_bureau.auc" in t:

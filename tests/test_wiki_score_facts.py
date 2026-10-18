@@ -14,7 +14,7 @@ def facts():
     from wiki.facts.data import score_split
     split = score_split()
     f, _ = score_facts.compute(split)
-    f.update(adj_facts.compute())
+    f.update(adj_facts.compute(split))
     f.update(ceiling.compute(split))
     return {k: v.text() for k, v in f.items()}
 
