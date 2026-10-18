@@ -57,7 +57,8 @@ loan's hurdle-clearing rate by that share of the term the assumption contributes
   ([6.3](methodology.qmd#pr-worked-example)) PD × LGD is below the cost of funds, so for at
   least half the book a move in LGD shifts the rate by less than the same move in the cost of
   funds. Only for the loans whose PD × LGD exceeds the cost of funds does it shift the rate
-  by more. The measured swings put it second.
+  by more. By total range across the two scenarios, it comes second (`capital_ratio` swings
+  more on the −{{< var pricing.sens.step >}} side alone).
 - `capital_ratio` and `roe_hurdle` contribute the {{< var pricing.capital_charge >}} capital
   charge, smaller than the cost of funds, to every loan.
 - `opex_rate` contributes {{< var market.opex_rate >}}, and `tax_rate` reaches the rate only

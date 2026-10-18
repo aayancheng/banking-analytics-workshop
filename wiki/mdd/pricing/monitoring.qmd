@@ -77,5 +77,5 @@ quotes, so there is no new cohort to compare. What runs today is the development
 every `python verify.py`: the summary comparison and the facts — every figure on these pages,
 the identities and the what-if check included — recomputed through the engine from the
 committed data, scorecard and `MARKET` ([6.9](gate.qmd), [D9](../d9-implementation.qmd)). A
-change to `MARKET` is caught there today, because the facts recomputed from it no longer match
+change to `MARKET` is caught on `main`, where the wiki check runs, because the facts recomputed from it no longer match
 the committed ones; nothing yet asks for the owner's sign-off.

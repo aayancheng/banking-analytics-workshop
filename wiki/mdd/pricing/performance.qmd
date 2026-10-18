@@ -92,6 +92,11 @@ exceeds the margin by. The level of the mispriced share is set by that construct
 anything the engine estimates: finding 1 ([6.7](limitations.qmd)). The measure itself is
 sound; this page shows it working.
 
+The session video below calls the mispriced EAD, \${{< var pricing.mispriced_ead >}}, "below
+the hurdle". It still teaches how the waterfall and the hurdle test work, and that a quote can
+only be judged against the bank's own PD; it does not show a pricing practice, because the
+generator quotes without the capital charge (finding 1).
+
 {{< yt S3-c4 >}}
 
 ## Where mispricing concentrates
@@ -107,13 +112,17 @@ Two readings of the same table, and they point at different bands:
 - **By share, the best bands.** The mispriced share is highest in band
   {{< var pricing.worst_band >}} ({{< var pricing.worst_band_rate >}}), then
   {{< var pricing.second_band >}} ({{< var pricing.second_band_rate >}}), and lowest in band
-  {{< var pricing.best_band >}} ({{< var pricing.best_band_rate >}}). In the best bands PD × LGD
-  is small, so a difference between the scorecard's PD and the PD the quote was built on is
+  {{< var pricing.best_band >}} ({{< var pricing.best_band_rate >}}). This is measured; why is not.
+  Reading the generator's code, we would expect it: in the best bands PD × LGD is small, so a difference between the scorecard's PD and the PD the quote was built on is
   typically small in rate terms too. The quote then sits close to the hurdle-clearing rate less
   the {{< var pricing.capital_charge_less_margin >}} gap, and a loan clears only if the quote's
   random term (`rng.normal(0.0, 0.003, n)` in the generator) happens to cover it. In band D,
   where PD × LGD is large, a difference between the two PDs moves the quote against the
   hurdle-clearing rate by more, in both directions, and more loans land on the clearing side.
+  The share is consistent with that reading; the facts do not decompose it. Band D's PD
+  over-predicts on the held-out booked (observed / predicted {{< var score.band_booked.D.ratio >}},
+  inside the tolerance), which by the same algebra would push band D quotes below the
+  hurdle-clearing rate.
 - **By money, band D.** Band D holds \${{< var pricing.band.D.mispriced_ead >}} of
   mispriced EAD, the most of any band, and the lowest median ROE,
   {{< var pricing.band.D.median_roe >}}. Its share mispriced,

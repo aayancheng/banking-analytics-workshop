@@ -38,7 +38,7 @@ loan's exposure, the rate the loan was quoted and the market assumptions in
 `shared.config.MARKET`, and runs a one-period profit waterfall
 ([6.3](methodology.qmd)). It is inventoried as a deterministic calculation tool, not a
 model ([D0](../d0-summary.qmd#risk-tiering)): it has no estimated parameters. It still gets
-a chapter, because its output drives decisions and its inputs need governing.
+a chapter, because its output informs pricing decisions and its inputs need governing.
 
 {{< include ../../_generated/pricing-headline.md >}}
 

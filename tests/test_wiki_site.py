@@ -333,3 +333,18 @@ def test_d6_code_claims_hold():
     # verify.py compares exactly these three figures (6.9)
     src = (ROOT / "verify.py").read_text()
     assert 'for k in ("n", "share_clears", "mispriced_ead"):' in src
+
+
+def test_d6_aaa_calibration_miss_reads_as_noise():
+    """Finding 3: an AAA default rate ratio x PD would, by finding 1's algebra, lift the
+    typical AAA quote over the capital-charge gap; most AAA loans are mispriced instead."""
+    f = _facts()
+    lift = (_num(f["score.band_booked.AAA.ratio"]) - 1) * _num(f["pricing.band.AAA.mean_pd"]) \
+        * _num(f["market.lgd"]) / 100
+    assert lift > _num(f["pricing.capital_charge_less_margin"])
+    assert _num(f["pricing.band.AAA.mispriced_rate"]) > 50
+    # band D over-predicts on the booked, inside the tolerance (6.5)
+    d = _num(f["score.band_booked.D.ratio"])
+    assert _num(f["monitoring.ratio_lo"]) <= d < 1
+    # "capital_ratio swings more on the -10% side alone" (6.6)
+    assert _num(f["pricing.sens.capital_ratio.down.swing"]) > _num(f["pricing.sens.lgd.down.swing"])

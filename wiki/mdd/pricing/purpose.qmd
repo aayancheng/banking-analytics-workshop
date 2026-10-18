@@ -17,8 +17,9 @@ every booked loan it returns:
 | `clears_hurdle` / `mispriced` | whether the ROE at the quoted rate reaches the hurdle; `mispriced` is its negation |
 | `rate_shortfall` | how far the quoted rate is below the hurdle-clearing rate, and zero for a loan that clears |
 
-The **mispricing measure** is the share of booked loans, and the share of their exposure,
-quoted below the hurdle-clearing rate. It is what the portal reports for the book
+The **mispricing measure** is the share of booked loans, and of their exposure, quoted below
+the hurdle-clearing rate. The portal reports the share of loans clearing and the mispriced
+EAD in dollars; the share of exposure exists only in the facts behind this chapter
 ([6.5](performance.qmd)). A loan is mispriced in this sense whenever it earns less than the
 hurdle, by one basis point or by enough to lose money; finding 2 ([6.7](limitations.qmd))
 is about the difference.
@@ -57,8 +58,8 @@ the book or `price_one` for a single loan. None re-implements the waterfall.
 | Loan workbench (v2), `.../pricing/whatif` | `price_one` re-run with the reviewer's quoted rate and any of the eight market values — the seven in `MARKET` and `fee_rate` — each on a slider; and the whole book re-priced under the same values (`_book_under`, `app/v2/whatif.py`). With no overrides it must equal the batch ([6.5](performance.qmd#pr-whatif)) |
 | Line Increase (D8) | not pricing's output, but its engine: the line-increase amount rules and incremental-ROE test import `MarketAssumptions`, `profit_waterfall` and `hurdle_clearing_rate`, and D8's gate is set at `MARKET`'s hurdle |
 
-Pricing's output reaches no other module: it is a read-out for the portal, not an input to a
-decision elsewhere on the platform. Its engine and its assumptions do reach line increase, so
+Pricing's output reaches no other module: it is a read-out in the portal that informs a
+pricing decision, not an input to another module's decision. Its engine and its assumptions do reach line increase, so
 a change to either is a change there too ([6.4](assumptions.qmd)).
 
 `fee_rate` deserves a note here because it is easy to miss: it is not in `MARKET`, the engine

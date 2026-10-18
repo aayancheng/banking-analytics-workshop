@@ -70,7 +70,7 @@ and which way leaving it out pushes the result.
 | Simplification | What it leaves out | Effect on this book |
 |---|---|---|
 | **Capital is a flat share of EAD** (risk-weighted assets = EAD) | Risk-sensitive capital: a riskier loan needs more equity | Every loan carries the same {{< var pricing.capital_charge >}} capital charge. Against a capital measure that rises with the PD, low-PD loans are charged more capital and high-PD loans less, so the hurdle-clearing rate tends to be higher in the best bands, and lower in band D, than such a measure would make it. |
-| **One period** | The term (`term_months` is not read), amortisation, the time value of money | The ROE is a first-year ROE on a fully drawn balance. For a loan that amortises, later years earn interest on less, so a one-period ROE overstates lifetime income. |
+| **One period** | The term (`term_months` is not read), amortisation, the time value of money | The ROE is a first-year ROE on a fully drawn balance. For a loan that amortises, later years earn interest on less, so a one-period view overstates lifetime income in dollars; the ROE changes little, because equity falls with the balance under flat capital. |
 | **No prepayment** | Borrowers repaying early, usually the best ones | Income on the loans most likely to prepay is overstated. |
 | **`fee_rate` is zero** | Origination and servicing fees | Interest is the only income. If fees exist, every loan's ROE is understated. The engine supports a fee, but it is never set and never tested (finding 4). |
 | **EAD is the requested amount** | Undrawn balances, partial draws, credit conversion | Every loan is fully drawn. Because ROE is a ratio to EAD this changes no verdict; it changes the dollar totals. |

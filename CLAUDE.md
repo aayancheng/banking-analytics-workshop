@@ -221,8 +221,9 @@ Then cut/annotate a `v1.x` tag recording what was verified.
      needs `roe_hurdle × capital_ratio / (1 − tax)` = 2.4% (`pricing.capital_charge`). A loan clears
      only if (true PD − score PD) × LGD + noise ≥ 0.4%. Prose quotes generator code, never DGP-truth facts.
   2. 1,547 loans (18.6%, $251m EAD) are below break-even; `portfolio_summary` has no break-even measure.
-  3. Mispricing is highest in AAA (80.4%) then A (73.1%), lowest C — where D4's PD under-predicts on the
-     booked (B is D4 finding 6; A/AAA observations). Under-prediction does *not* cause the concentration
+  3. In AAA–B the hurdle-clearing/recommended rates rest on a PD that under-predicts on the booked (B is
+     D4 finding 6; A/AAA observations). Mispricing is also highest there (AAA 80.4%, A 73.1%, lowest C),
+     but that is finding 1's construction (a reading of generator code, labelled as such). Under-prediction does *not* cause the concentration
      (it pushes the other way); it means the recommended rates there are too low. D carries the most
      mispriced EAD ($353.8m) and the lowest median ROE.
   4. `fee_rate` (not in `MARKET`) is a v2 slider but no engine test sets it; `price_population` /
