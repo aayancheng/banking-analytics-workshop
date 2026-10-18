@@ -42,6 +42,15 @@ book:
     - mdd/pricing/monitoring.qmd
     - mdd/pricing/gate.qmd
     - mdd/ews/index.qmd
+    - mdd/ews/purpose.qmd
+    - mdd/ews/data.qmd
+    - mdd/ews/methodology.qmd
+    - mdd/ews/assumptions.qmd
+    - mdd/ews/performance.qmd
+    - mdd/ews/sensitivity.qmd
+    - mdd/ews/limitations.qmd
+    - mdd/ews/monitoring.qmd
+    - mdd/ews/gate.qmd
     - mdd/line_increase/index.qmd
     - mdd/d9-implementation.qmd
     - mdd/d10-agents.qmd

@@ -1,0 +1,182 @@
+---
+title: "7.2 Data and sample"
+order: 2
+---
+
+## Sources
+
+Two files written by the platform's data generator ([D2](../d2-data.qmd)), both for the
+booked book only:
+
+| File | Grain | What it holds |
+|---|---|---|
+| `shared/data/raw/portfolio.parquet` | one row per booked account: {{< var ews.n_book >}} rows | the account's origination file (the applicant's columns), its on-book state (credit limit, current balance, on-book utilisation, tenure) and the two downstream labels |
+| `shared/data/raw/panel.parquet` | one row per account per month, `PANEL_MONTHS` months each (`shared/config.py`) | the monthly behaviour: balance, utilisation, days past due, deposit inflow, overdraft count |
+
+The panel is what makes this model different from the origination models. Everything they
+see is a snapshot at application; Early Warning sees how the account has behaved since.
+
+## Features {#ews-features}
+
+`compute_ews_features` (`ews/src/feature_engineering.py`) builds the
+{{< var ews.n_features >}} columns of `EWS_FEATURE_COLUMNS`. The first group, `PANEL_FEATURES`,
+aggregates the panel account by account, in `_agg_one`:
+
+```python
+last3, first6, last6 = df.tail(3), df.head(6), df.tail(6)   # ews/src/feature_engineering.py
+first6_dep = max(float(first6["deposit_inflow"].mean()), 1.0)
+"util_recent": float(last3["utilization"].mean()),
+"balance_recent": float(last3["balance"].mean()),
+"deposit_recent": float(last3["deposit_inflow"].mean()),
+"util_drift": float(last6["utilization"].mean() - first6["utilization"].mean()),
+"deposit_decline_pct": float((first6_dep - last6["deposit_inflow"].mean()) / first6_dep),
+"balance_trend": float(last6["balance"].mean() - first6["balance"].mean()),
+"util_volatility": float(df["utilization"].std(ddof=0)),
+"dpd_months": int((df["days_past_due"] > 0).sum()),
+"dpd_max": float(df["days_past_due"].max()),
+"dpd_recent": float(last3["days_past_due"].max()),
+"overdraft_total": float(df["overdraft_count"].sum()),
+"overdraft_recent": float(last6["overdraft_count"].sum()),
+```
+
+Levels over the most recent quarter, trends from the first half-year of history to the
+last, volatility over the whole history, and counts and worst values of delinquency and
+overdrafts. The rest are joined from the portfolio and the scorecard:
+
+| Kind | Columns |
+|---|---|
+| Behavioural, from the panel | `PANEL_FEATURES`, above |
+| On-book state | `utilization_onbook`, `current_balance`, `credit_limit`, `tenure_months` |
+| Origination file | `dscr`, `leverage`, `current_ratio`, `prior_delinquencies` |
+| The scorecard's output (D4) | `business_score`, `pd_score` |
+| Categorical | `industry`, `entity_type` |
+
+The panel aggregation is slow, so `train.py` writes its result to
+`ews/models/panel_features.parquet`, committed with the model; the portal, the facts and
+`verify.py` read that cache rather than re-aggregating. Every non-categorical column is
+made numeric and any missing value becomes zero. The generated data have none, so on this
+data the rule changes nothing; on a real book it would make an account with no history look
+like one with no problems ([7.7](limitations.qmd#ews-observations)).
+
+`industry` and `entity_type` have no role in how the generator draws deterioration; they are
+structural zeros for this target, as `industry` and `entity_type` are for default in D4
+(D4 finding 3). Neither is among the model's top {{< var ews.importance.top_n >}} features by
+gain ([7.3](methodology.qmd#ews-importance)).
+
+## The label {#ews-label}
+
+The target is `{{< var ews.target >}}`, a 0/1 flag on every booked account. Over the book,
+{{< var ews.n_events >}} accounts deteriorate: a base rate of {{< var ews.base_rate >}}.
+The generator draws it from a logit of the account's true PD, its recent utilisation above a
+level, the rise in its utilisation and its leverage, plus noise, and then a Bernoulli draw:
+
+```python
+det_logit = (                                           # shared/data_generator.py
+    -2.4
+    + 3.0 * pd_true
+    + 2.0 * np.clip(util_last3 - 0.85, 0, None)
+    + 1.5 * np.clip(util_trend, 0, None)
+    + 0.4 * _z(book["leverage"].to_numpy())
+    + rng.normal(0, 0.4, m)
+)
+deterioration = rng.binomial(1, 1.0 / (1.0 + np.exp(-det_logit))).astype(int)
+```
+
+Three things follow, each used later in the chapter:
+
+- **Noise enters twice** — the logit's normal term and the Bernoulli draw — so no model can
+  rank perfectly. How far the best possible ranking gets is measured in
+  [7.5](performance.qmd#ews-ceiling).
+- **The strongest driver is not observable.** `pd_true` is the generator's true PD, on the
+  leakage deny-list; the bank sees only the scorecard's estimate of it, `pd_score`.
+- **The label is drawn from the same simulated history the features summarise.** The name
+  says *next*, but in the generator there is no later period: the label
+  and the panel are drawn together ([7.4](assumptions.qmd#ews-the-label-looks-forward)).
+
+## Split and seed {#ews-split}
+
+`train.py` draws its own split of the booked book, with the platform seed and stratified on
+the label:
+
+```python
+X_tr, X_te, y_tr, y_te = train_test_split(               # ews/src/train.py
+    X, y, test_size=0.2, random_state=SEED, stratify=y)
+```
+
+That gives {{< var ews.n_train >}} training accounts and {{< var ews.n_test >}} held-out
+accounts (the held-out {{< var ews.test_share >}}), with {{< var ews.n_events_holdout >}}
+deteriorations among the held-out: a held-out base rate of
+{{< var ews.base_rate_holdout >}}. It is not the scorecard's split — the scorecard splits
+applicants, this splits booked accounts. `train.py` records only the model, not which rows
+were held out. The facts behind this chapter therefore redraw the split with an indexed call,
+check it against an independent call with exactly `train.py`'s arguments, and check its
+sizes against the ones `train.py` wrote into `ews/docs/validation_report.md`
+(`wiki/facts/ews_facts.py`):
+
+```python
+X_tr, X_te, _, _ = train_test_split(X, y, test_size=0.2, random_state=SEED, stratify=y)
+assert (np.array_equal(X_tr.index.to_numpy(), tr)
+        and np.array_equal(X_te.index.to_numpy(), te)), \
+    "the EWS split no longer reproduces train.py's train_test_split(X, y, ...)"
+...
+assert (len(tr), len(te)) == report_sizes(), "EWS split no longer reproduces train.py's sizes"
+```
+
+`verify.py` redraws the same split the same way to recompute the gate
+([7.9](gate.qmd)).
+
+## Leakage controls
+
+The platform's deny-list (`shared/config.py::LEAKAGE_COLUMNS`,
+[D2](../d2-data.qmd#leakage-controls)) holds the target itself, `booked`, and the
+generator's true PD. It is enforced for Early Warning at two points:
+
+1. **At feature construction.** `compute_ews_features` raises before returning if any column
+   of `EWS_FEATURE_COLUMNS` is on the deny-list:
+
+   ```python
+   leaked = [c for c in EWS_FEATURE_COLUMNS if c in LEAKAGE_COLUMNS]
+   if leaked:
+       raise ValueError(f"Leakage columns in EWS features: {leaked}")
+   ```
+
+2. **At training.** `train.py` asserts the same before fitting:
+
+   ```python
+   assert set(EWS_FEATURE_COLUMNS).isdisjoint(set(LEAKAGE_COLUMNS)), "leakage in features"
+   ```
+
+Unlike the scorecard and adjudication, Early Warning has no test of its own in
+`tests/test_leakage.py`; the two checks above run every time the features are built, which
+includes every `verify.py` run, so the gap is in the test suite, not in the control
+([7.7](limitations.qmd#ews-observations)).
+
+## The score as an input {#ews-score-input}
+
+`business_score` and `pd_score` are not data. `compute_ews_features` calls the scorecard's own
+scoring function on the booked accounts:
+
+```python
+sp = predict_score_pd(out)                      # ews/src/feature_engineering.py
+out["business_score"] = sp["business_score"].to_numpy()
+out["pd_score"] = sp["pd"].to_numpy()
+```
+
+That is the dependency drawn in [D3](../d3-dependencies.qmd): a change to the scorecard
+changes two of this model's inputs and forces a retrain and a recalibration of the tiers
+([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)). It never reads the
+generator's true PD. Two properties of the score carry over:
+
+- **It is in-sample for most booked accounts.** The scorecard was fitted on applicants
+  outside its held-out {{< var score.test_share >}}, drawn without regard to booking, so a
+  booked account's `pd_score` is in-sample for the scorecard unless the account fell in that
+  held-out share. The scorecard was fitted on `default`, not on deterioration, and it is a
+  binned additive model with little room to memorise; any optimism this lends the held-out
+  figures here has not been measured ([7.4](assumptions.qmd#ews-the-score-is-a-valid-input)).
+- **D4's findings arrive with it.** How much the model leans on the score, and whether it
+  ranks better than the score alone, is measured in [7.5](performance.qmd#ews-benchmark).
+
+## Exclusions
+
+None. Every booked account is in the training or the held-out split, and every booked account
+is scored, tiered and flagged by the portal.

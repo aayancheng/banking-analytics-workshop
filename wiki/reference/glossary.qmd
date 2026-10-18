@@ -23,6 +23,12 @@ Capital charge
   the ROE hurdle after tax: hurdle × capital ratio / (1 − tax rate), as a rate on exposure.
   The difference between the break-even and the hurdle-clearing rate (D6.3).
 
+Capture (top-decile capture)
+: The share of all events — here, deteriorations — that fall among the riskiest tenth of a
+  population ranked by a model. A random ranking captures a tenth; capture divided by a tenth
+  is the top-decile lift. Early Warning is gated on it, measured on held-out accounts (D7.5,
+  D7.9).
+
 EAD (exposure at default)
 : The amount owed if the borrower defaults. Pricing here uses the requested amount.
 
@@ -77,6 +83,11 @@ Proxy
   has one — here, columns derived from annual revenue. It ranks, stably and monotonically,
   for someone else's reasons.
 
+PR-AUC (area under the precision-recall curve)
+: Average precision over every cut of a ranking: how rich in events the top of the list stays
+  as it grows. A ranking with no information scores about the base rate, so it is read against
+  the base rate, not against 0.5 as AUC is (D7.5).
+
 PSI (population stability index)
 : How far a distribution has moved between two samples, summed over bins. Convention reads
   below {{< var monitoring.psi_watch >}} as stable, {{< var monitoring.psi_watch >}} to
@@ -102,6 +113,16 @@ SHAP (Shapley additive explanations)
 Structural zero
 : A feature the data generator gives no role in default at all. Any pattern it shows against
   default is sampling noise, however tidy the chart.
+
+Tier (risk tier)
+: In Early Warning, High, Medium or Low, from the model's probability against two cutoffs set
+  at training as quantiles of that probability over the book. The cutoffs fix a review
+  workload, not a probability limit (D7.3).
+
+Trigger
+: In Early Warning, a fixed rule that compares one behavioural feature with a threshold —
+  high or rising utilisation, a late payment, falling deposits, frequent overdrafts — and
+  names the account's warning sign. Triggers give a reason; the tier ranks (D7.3).
 
 VIF (variance inflation factor)
 : How much a coefficient's variance is inflated because its feature is predictable from the

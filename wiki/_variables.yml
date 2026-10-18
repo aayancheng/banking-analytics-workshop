@@ -417,6 +417,7 @@ ews:
   t_high: "0.5073"
   t_med: "0.1649"
   target: "deterioration_next_6_12mo"
+  test_share: "20%"
   tier:
     High:
       n: "833"
@@ -458,6 +459,7 @@ ews:
       recall: "48.8%"
       share: "33.1%"
       status: "within tolerance"
+    psi_vs_book: "0.1962"
   top_decile_rate: "38.9%"
   top_k: "167"
   train:

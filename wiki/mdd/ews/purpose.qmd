@@ -1,0 +1,91 @@
+---
+title: "7.1 Purpose and use"
+order: 1
+---
+
+## The question it answers
+
+Origination is a photograph; a booked loan is a film. Once a loan is on the book, its
+utilisation drifts, its deposits rise or fall, a payment slips. Early Warning answers the
+question the origination models cannot: **which booked accounts are quietly getting worse,
+before they miss a payment?** Its target is `{{< var ews.target >}}`: whether the account
+deteriorates in the window the name gives, as the generator defines it
+([7.2](data.qmd#ews-label)).
+
+The output is not a decision. It is a **review priority**: the order in which relationship
+managers and credit officers look at the book, and how closely. A miss is caught at the next
+review cycle, and nothing about a loan's terms changes because of a tier or a trigger alone;
+that is why it is Tier 2 ([D0](../d0-summary.qmd#risk-tiering)).
+
+## The output
+
+`score_population` (`ews/src/watchlist.py`) scores every booked account and returns, for
+each:
+
+| Output | What it is |
+|---|---|
+| `prob` | the model's probability of deterioration, rounded for display; tiers are decided on the unrounded value |
+| `risk_tier` | High, Medium or Low, from `prob` against two cutoffs, `t_high` and `t_med` ([7.3](methodology.qmd#ews-tiers)) |
+| `triggers` | the names of the fixed rules that fired on the account, from `flag_triggers` ([7.3](methodology.qmd#ews-triggers)) |
+| `top_shap_reasons` | the three features pushing the account's probability up most, by SHAP value |
+| key metrics | the behavioural features in `KEY_METRICS` — recent and drifting utilisation, worst days past due, deposit decline, recent overdrafts — so a reviewer sees the evidence beside the verdict |
+
+`watchlist` ranks the scored book by `prob` and returns the top accounts with their tier and
+triggers: {{< var ews.watchlist.top_n_default >}} by default in the module.
+
+The three layers have three jobs:
+
+- **The tier sets review intensity.** High-tier accounts are the call list; Medium are
+  watched; Low are left to the normal cycle. The cutoffs are set so that, over the book,
+  {{< var ews.tier.High.share >}}, {{< var ews.tier.Medium.share >}} and
+  {{< var ews.tier.Low.share >}} of accounts fall in the three tiers — a fixed review
+  workload, not a probability limit ([7.4](assumptions.qmd#ews-tiers-as-a-fixed-mix)).
+- **The triggers give a reason.** A tier says how worried to be; a trigger says what to ask
+  about: utilisation is high, utilisation is rising, a payment is late, deposits are falling,
+  overdrafts are frequent. Each is a comparison of one feature with one threshold in
+  `shared.config.EWS_TRIGGERS`, so it is exact and explainable to the customer.
+- **SHAP reasons explain the probability.** They are an attribution of the model's
+  output, not a rule ([7.3](methodology.qmd#ews-why-shap)).
+
+## The population it is for
+
+The booked book: the {{< var ews.n_book >}} accounts the bank lent to, out of
+{{< var score.n_applicants >}} applicants ([D2](../d2-data.qmd#two-populations-applicants-and-booked)).
+Early Warning has no use before booking: an applicant has no monthly history. The booked
+population was not chosen by any model on this platform; the generator draws `booked` from
+the true PD with noise, standing in for the bank's historical lending decision (D2).
+
+The model is trained and gated on a split of that same book. The portal then scores the
+whole book, including the {{< var ews.n_train >}} accounts the model was fitted on. What
+that does to the numbers the portal shows is the subject of findings 1 and 2
+([7.7](limitations.qmd)).
+
+## Who consumes it, and how
+
+Every consumer reads the batch `score_population` computes once at start-up
+(`app/main.py`), or calls `risk_tier` and `flag_triggers` again with a reviewer's values.
+None re-implements a tier or a trigger.
+
+| Consumer | What it takes |
+|---|---|
+| Portal (v1), `/api/ews/summary` | the tier counts and trigger counts over the scored book, the base rate, and the held-out metrics recorded at training (`metadata.json`) |
+| Portal (v1), `/api/ews/watchlist` | `watchlist` over the scored book, with the endpoint's own default length (`n: int = 25`), shorter than the module's |
+| Portal (v1), `/api/ews/{business_id}` | one account's probability, tier, triggers, top SHAP reasons and key metrics |
+| Portal (v1), `/api/dashboard/summary` and `/api/customer/{business_id}` | the count of High-tier accounts and the size of the monitored book; one account's tier, probability and triggers in the customer-360 view |
+| Loan workbench (v2), `/api/v2/loan/{business_id}/ews` | the account's whole monthly history, every trigger with each clause's threshold and this account's value, the SHAP drivers, and a caveat carrying the held-out metrics and the statement that AUC is not gated (`app/v2/ews.py`) |
+| Loan workbench (v2), `.../ews/whatif` | `risk_tier` and `flag_triggers` re-run with the reviewer's cutoffs and thresholds, on this account and over the whole book; with the committed values it must reproduce the batch tiers and triggers exactly (`app/v2/ews_whatif.py`, [7.9](gate.qmd#ews-whatif)) |
+
+Early Warning's output reaches no other module. Line Increase (D8) does not read the tier or
+the probability; the two modules meet only in the customer-360 view.
+
+## Prohibited uses
+
+| Use | Why it is prohibited |
+|---|---|
+| Quoting the capture, AUC or watchlist hit rate computed over the whole book | Most of the book is the model's training rows; the whole-book figures are in-sample (finding 2, [7.7](limitations.qmd)). Quote the held-out figures in [7.5](performance.qmd). |
+| Sizing review capacity from the book's tier counts | On accounts the model has not seen, the tiers do not hold the mix they were set for: far fewer are High (finding 1). |
+| Reading `prob` as a deterioration rate | It is uncalibrated, and in the Low tier it under-predicts on held-out accounts (finding 5). It ranks; it is not a rate. |
+| Changing a loan's terms, limit or price on a tier or a trigger alone | The output prioritises a human review; it is not a credit decision and was not validated as one. |
+| Treating the absence of a trigger as a clean bill of health | Triggers fire on most of the book and barely beat the base rate (finding 7); some High-tier accounts carry none ([7.7](limitations.qmd#ews-observations)). |
+| Scoring an applicant, or an account without its monthly history | The features need the panel; a missing value becomes zero, which reads as a healthy account ([7.7](limitations.qmd#ews-observations)). |
+| Any decision about a real business or a real book | The model was fitted to synthetic data ([D1](../d1-purpose.qmd#prohibited-uses)). |

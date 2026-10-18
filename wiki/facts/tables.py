@@ -269,6 +269,16 @@ def ews_insample_table(t: dict[str, str]) -> str:
     ])
 
 
+def ews_importance_table(t: dict[str, str]) -> str:
+    """LightGBM importances by gain and by split count. A table, not var shortcodes: the
+    keys carry a numeric rank segment, which Quarto's var lookup cannot address."""
+    n = int(t["ews.importance.top_n"])
+    return _table(["Rank", "By gain", "Share of gain", "By split count", "Share of splits"], [
+        [str(i), f"`{t[f'ews.importance.gain.{i}.feature']}`", t[f"ews.importance.gain.{i}.share"],
+         f"`{t[f'ews.importance.split.{i}.feature']}`", t[f"ews.importance.split.{i}.share"]]
+        for i in range(1, n + 1)])
+
+
 def ews_tier_table(t: dict[str, str]) -> str:
     rows = []
     for T in EWS_TIERS:
@@ -366,6 +376,7 @@ def render_all(t: dict[str, str], meta: dict[str, dict]) -> dict[str, str]:
         "_generated/ews-headline.md": ews_headline_table(t),
         "_generated/ews-insample.md": ews_insample_table(t),
         "_generated/ews-tiers.md": ews_tier_table(t),
+        "_generated/ews-importance.md": ews_importance_table(t),
         "_generated/ews-triggers.md": ews_trigger_table(t),
         "_generated/ews-ceiling.md": ews_ceiling_table(t),
         "reference/facts.qmd": fact_index(meta),

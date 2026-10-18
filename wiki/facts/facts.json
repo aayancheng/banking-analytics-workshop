@@ -2260,6 +2260,13 @@
     "text": "deterioration_next_6_12mo",
     "value": "deterioration_next_6_12mo"
   },
+  "ews.test_share": {
+    "fmt": ".0%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.train split (train_test_split, test_size 0.2, seed 42, stratified) (test_size)",
+    "text": "20%",
+    "value": 0.200096
+  },
   "ews.tier.High.n": {
     "fmt": ",d",
     "population": "booked book, all 8,336 accounts (as the portal scores it)",
@@ -2490,6 +2497,13 @@
     "source": "wiki.facts.policy ratio tolerance and MIN_BAND_DEFAULTS (events = deteriorations)",
     "text": "within tolerance",
     "value": "within tolerance"
+  },
+  "ews.tier_ho.psi_vs_book": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book against the whole book's tier shares (the mix the cutoffs were set to give)",
+    "source": "PSI over the three tiers (wiki.facts.score_facts._psi), book -> held out",
+    "text": "0.1962",
+    "value": 0.196185
   },
   "ews.top_decile_rate": {
     "fmt": ".1%",

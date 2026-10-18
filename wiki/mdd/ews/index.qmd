@@ -3,12 +3,62 @@ title: "D7 Early Warning"
 order: 0
 ---
 
-**Status: in progress.**
+**Status: complete.** All nine parts of the template are written.
 
-The chapter will cover the behavioural model over the booked book's monthly history; the
-risk tiers and how their cutoffs are set; the named triggers and the thresholds in
-`shared.config.EWS_TRIGGERS`; why the gate is on top-decile capture with AUC reported and
-not gated, and the ceiling the data's noise puts on AUC; the difference between the
-held-out figure and one recomputed over the whole book; and monitoring.
+::: {.callout-note}
+## D7 at a glance
 
-The chapter follows the [template](../index.qmd#the-template); D4 is the worked example.
+- **The gate:** top-decile capture {{< var ews.capture >}} of deteriorations on the held-out
+  {{< var ews.test_share >}} of the booked book, against a gate of
+  {{< var ews.gate.capture_min >}} (lift {{< var ews.lift >}}×); PR-AUC
+  {{< var ews.pr_auc >}} against a base rate of {{< var ews.base_rate >}}. Both met, the
+  capture gate narrowly: {{< var ews.boot.capture_below_gate >}} of bootstrap resamples fall
+  below it ([7.5](performance.qmd)).
+- **AUC is reported, not gated:** held-out AUC {{< var ews.auc >}}, within a whisker of the
+  {{< var ceiling.ews.oracle_model.auc >}} that the strongest model on every observable column
+  reaches on the same rows. The data's noise caps AUC; capture is what the review workflow
+  uses, so capture is what is gated ([7.9](gate.qmd)).
+- **Quote the held-out number:** over the whole book the same model shows capture
+  {{< var ews.whole.capture >}} and AUC {{< var ews.whole.auc >}}, but most of the book is
+  the model's own training rows. That figure, and the portal's default watchlist, are
+  in-sample (finding 2, [7.7](limitations.qmd)).
+- **The tiers do not hold their mix on new accounts:** the cutoffs are quantiles of in-sample
+  probabilities, so the High tier, {{< var ews.tier.High.share >}} of the book by construction,
+  holds {{< var ews.tier_ho.High.share >}} of held-out accounts (finding 1).
+- **No better than the score alone on AUC:** the paired interval for the difference,
+  {{< var ews.pd_score.diff_lo >}} to {{< var ews.pd_score.diff_hi >}}, contains zero
+  ([7.5](performance.qmd#ews-benchmark)).
+- **Seven open findings** the chapter raises about its own model, tiers and triggers
+  ([7.7](limitations.qmd)).
+:::
+
+Early Warning watches the loans the bank has already booked and asks which of them are
+likely to deteriorate in the months ahead ([7.1](purpose.qmd)). It is three things served
+together: a gradient-boosted model (LightGBM) on {{< var ews.n_features >}} features built
+from each account's monthly history, its origination file and the Business Credit Score's
+own output ([D3](../d3-dependencies.qmd)); **risk tiers** cut from the model's probability;
+and **named triggers**, fixed rules on the behavioural features that give a reviewer a reason
+([7.3](methodology.qmd)). It prioritises booked loans for human review and changes no credit
+decision by itself, which makes it Tier 2 ([D0](../d0-summary.qmd#risk-tiering)).
+
+{{< include ../../_generated/ews-headline.md >}}
+
+Measured on the held-out {{< var ews.test_share >}} of the {{< var ews.n_book >}} booked
+accounts: {{< var ews.n_test >}} accounts the model never saw while it was fitted, redrawn
+exactly as `ews/src/train.py` drew them ([7.2](data.qmd#ews-split)). Every number in the
+chapter is a named fact, recomputed through the module's own functions — the saved model on
+`compute_ews_features`, `risk_tier`, `flag_triggers` and `watchlist` — by `python verify.py`;
+the [fact index](../../reference/facts.qmd) gives each one's source and population. The
+chapter documents the model, tiers and triggers as committed: it changes none of them.
+
+| § | Part | What it establishes |
+|---|---|---|
+| 7.1 | [Purpose and use](purpose.qmd) | the question, the tiers and triggers, the consumers, prohibited uses |
+| 7.2 | [Data and sample](data.qmd) | the monthly panel, the aggregated features, the label, the split, leakage controls, the score as an input |
+| 7.3 | [Methodology and alternatives](methodology.qmd) | LightGBM on panel features; tiers as quantiles; triggers as rules; why both; SHAP |
+| 7.4 | [Assumptions](assumptions.qmd) | the label as a forward view, tiers as a fixed mix, triggers on generic scales, the score, the generator |
+| 7.5 | [Performance](performance.qmd) | capture, PR-AUC and AUC with intervals; the ceiling; the benchmark; held out against whole book; tiers; triggers; the watchlist |
+| 7.6 | [Sensitivity and stress](sensitivity.qmd) | what the facts show about the cutoffs and thresholds, and what was not run |
+| 7.7 | [Limitations and compensating controls](limitations.qmd) | seven open findings, each with a control and an owner |
+| 7.8 | [Monitoring plan](monitoring.qmd) | capture and PR-AUC on new cohorts, tier mix and calibration, trigger fire rates and dead clauses |
+| 7.9 | [Gate record](gate.qmd) | the capture and PR-AUC gates, the AUC floor, where each is asserted and recomputed, history |

@@ -1,0 +1,86 @@
+---
+title: "7.6 Sensitivity and stress"
+order: 6
+---
+
+Early Warning has two kinds of setting a validator would move: the two tier cutoffs, which
+training sets, and the trigger thresholds, which policy sets. This page records what the
+committed facts already show about each, and says plainly what has **not been run**. No
+scenario on this page is invented: where a sensitivity was not computed, the page says so and
+carries it to the monitoring plan or the next redevelopment.
+
+## Tier cutoffs
+
+**What the facts show.** The cutoffs' largest sensitivity is not to a small move in their
+value but to the rows they are taken over. Taken over the whole book, mostly in-sample
+probabilities, they put {{< var ews.tier.High.share >}} of the book in the High tier and
+{{< var ews.tier_ho.High.share >}} of held-out accounts there
+([7.4](assumptions.qmd#ews-tiers-as-a-fixed-mix)). That difference, a PSI of
+{{< var ews.tier_ho.psi_vs_book >}} over the three tiers, dwarfs anything a modest move of
+either cutoff would do, and it is the evidence for finding 1 ([7.7](limitations.qmd)).
+
+**Not run.**
+
+- *Moving either cutoff by a fixed step* and re-tiering the held-out accounts. Adjudication's
+  equivalent is in D5.6; no such scenario is computed for Early Warning.
+- *Cutoffs taken from out-of-sample probabilities* — the quantiles of held-out or
+  cross-validated probabilities, which is the control finding 1 proposes. Its effect on the
+  tier mix and on the High tier's capture is unmeasured until the next retrain.
+
+The v2 workbench lets a reviewer move either cutoff and see the whole book re-tiered, through
+the same `risk_tier` the batch uses ([7.1](purpose.qmd#who-consumes-it-and-how)). It is the tool
+for exploring a cutoff; it re-tiers the whole book, in-sample rows included, so it shows the
+workload a cutoff gives on the book, not on new accounts.
+
+## Trigger thresholds
+
+**What the facts show.** Two statements follow from the facts without a scenario, because a
+threshold above a feature's largest value can never be crossed:
+
+- **The `DELINQUENCY` rule's configured threshold has no effect anywhere above the data.**
+  `dpd_max` never exceeds {{< var ews.trigger.delinquency.clause.dpd_max.feature_max >}} over
+  the book, so `dpd_severe` could move from {{< var ews.trigger.delinquency.clause.dpd_max.threshold >}}
+  to any value above that maximum without changing a single flag. The trigger's behaviour is
+  set entirely by the hard-coded `dpd_recent` clause, which the configuration cannot reach
+  (finding 6).
+- **`DEPOSIT_DECLINE` sits near the edge of its data.** Its threshold,
+  {{< var ews.trigger.deposit_decline.clause.deposit_decline_pct.threshold >}}, is close to the
+  largest decline in the book, {{< var ews.trigger.deposit_decline.clause.deposit_decline_pct.feature_max >}};
+  it fires on {{< var ews.trigger.deposit_decline.n >}} accounts, and any threshold above that
+  maximum silences it.
+
+For the other triggers the facts give each one's firing count alone
+([7.4](assumptions.qmd#ews-trigger-thresholds-are-generic)) and its precision and recall
+([7.5](performance.qmd#ews-trigger-performance)), at the committed threshold only.
+
+**Not run.** A sweep of any threshold — the fire rate, precision and recall as each moves —
+is not computed. It is the evidence finding 7's control needs, and is carried there and to the
+monitoring plan ([7.8](monitoring.qmd)). The workbench lets a reviewer move every
+configured threshold and see the book's trigger counts change, through the same
+`flag_triggers` the batch uses; it does not show precision, and it cannot move the hard-coded
+`dpd_recent` clause.
+
+## Sampling sensitivity of the gate
+
+The one stress the facts do run on the model is the bootstrap of the held-out accounts
+([7.5](performance.qmd#how-firm-each-result-is)): {{< var ews.boot.capture_below_gate >}} of
+resamples fall below the capture gate. That is a sensitivity of the gate's *verdict* to the
+sample, not of the model to its inputs, and it is finding 3.
+
+## Reduced-input refits: not run
+
+D4 refits the scorecard on reduced inputs (D4.6). No such refit is run for Early Warning.
+What can be said without one:
+
+- **The score reaches this model directly.** `pd_score` alone ranks the held-out accounts
+  about as well as the model ([7.5](performance.qmd#ews-benchmark)); a model refitted without
+  the score has not been measured, and is the experiment finding 4 asks for.
+- **A missing panel is not an alert.** If an account's monthly history were missing, the
+  left join in `compute_ews_features` would leave its panel features empty, and they would
+  become zero: no utilisation, no drift, no days past due, no overdrafts. Zero fires no
+  trigger, and the model would score the account as quiet. The generated data have a full
+  panel for every account, so this is untested ([7.7](limitations.qmd#ews-observations)).
+
+Both refits — without the score, and without the panel, with an account missing its history
+referred rather than scored — are listed for the next redevelopment
+([7.8](monitoring.qmd#ews-redevelopment-triggers)).

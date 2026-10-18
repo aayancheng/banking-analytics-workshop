@@ -53,7 +53,10 @@ website:
           href: mdd/pricing/index.qmd
           contents:
             - auto: "mdd/pricing/*.qmd"
-        - mdd/ews/index.qmd
+        - section: "D7 Early Warning"
+          href: mdd/ews/index.qmd
+          contents:
+            - auto: "mdd/ews/*.qmd"
         - mdd/line_increase/index.qmd
         - mdd/d9-implementation.qmd
         - mdd/d10-agents.qmd

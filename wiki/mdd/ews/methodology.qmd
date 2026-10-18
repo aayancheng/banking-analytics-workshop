@@ -1,0 +1,198 @@
+---
+title: "7.3 Methodology and alternatives"
+order: 3
+---
+
+Early Warning is three components served side by side. A gradient-boosted model estimates
+each account's probability of deterioration; two cutoffs, set once at training, turn that
+probability into a tier; and a set of fixed rules, which are not fitted to anything, name
+the warning signs present on the account. They are described here in the order the code
+builds them.
+
+## The model: LightGBM
+
+A gradient-boosted tree ensemble, fitted on the {{< var ews.n_train >}} training accounts
+([7.2](data.qmd#ews-split)) with fixed hyperparameters and the platform seed:
+
+```python
+model = LGBMClassifier(n_estimators=500, learning_rate=0.03, num_leaves=31,   # ews/src/train.py
+                       subsample=0.8, colsample_bytree=0.8, random_state=SEED,
+                       n_jobs=-1, verbose=-1)
+model.fit(X_tr, y_tr, categorical_feature=EWS_CATEGORICAL)
+```
+
+The hyperparameters are constants, not the result of a search; there is no early stopping
+and no validation set. The probability is `predict_proba`'s, uncalibrated: no Platt or
+isotonic step follows the fit.
+
+With {{< var ews.model.n_estimators >}} trees of up to {{< var ews.model.num_leaves >}} leaves
+on {{< var ews.n_train >}} rows and a noisy label, the model **fits its training rows almost
+perfectly**: training AUC {{< var ews.train.auc >}}, against {{< var ews.auc >}} on the
+held-out accounts ([7.5](performance.qmd#ews-held-out-vs-whole-book)). That gap does not
+make the held-out figures wrong — they are measured on rows the trees never saw — but it
+matters wherever the model scores its own training rows, which is most of the book. It
+drives findings 1 and 2 ([7.7](limitations.qmd)).
+
+### What the model uses {#ews-importance}
+
+LightGBM's own importances, from the saved booster: *gain* is how much each feature's splits
+reduced the loss, *split* is how often it was used.
+
+{{< include ../../_generated/ews-importance.md >}}
+
+No feature dominates. `pd_score` ranks {{< var ews.importance.gain.pd_score_rank >}}th of
+{{< var ews.n_features >}} by gain and {{< var ews.importance.split.pd_score_rank >}}th by
+split count; with `business_score` the scorecard's two columns carry
+{{< var ews.importance.score_gain_share >}} of the gain.
+
+Read that with care. Importance describes how the fitted trees spread their splits, and a
+model that fits its training rows almost perfectly spreads them over many features. It does
+not say what the model would lose without a feature. The benchmark does: ranked by
+`pd_score` alone, the held-out accounts come out about as well as the model ranks them
+([7.5](performance.qmd#ews-benchmark)). Low importance for the score and a benchmark the
+model cannot beat are consistent with the behavioural features re-learning, through
+correlated columns, much of what the score already knows. That is a reading of the two
+measurements, not a decomposition.
+
+## Risk tiers, calibrated at training {#ews-tiers}
+
+After fitting, `train.py` sets the two tier cutoffs as quantiles of the model's probability
+over **all** {{< var ews.n_book >}} booked accounts — training and held-out rows together —
+and writes them into `metadata.json`:
+
+```python
+prob_full = model.predict_proba(X)[:, 1]                    # ews/src/train.py
+tiers = dict(EWS_TIERS)
+tiers["t_high"] = float(round(np.quantile(prob_full, 0.90), 4))
+tiers["t_med"] = float(round(np.quantile(prob_full, 0.70), 4))
+```
+
+The committed cutoffs are `t_high` = {{< var ews.t_high >}} and `t_med` =
+{{< var ews.t_med >}}. They replace the seed values in `shared.config.EWS_TIERS`, which are
+placeholders. `risk_tier` then reads them:
+
+```python
+def risk_tier(prob, tiers: dict) -> str:                     # ews/src/watchlist.py
+    if prob >= tiers["t_high"]:
+        return "High"
+    if prob >= tiers["t_med"]:
+        return "Medium"
+    return "Low"
+```
+
+By construction, then, the book splits {{< var ews.tier.High.share >}} High,
+{{< var ews.tier.Medium.share >}} Medium and {{< var ews.tier.Low.share >}} Low
+({{< var ews.tier.High.n >}}, {{< var ews.tier.Medium.n >}} and {{< var ews.tier.Low.n >}}
+accounts). The cutoffs are positions in the probability distribution, not risk limits: what
+is fixed is the review workload ([7.4](assumptions.qmd#ews-tiers-as-a-fixed-mix)). Because
+{{< var ews.n_train >}} of the {{< var ews.n_book >}} probabilities they are taken over are
+in-sample, the mix on accounts the model has not seen is very different — finding 1
+([7.7](limitations.qmd)).
+
+## Named triggers {#ews-triggers}
+
+`flag_triggers` (`ews/src/triggers.py`) is a rule layer beside the model, not inside it. Each
+rule compares one behavioural feature with a threshold from `shared.config.EWS_TRIGGERS`; an
+account carries the name of every rule that fires:
+
+```python
+rules = [                                                   # ews/src/triggers.py
+    ("HIGH_UTILIZATION", util_recent > cfg["high_utilization"]),
+    ("RISING_UTILIZATION", util_drift > cfg["rising_utilization"]),
+    ("DELINQUENCY", (dpd_max >= cfg["dpd_severe"]) | (dpd_recent > 0)),
+    ("DEPOSIT_DECLINE", deposit_decline > cfg["deposit_decline"]),
+    ("FREQUENT_OVERDRAFTS", overdraft_recent >= cfg["overdraft_recent"]),
+]
+```
+
+| Trigger | Rule | Threshold | Source of the threshold |
+|---|---|---|---|
+| `{{< var ews.trigger.high_utilization.name >}}` | `util_recent >` | {{< var ews.trigger.high_utilization.clause.util_recent.threshold >}} | `EWS_TRIGGERS["{{< var ews.trigger.high_utilization.clause.util_recent.config_key >}}"]` |
+| `{{< var ews.trigger.rising_utilization.name >}}` | `util_drift >` | {{< var ews.trigger.rising_utilization.clause.util_drift.threshold >}} | `EWS_TRIGGERS["{{< var ews.trigger.rising_utilization.clause.util_drift.config_key >}}"]` |
+| `{{< var ews.trigger.delinquency.name >}}` | `dpd_max >=` | {{< var ews.trigger.delinquency.clause.dpd_max.threshold >}} | `EWS_TRIGGERS["{{< var ews.trigger.delinquency.clause.dpd_max.config_key >}}"]` |
+| | *or* `dpd_recent >` | {{< var ews.trigger.delinquency.clause.dpd_recent.threshold >}} | {{< var ews.trigger.delinquency.clause.dpd_recent.config_key >}}, in `triggers.py` |
+| `{{< var ews.trigger.deposit_decline.name >}}` | `deposit_decline_pct >` | {{< var ews.trigger.deposit_decline.clause.deposit_decline_pct.threshold >}} | `EWS_TRIGGERS["{{< var ews.trigger.deposit_decline.clause.deposit_decline_pct.config_key >}}"]` |
+| `{{< var ews.trigger.frequent_overdrafts.name >}}` | `overdraft_recent >=` | {{< var ews.trigger.frequent_overdrafts.clause.overdraft_recent.threshold >}} | `EWS_TRIGGERS["{{< var ews.trigger.frequent_overdrafts.clause.overdraft_recent.config_key >}}"]` |
+
+The thresholds are policy values, not estimates: none was set from this book's
+distribution ([7.4](assumptions.qmd#ews-trigger-thresholds-are-generic)). `DELINQUENCY` is the
+only compound rule, and its second clause has a threshold written into the code rather than
+the configuration. On this data the configured clause never fires and the hard-coded one
+does all the work — finding 6 ([7.7](limitations.qmd)). How often each trigger fires, and how
+well, is in [7.5](performance.qmd#ews-trigger-performance).
+
+## Why both: a probability and a reason
+
+The model and the triggers answer different questions, and neither consults the other:
+
+- **The tier ranks.** It uses every feature at once, including the score, and it is the
+  part the gate measures ([7.9](gate.qmd)). It cannot say what is wrong with an account;
+  its SHAP reasons are an attribution, and a reason like "the score" is not one a
+  relationship manager can raise with a customer.
+- **The triggers explain.** Each names one observable fact about the account in the
+  customer's own terms — utilisation, a late payment, falling deposits — and turns a
+  probability into a conversation. They are exact, auditable and stable, and they do not
+  depend on a retrain.
+
+The cost of keeping them independent is that they can disagree: a High-tier account can carry
+no trigger, and most triggered accounts are not High ([7.5](performance.qmd#ews-tiers-and-triggers)).
+The design treats that as information for the reviewer, not as an error; whether the triggers
+carry enough signal to be worth the reviewer's attention is finding 7.
+
+## Why a gradient-boosted model {#ews-why-lightgbm}
+
+Monitoring is a different problem from origination: the features are trends and counts over
+time, their effects plausibly have thresholds (utilisation that matters only near the limit,
+a first late payment), and the output prioritises a review rather than deciding credit. A
+flexible learner that finds thresholds and interactions without hand-binning fits that
+problem, and a monitoring model's lower risk rating (Tier 2, [D0](../d0-summary.qmd#risk-tiering)) makes
+the loss of an exact decomposition more tolerable than at origination. The choice was made at development and is recorded here
+so it can be challenged.
+
+What the evidence says about it, from [7.5](performance.qmd):
+
+- **There is little left to find.** On the held-out accounts the model ranks within a
+  whisker of the strongest model the observable columns support
+  ([7.5](performance.qmd#ews-ceiling)). A different learner on the same columns would not do
+  much better.
+- **It is not distinguishable from the score it consumes.** On AUC, the paired interval for
+  the model's lead over `pd_score` alone contains zero
+  ([7.5](performance.qmd#ews-benchmark)). What it does do that the score alone does not is
+  clear the capture gate: `pd_score` alone captures {{< var ews.pd_score.capture >}} in its
+  top decile, below the {{< var ews.gate.capture_min >}} gate — one measurement, without an
+  interval for the difference.
+
+### Alternatives considered
+
+| Alternative | Status | What it would and would not give |
+|---|---|---|
+| Rank the book by the scorecard's `pd_score` alone | measured, not adopted | Nearly the same AUC on the held-out accounts, and no model to maintain; but it misses the capture gate on this sample, and it would never react to behaviour after booking (finding 4). |
+| A logistic or scorecard-style model on the panel features | not built | Exact reason codes, as D4 has, and far less room to memorise the training rows; whether it would rank as well is unmeasured. |
+| Triggers alone, without a model | measured as part of [7.5](performance.qmd#ews-trigger-performance), not adopted | Exact reasons, but on this book the triggers fire on most accounts and barely beat the base rate (finding 7). |
+
+None has been rejected on evidence that it ranks worse. The open question — whether the
+behavioural layer adds enough over the score to justify a model — is carried to the next
+redevelopment by finding 4 ([7.8](monitoring.qmd#ews-redevelopment-triggers)).
+
+## Reason codes: SHAP {#ews-why-shap}
+
+A tree ensemble has no exact decomposition into per-feature points the way the scorecard
+does (D4.3), so the model's reasons, where they are served, come from SHAP, as in
+adjudication ([D5.3](../adjudication/methodology.qmd#adj-reason-codes)). `score_population`
+runs `shap.TreeExplainer` over every booked account and keeps each account's top three
+adverse features with `top_adverse_shap`; the v1 account endpoint and the v2 workbench serve
+them. `train.py` runs the same explainer on a few held-out rows as a sanity check only;
+nothing is gated on it.
+
+They are served because a tier with no reason is not actionable, and the triggers do not
+always supply one. SHAP carries D5's caveats: it is an attribution method with its own
+choices, it splits credit between correlated features (here the scorecard's two columns, and
+the utilisation measures among themselves), and a reason that is the score is a model output,
+not a fact about the business. Where a trigger fired, the trigger is the reason to give;
+the SHAP reasons explain the probability.
+
+## Feature selection
+
+None, in the sense of a search: `EWS_FEATURE_COLUMNS` is a fixed list
+([7.2](data.qmd#ews-features)). `colsample_bytree` draws a random subset of the columns for
+each tree, which is regularisation, not selection.

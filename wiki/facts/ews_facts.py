@@ -37,7 +37,7 @@ from ews.src.triggers import flag_triggers
 from shared.config import EWS_TRIGGERS, RAW, ROOT, SEED
 from wiki.facts.core import Fact
 from wiki.facts.policy import MIN_BAND_DEFAULTS, RATIO_HI, RATIO_LO
-from wiki.facts.score_facts import BOOTSTRAP_N
+from wiki.facts.score_facts import BOOTSTRAP_N, _psi
 
 BOOK = "booked book, all 8,336 accounts (as the portal scores it)"
 HOLDOUT = "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)"
@@ -100,9 +100,15 @@ def ews_split() -> EwsSplit:
     feats = compute_ews_features(port)
     X = feats[EWS_FEATURE_COLUMNS]
     y = port[TARGET].to_numpy()
-    X_tr, X_te, _, _, tr, te = train_test_split(X, y, np.arange(len(X)), test_size=0.2,
-                                                random_state=SEED, stratify=y)
-    assert np.array_equal(X_tr.index.to_numpy(), tr) and np.array_equal(X_te.index.to_numpy(), te)
+    _, _, _, _, tr, te = train_test_split(X, y, np.arange(len(X)), test_size=0.2,
+                                          random_state=SEED, stratify=y)
+    # train.py splits (X, y) alone. An independent call with exactly its arguments must put
+    # the same rows on each side as the indexed call above (X carries a RangeIndex, so its
+    # index is the row position).
+    X_tr, X_te, _, _ = train_test_split(X, y, test_size=0.2, random_state=SEED, stratify=y)
+    assert (np.array_equal(X_tr.index.to_numpy(), tr)
+            and np.array_equal(X_te.index.to_numpy(), te)), \
+        "the EWS split no longer reproduces train.py's train_test_split(X, y, ...)"
     prob = joblib.load(ROOT / MODEL).predict_proba(X)[:, 1]
     return EwsSplit(port, feats, y, prob, tr, te)
 
@@ -194,6 +200,7 @@ def compute(es: EwsSplit | None = None) -> dict[str, Fact]:
     put("ews.n_book", int(len(y)), ",d", SRC_SPLIT, BOOK)
     put("ews.n_train", int(len(tr)), ",d", SRC_SPLIT, TRAIN_IN)
     put("ews.n_test", int(len(te)), ",d", SRC_SPLIT, HOLDOUT)
+    put("ews.test_share", len(te) / len(y), ".0%", SRC_SPLIT + " (test_size)", HOLDOUT)
     put("ews.n_features", len(EWS_FEATURE_COLUMNS), "d",
         "ews.src.feature_engineering.EWS_FEATURE_COLUMNS", MODULE_POP)
     put("ews.target", TARGET, "", "ews.src.train.TARGET", MODULE_POP)
@@ -292,6 +299,11 @@ def compute(es: EwsSplit | None = None) -> dict[str, Fact]:
             "wiki.facts.policy ratio tolerance and MIN_BAND_DEFAULTS (events = deteriorations)",
             HOLDOUT)
         put(f"{g}.recall", float(y_te[m].sum() / y_te.sum()), ".1%", SRC_LABEL, HOLDOUT)
+    # the held-out tier mix against the book's (the mix the quantiles set: 10 / 20 / 70)
+    put("ews.tier_ho.psi_vs_book", _psi(pd.Series(tier), pd.Series(t_te)), ".4f",
+        "PSI over the three tiers (wiki.facts.score_facts._psi), book -> held out",
+        "held-out 20% of the booked book against the whole book's tier shares (the mix the "
+        "cutoffs were set to give)")
 
     # --- triggers ---
     trig = flag_triggers(feats)

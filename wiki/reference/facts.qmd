@@ -331,6 +331,7 @@ title: "Every number in this documentation"
 | `ews.t_high` | 0.5073 | whole booked book, 8,336 accounts, in-sample probabilities (80% are training rows) -- the distribution train.py sets the cutoffs on | `ews.src.train tier calibration (np.quantile of whole-book prob, rounded 4dp)` |
 | `ews.t_med` | 0.1649 | whole booked book, 8,336 accounts, in-sample probabilities (80% are training rows) -- the distribution train.py sets the cutoffs on | `ews.src.train tier calibration (np.quantile of whole-book prob, rounded 4dp)` |
 | `ews.target` | deterioration_next_6_12mo | module constant | `ews.src.train.TARGET` |
+| `ews.test_share` | 20% | held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts) | `ews.src.train split (train_test_split, test_size 0.2, seed 42, stratified) (test_size)` |
 | `ews.tier.High.n` | 833 | booked book, all 8,336 accounts (as the portal scores it) | `ews.src.watchlist.risk_tier with metadata.json tiers` |
 | `ews.tier.High.share` | 10.0% | booked book, all 8,336 accounts (as the portal scores it) | `ews.src.watchlist.risk_tier with metadata.json tiers` |
 | `ews.tier.Low.n` | 5,835 | booked book, all 8,336 accounts (as the portal scores it) | `ews.src.watchlist.risk_tier with metadata.json tiers` |
@@ -364,6 +365,7 @@ title: "Every number in this documentation"
 | `ews.tier_ho.Medium.recall` | 48.8% | held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts) | `portfolio.deterioration_next_6_12mo` |
 | `ews.tier_ho.Medium.share` | 33.1% | held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts) | `ews.src.watchlist.risk_tier with metadata.json tiers` |
 | `ews.tier_ho.Medium.status` | within tolerance | held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts) | `wiki.facts.policy ratio tolerance and MIN_BAND_DEFAULTS (events = deteriorations)` |
+| `ews.tier_ho.psi_vs_book` | 0.1962 | held-out 20% of the booked book against the whole book's tier shares (the mix the cutoffs were set to give) | `PSI over the three tiers (wiki.facts.score_facts._psi), book -> held out` |
 | `ews.top_decile_rate` | 38.9% | held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts) | `ews.src.train.top_decile_capture` |
 | `ews.top_k` | 167 | held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts) | `ews.src.train.top_decile_capture (rows in the top decile)` |
 | `ews.train.auc` | 0.9990 | training 80% of the booked book (EWS split, seed 42), in-sample: the model was fitted on these rows | `ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)` |

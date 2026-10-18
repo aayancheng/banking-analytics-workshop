@@ -234,6 +234,32 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   swings are built from the *printed* shares. D11 has a D6 subsection; `tests/test_wiki_site.py` pins it
   row-for-row and the prose conclusions (cost_of_funds dominates, AAA then A, no flips, etc.).
 
+- **D7 (Early Warning) raises seven open findings**; document only (`ews/src`, models, `EWS_TRIGGERS`
+  untouched). Not a finding, on purpose: AUC 0.6622 sits a hair below the observable-only oracle
+  (0.6647, same held-out rows); that ceiling is *why* the gate is capture (invariant 2), said
+  positively in 7.5/7.9. The noise-free logit is 0.7038 on the book but 0.7329 on the held-out rows —
+  compare within a sample, as D4. The seven:
+  1. Tier cutoffs are quantiles of whole-book probs, 80% in-sample (train AUC 0.9990): held out,
+     High is 2.0% not 10% (34 accounts, 5.6% of deteriorations); tier-mix PSI 0.1962 (watch band).
+  2. Whole-book capture 54.4% / AUC 0.9476 and the default watchlist (98 of 100 training rows,
+     99.0% "hit rate") are in-sample. Quote 21.6% / 0.6622 (the S3 "54% vs 21.6% trap").
+  3. Capture gate passes by 4 accounts (65 vs 61 of 301); bootstrap 17.5–25.2%, 23.9% of resamples
+     below 20%. The gate was set pre-commit after the brief's AUC 0.75 / 3x proved unreachable (even
+     the noise-free logit gets 0.7329 / 26.9%) — recorded in 7.9's history.
+  4. Not distinguishable from `pd_score` alone on AUC (diff +0.0223, paired CI -0.0132..0.0548);
+     `pd_score` capture 18.6% would miss the gate (single number, no paired CI). Never claim EWS beats it.
+  5. Low tier under-predicts: 1.50 on 137 deteriorations (floor rule, events = deteriorations).
+  6. `DELINQUENCY`'s `dpd_max >= 30` can never fire (dpd_max peaks at 10); the trigger is the
+     hard-coded `dpd_recent > 0` (50.7% of the book), and the only unit test exercises the dead clause.
+  7. Triggers barely beat the 18.0% base rate (lift 1.23–1.69x vs High tier 2.77x); any trigger on
+     71.5% of the book.
+  Observations: 117 High accounts with no trigger; PR-AUC gate only asks "better than random";
+  contemporaneous label (no later period in the generator); missing panel reads as quiet; no EWS
+  test in `test_leakage.py`. Sensitivity scenarios for cutoffs/thresholds are **not run** and say so.
+  Facts added for the chapter: `ews.test_share`, `ews.tier_ho.psi_vs_book`. D11 has a D7 subsection;
+  `tests/test_wiki_site.py` pins it row-for-row, the tier floor rule, the prose conclusions and the
+  code claims (hard-coded clause, unit test, verify's own capture lines).
+
 ## The DGP, in numbers
 
 Facts a session needs before touching Session 1 or 2 material. All recomputable — the appendix of
@@ -303,7 +329,10 @@ template, the validation PDF and the agent homework with its self-checker; the S
 in `workshop/`. **D5 (Loan Adjudication) is complete and on `main` and `origin/main`** (2026-10-17): facts in
 `wiki/facts/adj_facts.py`, nine parts under `wiki/mdd/adjudication/`, six findings in D5.7 and D11.
 **D6 (Pricing) is complete on branch `wiki-d6`** (2026-10-18), branched from that `main`: facts in
-`wiki/facts/pricing_facts.py`, nine parts under `wiki/mdd/pricing/`, five findings in D6.7 and D11 — not yet merged or pushed. D7–D8 remain stubs.
+`wiki/facts/pricing_facts.py`, nine parts under `wiki/mdd/pricing/`, five findings in D6.7 and D11 — not yet merged or pushed.
+**D7 (Early Warning) is complete on branch `wiki-d7`** (2026-10-18), on top of `wiki-d6`: facts in
+`wiki/facts/ews_facts.py` (+ `ceiling.ews.*`), nine parts under `wiki/mdd/ews/`, seven findings in D7.7
+and D11 — not merged or pushed. D8 remains a stub.
 
 ### Recutting sessions into chapter videos — the house method
 
@@ -415,8 +444,8 @@ address (invariant 6).
 
 ### Open threads
 
-- **Wiki v1 leftovers:** D7–D8 in full (EWS and line increase chapters are stubs that follow
-  the template; D5 is done, on `main`, and D6 on `wiki-d6`), E1–E10 (explainers), book packaging (the EPUB/PDF is a stub:
+- **Wiki v1 leftovers:** D8 in full (the line increase chapter is a stub that follows the
+  template; D5 is done, on `main`, D6 on `wiki-d6` and D7 on `wiki-d7`), E1–E10 (explainers), book packaging (the EPUB/PDF is a stub:
   preface, Explain index, the template page and D10), and the Codespace test of the Quarto devcontainer
   (needs a push). Pages is live (above).
 

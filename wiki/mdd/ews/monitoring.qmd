@@ -1,0 +1,117 @@
+---
+title: "7.8 Monitoring plan"
+order: 8
+---
+
+## What is monitored
+
+Early Warning is monitored as three things: the model's **ranking**, the **tiers** cut from
+it, and the **triggers** beside it. Each new cohort of booked accounts is scored by the
+committed model — out-of-sample, unlike most of the development book — compared with the
+held-out development accounts and, once its outcomes mature, measured against the development
+performance. The thresholds are policy constants (`wiki/facts/policy.py`) and the model's own
+gate, printed here by name. Events, for the calibration floor, are deteriorations.
+
+| Metric | Population | Threshold | Frequency | Action on breach |
+|---|---|---|---|---|
+| Top-decile capture | the cohort's accounts with matured outcomes | below the gate, {{< var ews.gate.capture_min >}} | when outcomes mature | One cohort below: review with the validator, reading the interval (finding 3). Two consecutive cohorts below: redevelopment ([7.9](gate.qmd)). |
+| PR-AUC, and PR-AUC over the base rate | the same | at or below the cohort's base rate; a fall in the multiple from its development value | when outcomes mature | At or below the base rate: redevelopment. A falling multiple: review. |
+| AUC | the same | below the sanity floor, {{< var ews.gate.auc_floor >}}; otherwise reported, not thresholded | when outcomes mature | Below the floor: redevelopment. Read against the ceiling, never against an origination AUC. |
+| Benchmark against `pd_score` alone | the same | the model's capture or AUC at or below the score's | when outcomes mature | Review whether the behavioural model is still earning its place (finding 4). |
+| Tier mix: PSI over High / Medium / Low | new accounts against the intended mix ({{< var ews.tier.High.share >}} / {{< var ews.tier.Medium.share >}} / {{< var ews.tier.Low.share >}}) | below {{< var monitoring.psi_watch >}} stable; {{< var monitoring.psi_watch >}} to {{< var monitoring.psi_act >}} watch; above {{< var monitoring.psi_act >}} act | every cohort | Watch: tell the review team its High-tier volume will differ from plan. Act: review with the validator (finding 1). |
+| Observed / predicted deterioration rate, by tier | accounts with matured outcomes | outside {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}}, on at least {{< var monitoring.min_band_defaults >}} deteriorations | when outcomes mature | Below the floor: record and watch. At or above it: count toward trigger 3. |
+| Observed deterioration rate, by tier | accounts with matured outcomes | High not above Medium, or Medium not above Low | when outcomes mature | The tiers no longer rank: review with the validator. |
+| Trigger fire share, each trigger | every account scored | any trigger's share moving by more than {{< var monitoring.rule_hit_move >}} of its development share | every scoring run | Check the feature's source before the rule; report to the monitoring policy owner. |
+| Trigger clauses firing alone | every account scored | any clause that fires on no account by itself | every scoring run | Report as an untested control (finding 6). |
+| Trigger precision, each trigger | accounts with matured outcomes | reported against the base rate, not thresholded | when outcomes mature | Read with finding 7's threshold review. |
+| Tier cutoffs at a retrain | the retrained model | any change | every retrain | The workload was held and the risk accepted moved: the policy owner signs off the new cutoffs before use ([7.4](assumptions.qmd#ews-tiers-as-a-fixed-mix)). |
+| Watchlist: share of training rows | the watchlist served | reported, not thresholded | every scoring run | Any training row on the list makes its hit rate in-sample (finding 2). |
+
+The capture row is the gate carried into production, with the one-and-two-cohorts rule that
+finding 3 needs: on the development sample, {{< var ews.boot.capture_below_gate >}} of
+bootstrap resamples fall below the gate with nothing wrong, so a single breach is evidence to
+read, not yet a verdict. The tier-mix row is the control for finding 1, the calibration row
+for finding 5, the trigger rows for findings 6 and 7, the watchlist row for finding 2 and the
+benchmark row for finding 4.
+
+## Trigger fire rates and dead clauses {#ews-trigger-monitoring}
+
+A trigger clause that never fires is a control that cannot be shown to work. The detection is
+the count of accounts each clause flags by itself — the facts compute it by running
+`flag_triggers` with every other feature zeroed — on every scoring run. At development one
+clause is already dead ({{< var ews.trigger.n_dead_clauses >}}): `DELINQUENCY`'s `dpd_max`
+clause (finding 6). It is flagged from the first cohort and stays flagged until the policy
+owner restates or removes it. A clause that *stops* firing after firing at development is a
+stronger signal: a feature whose definition or source has changed. The share row uses the same
+relative threshold as adjudication's rule hits (D5.8), because a trigger is a rule.
+
+## Development baselines {#ews-development-baselines}
+
+What "no change" looks like, measured at development.
+
+| Metric | Development value | Population |
+|---|---|---|
+| Top-decile capture | {{< var ews.capture >}} (interval {{< var ews.boot.capture.lo >}}–{{< var ews.boot.capture.hi >}}) | held-out accounts |
+| Top-decile lift | {{< var ews.lift >}}× | held-out accounts |
+| PR-AUC | {{< var ews.pr_auc >}} ({{< var ews.pr_auc_over_base >}}× the base rate) | held-out accounts |
+| AUC | {{< var ews.auc >}} | held-out accounts |
+| `pd_score` alone: AUC / capture | {{< var ews.pd_score.auc >}} / {{< var ews.pd_score.capture >}} | held-out accounts |
+| Base rate | {{< var ews.base_rate_holdout >}} | held-out accounts |
+| Tier mix, High / Medium / Low | {{< var ews.tier_ho.High.share >}} / {{< var ews.tier_ho.Medium.share >}} / {{< var ews.tier_ho.Low.share >}}; PSI against the intended mix {{< var ews.tier_ho.psi_vs_book >}} | held-out accounts |
+| Tier cutoffs, `t_high` / `t_med` | {{< var ews.t_high >}} / {{< var ews.t_med >}} | quantiles over the whole book |
+
+| Tier | Observed / predicted | Deteriorations behind it | Population |
+|---|---|---|---|
+| High | {{< var ews.tier_ho.High.ratio >}} | {{< var ews.tier_ho.High.events >}} | held-out accounts |
+| Medium | {{< var ews.tier_ho.Medium.ratio >}} | {{< var ews.tier_ho.Medium.events >}} | held-out accounts |
+| Low | {{< var ews.tier_ho.Low.ratio >}} | {{< var ews.tier_ho.Low.events >}} | held-out accounts |
+
+| Trigger | Fire share | Precision | Population |
+|---|---|---|---|
+| `HIGH_UTILIZATION` | {{< var ews.trigger.high_utilization.share >}} | {{< var ews.trigger.high_utilization.precision >}} | fire share: the book; precision: held-out accounts |
+| `RISING_UTILIZATION` | {{< var ews.trigger.rising_utilization.share >}} | {{< var ews.trigger.rising_utilization.precision >}} | as above |
+| `DELINQUENCY` | {{< var ews.trigger.delinquency.share >}} | {{< var ews.trigger.delinquency.precision >}} | as above |
+| `DEPOSIT_DECLINE` | {{< var ews.trigger.deposit_decline.share >}} | {{< var ews.trigger.deposit_decline.precision >}} | as above |
+| `FREQUENT_OVERDRAFTS` | {{< var ews.trigger.frequent_overdrafts.share >}} | {{< var ews.trigger.frequent_overdrafts.precision >}} | as above |
+| Any trigger | {{< var ews.trigger.any.share >}} | {{< var ews.trigger.any.precision >}} | as above |
+
+The tier mix already sits in the watch band at development (finding 1), the Low tier is
+already outside the calibration tolerance (finding 5), and one clause is already dead
+(finding 6): the first cohorts are read against those three rows before any other.
+
+## Redevelopment triggers {#ews-redevelopment-triggers}
+
+Any one of these starts a redevelopment, with the validator informed:
+
+1. Top-decile capture below the gate in two consecutive cohorts with matured outcomes, or
+   PR-AUC at or below the base rate, or AUC below the sanity floor, in any one.
+2. Tier-mix PSI above {{< var monitoring.psi_act >}}.
+3. A tier's observed / predicted ratio outside the tolerance in two consecutive cohorts, each
+   with at least {{< var monitoring.min_band_defaults >}} deteriorations behind that tier.
+   Below that count a breach is recorded and watched, not acted on. The Low tier already
+   breaches at development (finding 5).
+4. A change to any input's definition or source — including any change to the scorecard,
+   which supplies two inputs ([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)),
+   and to the panel.
+
+Two further events go to the monitoring policy owner rather than to redevelopment: a change to
+any value in `EWS_TRIGGERS`, after which [7.5](performance.qmd#ews-trigger-performance) is
+re-run; and a clause that fires on no account (above).
+
+A redevelopment is also where the open findings of [7.7](limitations.qmd) are acted on, and
+where the questions this chapter leaves open are answered: whether the behavioural model earns
+its place beside `pd_score` alone, with paired intervals on capture (finding 4); how it
+performs refitted without the score and without the panel
+([7.6](sensitivity.qmd#reduced-input-refits-not-run)); what out-of-sample cutoffs and a
+calibration step do to the tiers (findings 1 and 5); and the threshold sweep the triggers need
+(finding 7). Every redevelopment re-runs [7.5](performance.qmd) and passes the gate.
+
+## What is automated today
+
+This plan is documented, not yet automated. The platform has one booked book and one draw of
+outcomes, so there is no new cohort to compare. What runs today is the development side:
+`python verify.py` recomputes the held-out capture, PR-AUC and AUC against its own copies of
+the gate ([7.9](gate.qmd)), and on `main` recomputes every fact on these pages — the tier mix,
+each clause's firings alone, the watchlist's composition — from the committed model and data
+on every run ([D9](../d9-implementation.qmd)). A dead clause is visible in the generated
+trigger table on every build, but nothing yet fails on it.

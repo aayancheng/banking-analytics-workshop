@@ -1,0 +1,259 @@
+---
+title: "7.5 Performance"
+order: 5
+---
+
+Every figure on this page names the population it was measured on. Unless stated otherwise,
+that is the held-out {{< var ews.test_share >}} of the booked book: {{< var ews.n_test >}}
+accounts the model never saw while it was fitted, {{< var ews.n_events_holdout >}} of them
+deteriorating ([7.2](data.qmd#ews-split)). Three things are measured, and they are not the
+same: the **model's ranking** (capture, PR-AUC, AUC), the **tiers** cut from it, and the
+**triggers** beside it.
+
+## The headline {#ews-headline}
+
+{{< include ../../_generated/ews-headline.md >}}
+
+**Top-decile capture** is the measure the review workflow uses. Rank the held-out accounts by
+the model's probability, take the riskiest tenth — {{< var ews.top_k >}} accounts — and count
+the deteriorations among them: {{< var ews.capture_events >}} of the
+{{< var ews.n_events_holdout >}}, so capture is {{< var ews.capture >}}. A random tenth would
+hold a tenth of them; the ratio is the lift, {{< var ews.lift >}}×. Put another way, a
+relationship manager working the top decile finds a deterioration in
+{{< var ews.top_decile_rate >}} of the accounts called, against {{< var ews.base_rate_holdout >}}
+for an account picked at random.
+
+**PR-AUC** (average precision) summarises precision across every cut of the ranking, not just
+the top tenth. A ranking with no information scores about the base rate, so the gate asks for
+more than that: {{< var ews.pr_auc >}}, {{< var ews.pr_auc_over_base >}} times the base rate
+of {{< var ews.base_rate >}}.
+
+**AUC** is reported, not gated. At {{< var ews.auc >}} it would fail any gate set for an
+origination model on this platform; why that is the data and not the model, and why the gate
+is on capture instead, is the next section and [7.9](gate.qmd).
+
+### How firm each result is
+
+The intervals come from {{< var ews.boot.n >}} bootstrap resamples of the held-out accounts,
+drawn with the platform seed, as for D4 and D5 (`wiki/facts/ews_facts.py`):
+
+- **Capture: met, narrowly.** The gate needs {{< var ews.gate.capture_events_needed >}} of the
+  {{< var ews.n_events_holdout >}} deteriorations in the top decile; the model has
+  {{< var ews.capture_events >}}, a margin of {{< var ews.gate.capture_events_margin >}}
+  accounts ({{< var ews.gate.capture_margin_pp >}} percentage points). The interval,
+  {{< var ews.boot.capture.lo >}} to {{< var ews.boot.capture.hi >}}, straddles the
+  {{< var ews.gate.capture_min >}} gate, and {{< var ews.boot.capture_below_gate >}} of the
+  resamples fall below it. Another held-out sample of the same size, from the same book, could
+  well have failed (finding 3, [7.7](limitations.qmd)).
+- **PR-AUC: met, firmly.** The interval, {{< var ews.boot.pr_auc.lo >}} to
+  {{< var ews.boot.pr_auc.hi >}}, lies wholly above the base rate;
+  {{< var ews.boot.pr_auc_at_or_below_base >}} of resamples fall at or below it. But the gate
+  asks only for a ranking better than none ([7.7](limitations.qmd#ews-observations)).
+- **AUC: above its sanity floor.** The interval, {{< var ews.boot.auc.lo >}} to
+  {{< var ews.boot.auc.hi >}}, lies wholly above the {{< var ews.gate.auc_floor >}} floor.
+
+## The ceiling {#ews-ceiling}
+
+Because the data are generated, the best ranking any model could achieve is known: rank the
+accounts by the generator's own deterioration logit without its noise term
+(`wiki/facts/ceiling.py`, the only code in this documentation that reads the generator's
+truth; it grades the data, not a model). A second reference point is a model, not the truth:
+the strongest learner the documentation trains on **every observable column** —
+{{< var ceiling.ews.oracle_model.n_columns >}} columns: the portfolio's columns outside the
+deny-list and the aggregated panel features — fitted on the same training accounts, as the workshop's
+`oracle_ceiling.py` does.
+
+{{< include ../../_generated/ews-ceiling.md >}}
+
+**Compare only within a row's sample.** The first row is measured over all
+{{< var ews.n_book >}} booked accounts, the rest over the held-out accounts. The figure quoted
+in `train.py`'s gate note and in `ews/docs/enhancement_notes.md` as the "oracle ceiling" is
+the first row. Setting it beside the model's held-out {{< var ews.auc >}} makes the model look
+close to the maximum; they are two different samples. On the held-out accounts themselves the
+noise-free logit reaches {{< var ceiling.ews.latent_holdout >}}, and the model falls short of
+it by {{< var ceiling.ews.gap_holdout >}}: it gets {{< var ceiling.ews.share_of_reach >}} of
+the way from a coin toss to the ceiling.
+
+**The model is at the limit of what can be observed.** The oracle model, with every
+observable column, reaches {{< var ceiling.ews.oracle_model.auc >}} on the same accounts: the
+committed model is a hair below it, well inside the AUC interval above. The rest of the
+distance to the noise-free logit is information no observable column holds. The generator's
+strongest driver of deterioration is the true PD ([7.2](data.qmd#ews-label)), and the bank
+sees only the scorecard's estimate of it. That attribution is a reading of the generator's
+code, not a decomposition.
+
+### Why this is the reason the gate is on capture
+
+An AUC gate set where the origination models are gated, {{< var score.gate >}}
+([D4.9](../score/gate.qmd)), would be unreachable here: not by this model only, but by any
+model, even one ranking by the generator's noise-free logit, which reaches
+{{< var ceiling.ews.latent_holdout >}} on these accounts. A gate no honest model can pass invites one of two failures: a
+model that is never accepted, or a gate quietly lowered until one is. Early Warning was
+instead gated, from its first commit, on what its use needs and the data supports: does the
+riskiest decile, the accounts a review team can actually call, hold well more than its share
+of the trouble? Even the noise-free logit captures only {{< var ceiling.ews.latent_capture_holdout >}}
+in its top decile on these accounts (PR-AUC {{< var ceiling.ews.latent_pr_auc_holdout >}}), so
+the {{< var ews.gate.capture_min >}} gate asks for most of what is possible, not all of it.
+AUC stays on the page, reported against the ceiling, so no reader has to take its absence on
+trust. That is the honest-gate design ([7.9](gate.qmd)), and it is not a limitation of the
+model; how narrowly the committed model clears the gate is (finding 3).
+
+## Benchmark: the score alone {#ews-benchmark}
+
+The simplest early warning a bank could run is to re-rank its book by the origination score.
+On the same held-out accounts:
+
+| Ranking | AUC, held-out accounts | Top-decile capture, held-out accounts |
+|---|---|---|
+| Committed EWS model | {{< var ews.auc >}} | {{< var ews.capture >}} |
+| Scorecard PD alone (`pd_score`) | {{< var ews.pd_score.auc >}} | {{< var ews.pd_score.capture >}} |
+
+The model leads on AUC by {{< var ews.pd_score.diff >}}. Because both rankings are scored on
+the same accounts, the comparison is a paired bootstrap: {{< var ews.boot.n >}} resamples,
+each scoring both on the same resampled rows. The 95% interval for the model's lead is
+{{< var ews.pd_score.diff_lo >}} to {{< var ews.pd_score.diff_hi >}}: **it contains zero.**
+On AUC the model is not distinguishable from the score it consumes — no measurable gain, and
+no measurable loss. On capture, `pd_score` alone falls below the gate where the model clears
+it; that is one measurement each, with no paired interval for the difference, and the model's
+own capture interval straddles the gate. This chapter does not claim that Early Warning ranks
+better than the score alone: finding 4 ([7.7](limitations.qmd)).
+
+## Held out against the whole book {#ews-held-out-vs-whole-book}
+
+The portal scores the whole booked book, and so does every chart drawn from it. Over the whole
+book the same model looks far stronger:
+
+{{< include ../../_generated/ews-insample.md >}}
+
+**Only the first row is a performance measure.** The whole book is mostly the model's training
+rows — {{< var ews.n_train >}} of {{< var ews.n_book >}} — and on those the model is almost
+perfect (training AUC {{< var ews.train.auc >}}, [7.3](methodology.qmd#the-model-lightgbm)).
+The whole-book capture of {{< var ews.whole.capture >}} is mostly the model recognising
+accounts it has already seen; it says nothing about the next account it will score. The
+held-out {{< var ews.capture >}} does. This is the trap Session 3 taught by setting these two
+capture figures side by side, and the numbers on its slide are these facts. The portal's own summary endpoint quotes the
+held-out metrics recorded at training, which is right; but the tier counts and the watchlist
+it serves are computed over the whole book, and they inherit the problem
+(below, and findings 1 and 2).
+
+The session video teaches the same point. The tier counts it shows are the whole book's,
+{{< var ews.tier.High.n >}} High of {{< var ews.n_book >}} — {{< var ews.tier.High.share >}} by
+construction — not what a new account should expect (below).
+
+{{< yt S3-c5 >}}
+
+## Tiers on the held-out accounts {#ews-tiers-held-out}
+
+{{< include ../../_generated/ews-tiers.md >}}
+
+![Observed deterioration rate and mean model probability by risk tier, held-out accounts; the dashed line is the book's base rate.](fig/tier-calibration.svg){#fig-tier-calibration}
+
+**The tiers rank.** The observed deterioration rate falls from
+{{< var ews.tier_ho.High.observed >}} in High to {{< var ews.tier_ho.Medium.observed >}} in
+Medium to {{< var ews.tier_ho.Low.observed >}} in Low: lifts over the base rate of
+{{< var ews.tier_ho.High.lift >}}×, {{< var ews.tier_ho.Medium.lift >}}× and
+{{< var ews.tier_ho.Low.lift >}}×.
+
+**The tiers do not hold their mix.** Built to hold {{< var ews.tier.High.share >}} of the
+book, the High tier holds {{< var ews.tier_ho.High.share >}} of the held-out accounts —
+{{< var ews.tier_ho.High.n >}} accounts — and catches {{< var ews.tier_ho.High.recall >}} of
+their deteriorations. Medium swells to {{< var ews.tier_ho.Medium.share >}}. A new account,
+scored out-of-sample like these, will rarely be High: finding 1 ([7.7](limitations.qmd)).
+
+**Calibration by tier.** For each tier, observed rate over mean probability, against the
+tolerance the monitoring plan applies, {{< var monitoring.ratio_lo >}} to
+{{< var monitoring.ratio_hi >}}, counted only on at least
+{{< var monitoring.min_band_defaults >}} events — here deteriorations — the same floor rule as
+D4 and D5 ([7.8](monitoring.qmd)):
+
+- High: {{< var ews.tier_ho.High.ratio >}} on {{< var ews.tier_ho.High.events >}}
+  deteriorations, {{< var ews.tier_ho.High.status >}};
+- Medium: {{< var ews.tier_ho.Medium.ratio >}} on {{< var ews.tier_ho.Medium.events >}},
+  {{< var ews.tier_ho.Medium.status >}};
+- Low: observed {{< var ews.tier_ho.Low.observed >}} against a mean probability of
+  {{< var ews.tier_ho.Low.predicted >}}, a ratio of {{< var ews.tier_ho.Low.ratio >}} on
+  {{< var ews.tier_ho.Low.events >}} deteriorations — outside the tolerance and above the
+  floor, so a finding (finding 5).
+
+The Low tier is where most accounts sit and where the probability is read least carefully;
+it holds {{< var ews.tier_ho.Low.recall >}} of the held-out deteriorations.
+
+## Triggers {#ews-trigger-performance}
+
+{{< include ../../_generated/ews-triggers.md >}}
+
+Book counts and shares are over all {{< var ews.n_book >}} booked accounts: the triggers are
+rules, not fitted, so the whole book is a fair population for how often they fire. Precision
+— the deterioration rate among flagged accounts — and recall — the share of deteriorations
+flagged — are on the held-out accounts, to sit beside the model's figures. **Lift is
+precision over the book's base rate** ({{< var ews.base_rate >}}), not over the rate among
+unflagged accounts.
+
+What the table shows:
+
+- **No trigger is dead, but one clause is.** Every trigger fires on some accounts. The
+  `DELINQUENCY` rule's configured clause, `dpd_max` at or above
+  {{< var ews.trigger.delinquency.clause.dpd_max.threshold >}}, fires on
+  {{< var ews.trigger.delinquency.clause.dpd_max.n_alone >}} accounts by itself: `dpd_max` never
+  exceeds {{< var ews.trigger.delinquency.clause.dpd_max.feature_max >}}. The trigger is, in
+  effect, `dpd_recent` above {{< var ews.trigger.delinquency.clause.dpd_recent.threshold >}}
+  (finding 6).
+- **The triggers barely discriminate.** Their precision runs from
+  {{< var ews.trigger.delinquency.precision >}} (`DELINQUENCY`) to
+  {{< var ews.trigger.high_utilization.precision >}} (`HIGH_UTILIZATION`), against a base rate
+  of {{< var ews.base_rate >}}: lifts of {{< var ews.trigger.delinquency.lift >}}× to
+  {{< var ews.trigger.high_utilization.lift >}}×, against the High tier's
+  {{< var ews.tier_ho.High.lift >}}×.
+- **Together they fire on most of the book.** {{< var ews.trigger.any.share >}} of accounts
+  ({{< var ews.trigger.any.n >}}) carry at least one trigger, and
+  {{< var ews.trigger.multi.share >}} carry two or more. On the held-out accounts, a flagged
+  account deteriorates at {{< var ews.trigger.any.precision >}} against
+  {{< var ews.trigger.none.rate >}} for an unflagged one; the flags reach
+  {{< var ews.trigger.any.recall >}} of deteriorations by flagging most accounts (finding 7).
+
+## Tiers and triggers together {#ews-tiers-and-triggers}
+
+Over the book, as the portal shows them side by side:
+
+| | Accounts | Share |
+|---|---|---|
+| High tier with at least one trigger | {{< var ews.overlap.high_with_trigger.n >}} | {{< var ews.overlap.high_with_trigger.share >}} of the High tier |
+| High tier with no trigger | {{< var ews.overlap.high_no_trigger.n >}} | the rest of the High tier |
+| At least one trigger, not High | {{< var ews.overlap.triggered_not_high.n >}} | {{< var ews.overlap.triggered_not_high.share >}} of triggered accounts |
+| … of which Low | {{< var ews.overlap.low_with_trigger.n >}} | |
+
+Most High-tier accounts come with a reason a reviewer can raise; some come with only the SHAP
+reasons. Among the held-out accounts, the count of High-tier accounts with no trigger is
+{{< var ews.overlap.high_no_trigger_ho.n >}}. The two layers are independent by design ([7.3](methodology.qmd)); the High tier
+without a trigger is recorded as an observation ([7.7](limitations.qmd#ews-observations)).
+
+## The watchlist {#ews-watchlist}
+
+`watchlist` returns the top {{< var ews.watchlist.top_n_default >}} accounts of the scored
+book by probability. Over the book as the portal scores it:
+
+| | Value | Population |
+|---|---|---|
+| Accounts on the list | {{< var ews.watchlist.n >}} | the watchlist |
+| … in the High tier | {{< var ews.watchlist.high_n >}} | the watchlist |
+| … with no trigger | {{< var ews.watchlist.no_trigger_n >}} | the watchlist |
+| … that are the model's training rows | {{< var ews.watchlist.n_train >}} | the watchlist |
+| … that are held-out accounts | {{< var ews.watchlist.n_holdout >}} | the watchlist |
+| Deterioration rate on the list | {{< var ews.watchlist.rate >}} ({{< var ews.watchlist.events >}} accounts) | the watchlist: **in-sample, not a performance measure** |
+| Deterioration rate, held-out members only | {{< var ews.watchlist.holdout_rate >}} ({{< var ews.watchlist.holdout_events >}} of {{< var ews.watchlist.n_holdout >}}) | far too few to measure anything |
+
+The watchlist is almost entirely accounts the model was fitted on, and its near-perfect hit
+rate is the model remembering their labels. It is the most visible in-sample number on the
+platform and the easiest to misread: finding 2 ([7.7](limitations.qmd)). The honest guide to
+what a call list of the riskiest accounts will find is the held-out top decile's rate,
+{{< var ews.top_decile_rate >}}.
+
+## Stability
+
+No population stability index is computed for the model's features. The training and
+held-out accounts are a random partition of one book, so a PSI between them would measure
+sampling noise, not drift; and there is no second period to compare (D4 finding 1,
+[7.4](assumptions.qmd#ews-the-label-looks-forward)). The one PSI recorded is the tier mix,
+held out against the book — {{< var ews.tier_ho.psi_vs_book >}} — which measures the in-sample
+problem of finding 1, not drift. The monitoring plan carries stability over time
+([7.8](monitoring.qmd)).

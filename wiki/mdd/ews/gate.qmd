@@ -1,0 +1,155 @@
+---
+title: "7.9 Gate record"
+order: 9
+---
+
+::: {.callout-important}
+## The gates
+
+**Top-decile capture ≥ {{< var ews.gate.capture_min >}}** of deteriorations — a lift of at
+least {{< var ews.gate.lift_min >}}× — and **PR-AUC above the base rate**, both on the held-out
+{{< var ews.test_share >}} of the booked book ([7.2](data.qmd#ews-split)). Current values
+{{< var ews.capture >}} and {{< var ews.pr_auc >}} against a base rate of
+{{< var ews.base_rate >}}: **both met**, capture narrowly (finding 3). **AUC is reported, not
+gated**: {{< var ews.auc >}}, held to a sanity floor of {{< var ews.gate.auc_floor >}} only, so
+that a near-random model cannot pass on capture alone. The gates are on the model's ranking;
+no gate covers the tiers or the triggers.
+:::
+
+## Why the gate is on capture, with AUC reported {#ews-why-capture}
+
+This is a deliberate design, recorded in the code itself:
+
+```python
+# Gate (Option B — honest gate for the noise-capped synthetic deterioration target).   # ews/src/train.py
+# The DGP label carries a large logit-noise + Bernoulli draw, so the oracle ceiling is
+# ~0.70 AUC; we gate on what the data genuinely supports and report AUC for transparency.
+CAPTURE_GATE = 0.20  # >= 20% of deteriorations in the top decile == 2x lift
+AUC_REPORT_FLOOR = 0.60  # sanity floor only (model must beat near-random); not the headline gate
+```
+
+Two reasons, both measured in [7.5](performance.qmd#ews-ceiling):
+
+- **The data caps AUC, for every model.** The label is drawn with noise twice over
+  ([7.2](data.qmd#ews-label)). On the held-out accounts the generator's own noise-free logit
+  reaches {{< var ceiling.ews.latent_holdout >}}, and the strongest model on every observable
+  column {{< var ceiling.ews.oracle_model.auc >}}; the committed model, {{< var ews.auc >}}, is a
+  hair below the second. An AUC gate set where the origination models' is would be failed by
+  every honest model, and the only way to "pass" it would be to lower it until something did —
+  which this platform never does (invariant: gates are never relaxed, [D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
+- **Capture is what the use needs.** A review team works the top of the list. The question
+  that decides whether the model is useful is how much of the coming trouble sits in the
+  accounts it can call, not how well the model orders the quiet accounts at the bottom.
+
+AUC stays on every page, reported beside its ceiling, so no reader has to take its absence
+from the gate on trust. The comment's "~0.70" is the noise-free logit over the whole book,
+{{< var ceiling.ews.latent_book >}}; on the held-out accounts the comparable figure is
+{{< var ceiling.ews.latent_holdout >}} — compare within a sample ([7.5](performance.qmd#ews-ceiling)).
+
+## Where they are asserted
+
+At the end of training, in `ews/src/train.py`, after the model, `metadata.json`, the panel
+cache and the validation report have been written:
+
+```python
+assert capture >= CAPTURE_GATE, f"GATE FAIL: capture {capture:.3f} < {CAPTURE_GATE} (2x)"
+assert pr_auc > base, f"GATE FAIL: PR-AUC {pr_auc:.4f} <= base rate {base:.4f}"
+assert auc >= AUC_REPORT_FLOOR, f"GATE FAIL: AUC {auc:.4f} < sanity floor {AUC_REPORT_FLOOR}"
+```
+
+`capture`, `pr_auc` and `auc` are computed on the held-out accounts' probabilities, capture by
+`top_decile_capture`; `base` is the deterioration rate over the whole booked book
+({{< var ews.base_rate >}}, the same to the printed precision as the held-out
+{{< var ews.base_rate_holdout >}}, because the split is stratified). The asserts are the
+script's last step, so a model that misses a gate still leaves its artifacts behind; the run
+fails, and `verify.py` then fails on those artifacts (below). The gate values are also written
+into `ews/models/metadata.json`, under `["gate"]["capture_min"]`, `["gate"]["pr_auc_min"]`
+(the string `"base_rate"`) and `["gate"]["auc_report_floor"]`.
+
+## Where they are recomputed, independently
+
+`verify.py` carries its own copies:
+
+```python
+EWS_CAPTURE_GATE = 0.20      # top-decile capture >= 20% of deteriorations = 2x lift   # verify.py
+EWS_AUC_FLOOR = 0.60         # sanity floor only, not the headline gate
+```
+
+Its check, `check_ews`, reads no stored metric. It:
+
+1. fails at once, naming them, if `ews_model.pkl`, `metadata.json` or `panel_features.parquet`
+   is missing;
+2. loads `ews_model.pkl`, builds the features from the committed portfolio with
+   `compute_ews_features` — which recomputes the score through `predict_score_pd` and reads
+   the committed panel cache — and redraws the held-out split with the platform seed and
+   stratification;
+3. recomputes AUC with `roc_auc_score`, PR-AUC with `average_precision_score`, and capture
+   **with its own code**, not by importing `top_decile_capture`:
+
+   ```python
+   k = max(1, int(round(0.10 * len(y_te))))                       # verify.py
+   capture = float(y_te[np.argsort(p)[::-1][:k]].sum() / y_te.sum())
+   base = float(y.mean())
+   ```
+
+4. fails if capture is below its own constant, if PR-AUC is at or below the base rate, or if
+   AUC is below the floor — and on success prints AUC as "reported, not gated".
+
+It does not read the tier cutoffs, re-tier the book or run the triggers: they are outside the
+gate. On `main`, `verify.py` then recomputes every fact in this chapter — the gate figures,
+their bootstrap intervals and margin, the tiers, every trigger clause, the watchlist — and
+fails, naming the key, if any page would print a stale value ([D9](../d9-implementation.qmd)).
+
+This is why **a relaxed local gate cannot pass.** Lowering `CAPTURE_GATE` in `train.py` lets a
+weaker model finish training, but `verify.py` recomputes that model's capture against the
+constant it carries itself, and fails. The panel cache cannot be edited around the gate either:
+the model's predictions move with it, and the recomputed gate moves with them.
+
+## The what-if equals the batch {#ews-whatif}
+
+Not a gate, but a control on what the workbench shows. The v2 EWS what-if re-tiers the book
+with `risk_tier` and re-flags it with `flag_triggers` under a reviewer's values; with the
+committed values it must reproduce the batch exactly ([7.1](purpose.qmd#who-consumes-it-and-how)):
+
+- **`tests/test_app_v2.py`**: an empty body reproduces each sampled account's batch tier and
+  triggers, and the book's tier counts in `/api/ews/summary`; an out-of-range value or an
+  inverted tier band is refused.
+- **`tests/test_app_v2_ui_bodies.py`**: what the browser actually sends on every drag — both
+  cutoffs and every trigger threshold, explicitly — re-tiers all {{< var ews.n_book >}} accounts
+  to their batch tier and reproduces the batch triggers on a sample. Tiers are re-derived from
+  the unrounded probability, never from the rounded `prob` column.
+- **The facts**: the tiers, triggers, probabilities and watchlist the facts compute equal
+  `score_population`'s, account by account (`tests/test_wiki_ews_facts.py`).
+
+`verify.py`'s own v2 smoke check asserts the what-if for adjudication, not for Early Warning;
+the EWS what-if is covered by the tests above. If any fails, the workbench is showing a tier
+the batch does not: fix the drift, never the test.
+
+## What the gates do not cover
+
+- **The tiers.** The cutoffs are written by the same run, from in-sample quantiles, and no
+  check compares the mix they give on held-out accounts with the mix intended (finding 1).
+- **The whole-book figures.** Every gate figure is held out; nothing stops a whole-book figure
+  being quoted (finding 2).
+- **Calibration.** All three measures are about ranking; the Low tier's under-prediction
+  passes them (finding 5).
+- **The triggers.** No gate measures them; one clause cannot fire and the rest barely beat the
+  base rate (findings 6 and 7).
+- **The score.** Passing the gate does not show the model ranks better than `pd_score` alone
+  (finding 4).
+
+## History
+
+| Version | Change | Gates |
+|---|---|---|
+| development, before `stage-4` | the design brief's gate (an AUC minimum and a higher capture) found unreachable on this data and replaced, before the module was first committed (`ews/docs/enhancement_notes.md`) | not committed |
+| `stage-4` (commit `dbca721`) | gates introduced with the Early Warning model, in `train.py` and `verify.py` | capture {{< var ews.gate.capture_min >}}, PR-AUC above the base rate, AUC floor {{< var ews.gate.auc_floor >}} |
+| `stage-5`, `v1.0` to `v1.5`, `main` | unchanged | as above |
+
+The gates have not changed since they were committed, and they are never relaxed to let a
+model pass ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
+The pre-commit change is recorded because it was made with the model's result in view, which is
+part of why finding 3 matters. The brief's stronger gate is not unreachable for want of a
+better model: on the held-out accounts not even the generator's noise-free logit meets it
+([7.7](limitations.qmd#ews-finding-3)). A change to any gate would be a change of the committed
+promise: made on `main`, recorded in a new version tag, and shown in this table.

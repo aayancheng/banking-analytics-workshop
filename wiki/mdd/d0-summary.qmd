@@ -44,7 +44,19 @@ one is yet recorded as owning.
 **Early Warning (D7).** A behavioural model over the booked book's monthly history that
 places loans in risk tiers and names the triggers that fired. It is gated on how many
 deteriorations it captures in its top decile, with AUC reported but not gated, because
-noise in the data puts a low ceiling on AUC. Its headline figures arrive with the chapter.
+noise in the data puts a low ceiling on AUC: on the held-out {{< var ews.test_share >}} of
+the booked book it scores {{< var ews.auc >}}, a hair below the strongest model the
+observable columns support. Its top decile captures {{< var ews.capture >}} of
+deteriorations against a gate of {{< var ews.gate.capture_min >}} — met, but narrowly, with
+{{< var ews.boot.capture_below_gate >}} of bootstrap resamples below the gate. Three things
+qualify the output the portal shows. The whole-book figures and the default watchlist are
+in-sample, because most of the book is the model's own training rows (capture
+{{< var ews.whole.capture >}} over the whole book). The tier cutoffs are set on those in-sample
+probabilities, so the High tier, {{< var ews.tier.High.share >}} of the book by construction,
+holds {{< var ews.tier_ho.High.share >}} of held-out accounts. And on AUC the model is not
+distinguishable from the scorecard's PD alone. The chapter raises seven open findings about
+itself, among them a delinquency trigger whose configured threshold can never fire on this
+data.
 
 **Line Increase (D8).** A gradient-boosted candidate model plus amount rules and an incremental-ROE test,
 which offers more credit only to the lower-risk half of the book. Its headline figures

@@ -89,7 +89,7 @@ def test_signoff_open_findings_are_d6_limitations_word_for_word():
 
 def test_signoff_lists_every_finding_row_once():
     text = (WIKI / "mdd" / "d11-signoff.qmd").read_text()
-    assert len(_finding_rows(text)) == 6 + 6 + 5
+    assert len(_finding_rows(text)) == 6 + 6 + 5 + 7
 
 
 def test_d5_has_an_index_and_the_nine_parts_in_order():
@@ -113,7 +113,7 @@ def test_d6_has_an_index_and_the_nine_parts_in_order():
 
 def test_validation_book_lists_every_model_chapter_page():
     book = (WIKI / "_quarto-validation.yml").read_text()
-    for chapter in ("score", "adjudication", "pricing"):
+    for chapter in ("score", "adjudication", "pricing", "ews"):
         pos = [book.index(f"mdd/{chapter}/{p}.qmd") for p in ["index"] + TEMPLATE_PARTS]
         assert pos == sorted(pos), chapter
 
@@ -348,3 +348,175 @@ def test_d6_aaa_calibration_miss_reads_as_noise():
     assert _num(f["monitoring.ratio_lo"]) <= d < 1
     # "capital_ratio swings more on the -10% side alone" (6.6)
     assert _num(f["pricing.sens.capital_ratio.down.swing"]) > _num(f["pricing.sens.lgd.down.swing"])
+
+
+def test_signoff_open_findings_are_d7_limitations_word_for_word():
+    d11 = _finding_rows(_signoff_section("D7"))
+    assert len(d11) == 7
+    assert d11 == _finding_rows((WIKI / "mdd" / "ews" / "limitations.qmd").read_text())
+
+
+def test_d7_has_an_index_and_the_nine_parts_in_order():
+    index = (WIKI / "mdd" / "ews" / "index.qmd").read_text()
+    assert "order: 0" in index and "Status: complete" in index
+    for i, part in enumerate(TEMPLATE_PARTS, 1):
+        text = (WIKI / "mdd" / "ews" / f"{part}.qmd").read_text()
+        assert f'title: "7.{i} ' in text and f"order: {i}" in text, part
+        assert "TEMPLATE" not in text, f"{part}: template brief not replaced"
+
+
+def test_d7_tier_calibration_findings_follow_the_monitoring_floor():
+    """D7.7 applies the floor rule to the tiers (events = deteriorations): a tier outside the
+    tolerance on at least the floor's events is finding 5; below it, an observation."""
+    f = _facts()
+    lo, hi = _num(f["monitoring.ratio_lo"]), _num(f["monitoring.ratio_hi"])
+    floor = _num(f["monitoring.min_band_defaults"])
+    findings, observations = set(), set()
+    for T in ("High", "Medium", "Low"):
+        if not lo <= _num(f[f"ews.tier_ho.{T}.ratio"]) <= hi:
+            (findings if _num(f[f"ews.tier_ho.{T}.events"]) >= floor else observations).add(T)
+    assert findings == {"Low"} and observations == set()
+    assert _num(f["ews.tier_ho.Low.ratio"]) > hi            # under-predicts
+    for T in ("High", "Medium", "Low"):
+        want = "finding" if T in findings else "within tolerance"
+        assert f[f"ews.tier_ho.{T}.status"] == want, T
+    text = (WIKI / "mdd" / "ews" / "limitations.qmd").read_text()
+    f5 = text.split("## Finding 5", 1)[1].split("\n## ", 1)[0]
+    assert "ews.tier_ho.Low.ratio" in f5 and "monitoring.min_band_defaults" in f5
+
+
+def test_d7_prose_conclusions_hold_on_the_facts():
+    """Sentences in D7 that state a conclusion about a fact: if the fact moves, the prose must."""
+    f = _facts()
+    n_book, n_train = _num(f["ews.n_book"]), _num(f["ews.n_train"])
+    # "most of the book is the model's own training rows"; training AUC "almost perfect"
+    assert n_train / n_book > 0.5 and _num(f["ews.train.auc"]) > 0.99
+    # gates met (headline, 7.9); capture "narrowly": small margin, interval straddles the gate,
+    # "a quarter of resamples" below it (finding 3)
+    gate = _num(f["ews.gate.capture_min"])
+    assert _num(f["ews.capture"]) >= gate
+    assert 0 < _num(f["ews.gate.capture_events_margin"]) <= 10
+    assert _num(f["ews.boot.capture.lo"]) < gate < _num(f["ews.boot.capture.hi"])
+    assert 20 <= _num(f["ews.boot.capture_below_gate"]) <= 30
+    assert _num(f["ews.capture_events"]) - _num(f["ews.gate.capture_events_needed"]) == \
+        _num(f["ews.gate.capture_events_margin"])
+    # PR-AUC "firmly": interval wholly above the base rate, no resample at or below it
+    base = _num(f["ews.base_rate"]) / 100
+    assert _num(f["ews.boot.pr_auc.lo"]) > base and f["ews.boot.pr_auc_at_or_below_base"] == "0.0%"
+    # AUC interval wholly above the sanity floor
+    assert _num(f["ews.boot.auc.lo"]) > _num(f["ews.gate.auc_floor"])
+    # the ceiling: "a hair below" the observable oracle, well inside the AUC interval; the
+    # noise-free logit higher on the held-out rows than on the book; the origination gate
+    # unreachable even for the noise-free logit; the capture gate below the noise-free capture
+    # but "most of what is possible" (7.5, 7.9)
+    oracle, auc = _num(f["ceiling.ews.oracle_model.auc"]), _num(f["ews.auc"])
+    assert 0 <= oracle - auc < 0.01
+    assert oracle - auc < (_num(f["ews.boot.auc.hi"]) - _num(f["ews.boot.auc.lo"])) / 4
+    assert _num(f["ceiling.ews.latent_holdout"]) > _num(f["ceiling.ews.latent_book"]) > auc
+    assert _num(f["score.gate"]) > _num(f["ceiling.ews.latent_holdout"])
+    lat_cap = _num(f["ceiling.ews.latent_capture_holdout"])
+    assert lat_cap / 2 < gate < lat_cap
+    # the brief's targets (enhancement_notes: AUC 0.75, capture 3x) are out of reach even for
+    # the noise-free logit on the held-out accounts (finding 3, 7.9)
+    notes = (ROOT / "ews" / "docs" / "enhancement_notes.md").read_text()
+    assert "AUC ≥ 0.75" in notes and "capture ≥ 3×" in notes
+    assert _num(f["ceiling.ews.latent_holdout"]) < 0.75 and lat_cap < 30
+    # benchmark: the paired interval contains zero; pd_score alone misses the capture gate
+    assert _num(f["ews.pd_score.diff_lo"]) < 0 < _num(f["ews.pd_score.diff_hi"])
+    assert _num(f["ews.pd_score.capture"]) < gate
+    # importance: no feature dominates; pd_score not in the top five by gain or split
+    assert _num(f["ews.importance.gain.1.share"]) < 15
+    assert _num(f["ews.importance.gain.pd_score_rank"]) > 5
+    assert _num(f["ews.importance.split.pd_score_rank"]) > 5
+    gain_top = {f[f"ews.importance.gain.{i}.feature"] for i in range(1, 6)}
+    assert not gain_top & {"industry", "entity_type", "pd_score", "business_score"}
+    # whole book far stronger than held out ("severalfold", finding 2)
+    assert _num(f["ews.whole.capture"]) > 2 * _num(f["ews.capture"])
+    assert _num(f["ews.whole.auc"]) > _num(f["ews.boot.auc.hi"])
+    # tiers: rank monotonically; High holds "far fewer" than intended; Medium "a third"
+    obs = [_num(f[f"ews.tier_ho.{T}.observed"]) for T in ("High", "Medium", "Low")]
+    assert obs == sorted(obs, reverse=True) and len(set(obs)) == 3
+    for T, q in (("High", 10.0), ("Medium", 20.0), ("Low", 70.0)):
+        assert _num(f[f"ews.tier.{T}.share"]) == q, T
+    assert _num(f["ews.tier_ho.High.share"]) < _num(f["ews.tier.High.share"]) / 2
+    assert 30 <= _num(f["ews.tier_ho.Medium.share"]) <= 36
+    # tier-mix PSI in the watch band at development (7.4, 7.8)
+    psi = _num(f["ews.tier_ho.psi_vs_book"])
+    assert _num(f["monitoring.psi_watch"]) < psi < _num(f["monitoring.psi_act"])
+    # watchlist: almost all training rows; every one High; in-sample rate near perfect
+    assert _num(f["ews.watchlist.n_train"]) >= 0.9 * _num(f["ews.watchlist.n"])
+    assert f["ews.watchlist.high_n"] == f["ews.watchlist.n"]
+    assert _num(f["ews.watchlist.rate"]) > 90
+    assert _num(f["ews.watchlist.n_holdout"]) < 10
+    # triggers: none dead, exactly one dead clause, and it is dpd_max; DELINQUENCY is
+    # dpd_recent alone, "about half the book"; deposit decline "very few"
+    assert f["ews.trigger.n_dead"] == "0" and f["ews.trigger.n_dead_clauses"] == "1"
+    d = "ews.trigger.delinquency"
+    assert f[f"{d}.clause.dpd_max.n_alone"] == "0"
+    assert _num(f[f"{d}.clause.dpd_max.feature_max"]) < _num(f[f"{d}.clause.dpd_max.threshold"])
+    assert f[f"{d}.clause.dpd_recent.n_alone"] == f[f"{d}.n"]
+    assert 45 <= _num(f[f"{d}.share"]) <= 55
+    assert _num(f["ews.trigger.deposit_decline.share"]) <= 2
+    dd = "ews.trigger.deposit_decline.clause.deposit_decline_pct"
+    assert _num(f[f"{dd}.threshold"]) < _num(f[f"{dd}.feature_max"])
+    # the other clauses can fire: threshold below the feature's maximum
+    for t, c in (("high_utilization", "util_recent"), ("rising_utilization", "util_drift"),
+                 ("frequent_overdrafts", "overdraft_recent")):
+        k = f"ews.trigger.{t}.clause.{c}"
+        assert _num(f[f"{k}.threshold"]) < _num(f[f"{k}.feature_max"]), t
+    # triggers "barely beat the base rate", every one below the High tier's lift, together on
+    # "most of the book"; precision range quoted from DELINQUENCY (lowest) to HIGH_UTILIZATION
+    slugs = ("high_utilization", "rising_utilization", "delinquency", "deposit_decline",
+             "frequent_overdrafts")
+    lifts = {t: _num(f[f"ews.trigger.{t}.lift"]) for t in slugs}
+    assert min(lifts, key=lifts.get) == "delinquency"
+    assert max(lifts, key=lifts.get) == "high_utilization"
+    assert all(1 < v < 2 and v < _num(f["ews.tier_ho.High.lift"]) for v in lifts.values())
+    assert _num(f["ews.trigger.any.share"]) > 50
+    assert _num(f["ews.trigger.any.precision"]) > _num(f["ews.trigger.none.rate"])
+    # most High accounts carry a trigger, some none; most triggered accounts are not High
+    assert _num(f["ews.overlap.high_with_trigger.share"]) > 50
+    assert _num(f["ews.overlap.high_no_trigger.n"]) > 0
+    assert _num(f["ews.overlap.triggered_not_high.share"]) > 50
+    # lift is over the book base rate, equal to the held-out one at the printed precision
+    assert f["ews.base_rate"] == f["ews.base_rate_holdout"]
+
+
+def test_d7_code_claims_hold():
+    """D7 statements about the code, not the facts."""
+    import inspect
+    from ews.src import triggers, watchlist
+    src = inspect.getsource(triggers.flag_triggers)
+    # DELINQUENCY's second clause is hard-coded, not in EWS_TRIGGERS (7.3, finding 6)
+    assert '(dpd_max >= cfg["dpd_severe"]) | (dpd_recent > 0)' in src
+    from shared.config import EWS_TRIGGERS
+    assert not any("recent" in k and "dpd" in k for k in EWS_TRIGGERS)
+    # the pages print each clause's operator as a literal (a var shortcode drops ">"): the
+    # facts must still agree with what is printed
+    f = _facts()
+    ops = {"high_utilization.clause.util_recent": ">", "rising_utilization.clause.util_drift": ">",
+           "delinquency.clause.dpd_max": ">=", "delinquency.clause.dpd_recent": ">",
+           "deposit_decline.clause.deposit_decline_pct": ">",
+           "frequent_overdrafts.clause.overdraft_recent": ">="}
+    pages = "".join(p.read_text() for p in (WIKI / "mdd" / "ews").glob("*.qmd"))
+    for k, op in ops.items():
+        assert f[f"ews.trigger.{k}.op"] == op, k
+        assert f"`{k.rsplit('.', 1)[1]} {op}`" in pages, k
+    assert ".op >}}" not in pages
+    # the only trigger unit test fires DELINQUENCY through dpd_max with dpd_recent zero
+    test = (ROOT / "tests" / "test_triggers_and_rules.py").read_text()
+    assert '"dpd_max": 45, "dpd_recent": 0' in test and '"dpd_recent": 1' not in test
+    # no EWS leakage test (7.2 observation)
+    assert "ews" not in (ROOT / "tests" / "test_leakage.py").read_text().lower()
+    # watchlist default length 100; the v1 endpoint's 25 (7.1)
+    assert inspect.signature(watchlist.watchlist).parameters["top_n"].default == 100
+    assert "def ews_watchlist_endpoint(n: int = 25):" in (ROOT / "app" / "main.py").read_text()
+    # verify.py computes capture with its own lines and gates on the three (7.9)
+    v = (ROOT / "verify.py").read_text()
+    assert "capture = float(y_te[np.argsort(p)[::-1][:k]].sum() / y_te.sum())" in v
+    assert "if capture < EWS_CAPTURE_GATE or pr <= base or auc < EWS_AUC_FLOOR:" in v
+    # train.py asserts all three, last
+    t = (ROOT / "ews" / "src" / "train.py").read_text()
+    for line in ("assert capture >= CAPTURE_GATE", "assert pr_auc > base",
+                 "assert auc >= AUC_REPORT_FLOOR"):
+        assert line in t and t.index(line) > t.index('(DOCS / "validation_report.md").write_text'), line

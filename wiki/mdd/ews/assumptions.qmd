@@ -1,0 +1,147 @@
+---
+title: "7.4 Assumptions"
+order: 4
+---
+
+Five assumptions carry the output. For each: what it is, the evidence, and what breaks if it
+fails. One holds, three hold only in part or nominally, and the last is the one every chapter
+rests on.
+
+## The label looks forward {#ews-the-label-looks-forward}
+
+**The assumption.** `{{< var ews.target >}}` is an outcome *after* the behaviour the features
+summarise: the model sees an account's history up to now and predicts what happens next. That
+is what an early-warning model is for, and what its name says.
+
+**The evidence.** In the generator the label is not later than the features. It is drawn
+once, from a logit of the account's true PD, its utilisation over the last three months of the
+panel, the change in its utilisation from the first month to the last, and its leverage
+([7.2](data.qmd#ews-label)) — quantities measured over the same months the features are built
+from. Several features are close transforms of the label's drivers: `util_recent` and
+`utilization_onbook` are the recent utilisation, and `util_drift` measures the same rise. The
+generator has no calendar beyond the panel, so no out-of-time sample exists either; as for
+the scorecard, train and held-out are random splits of one cohort (D4 finding 1).
+
+The assumption **holds only nominally**. The model is a contemporaneous classifier of a
+label drawn from the panel's own months, not a forecast across a gap in time.
+
+**What breaks if it fails.** On a real book the label would be observed over a window after
+the features, the behaviour driving it would partly happen in that gap, and some of
+what the features show now would no longer be true then. Performance across a real forecast
+horizon is untested here and would plausibly be lower than the held-out figures in
+[7.5](performance.qmd); that is not measured. The monitoring plan measures capture on each new
+cohort with matured outcomes, which is the first out-of-time test this model will get
+([7.8](monitoring.qmd)).
+
+## The tiers are a fixed review workload {#ews-tiers-as-a-fixed-mix}
+
+**The assumption.** The cutoffs `t_high` and `t_med` are not risk limits stated as
+probabilities. They are the {{< var ews.q_high >}} and {{< var ews.q_med >}} quantiles of
+the model's probability, re-taken on every retrain ([7.3](methodology.qmd#ews-tiers)). What
+the bank fixes is the **review workload** — the share of the book in each tier — and the
+probability that separates the tiers follows from the model. The assumption is that the mix
+the cutoffs are set to give over the book is the mix they will give on the accounts that get
+reviewed.
+
+**The evidence.** The quantiles are taken over all {{< var ews.n_book >}} booked accounts,
+of which {{< var ews.n_train >}} are the model's training rows. On those rows the model is
+almost perfect (training AUC {{< var ews.train.auc >}}), so their probabilities spread to the
+extremes; the upper quantile is set largely by training rows the model has memorised. On the
+held-out accounts the mix is very different:
+
+| Tier | Share by construction, the whole book | Share on the held-out accounts |
+|---|---|---|
+| High | {{< var ews.tier.High.share >}} | {{< var ews.tier_ho.High.share >}} |
+| Medium | {{< var ews.tier.Medium.share >}} | {{< var ews.tier_ho.Medium.share >}} |
+| Low | {{< var ews.tier.Low.share >}} | {{< var ews.tier_ho.Low.share >}} |
+
+The population stability index between the two mixes is {{< var ews.tier_ho.psi_vs_book >}}:
+above the {{< var monitoring.psi_watch >}} the monitoring plan reads as a shift worth watching.
+A new account is out-of-sample, so the held-out row is the better guide to the mix the tiers
+will give on new business. The assumption **holds in part**: the cutoffs do what the code
+says, but not on the accounts the model has not seen — finding 1 ([7.7](limitations.qmd)).
+
+**What breaks if it fails.** Review capacity planned from the book's tier counts is planned
+for a High tier that new accounts will rarely enter. And because the cutoffs are re-taken on
+every retrain, a retrain on a riskier book would move them up and hold the workload, not the
+risk: the monitoring plan watches the cutoffs themselves as well as the mix
+([7.8](monitoring.qmd)).
+
+## The trigger thresholds are meaningful on this data {#ews-trigger-thresholds-are-generic}
+
+**The assumption.** Each threshold in `shared.config.EWS_TRIGGERS` is a policy value a
+monitoring officer would recognise — utilisation near the limit, a material rise, a
+delinquency of a month or more, a large fall in deposits, repeated overdrafts — and the
+assumption is that each is on the scale of the feature it is applied to.
+
+**The evidence.** The largest value each feature takes over the {{< var ews.n_book >}} booked
+accounts, against its threshold ([7.5](performance.qmd#ews-trigger-performance)):
+
+| Clause | Threshold | Largest value over the book | Accounts it fires on by itself |
+|---|---|---|---|
+| `util_recent >` | {{< var ews.trigger.high_utilization.clause.util_recent.threshold >}} | {{< var ews.trigger.high_utilization.clause.util_recent.feature_max >}} | {{< var ews.trigger.high_utilization.clause.util_recent.n_alone >}} |
+| `util_drift >` | {{< var ews.trigger.rising_utilization.clause.util_drift.threshold >}} | {{< var ews.trigger.rising_utilization.clause.util_drift.feature_max >}} | {{< var ews.trigger.rising_utilization.clause.util_drift.n_alone >}} |
+| `dpd_max >=` | {{< var ews.trigger.delinquency.clause.dpd_max.threshold >}} | {{< var ews.trigger.delinquency.clause.dpd_max.feature_max >}} | {{< var ews.trigger.delinquency.clause.dpd_max.n_alone >}} |
+| `dpd_recent >` | {{< var ews.trigger.delinquency.clause.dpd_recent.threshold >}} (hard-coded) | {{< var ews.trigger.delinquency.clause.dpd_recent.feature_max >}} | {{< var ews.trigger.delinquency.clause.dpd_recent.n_alone >}} |
+| `deposit_decline_pct >` | {{< var ews.trigger.deposit_decline.clause.deposit_decline_pct.threshold >}} | {{< var ews.trigger.deposit_decline.clause.deposit_decline_pct.feature_max >}} | {{< var ews.trigger.deposit_decline.clause.deposit_decline_pct.n_alone >}} |
+| `overdraft_recent >=` | {{< var ews.trigger.frequent_overdrafts.clause.overdraft_recent.threshold >}} | {{< var ews.trigger.frequent_overdrafts.clause.overdraft_recent.feature_max >}} | {{< var ews.trigger.frequent_overdrafts.clause.overdraft_recent.n_alone >}} |
+
+Days past due in this data are small counts: the generator draws each month's figure from a
+Poisson distribution whose mean scales with the true PD, so the worst month on the whole
+book is far below the configured delinquency threshold. That clause can never fire, and the
+hard-coded "any days past due in the last quarter" clause beside it fires on about half the
+book. At the other end, the deposit-decline threshold sits close to the largest decline in
+the data, so that trigger fires on very few accounts.
+
+The assumption **holds in part**: four configured thresholds can fire, deposit decline only
+rarely; one is unreachable; and the clause doing the delinquency trigger's work is not in the
+configuration —
+finding 6 ([7.7](limitations.qmd)). Whether the live thresholds pick out accounts that
+deteriorate more often than the rest is a question of performance, not scale: finding 7.
+
+**What breaks if it fails.** A threshold on the wrong scale is a control that appears in the
+configuration, in the workbench's trigger panel and in this chapter, and does nothing — or
+does something no one configured. A reviewer reading `EWS_TRIGGERS` would believe delinquency
+is flagged at a month past due; on this data it is flagged at a day.
+
+## The score is a valid input {#ews-the-score-is-a-valid-input}
+
+**The assumption.** `business_score` and `pd_score` come from the saved scorecard
+([7.2](data.qmd#ews-score-input)), and the model relies on them being what D4 documents: a
+valid ranking of credit risk, computed without leakage.
+
+**The evidence.** Three parts:
+
+- **Computed from the saved model, never from the generator's truth.** `compute_ews_features`
+  calls `predict_score_pd` ([7.2](data.qmd#ews-score-input)).
+- **In-sample for the scorecard on most accounts.** The scorecard was fitted on applicants
+  outside its own held-out share, drawn without regard to booking. The scorecard is a binned
+  additive model fitted on a different label, so the optimism this can lend is small, but it
+  has not been measured.
+- **The score is most of what the model knows.** Ranked by `pd_score` alone, the held-out
+  accounts come out about as well as the model ranks them
+  ([7.5](performance.qmd#ews-benchmark)). D4's findings — a weaker ranking on the booked
+  (D4 finding 2), band B under-predicting on the booked (D4 finding 6) — reach this model
+  through the score.
+
+The assumption **holds**, with the dependency stated: Early Warning is only as valid as D4,
+and on AUC it is not yet shown to be more than D4 (finding 4).
+
+**What breaks if it fails.** A scorecard change is an Early Warning change: retrain,
+recalibrate the tier cutoffs and re-assert the gate
+([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)).
+
+## The generator as ground truth
+
+**The assumption.** As in D4 (D4.4): every label in the data was drawn by
+`shared/data_generator.py`, and every claim in this chapter is a statement about that
+generator, not about a real book ([D1](../d1-purpose.qmd#scope-synthetic-data-real-methods)).
+
+**The evidence.** The generator is code, which is how this chapter can state the ceiling on
+ranking ([7.5](performance.qmd#ews-ceiling)), say that one trigger clause can never fire, and
+say that the label is contemporaneous with its features.
+
+**What breaks if it fails.** On real data the label would come from a real future, the
+panel would have gaps and missing months, and the triggers' thresholds would meet
+distributions no one has yet looked at. Each of the three is named above or in
+[7.7](limitations.qmd) as a question to answer before any real use.

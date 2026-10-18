@@ -103,6 +103,8 @@ def test_score_population_agrees_row_for_row(es, ef):
     meta = json.loads((ROOT / "ews/models/metadata.json").read_text())
     tier = np.array([wl.risk_tier(p, meta["tiers"]) for p in es.prob])
     trig = flag_triggers(es.feats)
+    ids = list(es.port["business_id"].astype(str))
+    assert list(sp["business_id"]) == ids and list(sp.index) == ids
     assert np.array_equal(sp["prob"].to_numpy(), np.round(es.prob, 4))
     assert list(sp["risk_tier"]) == list(tier)
     assert [list(x) for x in sp["triggers"]] == trig
