@@ -227,6 +227,100 @@ def pricing_waterfall_table(t: dict[str, str]) -> str:
                    f"EAD \\${t[f'{e}.ead']})", "At the quoted rate"], rows)
 
 
+EWS_TIERS = ["High", "Medium", "Low"]
+EWS_TRIGGERS = ["high_utilization", "rising_utilization", "delinquency", "deposit_decline",
+                "frequent_overdrafts"]
+
+
+def _pass_gt(value: str, gate: str) -> str:
+    return "pass" if float(value) > float(gate) else "**fail**"
+
+
+def ews_headline_table(t: dict[str, str]) -> str:
+    cap, gate = t["ews.capture"], t["ews.gate.capture_min"]
+    return _table(["Measure (held-out 20% of the booked book)", "Value", "95% interval",
+                   "Gate", "Result"], [
+        ["Top-decile capture", f"{cap} ({t['ews.capture_events']} of "
+                               f"{t['ews.n_events_holdout']} deteriorations)",
+         f"{t['ews.boot.capture.lo']} – {t['ews.boot.capture.hi']}", f"≥ {gate}",
+         "pass" if float(cap.rstrip("%")) >= float(gate.rstrip("%")) else "**fail**"],
+        ["Top-decile lift", f"{t['ews.lift']}×", "", f"≥ {t['ews.gate.lift_min']}×",
+         _pass(t["ews.lift"], t["ews.gate.lift_min"])],
+        ["PR-AUC", t["ews.pr_auc"], f"{t['ews.boot.pr_auc.lo']} – {t['ews.boot.pr_auc.hi']}",
+         f"> {t['ews.gate.pr_auc_min']} ({t['ews.base_rate']})",
+         "pass" if float(t["ews.pr_auc"]) > float(t["ews.base_rate"].rstrip("%")) / 100
+         else "**fail**"],
+        ["AUC (reported, not gated)", t["ews.auc"],
+         f"{t['ews.boot.auc.lo']} – {t['ews.boot.auc.hi']}",
+         f"sanity floor {t['ews.gate.auc_floor']}", _pass(t["ews.auc"], t["ews.gate.auc_floor"])],
+        ["High tier if probability ≥", t["ews.t_high"], "", "", ""],
+        ["Medium tier if probability ≥", t["ews.t_med"], "", "", ""],
+    ])
+
+
+def ews_insample_table(t: dict[str, str]) -> str:
+    return _table(["Rows scored", "n", "AUC", "PR-AUC", "Top-decile capture", "Lift"], [
+        ["**Held-out 20% (the number to quote)**", t["ews.n_test"], t["ews.auc"],
+         t["ews.pr_auc"], t["ews.capture"], t["ews.lift"] + "×"],
+        ["Whole booked book (80% in-sample)", t["ews.n_book"], t["ews.whole.auc"],
+         t["ews.whole.pr_auc"], t["ews.whole.capture"], t["ews.whole.lift"] + "×"],
+        ["Training 80% (in-sample)", t["ews.n_train"], t["ews.train.auc"], "—",
+         t["ews.train.capture"], "—"],
+    ])
+
+
+def ews_tier_table(t: dict[str, str]) -> str:
+    rows = []
+    for T in EWS_TIERS:
+        g = f"ews.tier_ho.{T}"
+        rows.append([T, t[f"ews.tier.{T}.n"], t[f"ews.tier.{T}.share"], t[f"{g}.n"],
+                     t[f"{g}.share"], t[f"{g}.events"], t[f"{g}.observed"], t[f"{g}.predicted"],
+                     t[f"{g}.ratio"], t[f"{g}.lift"] + "×", t[f"{g}.status"]])
+    return _table(["Tier", "Book n", "Book share", "Held-out n", "Held-out share",
+                   "Deteriorations", "Observed rate", "Mean probability", "Observed / predicted",
+                   "Lift over base", "Calibration"], rows)
+
+
+def ews_trigger_table(t: dict[str, str]) -> str:
+    rows = []
+    for k in EWS_TRIGGERS:
+        g = f"ews.trigger.{k}"
+        clauses = sorted({c.split(".")[4] for c in t if c.startswith(f"{g}.clause.")})
+        rule = " or ".join(f"`{t[f'{g}.clause.{c}.feature']}` {t[f'{g}.clause.{c}.op']} "
+                           f"{t[f'{g}.clause.{c}.threshold']} (max {t[f'{g}.clause.{c}.feature_max']}"
+                           f"; fires alone on {t[f'{g}.clause.{c}.n_alone']})"
+                           for c in clauses)
+        rows.append([f"`{t[f'{g}.name']}`", rule, t[f"{g}.n"], t[f"{g}.share"],
+                     t[f"{g}.precision"], t[f"{g}.recall"], t[f"{g}.lift"] + "×"])
+    rows.append(["Any trigger", "", t["ews.trigger.any.n"], t["ews.trigger.any.share"],
+                 t["ews.trigger.any.precision"], t["ews.trigger.any.recall"], ""])
+    return _table(["Trigger", "Rule (feature max over the book; accounts the clause fires on "
+                   "by itself)", "Book n", "Book share", "Precision (held out)",
+                   "Recall (held out)", "Lift over base"], rows)
+
+
+def ews_ceiling_table(t: dict[str, str]) -> str:
+    rows = [
+        ["Noise-free deterioration logit (the data's ceiling)", "all booked accounts",
+         t["ceiling.ews.latent_book"], "", ""],
+        ["Noise-free deterioration logit", "the EWS held-out 20%",
+         t["ceiling.ews.latent_holdout"], t["ceiling.ews.latent_pr_auc_holdout"],
+         t["ceiling.ews.latent_capture_holdout"]],
+    ]
+    if "ceiling.ews.oracle_model.auc" in t:
+        rows.append(["Oracle model (every observable column)", "the same held-out 20%",
+                     t["ceiling.ews.oracle_model.auc"], "", ""])
+    rows += [
+        ["Committed EWS model", "the same held-out 20%", t["ews.auc"], t["ews.pr_auc"],
+         t["ews.capture"]],
+        ["Score PD alone (`pd_score`)", "the same held-out 20%", t["ews.pd_score.auc"], "",
+         t["ews.pd_score.capture"]],
+        ["Gate", "", f"floor {t['ews.gate.auc_floor']}", f"> {t['ews.base_rate']}",
+         f"≥ {t['ews.gate.capture_min']}"],
+    ]
+    return _table(["", "Measured over", "AUC", "PR-AUC", "Top-decile capture"], rows)
+
+
 def fact_index(meta: dict[str, dict]) -> str:
     rows = [[f"`{k}`", d["text"], d["population"], f"`{d['source']}`"]
             for k, d in sorted(meta.items())]
@@ -236,8 +330,11 @@ def fact_index(meta: dict[str, dict]) -> str:
             "are recomputed through the saved model and `policy.decide`, exactly as the "
             "platform scores adjudication, and the `pricing.*` facts through "
             "`price_population` and the engine's own functions, exactly as the portal "
-            "prices the booked book); the "
-            "`score.stress.*` refits are recomputed only under `python verify.py --full`. "
+            "prices the booked book, and the `ews.*` facts through the saved EWS model, "
+            "`risk_tier`, `flag_triggers` and `watchlist`, exactly as the portal scores "
+            "the booked book); the `score.stress.*` refits and the "
+            "`ceiling.ews.oracle_model.*` refit are recomputed only under "
+            "`python verify.py --full`. "
             "Pages print these through `{{</* var key */>}}`; none is typed by hand.\n\n" +
             _table(["Key", "Value", "Population", "Source"], rows))
 
@@ -266,6 +363,11 @@ def render_all(t: dict[str, str], meta: dict[str, dict]) -> dict[str, str]:
         "_generated/pricing-sensitivity.md": pricing_sensitivity_table(t),
         "_generated/pricing-pd-scaling.md": pricing_pd_table(t),
         "_generated/pricing-waterfall.md": pricing_waterfall_table(t),
+        "_generated/ews-headline.md": ews_headline_table(t),
+        "_generated/ews-insample.md": ews_insample_table(t),
+        "_generated/ews-tiers.md": ews_tier_table(t),
+        "_generated/ews-triggers.md": ews_trigger_table(t),
+        "_generated/ews-ceiling.md": ews_ceiling_table(t),
         "reference/facts.qmd": fact_index(meta),
     }
     if "score.stress.no_bureau.auc" in t:

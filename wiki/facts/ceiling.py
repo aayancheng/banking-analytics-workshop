@@ -39,3 +39,87 @@ def compute(split) -> dict[str, Fact]:
         "ceiling.signal_holdout": Fact(held, ".4f", SRC, "held-out 20% (score split)"),
         "ceiling.gap_holdout": Fact(held - model, ".3f", SRC, "held-out 20% (score split)"),
     }
+
+
+# --- D7: the deterioration label's ceiling (mirrors workshop/labs/oracle_ceiling.py) ---------
+SRC_EWS = ("wiki.facts.ceiling.ews_latent (the DGP's deterioration logit without its noise "
+           "term; mirrors workshop/labs/oracle_ceiling.py)")
+SRC_ORACLE = ("wiki.facts.ceiling.compute_ews_oracle (LightGBM on every observable column, "
+              "train.py's hyper-parameters and split; mirrors workshop/labs/oracle_ceiling.py)")
+EWS_BOOK = "booked book, all 8,336 accounts"
+EWS_HOLDOUT = "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)"
+
+
+def ews_latent(port) -> np.ndarray:
+    """The deterioration logit of shared/data_generator.py without its N(0, 0.4) noise and
+    without its intercept (AUC is rank-only), built exactly as oracle_ceiling.py builds it:
+    the true PD, on-book utilisation (last three months), the first-to-last utilisation trend
+    from the panel, and leverage."""
+    import pandas as pd
+    from shared.config import RAW
+    panel = pd.read_parquet(RAW / "panel.parquet")
+    last_m = panel["month_index"].max()
+    u = panel.pivot_table(index="business_id", columns="month_index",
+                          values="utilization", aggfunc="first")
+    util_trend = (u[last_m] - u[0]).loc[port["business_id"]].to_numpy()
+    pd_true = port["pd_default_origination"].to_numpy()       # DGP truth: allowed HERE only
+    util_last3 = port["utilization_onbook"].to_numpy()
+    lev = np.asarray(port["leverage"], float)
+    return (3.0 * pd_true + 2.0 * np.clip(util_last3 - 0.85, 0, None)
+            + 1.5 * np.clip(util_trend, 0, None) + 0.4 * _z(lev))
+
+
+def compute_ews(es) -> dict[str, Fact]:
+    """es: wiki.facts.ews_facts.EwsSplit (train.py's split and the committed model's prob)."""
+    from ews.src.train import top_decile_capture
+    from sklearn.metrics import average_precision_score
+    y, te = es.y, es.idx_te
+    lat = ews_latent(es.port)
+    held = float(roc_auc_score(y[te], lat[te]))
+    model = float(roc_auc_score(y[te], es.prob[te]))
+    return {
+        "ceiling.ews.latent_book": Fact(float(roc_auc_score(y, lat)), ".4f", SRC_EWS, EWS_BOOK),
+        "ceiling.ews.latent_holdout": Fact(held, ".4f", SRC_EWS, EWS_HOLDOUT),
+        "ceiling.ews.latent_pr_auc_holdout": Fact(
+            float(average_precision_score(y[te], lat[te])), ".4f", SRC_EWS, EWS_HOLDOUT),
+        "ceiling.ews.latent_capture_holdout": Fact(
+            top_decile_capture(y[te], lat[te]), ".1%",
+            SRC_EWS + " ranked by ews.src.train.top_decile_capture", EWS_HOLDOUT),
+        "ceiling.ews.gap_holdout": Fact(held - model, ".3f",
+                                        SRC_EWS + " minus the committed EWS model's AUC",
+                                        EWS_HOLDOUT),
+        "ceiling.ews.share_of_reach": Fact((model - 0.5) / (held - 0.5), ".0%",
+                                           "(EWS AUC - 0.5) / (noise-free AUC - 0.5)",
+                                           EWS_HOLDOUT),
+    }
+
+
+def compute_ews_oracle(es) -> dict[str, Fact]:
+    """Slow (a 500-tree refit): the strongest model on OBSERVABLE columns, as
+    oracle_ceiling.py trains it. Run under --full only; cached in facts.json otherwise."""
+    import pandas as pd
+    from lightgbm import LGBMClassifier
+    from sklearn.model_selection import train_test_split
+    from ews.src.feature_engineering import _cached_panel_features
+    from shared.config import LEAKAGE_COLUMNS, SEED
+    port, y = es.port, es.y
+    X = port.merge(_cached_panel_features(), on="business_id")
+    assert np.array_equal(X["business_id"].to_numpy(), port["business_id"].to_numpy())
+    X = X.drop(columns=[c for c in LEAKAGE_COLUMNS + ["business_id", "net_income"]
+                        if c in X.columns])
+    cats = ["industry", "region", "entity_type", "loan_purpose"]
+    for c in cats:
+        X[c] = X[c].astype("category")
+    X_tr, X_te, y_tr, y_te, _, te = train_test_split(X, y, np.arange(len(X)), test_size=0.2,
+                                                     random_state=SEED, stratify=y)
+    assert np.array_equal(te, es.idx_te), "oracle split no longer matches the EWS split"
+    oracle = LGBMClassifier(n_estimators=500, learning_rate=0.03, num_leaves=31,
+                            subsample=0.8, colsample_bytree=0.8, random_state=SEED,
+                            n_jobs=-1, verbose=-1)
+    oracle.fit(X_tr, y_tr, categorical_feature=cats)
+    auc = float(roc_auc_score(y_te, oracle.predict_proba(X_te)[:, 1]))
+    return {
+        "ceiling.ews.oracle_model.auc": Fact(auc, ".4f", SRC_ORACLE, EWS_HOLDOUT),
+        "ceiling.ews.oracle_model.n_columns": Fact(int(X.shape[1]), "d", SRC_ORACLE,
+                                                   "module constant"),
+    }

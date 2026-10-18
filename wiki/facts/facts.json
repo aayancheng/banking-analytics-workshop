@@ -1658,6 +1658,62 @@
     "text": "35%",
     "value": 0.35
   },
+  "ceiling.ews.gap_holdout": {
+    "fmt": ".3f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "wiki.facts.ceiling.ews_latent (the DGP's deterioration logit without its noise term; mirrors workshop/labs/oracle_ceiling.py) minus the committed EWS model's AUC",
+    "text": "0.071",
+    "value": 0.070706
+  },
+  "ceiling.ews.latent_book": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts",
+    "source": "wiki.facts.ceiling.ews_latent (the DGP's deterioration logit without its noise term; mirrors workshop/labs/oracle_ceiling.py)",
+    "text": "0.7038",
+    "value": 0.703762
+  },
+  "ceiling.ews.latent_capture_holdout": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "wiki.facts.ceiling.ews_latent (the DGP's deterioration logit without its noise term; mirrors workshop/labs/oracle_ceiling.py) ranked by ews.src.train.top_decile_capture",
+    "text": "26.9%",
+    "value": 0.269103
+  },
+  "ceiling.ews.latent_holdout": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "wiki.facts.ceiling.ews_latent (the DGP's deterioration logit without its noise term; mirrors workshop/labs/oracle_ceiling.py)",
+    "text": "0.7329",
+    "value": 0.732875
+  },
+  "ceiling.ews.latent_pr_auc_holdout": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "wiki.facts.ceiling.ews_latent (the DGP's deterioration logit without its noise term; mirrors workshop/labs/oracle_ceiling.py)",
+    "text": "0.3964",
+    "value": 0.396414
+  },
+  "ceiling.ews.oracle_model.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "wiki.facts.ceiling.compute_ews_oracle (LightGBM on every observable column, train.py's hyper-parameters and split; mirrors workshop/labs/oracle_ceiling.py)",
+    "text": "0.6647",
+    "value": 0.664722
+  },
+  "ceiling.ews.oracle_model.n_columns": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "wiki.facts.ceiling.compute_ews_oracle (LightGBM on every observable column, train.py's hyper-parameters and split; mirrors workshop/labs/oracle_ceiling.py)",
+    "text": "35",
+    "value": 35
+  },
+  "ceiling.ews.share_of_reach": {
+    "fmt": ".0%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "(EWS AUC - 0.5) / (noise-free AUC - 0.5)",
+    "text": "70%",
+    "value": 0.69638
+  },
   "ceiling.gap_holdout": {
     "fmt": ".3f",
     "population": "held-out 20% (score split)",
@@ -1685,6 +1741,1441 @@
     "source": "wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)",
     "text": "0.8311",
     "value": 0.831076
+  },
+  "ews.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "0.6622",
+    "value": 0.66217
+  },
+  "ews.base_rate": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "18.0%",
+    "value": 0.180182
+  },
+  "ews.base_rate_holdout": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "18.0%",
+    "value": 0.180456
+  },
+  "ews.boot.auc.hi": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "0.6938",
+    "value": 0.693752
+  },
+  "ews.boot.auc.lo": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "0.6279",
+    "value": 0.627866
+  },
+  "ews.boot.capture.hi": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "25.2%",
+    "value": 0.251764
+  },
+  "ews.boot.capture.lo": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "17.5%",
+    "value": 0.175417
+  },
+  "ews.boot.capture_below_gate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42: share of resamples whose capture is below CAPTURE_GATE",
+    "text": "23.9%",
+    "value": 0.239
+  },
+  "ews.boot.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "1,000",
+    "value": 1000
+  },
+  "ews.boot.pr_auc.hi": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "0.3621",
+    "value": 0.36214
+  },
+  "ews.boot.pr_auc.lo": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "0.2653",
+    "value": 0.265266
+  },
+  "ews.boot.pr_auc_at_or_below_base": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42: share of resamples whose PR-AUC is at or below the base rate",
+    "text": "0.0%",
+    "value": 0.0
+  },
+  "ews.capture": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.train.top_decile_capture",
+    "text": "21.6%",
+    "value": 0.215947
+  },
+  "ews.capture_events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.train.top_decile_capture",
+    "text": "65",
+    "value": 65
+  },
+  "ews.gate.auc_floor": {
+    "fmt": ".2f",
+    "population": "policy constant (gate, measured on the held-out 20% of the booked book)",
+    "source": "ews.src.train.AUC_REPORT_FLOOR (sanity floor; AUC reported, not gated)",
+    "text": "0.60",
+    "value": 0.6
+  },
+  "ews.gate.capture_events_margin": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "captured minus needed deteriorations in the top decile",
+    "text": "4",
+    "value": 4
+  },
+  "ews.gate.capture_events_needed": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ceil(CAPTURE_GATE x held-out deteriorations)",
+    "text": "61",
+    "value": 61
+  },
+  "ews.gate.capture_margin_pp": {
+    "fmt": ".1f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "top-decile capture minus CAPTURE_GATE, percentage points",
+    "text": "1.6",
+    "value": 1.594684
+  },
+  "ews.gate.capture_min": {
+    "fmt": ".0%",
+    "population": "policy constant (gate, measured on the held-out 20% of the booked book)",
+    "source": "ews.src.train.CAPTURE_GATE",
+    "text": "20%",
+    "value": 0.2
+  },
+  "ews.gate.lift_min": {
+    "fmt": ".1f",
+    "population": "policy constant (gate, measured on the held-out 20% of the booked book)",
+    "source": "ews.src.train.CAPTURE_GATE / 0.10",
+    "text": "2.0",
+    "value": 2.0
+  },
+  "ews.gate.pr_auc_min": {
+    "fmt": "",
+    "population": "policy constant (gate, measured on the held-out 20% of the booked book)",
+    "source": "ews.src.train (assert pr_auc > base)",
+    "text": "the base rate",
+    "value": "the base rate"
+  },
+  "ews.importance.gain.1.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "leverage",
+    "value": "leverage"
+  },
+  "ews.importance.gain.1.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "9.3%",
+    "value": 0.093311
+  },
+  "ews.importance.gain.2.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "current_ratio",
+    "value": "current_ratio"
+  },
+  "ews.importance.gain.2.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "7.1%",
+    "value": 0.070984
+  },
+  "ews.importance.gain.3.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "dscr",
+    "value": "dscr"
+  },
+  "ews.importance.gain.3.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "7.0%",
+    "value": 0.069809
+  },
+  "ews.importance.gain.4.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "deposit_decline_pct",
+    "value": "deposit_decline_pct"
+  },
+  "ews.importance.gain.4.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "6.9%",
+    "value": 0.069022
+  },
+  "ews.importance.gain.5.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "deposit_recent",
+    "value": "deposit_recent"
+  },
+  "ews.importance.gain.5.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), share of total",
+    "text": "6.8%",
+    "value": 0.067926
+  },
+  "ews.importance.gain.pd_score_rank": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain)",
+    "text": "13",
+    "value": 13
+  },
+  "ews.importance.score_gain_share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (gain), pd_score + business_score",
+    "text": "9.0%",
+    "value": 0.090332
+  },
+  "ews.importance.split.1.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "current_ratio",
+    "value": "current_ratio"
+  },
+  "ews.importance.split.1.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.8%",
+    "value": 0.077933
+  },
+  "ews.importance.split.2.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "deposit_decline_pct",
+    "value": "deposit_decline_pct"
+  },
+  "ews.importance.split.2.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.5%",
+    "value": 0.074867
+  },
+  "ews.importance.split.3.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "dscr",
+    "value": "dscr"
+  },
+  "ews.importance.split.3.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.4%",
+    "value": 0.073667
+  },
+  "ews.importance.split.4.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "deposit_recent",
+    "value": "deposit_recent"
+  },
+  "ews.importance.split.4.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.3%",
+    "value": 0.073467
+  },
+  "ews.importance.split.5.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "util_volatility",
+    "value": "util_volatility"
+  },
+  "ews.importance.split.5.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split), share of total",
+    "text": "7.1%",
+    "value": 0.070933
+  },
+  "ews.importance.split.pd_score_rank": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "ews_model.pkl booster feature_importance (split)",
+    "text": "14",
+    "value": 14
+  },
+  "ews.importance.top_n": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "wiki.facts.ews_facts.TOP_FEATURES",
+    "text": "5",
+    "value": 5
+  },
+  "ews.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.train.top_decile_capture / 0.10 (as train.py)",
+    "text": "2.16",
+    "value": 2.159468
+  },
+  "ews.model.n_estimators": {
+    "fmt": ",d",
+    "population": "module constant",
+    "source": "ews/models/ews_model.pkl",
+    "text": "500",
+    "value": 500
+  },
+  "ews.model.num_leaves": {
+    "fmt": ",d",
+    "population": "module constant",
+    "source": "ews/models/ews_model.pkl",
+    "text": "31",
+    "value": 31
+  },
+  "ews.n_book": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "8,336",
+    "value": 8336
+  },
+  "ews.n_events": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "1,502",
+    "value": 1502
+  },
+  "ews.n_events_holdout": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "301",
+    "value": 301
+  },
+  "ews.n_features": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "ews.src.feature_engineering.EWS_FEATURE_COLUMNS",
+    "text": "24",
+    "value": 24
+  },
+  "ews.n_test": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "1,668",
+    "value": 1668
+  },
+  "ews.n_train": {
+    "fmt": ",d",
+    "population": "training 80% of the booked book (EWS split, seed 42), in-sample: the model was fitted on these rows",
+    "source": "ews.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "6,668",
+    "value": 6668
+  },
+  "ews.overlap.high_no_trigger.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "117",
+    "value": 117
+  },
+  "ews.overlap.high_no_trigger_ho.events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "0",
+    "value": 0
+  },
+  "ews.overlap.high_no_trigger_ho.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "1",
+    "value": 1
+  },
+  "ews.overlap.high_with_trigger.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "716",
+    "value": 716
+  },
+  "ews.overlap.high_with_trigger.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- share of High-tier accounts",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "86.0%",
+    "value": 0.859544
+  },
+  "ews.overlap.low_with_trigger.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "3,854",
+    "value": 3854
+  },
+  "ews.overlap.triggered_not_high.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "5,241",
+    "value": 5241
+  },
+  "ews.overlap.triggered_not_high.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- share of accounts with at least one trigger",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "88.0%",
+    "value": 0.879805
+  },
+  "ews.pd_score.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "predict_score_pd's pd (the pd_score feature) alone",
+    "text": "0.6398",
+    "value": 0.63984
+  },
+  "ews.pd_score.capture": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.train.top_decile_capture on pd_score alone",
+    "text": "18.6%",
+    "value": 0.186047
+  },
+  "ews.pd_score.diff": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "EWS AUC minus pd_score AUC",
+    "text": "0.0223",
+    "value": 0.02233
+  },
+  "ews.pd_score.diff_hi": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: EWS AUC minus pd_score AUC on the same resampled rows",
+    "text": "0.0548",
+    "value": 0.05476
+  },
+  "ews.pd_score.diff_lo": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: EWS AUC minus pd_score AUC on the same resampled rows",
+    "text": "-0.0132",
+    "value": -0.013152
+  },
+  "ews.pr_auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "0.3080",
+    "value": 0.307969
+  },
+  "ews.pr_auc_over_base": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population) / base rate",
+    "text": "1.71",
+    "value": 1.709205
+  },
+  "ews.q_high": {
+    "fmt": ".0%",
+    "population": "policy constant",
+    "source": "ews.src.train (quantile for t_high)",
+    "text": "90%",
+    "value": 0.9
+  },
+  "ews.q_med": {
+    "fmt": ".0%",
+    "population": "policy constant",
+    "source": "ews.src.train (quantile for t_med)",
+    "text": "70%",
+    "value": 0.7
+  },
+  "ews.t_high": {
+    "fmt": ".4f",
+    "population": "whole booked book, 8,336 accounts, in-sample probabilities (80% are training rows) -- the distribution train.py sets the cutoffs on",
+    "source": "ews.src.train tier calibration (np.quantile of whole-book prob, rounded 4dp)",
+    "text": "0.5073",
+    "value": 0.5073
+  },
+  "ews.t_med": {
+    "fmt": ".4f",
+    "population": "whole booked book, 8,336 accounts, in-sample probabilities (80% are training rows) -- the distribution train.py sets the cutoffs on",
+    "source": "ews.src.train tier calibration (np.quantile of whole-book prob, rounded 4dp)",
+    "text": "0.1649",
+    "value": 0.1649
+  },
+  "ews.target": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.train.TARGET",
+    "text": "deterioration_next_6_12mo",
+    "value": "deterioration_next_6_12mo"
+  },
+  "ews.tier.High.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "833",
+    "value": 833
+  },
+  "ews.tier.High.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "10.0%",
+    "value": 0.099928
+  },
+  "ews.tier.Low.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "5,835",
+    "value": 5835
+  },
+  "ews.tier.Low.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "70.0%",
+    "value": 0.699976
+  },
+  "ews.tier.Medium.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "1,668",
+    "value": 1668
+  },
+  "ews.tier.Medium.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "20.0%",
+    "value": 0.200096
+  },
+  "ews.tier_ho.High.events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "17",
+    "value": 17
+  },
+  "ews.tier_ho.High.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo / book base rate",
+    "text": "2.77",
+    "value": 2.774967
+  },
+  "ews.tier_ho.High.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "34",
+    "value": 34
+  },
+  "ews.tier_ho.High.observed": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "50.0%",
+    "value": 0.5
+  },
+  "ews.tier_ho.High.predicted": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "60.4%",
+    "value": 0.603645
+  },
+  "ews.tier_ho.High.ratio": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "0.83",
+    "value": 0.828302
+  },
+  "ews.tier_ho.High.recall": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "5.6%",
+    "value": 0.056478
+  },
+  "ews.tier_ho.High.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "2.0%",
+    "value": 0.020384
+  },
+  "ews.tier_ho.High.status": {
+    "fmt": "",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "wiki.facts.policy ratio tolerance and MIN_BAND_DEFAULTS (events = deteriorations)",
+    "text": "within tolerance",
+    "value": "within tolerance"
+  },
+  "ews.tier_ho.Low.events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "137",
+    "value": 137
+  },
+  "ews.tier_ho.Low.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo / book base rate",
+    "text": "0.70",
+    "value": 0.702718
+  },
+  "ews.tier_ho.Low.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "1,082",
+    "value": 1082
+  },
+  "ews.tier_ho.Low.observed": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "12.7%",
+    "value": 0.126617
+  },
+  "ews.tier_ho.Low.predicted": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "8.4%",
+    "value": 0.084448
+  },
+  "ews.tier_ho.Low.ratio": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "1.50",
+    "value": 1.499359
+  },
+  "ews.tier_ho.Low.recall": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "45.5%",
+    "value": 0.45515
+  },
+  "ews.tier_ho.Low.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "64.9%",
+    "value": 0.648681
+  },
+  "ews.tier_ho.Low.status": {
+    "fmt": "",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "wiki.facts.policy ratio tolerance and MIN_BAND_DEFAULTS (events = deteriorations)",
+    "text": "finding",
+    "value": "finding"
+  },
+  "ews.tier_ho.Medium.events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "147",
+    "value": 147
+  },
+  "ews.tier_ho.Medium.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo / book base rate",
+    "text": "1.48",
+    "value": 1.477971
+  },
+  "ews.tier_ho.Medium.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "552",
+    "value": 552
+  },
+  "ews.tier_ho.Medium.observed": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "26.6%",
+    "value": 0.266304
+  },
+  "ews.tier_ho.Medium.predicted": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "26.4%",
+    "value": 0.264042
+  },
+  "ews.tier_ho.Medium.ratio": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "1.01",
+    "value": 1.008568
+  },
+  "ews.tier_ho.Medium.recall": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "48.8%",
+    "value": 0.488372
+  },
+  "ews.tier_ho.Medium.share": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.watchlist.risk_tier with metadata.json tiers",
+    "text": "33.1%",
+    "value": 0.330935
+  },
+  "ews.tier_ho.Medium.status": {
+    "fmt": "",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "wiki.facts.policy ratio tolerance and MIN_BAND_DEFAULTS (events = deteriorations)",
+    "text": "within tolerance",
+    "value": "within tolerance"
+  },
+  "ews.top_decile_rate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.train.top_decile_capture",
+    "text": "38.9%",
+    "value": 0.389222
+  },
+  "ews.top_k": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.train.top_decile_capture (rows in the top decile)",
+    "text": "167",
+    "value": 167
+  },
+  "ews.train.auc": {
+    "fmt": ".4f",
+    "population": "training 80% of the booked book (EWS split, seed 42), in-sample: the model was fitted on these rows",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "0.9990",
+    "value": 0.998983
+  },
+  "ews.train.capture": {
+    "fmt": ".1%",
+    "population": "training 80% of the booked book (EWS split, seed 42), in-sample: the model was fitted on these rows",
+    "source": "ews.src.train.top_decile_capture",
+    "text": "55.5%",
+    "value": 0.555371
+  },
+  "ews.trigger.any.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "5,957",
+    "value": 5957
+  },
+  "ews.trigger.any.precision": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "20.6%",
+    "value": 0.205833
+  },
+  "ews.trigger.any.recall": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "82.1%",
+    "value": 0.820598
+  },
+  "ews.trigger.any.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "71.5%",
+    "value": 0.714611
+  },
+  "ews.trigger.delinquency.clause.dpd_max.config_key": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS",
+    "text": "dpd_severe",
+    "value": "dpd_severe"
+  },
+  "ews.trigger.delinquency.clause.dpd_max.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": "dpd_max",
+    "value": "dpd_max"
+  },
+  "ews.trigger.delinquency.clause.dpd_max.feature_max": {
+    "fmt": ".0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "compute_ews_features",
+    "text": "10",
+    "value": 10.0
+  },
+  "ews.trigger.delinquency.clause.dpd_max.n_alone": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS on this feature alone (the others zeroed)",
+    "text": "0",
+    "value": 0
+  },
+  "ews.trigger.delinquency.clause.dpd_max.op": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": ">=",
+    "value": ">="
+  },
+  "ews.trigger.delinquency.clause.dpd_max.threshold": {
+    "fmt": "d",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS['dpd_severe']",
+    "text": "30",
+    "value": 30
+  },
+  "ews.trigger.delinquency.clause.dpd_recent.config_key": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers",
+    "text": "none (hard-coded)",
+    "value": "none (hard-coded)"
+  },
+  "ews.trigger.delinquency.clause.dpd_recent.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": "dpd_recent",
+    "value": "dpd_recent"
+  },
+  "ews.trigger.delinquency.clause.dpd_recent.feature_max": {
+    "fmt": ".0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "compute_ews_features",
+    "text": "9",
+    "value": 9.0
+  },
+  "ews.trigger.delinquency.clause.dpd_recent.n_alone": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS on this feature alone (the others zeroed)",
+    "text": "4,225",
+    "value": 4225
+  },
+  "ews.trigger.delinquency.clause.dpd_recent.op": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": ">",
+    "value": ">"
+  },
+  "ews.trigger.delinquency.clause.dpd_recent.threshold": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "ews.src.triggers (hard-coded, not in EWS_TRIGGERS)",
+    "text": "0",
+    "value": 0
+  },
+  "ews.trigger.delinquency.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS precision / book base rate",
+    "text": "1.23",
+    "value": 1.232609
+  },
+  "ews.trigger.delinquency.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "4,225",
+    "value": 4225
+  },
+  "ews.trigger.delinquency.n_ho": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "869",
+    "value": 869
+  },
+  "ews.trigger.delinquency.name": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "DELINQUENCY",
+    "value": "DELINQUENCY"
+  },
+  "ews.trigger.delinquency.precision": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (deterioration rate among flagged)",
+    "text": "22.2%",
+    "value": 0.222094
+  },
+  "ews.trigger.delinquency.recall": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (share of deteriorations flagged)",
+    "text": "64.1%",
+    "value": 0.641196
+  },
+  "ews.trigger.delinquency.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "50.7%",
+    "value": 0.506838
+  },
+  "ews.trigger.deposit_decline.clause.deposit_decline_pct.config_key": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS",
+    "text": "deposit_decline",
+    "value": "deposit_decline"
+  },
+  "ews.trigger.deposit_decline.clause.deposit_decline_pct.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": "deposit_decline_pct",
+    "value": "deposit_decline_pct"
+  },
+  "ews.trigger.deposit_decline.clause.deposit_decline_pct.feature_max": {
+    "fmt": ".2f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "compute_ews_features",
+    "text": "0.43",
+    "value": 0.429488
+  },
+  "ews.trigger.deposit_decline.clause.deposit_decline_pct.n_alone": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS on this feature alone (the others zeroed)",
+    "text": "83",
+    "value": 83
+  },
+  "ews.trigger.deposit_decline.clause.deposit_decline_pct.op": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": ">",
+    "value": ">"
+  },
+  "ews.trigger.deposit_decline.clause.deposit_decline_pct.threshold": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS['deposit_decline']",
+    "text": "0.30",
+    "value": 0.3
+  },
+  "ews.trigger.deposit_decline.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS precision / book base rate",
+    "text": "1.39",
+    "value": 1.387483
+  },
+  "ews.trigger.deposit_decline.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "83",
+    "value": 83
+  },
+  "ews.trigger.deposit_decline.n_ho": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "16",
+    "value": 16
+  },
+  "ews.trigger.deposit_decline.name": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "DEPOSIT_DECLINE",
+    "value": "DEPOSIT_DECLINE"
+  },
+  "ews.trigger.deposit_decline.precision": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (deterioration rate among flagged)",
+    "text": "25.0%",
+    "value": 0.25
+  },
+  "ews.trigger.deposit_decline.recall": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (share of deteriorations flagged)",
+    "text": "1.3%",
+    "value": 0.013289
+  },
+  "ews.trigger.deposit_decline.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "1.0%",
+    "value": 0.009957
+  },
+  "ews.trigger.frequent_overdrafts.clause.overdraft_recent.config_key": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS",
+    "text": "overdraft_recent",
+    "value": "overdraft_recent"
+  },
+  "ews.trigger.frequent_overdrafts.clause.overdraft_recent.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": "overdraft_recent",
+    "value": "overdraft_recent"
+  },
+  "ews.trigger.frequent_overdrafts.clause.overdraft_recent.feature_max": {
+    "fmt": ".0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "compute_ews_features",
+    "text": "11",
+    "value": 11.0
+  },
+  "ews.trigger.frequent_overdrafts.clause.overdraft_recent.n_alone": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS on this feature alone (the others zeroed)",
+    "text": "1,574",
+    "value": 1574
+  },
+  "ews.trigger.frequent_overdrafts.clause.overdraft_recent.op": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": ">=",
+    "value": ">="
+  },
+  "ews.trigger.frequent_overdrafts.clause.overdraft_recent.threshold": {
+    "fmt": "d",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS['overdraft_recent']",
+    "text": "3",
+    "value": 3
+  },
+  "ews.trigger.frequent_overdrafts.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS precision / book base rate",
+    "text": "1.29",
+    "value": 1.288684
+  },
+  "ews.trigger.frequent_overdrafts.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "1,574",
+    "value": 1574
+  },
+  "ews.trigger.frequent_overdrafts.n_ho": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "323",
+    "value": 323
+  },
+  "ews.trigger.frequent_overdrafts.name": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "FREQUENT_OVERDRAFTS",
+    "value": "FREQUENT_OVERDRAFTS"
+  },
+  "ews.trigger.frequent_overdrafts.precision": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (deterioration rate among flagged)",
+    "text": "23.2%",
+    "value": 0.232198
+  },
+  "ews.trigger.frequent_overdrafts.recall": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (share of deteriorations flagged)",
+    "text": "24.9%",
+    "value": 0.249169
+  },
+  "ews.trigger.frequent_overdrafts.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "18.9%",
+    "value": 0.18882
+  },
+  "ews.trigger.high_utilization.clause.util_recent.config_key": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS",
+    "text": "high_utilization",
+    "value": "high_utilization"
+  },
+  "ews.trigger.high_utilization.clause.util_recent.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": "util_recent",
+    "value": "util_recent"
+  },
+  "ews.trigger.high_utilization.clause.util_recent.feature_max": {
+    "fmt": ".2f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "compute_ews_features",
+    "text": "1.20",
+    "value": 1.2
+  },
+  "ews.trigger.high_utilization.clause.util_recent.n_alone": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS on this feature alone (the others zeroed)",
+    "text": "628",
+    "value": 628
+  },
+  "ews.trigger.high_utilization.clause.util_recent.op": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": ">",
+    "value": ">"
+  },
+  "ews.trigger.high_utilization.clause.util_recent.threshold": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS['high_utilization']",
+    "text": "0.90",
+    "value": 0.9
+  },
+  "ews.trigger.high_utilization.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS precision / book base rate",
+    "text": "1.69",
+    "value": 1.692533
+  },
+  "ews.trigger.high_utilization.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "628",
+    "value": 628
+  },
+  "ews.trigger.high_utilization.n_ho": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "141",
+    "value": 141
+  },
+  "ews.trigger.high_utilization.name": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "HIGH_UTILIZATION",
+    "value": "HIGH_UTILIZATION"
+  },
+  "ews.trigger.high_utilization.precision": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (deterioration rate among flagged)",
+    "text": "30.5%",
+    "value": 0.304965
+  },
+  "ews.trigger.high_utilization.recall": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (share of deteriorations flagged)",
+    "text": "14.3%",
+    "value": 0.142857
+  },
+  "ews.trigger.high_utilization.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "7.5%",
+    "value": 0.075336
+  },
+  "ews.trigger.multi.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (two or more triggers)",
+    "text": "29.6%",
+    "value": 0.296065
+  },
+  "ews.trigger.n_dead": {
+    "fmt": "d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (triggers that fire on no account)",
+    "text": "0",
+    "value": 0
+  },
+  "ews.trigger.n_dead_clauses": {
+    "fmt": "d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (clauses that fire on no account by themselves)",
+    "text": "1",
+    "value": 1
+  },
+  "ews.trigger.n_triggers": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": "5",
+    "value": 5
+  },
+  "ews.trigger.none.rate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (deterioration rate with no trigger)",
+    "text": "11.5%",
+    "value": 0.115385
+  },
+  "ews.trigger.rising_utilization.clause.util_drift.config_key": {
+    "fmt": "",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS",
+    "text": "rising_utilization",
+    "value": "rising_utilization"
+  },
+  "ews.trigger.rising_utilization.clause.util_drift.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": "util_drift",
+    "value": "util_drift"
+  },
+  "ews.trigger.rising_utilization.clause.util_drift.feature_max": {
+    "fmt": ".2f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "compute_ews_features",
+    "text": "0.80",
+    "value": 0.802167
+  },
+  "ews.trigger.rising_utilization.clause.util_drift.n_alone": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS on this feature alone (the others zeroed)",
+    "text": "2,923",
+    "value": 2923
+  },
+  "ews.trigger.rising_utilization.clause.util_drift.op": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": ">",
+    "value": ">"
+  },
+  "ews.trigger.rising_utilization.clause.util_drift.threshold": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "shared.config.EWS_TRIGGERS['rising_utilization']",
+    "text": "0.15",
+    "value": 0.15
+  },
+  "ews.trigger.rising_utilization.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS precision / book base rate",
+    "text": "1.24",
+    "value": 1.238653
+  },
+  "ews.trigger.rising_utilization.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "2,923",
+    "value": 2923
+  },
+  "ews.trigger.rising_utilization.n_ho": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "578",
+    "value": 578
+  },
+  "ews.trigger.rising_utilization.name": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "RISING_UTILIZATION",
+    "value": "RISING_UTILIZATION"
+  },
+  "ews.trigger.rising_utilization.precision": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (deterioration rate among flagged)",
+    "text": "22.3%",
+    "value": 0.223183
+  },
+  "ews.trigger.rising_utilization.recall": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS (share of deteriorations flagged)",
+    "text": "42.9%",
+    "value": 0.428571
+  },
+  "ews.trigger.rising_utilization.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.triggers.flag_triggers with shared.config.EWS_TRIGGERS",
+    "text": "35.1%",
+    "value": 0.350648
+  },
+  "ews.watchlist.events": {
+    "fmt": ",d",
+    "population": "the 100 watchlist accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "99",
+    "value": 99
+  },
+  "ews.watchlist.high_n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.watchlist (default top_n) over the scored book",
+    "text": "100",
+    "value": 100
+  },
+  "ews.watchlist.holdout_events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "1",
+    "value": 1
+  },
+  "ews.watchlist.holdout_rate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts) -- watchlist members only",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "50.0%",
+    "value": 0.5
+  },
+  "ews.watchlist.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.watchlist (default top_n) over the scored book",
+    "text": "100",
+    "value": 100
+  },
+  "ews.watchlist.n_holdout": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (EWS split, seed 42, stratified: 1,668 accounts)",
+    "source": "ews.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "2",
+    "value": 2
+  },
+  "ews.watchlist.n_train": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "98",
+    "value": 98
+  },
+  "ews.watchlist.no_trigger_n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.watchlist (default top_n) over the scored book",
+    "text": "1",
+    "value": 1
+  },
+  "ews.watchlist.rate": {
+    "fmt": ".1%",
+    "population": "the 100 watchlist accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure",
+    "source": "portfolio.deterioration_next_6_12mo",
+    "text": "99.0%",
+    "value": 0.99
+  },
+  "ews.watchlist.top_n_default": {
+    "fmt": ",d",
+    "population": "module constant",
+    "source": "ews.src.watchlist.watchlist signature",
+    "text": "100",
+    "value": 100
+  },
+  "ews.whole.auc": {
+    "fmt": ".4f",
+    "population": "whole booked book, 8,336 accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "0.9476",
+    "value": 0.947551
+  },
+  "ews.whole.capture": {
+    "fmt": ".1%",
+    "population": "whole booked book, 8,336 accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure",
+    "source": "ews.src.train.top_decile_capture",
+    "text": "54.4%",
+    "value": 0.543941
+  },
+  "ews.whole.lift": {
+    "fmt": ".2f",
+    "population": "whole booked book, 8,336 accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure",
+    "source": "ews.src.train.top_decile_capture / 0.10",
+    "text": "5.44",
+    "value": 5.439414
+  },
+  "ews.whole.pr_auc": {
+    "fmt": ".4f",
+    "population": "whole booked book, 8,336 accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
+    "text": "0.8984",
+    "value": 0.898436
   },
   "market.base_margin": {
     "fmt": ".1%",

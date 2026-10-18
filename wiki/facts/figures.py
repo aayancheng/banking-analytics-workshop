@@ -56,3 +56,22 @@ def write_pricing(t: dict[str, str], out: Path) -> None:
     ax.set_ylim(0, 100); ax.set_xlabel("score band"); ax.set_ylabel("quoted below hurdle (%)")
     ax.legend(frameon=False, loc="lower right")
     _save(fig, out / "mispriced-by-band.svg")
+
+
+def write_ews(t: dict[str, str], out: Path) -> None:
+    """D7: observed deterioration rate against mean model probability by risk tier, on the
+    held-out rows, drawn from the printed facts so the figure and the tables cannot disagree."""
+    out.mkdir(parents=True, exist_ok=True)
+    tiers = ["Low", "Medium", "High"]
+    obs = [float(t[f"ews.tier_ho.{k}.observed"].rstrip("%")) for k in tiers]
+    pred = [float(t[f"ews.tier_ho.{k}.predicted"].rstrip("%")) for k in tiers]
+    labels = [f"{k}\n(n={t[f'ews.tier_ho.{k}.n']})" for k in tiers]
+    fig, ax = plt.subplots(figsize=(6, 3.6))
+    x = range(len(tiers))
+    ax.bar([i - 0.2 for i in x], pred, width=0.4, color=MUTED, label="mean probability")
+    ax.bar([i + 0.2 for i in x], obs, width=0.4, color=ACCENT, label="observed")
+    ax.axhline(float(t["ews.base_rate"].rstrip("%")), color=INK, ls="--", lw=1,
+               label="book base rate")
+    ax.set_xticks(list(x), labels); ax.set_ylabel("deterioration rate (%)")
+    ax.legend(frameon=False, loc="upper left")
+    _save(fig, out / "tier-calibration.svg")

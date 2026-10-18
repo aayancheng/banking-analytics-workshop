@@ -302,10 +302,283 @@ adj:
     Decline: "10%"
     Refer: "35%"
 ceiling:
+  ews:
+    gap_holdout: "0.071"
+    latent_book: "0.7038"
+    latent_capture_holdout: "26.9%"
+    latent_holdout: "0.7329"
+    latent_pr_auc_holdout: "0.3964"
+    oracle_model:
+      auc: "0.6647"
+      n_columns: "35"
+    share_of_reach: "70%"
   gap_holdout: "0.018"
   signal_all: "0.8177"
   signal_holdout: "0.8353"
   truepd_all: "0.8311"
+ews:
+  auc: "0.6622"
+  base_rate: "18.0%"
+  base_rate_holdout: "18.0%"
+  boot:
+    auc:
+      hi: "0.6938"
+      lo: "0.6279"
+    capture:
+      hi: "25.2%"
+      lo: "17.5%"
+    capture_below_gate: "23.9%"
+    n: "1,000"
+    pr_auc:
+      hi: "0.3621"
+      lo: "0.2653"
+    pr_auc_at_or_below_base: "0.0%"
+  capture: "21.6%"
+  capture_events: "65"
+  gate:
+    auc_floor: "0.60"
+    capture_events_margin: "4"
+    capture_events_needed: "61"
+    capture_margin_pp: "1.6"
+    capture_min: "20%"
+    lift_min: "2.0"
+    pr_auc_min: "the base rate"
+  importance:
+    gain:
+      1:
+        feature: "leverage"
+        share: "9.3%"
+      2:
+        feature: "current_ratio"
+        share: "7.1%"
+      3:
+        feature: "dscr"
+        share: "7.0%"
+      4:
+        feature: "deposit_decline_pct"
+        share: "6.9%"
+      5:
+        feature: "deposit_recent"
+        share: "6.8%"
+      pd_score_rank: "13"
+    score_gain_share: "9.0%"
+    split:
+      1:
+        feature: "current_ratio"
+        share: "7.8%"
+      2:
+        feature: "deposit_decline_pct"
+        share: "7.5%"
+      3:
+        feature: "dscr"
+        share: "7.4%"
+      4:
+        feature: "deposit_recent"
+        share: "7.3%"
+      5:
+        feature: "util_volatility"
+        share: "7.1%"
+      pd_score_rank: "14"
+    top_n: "5"
+  lift: "2.16"
+  model:
+    n_estimators: "500"
+    num_leaves: "31"
+  n_book: "8,336"
+  n_events: "1,502"
+  n_events_holdout: "301"
+  n_features: "24"
+  n_test: "1,668"
+  n_train: "6,668"
+  overlap:
+    high_no_trigger:
+      n: "117"
+    high_no_trigger_ho:
+      events: "0"
+      n: "1"
+    high_with_trigger:
+      n: "716"
+      share: "86.0%"
+    low_with_trigger:
+      n: "3,854"
+    triggered_not_high:
+      n: "5,241"
+      share: "88.0%"
+  pd_score:
+    auc: "0.6398"
+    capture: "18.6%"
+    diff: "0.0223"
+    diff_hi: "0.0548"
+    diff_lo: "-0.0132"
+  pr_auc: "0.3080"
+  pr_auc_over_base: "1.71"
+  q_high: "90%"
+  q_med: "70%"
+  t_high: "0.5073"
+  t_med: "0.1649"
+  target: "deterioration_next_6_12mo"
+  tier:
+    High:
+      n: "833"
+      share: "10.0%"
+    Low:
+      n: "5,835"
+      share: "70.0%"
+    Medium:
+      n: "1,668"
+      share: "20.0%"
+  tier_ho:
+    High:
+      events: "17"
+      lift: "2.77"
+      n: "34"
+      observed: "50.0%"
+      predicted: "60.4%"
+      ratio: "0.83"
+      recall: "5.6%"
+      share: "2.0%"
+      status: "within tolerance"
+    Low:
+      events: "137"
+      lift: "0.70"
+      n: "1,082"
+      observed: "12.7%"
+      predicted: "8.4%"
+      ratio: "1.50"
+      recall: "45.5%"
+      share: "64.9%"
+      status: "finding"
+    Medium:
+      events: "147"
+      lift: "1.48"
+      n: "552"
+      observed: "26.6%"
+      predicted: "26.4%"
+      ratio: "1.01"
+      recall: "48.8%"
+      share: "33.1%"
+      status: "within tolerance"
+  top_decile_rate: "38.9%"
+  top_k: "167"
+  train:
+    auc: "0.9990"
+    capture: "55.5%"
+  trigger:
+    any:
+      n: "5,957"
+      precision: "20.6%"
+      recall: "82.1%"
+      share: "71.5%"
+    delinquency:
+      clause:
+        dpd_max:
+          config_key: "dpd_severe"
+          feature: "dpd_max"
+          feature_max: "10"
+          n_alone: "0"
+          op: ">="
+          threshold: "30"
+        dpd_recent:
+          config_key: "none (hard-coded)"
+          feature: "dpd_recent"
+          feature_max: "9"
+          n_alone: "4,225"
+          op: ">"
+          threshold: "0"
+      lift: "1.23"
+      n: "4,225"
+      n_ho: "869"
+      name: "DELINQUENCY"
+      precision: "22.2%"
+      recall: "64.1%"
+      share: "50.7%"
+    deposit_decline:
+      clause:
+        deposit_decline_pct:
+          config_key: "deposit_decline"
+          feature: "deposit_decline_pct"
+          feature_max: "0.43"
+          n_alone: "83"
+          op: ">"
+          threshold: "0.30"
+      lift: "1.39"
+      n: "83"
+      n_ho: "16"
+      name: "DEPOSIT_DECLINE"
+      precision: "25.0%"
+      recall: "1.3%"
+      share: "1.0%"
+    frequent_overdrafts:
+      clause:
+        overdraft_recent:
+          config_key: "overdraft_recent"
+          feature: "overdraft_recent"
+          feature_max: "11"
+          n_alone: "1,574"
+          op: ">="
+          threshold: "3"
+      lift: "1.29"
+      n: "1,574"
+      n_ho: "323"
+      name: "FREQUENT_OVERDRAFTS"
+      precision: "23.2%"
+      recall: "24.9%"
+      share: "18.9%"
+    high_utilization:
+      clause:
+        util_recent:
+          config_key: "high_utilization"
+          feature: "util_recent"
+          feature_max: "1.20"
+          n_alone: "628"
+          op: ">"
+          threshold: "0.90"
+      lift: "1.69"
+      n: "628"
+      n_ho: "141"
+      name: "HIGH_UTILIZATION"
+      precision: "30.5%"
+      recall: "14.3%"
+      share: "7.5%"
+    multi:
+      share: "29.6%"
+    n_dead: "0"
+    n_dead_clauses: "1"
+    n_triggers: "5"
+    none:
+      rate: "11.5%"
+    rising_utilization:
+      clause:
+        util_drift:
+          config_key: "rising_utilization"
+          feature: "util_drift"
+          feature_max: "0.80"
+          n_alone: "2,923"
+          op: ">"
+          threshold: "0.15"
+      lift: "1.24"
+      n: "2,923"
+      n_ho: "578"
+      name: "RISING_UTILIZATION"
+      precision: "22.3%"
+      recall: "42.9%"
+      share: "35.1%"
+  watchlist:
+    events: "99"
+    high_n: "100"
+    holdout_events: "1"
+    holdout_rate: "50.0%"
+    n: "100"
+    n_holdout: "2"
+    n_train: "98"
+    no_trigger_n: "1"
+    rate: "99.0%"
+    top_n_default: "100"
+  whole:
+    auc: "0.9476"
+    capture: "54.4%"
+    lift: "5.44"
+    pr_auc: "0.8984"
 market:
   base_margin: "2.0%"
   capital_ratio: "12%"
