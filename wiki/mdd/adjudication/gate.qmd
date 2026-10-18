@@ -96,7 +96,7 @@ than the scorecard.
   [5.5](performance.qmd#adj-decisions-and-outcomes) and monitored by rule hit and by decision
   in [5.8](monitoring.qmd).
 - **Calibration.** Both gates measure ranking. The Approve zone's under-prediction
-  (finding 3) passes both.
+  (finding 3) and the booked Decline zone's over-prediction (finding 6) pass both.
 - **The zone cutoffs.** They are written to `policy_config.json` by the same run, from
   quantiles that include the held-out rows (finding 4), and no check compares them with
   anything.

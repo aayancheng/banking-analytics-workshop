@@ -38,7 +38,9 @@ revenue ([glossary](../../reference/glossary.qmd)). D4 raises the same issue for
 three structural zeros (D4 finding 3). Here they are left in, and their fitted weight has
 not been measured feature by feature; the SHAP reasons in
 [5.5](performance.qmd#adj-reasons-among-declines) show which features the model leans on
-for its Declines, and none of the structural zeros is among the top three.
+for its Declines: the top three are {{< var adj.decline.shap1.feature >}},
+{{< var adj.decline.shap2.feature >}} and {{< var adj.decline.shap3.feature >}}, none of them a
+structural zero.
 
 ## Split and seed
 

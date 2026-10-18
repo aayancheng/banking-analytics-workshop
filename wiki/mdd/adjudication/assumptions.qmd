@@ -96,8 +96,8 @@ valid ranking of applicants at decision time, computed without leakage.
   numbers already include its cost.
 - **D4's findings arrive with the score.** The scorecard ranks less well on the booked
   (D4 finding 2) and under-predicts in band B on the booked (D4 finding 6). Both reach
-  adjudication through `pd_score`: the first is mirrored in finding 1 of
-  [5.7](limitations.qmd), the second in finding 3.
+  adjudication through `pd_score`, and both are consistent with what this chapter finds:
+  the first with finding 1 of [5.7](limitations.qmd), the second with finding 3.
 
 The assumption **holds**, with the dependency stated: the model's strongest inputs are the
 score ([5.5](performance.qmd#adj-reasons-among-declines)), so the adjudication model is

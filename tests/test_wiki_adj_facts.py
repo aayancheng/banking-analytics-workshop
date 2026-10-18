@@ -138,6 +138,8 @@ def test_labels_say_what_was_measured(adj):
         assert adj[k].population != HOLDOUT and "constant" in adj[k].population, k
     for k in ("adj.trainonly.t_low", "adj.trainonly.t_high"):
         assert "in-sample" in adj[k].population and "not an out-of-sample" in adj[k].population
+    assert "biased low" in adj["adj.trainonly.t_low"].population
+    assert "biased high" in adj["adj.trainonly.t_high"].population
     for k in ("thin_dscr", "weak_score", "large_request"):
         for f in ("n", "share", "n_all"):
             pop = adj[f"adj.rule.{k}.{f}"].population

@@ -106,6 +106,6 @@ same values: the top three adverse rows of the ledger are the top-three reasons.
 |---|---|
 | Declining an applicant on the model's PD without the policy layer | The gate measures the PD's ranking, not a decision. The decision is the policy layer's, and most Declines come from its knockouts, not from the PD ([5.3](methodology.qmd#adj-knockouts-dominate)). |
 | Telling a declined applicant only the SHAP reasons | A knockout Decline has a rule as its reason, whatever the SHAP values say. Adverse-action reasons start from the rule hits, then the SHAP reasons. |
-| Reading the PD as calibrated on booked loans | On held-out booked loans the Approve zone under-predicts default (finding 3, [5.7](limitations.qmd)). The PD is for ranking and for placing a file in a zone. Pricing takes its PD from the scorecard (D6), not from this model. |
+| Reading the PD as calibrated on booked loans | On held-out booked loans the Approve zone under-predicts default, and on all held-out applicants too (finding 3, [5.7](limitations.qmd)). The PD is for ranking and for placing a file in a zone. Pricing takes its PD from the scorecard (D6), not from this model. |
 | Changing a zone cutoff without re-running the decision mix | The cutoffs are quantiles of the PD distribution, recalibrated on every retrain ([5.4](assumptions.qmd)); a cutoff carried over from another model version means something different. |
 | Any decision about a real business | The model was fitted to synthetic data ([D1](../d1-purpose.qmd#prohibited-uses)). |

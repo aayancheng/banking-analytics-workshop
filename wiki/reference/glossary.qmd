@@ -75,7 +75,8 @@ ROE (return on equity)
 SHAP (Shapley additive explanations)
 : An attribution method that splits one prediction among the model's features, so that a base
   value plus the features' contributions equals the prediction (in log-odds, for a classifier).
-  Adjudication's reasons are SHAP values (D5.3). It is exact in that sense, but how it shares
+  The adjudication model's reasons are SHAP values (D5.3); the policy layer's rule hits come
+  first. It is exact in that sense, but how it shares
   credit between correlated features is a choice of the method, which a validator has to
   assess as well as the model.
 

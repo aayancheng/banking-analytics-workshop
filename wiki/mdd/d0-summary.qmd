@@ -27,7 +27,7 @@ loans the bank books the model scores {{< var adj.pop.booked.auc >}}, below the 
 value and no better than the scorecard it consumes ({{< var score.pop.booked.auc >}} on the
 same rows). And the policy layer, not the model, decides most Declines:
 {{< var adj.decline.knockout_share >}} of held-out Declines carry a hard knockout. The
-chapter raises five open findings about itself, among them two policy rules that can never
+chapter raises six open findings about itself, among them two policy rules that can never
 fire on this data.
 
 **Pricing (D6).** A deterministic return-on-equity calculation: given the score's PD and

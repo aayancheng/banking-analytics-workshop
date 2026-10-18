@@ -25,8 +25,8 @@ last row is not a sensitivity scenario; it is the evidence for finding 4 and is 
 
 **The decisions barely move.** Moving `t_low` by {{< var adj.sens.step >}} either way
 changes {{< var adj.sens.t_low_down.changed >}} and {{< var adj.sens.t_low_up.changed >}}
-held-out decisions; moving `t_high` changes {{< var adj.sens.t_high_down.changed >}} each
-way. No decision share moves by as much as a percentage point. Two reasons, both from the
+held-out decisions; moving `t_high` changes {{< var adj.sens.t_high_down.changed >}} (down)
+and {{< var adj.sens.t_high_up.changed >}} (up). No decision share moves by as much as a percentage point. Two reasons, both from the
 code:
 
 - **The knockouts absorb the Decline edge.** Most Declines are knockouts
@@ -64,8 +64,10 @@ is down (D4.6). No such refit is run for adjudication. What can be said without 
   (D4.6). An adjudication model refitted without the bureau is therefore not the validated
   model either, and the documented response is the same as D4's: refer an applicant whose
   bureau data are missing to an underwriter.
-- **As the code stands, a missing value is not referred.** It becomes zero in the features
-  and in the policy layer, and a zero `dscr` is a knockout: a file with a missing coverage
+- **As the code stands, a missing value is not referred.** A missing numeric feature becomes
+  zero in `compute_adjudication_features`, and `decide` also fills a missing `dscr`, leverage,
+  public-records or delinquency value with zero (a missing `business_score` takes the score
+  floor, and revenue is floored at 1). A zero `dscr` is a knockout: a file with a missing coverage
   ratio would be declined for `dscr` below the floor, with a reason that is not true
   ([5.7](limitations.qmd#adj-observations)).
 

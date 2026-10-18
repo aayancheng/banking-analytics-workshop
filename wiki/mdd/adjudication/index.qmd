@@ -16,11 +16,11 @@ order: 0
   population, asserted at training and recomputed by `verify.py` — both met.
 - **On the loans the bank books:** held-out AUC {{< var adj.pop.booked.auc >}} on the
   {{< var adj.pop.booked.n >}} booked applicants in the held-out split — below the AUC gate
-  value, and below the scorecard's {{< var score.pop.booked.auc >}} on the same rows; lift
+  value, and no better than the scorecard's {{< var score.pop.booked.auc >}} on the same rows; lift
   {{< var adj.pop.booked.lift >}}× still passes.
 - **Mostly rules:** {{< var adj.decline.knockout_share >}} of held-out Declines carry a hard
   knockout. Adjudication is largely a rules engine with a model attached.
-- **Five open findings** the chapter raises about its own model and policy
+- **Six open findings** the chapter raises about its own model and policy
   ([5.7](limitations.qmd)).
 :::
 
@@ -52,6 +52,6 @@ population. The chapter documents the model and policy as committed: it changes 
 | 5.4 | [Assumptions](assumptions.qmd) | cutoffs as quantiles, limits as policy, the score as an input, the generator as truth |
 | 5.5 | [Performance](performance.qmd) | discrimination by population, calibration by zone, outcomes by decision, reasons among Declines |
 | 5.6 | [Sensitivity and stress](sensitivity.qmd) | the zone cutoffs moved by {{< var adj.sens.step >}}; what was not stressed |
-| 5.7 | [Limitations and compensating controls](limitations.qmd) | five open findings, each with a control and an owner |
+| 5.7 | [Limitations and compensating controls](limitations.qmd) | six open findings, each with a control and an owner |
 | 5.8 | [Monitoring plan](monitoring.qmd) | metrics, thresholds, rule-hit and dead-rule detection, triggers |
 | 5.9 | [Gate record](gate.qmd) | the two gates, where they are asserted and recomputed, their history |

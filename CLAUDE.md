@@ -193,20 +193,26 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   (`tests/test_wiki_site.py` pins it). Calibration misses in bands A/AAA on all held-out applicants
   (5 and 4 defaults) and on the held-out booked (5 and 4) are *observations*: below the floor. D11's
   open-findings table repeats D4.7's six rows character for character.
-- **D5 (Loan Adjudication) raises five open findings about its model and policy**, documented, not
+- **D5 (Loan Adjudication) raises six open findings about its model and policy**, documented, not
   fixed (the author chose "document only": `adjudication/src`, models and `train.py` are untouched):
-  1. On the held-out booked, AUC 0.7355 is below the 0.78 AUC gate value and below the scorecard's
-     0.7447 on the same rows (lift 2.35x still passes; the gap to the scorecard is inside the interval).
+  1. On the held-out booked, AUC 0.7355 is below the 0.78 AUC gate value (booked bootstrap interval
+     0.6964-0.7747, wholly below) and no better than the scorecard's 0.7447 on the same rows (paired
+     bootstrap difference 0.0092, interval contains zero). Lift 2.35x still passes.
   2. Two policy rules can never fire: leverage cap 6.0 vs max leverage 0.80 (debt/revenue), and
      request-to-revenue cap 0.75 vs max 0.50 (generator draws U(0.05, 0.50)). Untested controls.
-  3. The Approve PD zone under-predicts: 1.66 on 60 defaults (held-out booked), 1.44 on all held-out;
-     the booked Decline zone over-predicts (0.73 on 15). All clear the floor, so all are in finding 3.
+  3. The Approve PD zone under-predicts: 1.66 on 60 defaults (held-out booked) and 1.44 on 66 (all
+     held-out). Control: calibrate the PD, then recalibrate the zones.
   4. `t_low`/`t_high` are quantiles over all 12,000, held-out included; training-only (in-sample)
      quantiles change 7 of 2,400 held-out decisions. Control weakness, immaterial.
   5. `top_ventile_lift` measures the top 20%, not a ventile. Number right, name misleading.
+  6. On held-out booked, the Decline zone over-predicts (0.73 on 15 defaults; 0.95 on all held-out):
+     selection, since booking is drawn from the true PD. Control: monitor and explain, not recalibrate.
+  Split per D4's one-band-one-finding rule: each zone breach that clears the floor is its own finding.
   Observations: knockouts carry 90.2% of held-out Declines (adjudication is mostly a rules engine);
-  the top SHAP reasons are `pd_score`/`business_score`, one signal in two columns. D11 now has a D4
-  and a D5 subsection; `tests/test_wiki_site.py` pins each row-for-row and the D5 floor rule.
+  the top SHAP reasons are `pd_score`/`business_score`, one signal in two columns; the 76 PD-zone-only
+  Declines (9.8%) get an empty rule-hit list from v1 `/api/adjudicate`. D11 has a D4 and a D5
+  subsection; `tests/test_wiki_site.py` pins each row-for-row, the D5 floor rule and every prose
+  conclusion that rests on a fact (opposite zones 0, order breaks 0, decisions rank, etc.).
 
 ## The DGP, in numbers
 
@@ -255,7 +261,7 @@ repo is decoration.
 
 ## Where things stand — updated 2026-10-17
 
-**v1.4** is the public release. **Session 1 ran Thu 10 Sep** (recording recut to 58:53 and a
+**v1.5** is the public release. **Session 1 ran Thu 10 Sep** (recording recut to 58:53 and a
 3:04 LinkedIn promo — see *Session recordings* below). **Session 2 ran Thu 17 Sep** at the
 90-minute re-cut; **its recording is recut** (2026-09-18) into six standalone chapter videos plus
 a 53:04 stitched version, and a **55 s promo** (2026-09-20: the six hooks over a music bed, no
@@ -275,7 +281,7 @@ https://aayancheng.github.io/banking-analytics-workshop/, republished on every p
 touches `wiki/`. It holds D4 and D5 in full, the platform chapters, two navigation spines, the
 template, the validation PDF and the agent homework with its self-checker; the S4 finale materials are
 in `workshop/`. **D5 (Loan Adjudication) is complete on branch `wiki-d5`** (2026-10-17): facts in
-`wiki/facts/adj_facts.py`, nine parts under `wiki/mdd/adjudication/`, five findings in D5.7 and D11 —
+`wiki/facts/adj_facts.py`, nine parts under `wiki/mdd/adjudication/`, six findings in D5.7 and D11 —
 not yet merged or pushed. D6–D8 remain stubs.
 
 ### Recutting sessions into chapter videos — the house method

@@ -37,7 +37,9 @@ finding 5 ([5.7](limitations.qmd)).
 {{< include ../../_generated/adj-populations.md >}}
 
 On the held-out booked, the AUC is {{< var adj.pop.booked.auc >}}: **below the
-{{< var adj.gate_auc >}} AUC gate value**, while lift, at {{< var adj.pop.booked.lift >}}×,
+{{< var adj.gate_auc >}} AUC gate value**, and the booked sample's own bootstrap interval,
+{{< var adj.pop.booked.auc_ci_lo >}} – {{< var adj.pop.booked.auc_ci_hi >}}, lies wholly below
+it; meanwhile lift, at {{< var adj.pop.booked.lift >}}×,
 still clears its gate. As in D4, much of the AUC over all applicants comes from separating
 the obvious rejections from the obvious approvals; among the loans the bank booked, the
 remaining differences are harder to rank. That is finding 1 ([5.7](limitations.qmd)).
@@ -50,8 +52,17 @@ remaining differences are harder to rank. That is finding 1 ([5.7](limitations.q
 | Adjudication, LightGBM | {{< var adj.pop.everyone.auc >}} | {{< var adj.pop.booked.auc >}} | {{< var adj.pop.rejected.auc >}} |
 
 AUC, same rows in each column. The LightGBM is slightly below the scorecard in every
-population — by less than the interval half-width, so no detectable difference, and in
-particular no gain from the richer model ([5.3](methodology.qmd#adj-why-lightgbm)).
+population. Because both are scored on the same rows, the comparison is a paired bootstrap:
+{{< var score.bootstrap_n >}} resamples, each scoring both PDs on the same resampled rows.
+
+| Population | Scorecard AUC minus LightGBM AUC | Paired 95% interval |
+|---|---|---|
+| Held-out applicants | {{< var adj.vs_score.everyone.diff >}} | {{< var adj.vs_score.everyone.lo >}} to {{< var adj.vs_score.everyone.hi >}} |
+| Held-out booked | {{< var adj.vs_score.booked.diff >}} | {{< var adj.vs_score.booked.lo >}} to {{< var adj.vs_score.booked.hi >}} |
+| Held-out rejected | {{< var adj.vs_score.rejected.diff >}} | {{< var adj.vs_score.rejected.lo >}} to {{< var adj.vs_score.rejected.hi >}} |
+
+Every interval contains zero: no detectable difference, and in particular no gain from the
+richer model ([5.3](methodology.qmd#adj-why-lightgbm)).
 
 ### The ceiling
 
@@ -95,8 +106,9 @@ its band D: booking was drawn from the true PD, so the booked files the model pu
 Decline zone are the ones whose true risk was lower than their PD says.
 
 All three breaches rest on at least the floor's {{< var monitoring.min_band_defaults >}}
-defaults, so all three count, and together they are finding 3 ([5.7](limitations.qmd)).
-The one that matters is the Approve zone: it is where the bank lends without a person
+defaults, so all three count. Following D4's one-band-one-finding rule, the Approve zone's
+under-prediction, on both populations, is finding 3, and the booked Decline zone's
+over-prediction is finding 6 ([5.7](limitations.qmd)). The one that matters is the Approve zone: it is where the bank lends without a person
 looking, and there the PD is too low on both populations. No zone misses the tolerance on
 fewer defaults than the floor, so there is no calibration observation below it.
 
@@ -152,10 +164,10 @@ on a Decline only beside a knockout: the override fired on an Approve-zone PD, a
 knockout set the decision ([5.3](methodology.qmd#adj-policy-layer)). It is a rule hit, not
 the reason for the Decline.
 
-**SHAP reasons.** The two most frequent adverse SHAP features on Declines are the
-scorecard's outputs, `pd_score` and `business_score` — one signal in two columns
-([5.3](methodology.qmd#adj-reason-codes)) — and the first raw feature, `dscr`, comes a long
-way behind. Three things follow:
+**SHAP reasons.** The two most frequent adverse SHAP features on Declines,
+{{< var adj.decline.shap1.feature >}} and {{< var adj.decline.shap2.feature >}}, are the
+scorecard's outputs — one signal in two columns ([5.3](methodology.qmd#adj-reason-codes)) —
+and the first raw feature, {{< var adj.decline.shap3.feature >}}, comes a long way behind. Three things follow:
 
 - **The model's dependency on D4 is direct and heavy.** When the model pushes a file towards
   Decline, it is mostly the score doing the pushing. A defect in the scorecard is a defect in

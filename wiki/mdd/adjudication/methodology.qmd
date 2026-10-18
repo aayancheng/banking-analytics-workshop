@@ -151,13 +151,17 @@ It does not. On the same held-out applicants ([5.2](data.qmd#split-and-seed)):
 | Business Credit Score (D4) | {{< var score.pop.everyone.auc >}} | {{< var score.pop.booked.auc >}} |
 | Adjudication, LightGBM | {{< var adj.pop.everyone.auc >}} | {{< var adj.pop.booked.auc >}} |
 
-The challenger is slightly below the scorecard on both populations, by less than the
-±{{< var adj.auc_ci_half >}} half-width of its bootstrap interval
-([5.5](performance.qmd#adj-discrimination)): no detectable difference, and no gain. D4
+The challenger is slightly below the scorecard on both populations. A paired bootstrap —
+both PDs scored on the same resampled rows, {{< var score.bootstrap_n >}} times — puts the
+scorecard's lead at {{< var adj.vs_score.everyone.diff >}} on all held-out applicants
+(95% interval {{< var adj.vs_score.everyone.lo >}} to {{< var adj.vs_score.everyone.hi >}})
+and {{< var adj.vs_score.booked.diff >}} on the booked ({{< var adj.vs_score.booked.lo >}} to
+{{< var adj.vs_score.booked.hi >}}) ([5.5](performance.qmd#benchmark-the-scorecard-it-consumes)).
+Both intervals contain zero: no detectable difference, and no gain. D4
 records the same comparison from the scorecard's side and keeps the scorecard as the score
 spine (D4.3). This chapter records the other half: the model that decides adjudication adds
 no ranking power over the score it consumes, and on the booked it sits below the AUC gate
-(finding 1, [5.7](limitations.qmd)).
+value (finding 1, [5.7](limitations.qmd)).
 
 ### Alternative considered: PD zones on the scorecard's PD
 
@@ -192,16 +196,18 @@ _ = top_adverse_shap(sv, ADJ_FEATURE_COLUMNS, k=3)
 `top_adverse_shap` keeps, for each file, the three features with the largest positive SHAP
 value — the largest pushes towards default — and drops any non-positive one. `TreeExplainer`
 is exact for a tree ensemble in one sense: the base value plus the SHAP values reproduces the
-model's log-odds, which the v2 workbench checks for every ledger it serves (`app/v2/ledgers.py`).
+model's log-odds. The v2 workbench serves that decomposition as a ledger (`app/v2/ledgers.py`),
+and the test suite checks the identity on a sample of applicants
+(`tests/test_app_v2.py::test_shap_is_exactly_additive`); the ledger itself asserts nothing.
 It is still an *attribution method*, with choices of its own: how credit is shared between
 correlated features is one of them, and a validator has to validate the method as well as the
-model. `train.py` runs it on fifty held-out rows as a sanity check only; nothing is gated on it.
+model. `train.py` runs it on the first {{< var adj.train_shap_rows >}} held-out rows as a sanity check only; nothing is gated on it.
 
 The sharpest case is the model's two strongest inputs. `business_score` and `pd_score` are
 two transforms of the scorecard's single log-odds: over all {{< var adj.n_applicants >}}
 applicants, sorted by `pd_score`, `business_score` rises {{< var adj.score_pd.order_breaks >}}
 times. They are one signal in two columns, and SHAP splits its credit between them. A file
-whose top-three reasons are `pd_score` and `business_score` has been given one reason twice
+whose top-three reasons include both `pd_score` and `business_score` has been given one reason twice
 — and a reason that is itself a model output, not a fact about the business. What that means
 for adverse-action notices and for the dependency on D4 is in
 [5.5](performance.qmd#adj-reasons-among-declines).

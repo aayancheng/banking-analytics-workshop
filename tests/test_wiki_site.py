@@ -77,13 +77,13 @@ def test_signoff_open_findings_are_d4_limitations_word_for_word():
 
 def test_signoff_open_findings_are_d5_limitations_word_for_word():
     d11 = _finding_rows(_signoff_section("D5"))
-    assert len(d11) == 5
+    assert len(d11) == 6
     assert d11 == _finding_rows((WIKI / "mdd" / "adjudication" / "limitations.qmd").read_text())
 
 
 def test_signoff_lists_every_finding_row_once():
     text = (WIKI / "mdd" / "d11-signoff.qmd").read_text()
-    assert len(_finding_rows(text)) == 6 + 5
+    assert len(_finding_rows(text)) == 6 + 6
 
 
 def test_d5_has_an_index_and_the_nine_parts_in_order():
@@ -147,10 +147,13 @@ def test_d5_zone_calibration_findings_follow_the_monitoring_floor():
                         "adj.zone.booked.Decline"}
     assert observations == set()
     text = (WIKI / "mdd" / "adjudication" / "limitations.qmd").read_text()
-    f3 = text.split("## Finding 3", 1)[1].split("\n## ", 1)[0]
-    for key in findings:
+    section = lambda n: text.split(f"## Finding {n}", 1)[1].split("\n## ", 1)[0]
+    f3, f6 = section(3), section(6)
+    for key in ("adj.zone.everyone.Approve", "adj.zone.booked.Approve"):
         assert f"{key}.ratio" in f3, key
-    assert "monitoring.min_band_defaults" in f3
+    assert "adj.zone.booked.Decline.ratio" in f6
+    assert "adj.zone.booked.Decline.ratio" not in f3
+    assert "monitoring.min_band_defaults" in f3 and "monitoring.min_band_defaults" in f6
     obs = next(l for l in text.splitlines() if l.startswith("| No calibration miss below the floor"))
     assert "monitoring.min_band_defaults" in obs
 
@@ -167,3 +170,45 @@ def test_d5_inert_rules_finding_matches_the_facts():
     f2 = text.split("## Finding 2", 1)[1].split("\n## ", 1)[0]
     for r in dead:
         assert f"adj.rule.{r}.n_all" in f2, r
+
+
+def _facts() -> dict[str, str]:
+    import json
+    return {k: v["text"] for k, v in json.loads((WIKI / "facts" / "facts.json").read_text()).items()}
+
+
+def _num(t: str) -> float:
+    return float(t.replace(",", "").rstrip("%"))
+
+
+def test_d5_prose_conclusions_hold_on_the_facts():
+    """Sentences in D5 that state a conclusion about a fact: if the fact moves, the prose must."""
+    f = _facts()
+    # "no file is Approve under one and Decline under the other" (5.3, 5.5)
+    assert f["adj.score_zone.opposite.n"] == "0"
+    # "business_score rises 0 times": one signal in two columns (5.3)
+    assert f["adj.score_pd.order_breaks"] == "0"
+    # cutoff sensitivity: "no decision share moves by as much as a percentage point" (5.6)
+    for sc in ("t_low_down", "t_low_up", "t_high_down", "t_high_up"):
+        for k in ("Approve", "Refer", "Decline"):
+            assert abs(_num(f[f"adj.sens.{sc}.{k}"]) - _num(f[f"adj.mix.{k}"])) < 1, (sc, k)
+    # "the observed default rate rises from Approve to Refer to Decline" in every population (5.5)
+    for pop in ("everyone", "booked", "rejected"):
+        dr = [_num(f[f"adj.dec.{pop}.{k}.dr"]) for k in ("Approve", "Refer", "Decline")]
+        assert dr == sorted(dr) and len(set(dr)) == 3, pop
+    # the top two SHAP features on Declines are the score's two columns; none of the top three
+    # is a structural zero (5.2, 5.3, 5.5)
+    assert {f["adj.decline.shap1.feature"], f["adj.decline.shap2.feature"]} == {"pd_score",
+                                                                                "business_score"}
+    zeros = {"industry", "entity_type", "loan_purpose", "term_months", "collateral_flag",
+             "trade_lines", "employees"}
+    assert not zeros & {f[f"adj.decline.shap{i}.feature"] for i in (1, 2, 3)}
+    # "every Decline with a reason string has a knockout behind it" (5.5)
+    assert f["adj.decline.rule_share"] == f["adj.decline.knockout_share"]
+    # "the interval contains zero": no better, not measurably worse (5.3, 5.5, finding 1)
+    for pop in ("everyone", "booked", "rejected"):
+        assert _num(f[f"adj.vs_score.{pop}.lo"]) < 0 < _num(f[f"adj.vs_score.{pop}.hi"]), pop
+    # "the booked sample's own interval lies wholly below the gate" (finding 1)
+    assert _num(f["adj.pop.booked.auc_ci_hi"]) < _num(f["adj.gate_auc"])
+    # booked lift "still clears its gate"
+    assert _num(f["adj.pop.booked.lift"]) >= _num(f["adj.gate_lift"])

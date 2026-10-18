@@ -14,10 +14,12 @@ RATIO_LO = 0.75     # observed / predicted default rate by band: tolerance, lowe
 RATIO_HI = 1.25     # ... upper edge
 IV_USELESS = 0.02   # information value below this: conventionally unpredictive
 MIN_BAND_DEFAULTS = 10  # a band's calibration breach counts toward a trigger only on this many defaults
+RULE_HIT_MOVE = 0.5     # a policy rule's hit share moving by more than this fraction of its development share
 
 
 def compute() -> dict[str, Fact]:
     return {f"monitoring.{k}": Fact(v, ".2f", SRC, POP) for k, v in [
         ("psi_watch", PSI_WATCH), ("psi_act", PSI_ACT),
         ("ratio_lo", RATIO_LO), ("ratio_hi", RATIO_HI), ("iv_useless", IV_USELESS)]} | {
-        "monitoring.min_band_defaults": Fact(MIN_BAND_DEFAULTS, "d", SRC, POP)}
+        "monitoring.min_band_defaults": Fact(MIN_BAND_DEFAULTS, "d", SRC, POP),
+        "monitoring.rule_hit_move": Fact(RULE_HIT_MOVE, ".0%", SRC, POP)}

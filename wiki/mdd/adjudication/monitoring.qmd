@@ -14,7 +14,7 @@ the same policy constants D4 uses (`wiki/facts/policy.py`), printed here by name
 |---|---|---|---|---|
 | PD-zone mix: PSI over the three zones | new applicants vs the held-out development applicants | below {{< var monitoring.psi_watch >}} stable; {{< var monitoring.psi_watch >}} to {{< var monitoring.psi_act >}} watch; above {{< var monitoring.psi_act >}} act | every cohort | Watch: find the inputs that moved, the score first. Act: review with the validator. |
 | Decision mix: PSI over Approve / Refer / Decline | new applicants vs the held-out development applicants | same | every cohort | As above; a shift with a stable zone mix points at the rules, not the model. |
-| Rule-hit rate, each of the seven rules | new applicants | a rule with no hits in a cohort; any rule's hit share moving by more than half its development share | every cohort | No hits: report to the policy owner as an untested control. A large move: check the input's source before the rule. |
+| Rule-hit rate, each of the seven rules | new applicants | a rule with no hits in a cohort; any rule's hit share moving by more than {{< var monitoring.rule_hit_move >}} of its development share | every cohort | No hits: report to the policy owner as an untested control. A large move: check the input's source before the rule. |
 | Share of Declines carrying a knockout | new applicants | reported, not thresholded | every cohort | Read the PD gates against it. |
 | Observed / predicted default rate, by PD zone | booked loans with outcomes | ratio outside {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}}, on at least {{< var monitoring.min_band_defaults >}} defaults | when outcomes mature | Below the floor: record and watch. At or above it: count toward trigger 3. |
 | Observed default rate, by decision | booked loans with outcomes | Approve above Refer, or Refer above Decline | when outcomes mature | The decisions no longer rank: review with the validator. |
@@ -22,7 +22,7 @@ the same policy constants D4 uses (`wiki/facts/policy.py`), printed here by name
 | AUC and lift, booked only | the cohort's booked loans with outcomes | AUC falling more than {{< var adj.auc_ci_half >}} from development; lift below {{< var adj.gate_lift >}}× | when outcomes mature | Review with the validator; weigh gating on the booked (finding 1). |
 | Zone cutoffs at a retrain | the retrained model | either cutoff moving by more than {{< var adj.sens.step >}} of its committed value | every retrain | The mix was held and the risk accepted moved: the policy owner signs off the new cutoffs before they are used ([5.4](assumptions.qmd#adj-thresholds-are-quantiles)). |
 
-The booked rows are the control for finding 1; the zone calibration row for finding 3; the
+The booked rows are the control for finding 1; the zone calibration row for findings 3 and 6; the
 rule-hit row for finding 2; the cutoff row for the assumption that a fixed mix is the right
 policy. As in D4, the fall that triggers review on the booked AUC is the half-width of the
 all-applicant interval: the booked sample is smaller and its own interval wider, so the
@@ -74,7 +74,7 @@ held-out **booked** applicants, the population the calibration check monitors.
 | Decline | {{< var adj.zone.booked.Decline.ratio >}} | {{< var adj.zone.booked.Decline.defaults >}} | held-out booked applicants |
 
 The Approve and Decline zones are already outside the tolerance at development, on enough
-defaults to count: finding 3, with its own control. The first cohorts with matured outcomes
+defaults to count: findings 3 and 6, each with its own control. The first cohorts with matured outcomes
 are read against trigger 3 for those two zones before any other.
 
 ## Redevelopment triggers {#adj-redevelopment-triggers}
@@ -85,8 +85,8 @@ Any one of these starts a redevelopment, with the validator informed:
 2. PD-zone or decision-mix PSI above {{< var monitoring.psi_act >}}.
 3. A zone's observed / predicted ratio outside the tolerance in two consecutive cohorts, each
    with at least {{< var monitoring.min_band_defaults >}} defaults behind that zone. Below
-   that count a breach is recorded and watched, not acted on. The Approve zone already
-   breaches at development (finding 3).
+   that count a breach is recorded and watched, not acted on. The Approve and Decline zones
+   already breach at development (findings 3 and 6).
 4. A change to any input's definition or source — including any change to the scorecard,
    which is an input ([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)).
 

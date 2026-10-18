@@ -36,9 +36,13 @@ TRAIN = "training 80% of applicants (adjudication split, seed 42)"
 ALL = "all 12,000 applicants"
 POLICY_POP = "policy constant"
 MODULE_POP = "module constant"
-TRAIN_INSAMPLE = ("training 80% of applicants, in-sample model PDs (the model was fitted on "
-                  "these rows, so their PDs spread wider than out-of-sample ones: the 55% "
-                  "quantile is biased low); not an out-of-sample recalibration")
+_INSAMPLE = ("training 80% of applicants, in-sample model PDs (the model was fitted on "
+             "these rows, so their PDs spread wider than out-of-sample ones: the {q} "
+             "quantile is biased {d}); not an out-of-sample recalibration")
+TRAIN_INSAMPLE_LOW = _INSAMPLE.format(q="55%", d="low")
+TRAIN_INSAMPLE_HIGH = _INSAMPLE.format(q="90%", d="high")
+LIFT_PROBE_N = 10_000             # rows in the lift_top_share probe
+TRAIN_SHAP_ROWS = 50              # train.py's SHAP sanity check: X_te.iloc[:50]
 HIT = " -- rule hits: a file is counted when the rule fires, whatever decide() finally returns"
 OV_HIT = (" -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the "
           "same file still makes it a Decline")
@@ -78,7 +82,7 @@ def lift_top_share() -> float:
     """The share of files top_ventile_lift actually ranks as its top group, measured on
     the function rather than read from its name: one default on the riskiest of n rows
     gives lift n/k, so the share k/n is 1/lift."""
-    n = 10_000
+    n = LIFT_PROBE_N
     y = np.zeros(n); y[-1] = 1
     return 1 / top_ventile_lift(y, np.arange(n, dtype=float))
 
@@ -158,6 +162,37 @@ def compute(split) -> dict[str, Fact]:
         put(f"adj.pop.{name}.dr", float(y_te[m].mean()), ".1%", "businesses.default", pop)
         put(f"adj.pop.{name}.auc", float(roc_auc_score(y_te[m], p_te[m])), ".4f", SRC_PD, pop)
         put(f"adj.pop.{name}.lift", top_ventile_lift(y_te[m], p_te[m]), ".2f", SRC_LIFT, pop)
+
+    # --- paired bootstrap: scorecard AUC minus adjudication AUC, same rows per resample ---
+    s_te = X_all["pd_score"].to_numpy()[te]
+    src_pair = (f"paired bootstrap, {BOOTSTRAP_N} resamples, seed {SEED}: AUC of predict_score_pd's "
+                "pd minus AUC of the adjudication PD, both on the same resampled rows")
+    for name, m, pop in pops:
+        yy, pa, ps = y_te[m], p_te[m], s_te[m]
+        r = np.random.default_rng(SEED)
+        diffs = []
+        for _ in range(BOOTSTRAP_N):
+            i = r.integers(0, len(yy), len(yy))
+            diffs.append(roc_auc_score(yy[i], ps[i]) - roc_auc_score(yy[i], pa[i]))
+        lo_d, hi_d = np.percentile(diffs, [2.5, 97.5])
+        put(f"adj.vs_score.{name}.diff",
+            float(roc_auc_score(yy, ps) - roc_auc_score(yy, pa)), ".4f", src_pair, pop)
+        put(f"adj.vs_score.{name}.lo", float(lo_d), ".4f", src_pair, pop)
+        put(f"adj.vs_score.{name}.hi", float(hi_d), ".4f", src_pair, pop)
+    # the booked sample's own AUC interval
+    yb, pb = y_te[booked], p_te[booked]
+    r = np.random.default_rng(SEED)
+    bb = [roc_auc_score(yb[i], pb[i])
+          for i in (r.integers(0, len(yb), len(yb)) for _ in range(BOOTSTRAP_N))]
+    blo, bhi = np.percentile(bb, [2.5, 97.5])
+    put("adj.pop.booked.auc_ci_lo", float(blo), ".4f", src_boot, BOOKED)
+    put("adj.pop.booked.auc_ci_hi", float(bhi), ".4f", src_boot, BOOKED)
+    put("adj.lift_probe_n", LIFT_PROBE_N, ",d", "wiki.facts.adj_facts.lift_top_share",
+        "measured on the function (rows in the probe)")
+    assert f"X_te.iloc[:{TRAIN_SHAP_ROWS}]" in (ROOT / "adjudication/src/train.py").read_text(), \
+        "train.py's SHAP sanity sample changed"
+    put("adj.train_shap_rows", TRAIN_SHAP_ROWS, ",d",
+        "adjudication.src.train (shap on X_te.iloc[:50], a sanity check)", MODULE_POP)
 
     # --- decisions by population: mix, observed default rate, mean PD (items 2, 3) ---
     for name, m, pop in pops:
@@ -257,6 +292,11 @@ def compute(split) -> dict[str, Fact]:
     # --- reasons on the held-out Declines (item 6) ---
     dm = d == "Decline"
     n_dec = int(dm.sum())
+    no_reason = dm & ~any_hit
+    put("adj.decline.no_reason.n", int(no_reason.sum()), ",d", SRC_HITS,
+        DECLINES + " -- Declines decided by the PD zone alone, with an empty decision_reasons")
+    put("adj.decline.no_reason.share", float(no_reason.sum() / n_dec), ".1%", SRC_HITS,
+        DECLINES + " -- Declines decided by the PD zone alone, with an empty decision_reasons")
     put("adj.decline.n", n_dec, ",d", SRC_DECIDE, DECLINES)
     put("adj.decline.rule_share", float(any_hit[dm].mean()), ".1%", SRC_HITS, DECLINES + HIT)
     put("adj.decline.knockout_share", float(any_ko[dm].mean()), ".1%", SRC_HITS,
@@ -284,8 +324,8 @@ def compute(split) -> dict[str, Fact]:
     # --- candidate finding: thresholds calibrated on rows that include the held-out (7a) ---
     tr_low, tr_high = (round(float(np.quantile(p_all[tr], q)), 4) for q in (Q_LOW, Q_HIGH))
     src_tr = SRC_CAL + " applied to the in-sample PDs of the training rows only"
-    put("adj.trainonly.t_low", tr_low, ".4f", src_tr, TRAIN_INSAMPLE)
-    put("adj.trainonly.t_high", tr_high, ".4f", src_tr, TRAIN_INSAMPLE)
+    put("adj.trainonly.t_low", tr_low, ".4f", src_tr, TRAIN_INSAMPLE_LOW)
+    put("adj.trainonly.t_high", tr_high, ".4f", src_tr, TRAIN_INSAMPLE_HIGH)
     c3 = replace(cfg, t_low=tr_low, t_high=tr_high)
     d3 = decide(X_all.iloc[te], p_te, c3)["decision"].to_numpy()
     src3 = (f"{SRC_DECIDE} with thresholds from in-sample training-row PDs only "
