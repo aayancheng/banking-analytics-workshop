@@ -32,6 +32,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
+from scipy.stats import binomtest
 from sklearn.model_selection import train_test_split
 
 from line_increase.src import candidates as cand
@@ -92,6 +93,9 @@ CFG_FMT = {"target_util": ".2f", "pct_cap": ".2f", "revenue_mult_cap": ".2f",
 CAPS = ["headroom_to_target_util", "pct_cap", "revenue_ceiling"]
 BANDS = ["D", "C", "B", "A", "AAA"]
 TIERS = ["High", "Medium", "Low"]
+EWS_TRIGGER_NAMES = ["HIGH_UTILIZATION", "RISING_UTILIZATION", "DELINQUENCY", "DEPOSIT_DECLINE",
+                     "FREQUENT_OVERDRAFTS"]
+UTIL_TRIGGERS = ["HIGH_UTILIZATION", "RISING_UTILIZATION"]   # rules on utilization itself
 
 
 @dataclass(frozen=True)
@@ -247,8 +251,9 @@ def _caps_binding(port: pd.DataFrame) -> np.ndarray:
     return np.array(out)
 
 
-def compute(ls: LiSplit | None = None, es=None) -> dict[str, Fact]:
-    ls = ls or li_split()
+def compute(ls: LiSplit, es) -> dict[str, Fact]:
+    """ls: li_split(); es: wiki.facts.ews_facts.ews_split() (to tier and flag the offers as the
+    EWS screen does, and to rank by the EWS probability as a baseline)."""
     port, feats, y, prob, tr, te = ls.port, ls.feats, ls.y, ls.prob, ls.idx_tr, ls.idx_te
     meta = json.loads((ROOT / META).read_text())
     model = joblib.load(ROOT / MODEL)
@@ -312,7 +317,8 @@ def compute(ls: LiSplit | None = None, es=None) -> dict[str, Fact]:
         "-- the distribution train.py sets the threshold on")
     put("li.offer_max_pd", max_pd, ".4f", SRC_CAL,
         "whole booked book, 8,336 accounts: the scorecard's PD (predict_score_pd), the "
-        "distribution train.py sets the ceiling on")
+        "distribution train.py sets the ceiling on -- in-sample for the scorecard on most "
+        "accounts (it was fitted on applicants outside its own held-out 20%)")
     for k in ("offer_quantile", "max_pd_quantile", "target_util", "pct_cap",
               "revenue_mult_cap", "round_to", "roe_hurdle"):
         put(f"li.config.{k}", LINE_INCREASE[k], CFG_FMT[k],
@@ -393,24 +399,54 @@ def compute(ls: LiSplit | None = None, es=None) -> dict[str, Fact]:
     put("li.agg_roe", run["agg_roe"], ".4f",
         "sum incremental net income / sum (capital_ratio x incremental EAD), as train.py",
         OFFERS)
-    # three of the six gates hold by construction
+    # Three of the six gates cannot fail. Only the ROE gate cannot fail BY CONSTRUCTION: the
+    # aggregate is sum(net income) / sum(capital_ratio x EAD), an equity-weighted mean of
+    # per-loan ROEs that each clear the hurdle. The utilization and PD gates cannot fail ON
+    # THIS BOOK: an amount needs utilization above target_util, which is above this book's
+    # mean; the PD ceiling is the book's median score PD, which is below this book's mean
+    # because the PD distribution is right-skewed. Neither holds for every possible book.
+    cg = "li.cohort_gate"
     util_pos_min = float(util[c].min())
-    put("li.construct.min_util_amount", util_pos_min, ".3f",
+    put(f"{cg}.util.min_amount", util_pos_min, ".3f",
         "portfolio.utilization_onbook, minimum where recommended_amount > 0", AMOUNT_POS)
-    put("li.construct.min_util_offers", float(util[off].min()), ".3f",
+    put(f"{cg}.util.median_amount", float(np.median(util[c])), ".3f",
+        "portfolio.utilization_onbook, median where recommended_amount > 0", AMOUNT_POS)
+    put(f"{cg}.util.mean_amount", float(util[c].mean()), ".4f",
+        "portfolio.utilization_onbook, mean where recommended_amount > 0", AMOUNT_POS)
+    put(f"{cg}.util.min_offers", float(util[off].min()), ".3f",
         "portfolio.utilization_onbook, minimum", OFFERS)
-    put("li.construct.pd_margin", book_pd - max_pd, ".4f",
+    put(f"{cg}.util.book_share_above_target", float((util > LINE_INCREASE["target_util"]).mean()),
+        ".1%", "portfolio.utilization_onbook > LINE_INCREASE['target_util']", BOOK)
+    pd_med = float(np.median(pd_s))
+    assert round(pd_med, 4) == max_pd, "the PD ceiling is no longer the book's median score PD"
+    put(f"{cg}.pd.book_median", pd_med, ".4f", "predict_score_pd's pd, median", BOOK)
+    put(f"{cg}.pd.margin", book_pd - max_pd, ".4f",
         "book mean score PD minus offer_max_pd (a cohort capped at the ceiling has a mean "
-        "below it)", BOOK)
+        "at or below it)", BOOK)
+    put(f"{cg}.pd.max_offers", float(pd_s[off].max()), ".4f", "predict_score_pd's pd, maximum",
+        OFFERS)
     roe_min = float(sc.roe[off].min())
-    put("li.construct.min_roe_offers", roe_min, ".4f", SRC_ROE + " (minimum)", OFFERS)
-    util_bc = util_pos_min > book_util            # any cohort with an amount beats the book
-    pd_bc = max_pd < book_pd                      # any cohort under the ceiling beats the book
-    roe_bc = bool(roe_min >= market.roe_hurdle)   # a weighted mean of clearing ROEs clears
-    put("li.gate.n_by_construction", int(util_bc) + int(pd_bc) + int(roe_bc), "d",
-        "cohort gates that cannot fail given the offer rules: utilization (every account with "
-        "an amount is above the book mean), PD (the ceiling is below the book mean), "
-        "aggregate ROE (an EAD-weighted mean of ROEs that each clear the hurdle)", BOOK)
+    put(f"{cg}.roe.min_offers", roe_min, ".4f", SRC_ROE + " (minimum)", OFFERS)
+    # every offer's allocated equity is capital_ratio x its incremental EAD, so the aggregate
+    # the gate tests is an equity-weighted mean of the offers' own ROEs
+    k_cap = MARKET["capital_ratio"]
+    rate = port["risk_based_rate"].to_numpy(dtype=float)
+    for i in np.nonzero(off)[0]:
+        w = profit_waterfall(pd_s[i], sc.ead[i], rate[i], market)
+        assert abs(w["allocated_equity"] - k_cap * sc.ead[i]) <= 1e-9 * max(1.0, sc.ead[i])
+    util_ob = util_pos_min > book_util            # holds on this book: book mean < target_util
+    pd_ob = max_pd < book_pd                      # holds on this book: median < mean
+    roe_bc = bool(roe_min >= market.roe_hurdle)   # holds always: a weighted mean of clearing ROEs
+    put(f"{cg}.n_by_construction", int(roe_bc), "d",
+        "cohort gates that cannot fail for any book: the aggregate incremental ROE (an "
+        "equity-weighted mean of per-loan ROEs that each clear the hurdle)", BOOK)
+    put(f"{cg}.n_on_this_book", int(util_ob) + int(pd_ob), "d",
+        "cohort gates that cannot fail on this book, though they could on another: "
+        "utilization (every account with an amount is above target_util, which is above the "
+        "book mean) and PD (the ceiling is the book median, below the book mean)", BOOK)
+    put(f"{cg}.n_cannot_fail", int(util_ob) + int(pd_ob) + int(roe_bc), "d",
+        "cohort gates that cannot fail on this book: one by construction (ROE), two given "
+        "this book's distributions (utilization, PD)", BOOK)
 
     # --- the offered cohort: train vs held out, outcomes, the floor rule ---
     off_te = off[te]
@@ -452,38 +488,77 @@ def compute(ls: LiSplit | None = None, es=None) -> dict[str, Fact]:
         put(f"li.offers_ho.{slug}.rate", float(v[te][off_te].mean()), ".1%", src, OFFERS_HO)
         put(f"li.book_ho.{slug}.rate", float(v[te].mean()), ".1%", src, HOLDOUT)
 
-    # --- the offered accounts on the EWS screen (what the portal shows beside them) ---
-    if es is not None:
-        from ews.src import watchlist as wl
-        from ews.src.triggers import flag_triggers
-        assert np.array_equal(es.port["business_id"].to_numpy(), port["business_id"].to_numpy())
-        etiers = json.loads((ROOT / "ews/models/metadata.json").read_text())["tiers"]
-        tier = np.array([wl.risk_tier(p, etiers) for p in es.prob])
-        trig = flag_triggers(es.feats)
-        pop_e = ("the 95 offered accounts, as the EWS screen tiers and flags them "
-                 "(ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)")
-        for T in TIERS:
-            put(f"li.offers.ews.{T}.n", int((tier[off] == T).sum()), ",d",
-                "ews.src.watchlist.risk_tier with ews metadata.json tiers", pop_e)
-        idx = np.nonzero(off)[0]
-        put("li.offers.ews.any_trigger.n", int(sum(len(trig[i]) > 0 for i in idx)), ",d",
-            "ews.src.triggers.flag_triggers (at least one)", pop_e)
-        for name in ("HIGH_UTILIZATION", "RISING_UTILIZATION", "DELINQUENCY",
-                     "DEPOSIT_DECLINE", "FREQUENT_OVERDRAFTS"):
-            put(f"li.offers.ews.trigger.{name.lower()}.n", int(sum(name in trig[i] for i in idx)),
-                ",d", f"ews.src.triggers.flag_triggers ({name})", pop_e)
-        put("li.offers.ews.watchlist_n", int(sum(
-            r["business_id"] in set(port["business_id"].astype(str)[off])
-            for r in wl.watchlist(_ews_scored(es, tier, trig)))), ",d",
-            "ews.src.watchlist.watchlist (default top_n) members that are also offered", pop_e)
-        # the EWS probability as a baseline ranking for this label (lower = better candidate)
-        e_te = es.prob[te]
-        put("li.baseline.ews.auc", float(roc_auc_score(y_te, -e_te)), ".4f",
-            "EWS model probability alone, negated (lower deterioration risk ranks higher)",
-            HOLDOUT + "; the EWS model was fitted on its own split, which puts about 80% of "
-            "these rows in its training data (for a different label)")
-        put("li.baseline.ews.in_ews_train", float(np.isin(te, es.idx_tr).mean()), ".0%",
-            "share of the line-increase held-out rows that are EWS training rows", HOLDOUT)
+    # Is the offers' deterioration rate distinguishable from the book's? An exact two-sided
+    # binomial test against the book rate, and a Clopper-Pearson interval, on all offers and
+    # on the held-out offers.
+    src_bt = ("scipy.stats.binomtest (exact, two-sided) of the offers' deterioration count "
+              "against the book's deterioration rate")
+    for slug, mask, rate_ref, pop in (("offers", off, det.mean(), OFFERS),
+                                      ("offers_ho", None, det[te].mean(), OFFERS_HO)):
+        v = det[off] if mask is not None else det[te][off_te]
+        bt = binomtest(int(v.sum()), int(len(v)), float(rate_ref))
+        ci = bt.proportion_ci(confidence_level=0.95, method="exact")
+        put(f"li.{slug}.det.p_value", float(bt.pvalue), ".2f", src_bt, pop)
+        put(f"li.{slug}.det.ci_lo", float(ci.low), ".1%",
+            "Clopper-Pearson 95% interval for the offers' deterioration rate", pop)
+        put(f"li.{slug}.det.ci_hi", float(ci.high), ".1%",
+            "Clopper-Pearson 95% interval for the offers' deterioration rate", pop)
+
+    # --- the offered accounts on the EWS screen (what the portal shows beside them), each
+    # beside the same measure over the whole book, computed the same way ---
+    from ews.src import watchlist as wl
+    from ews.src.triggers import flag_triggers
+    assert np.array_equal(es.port["business_id"].to_numpy(), port["business_id"].to_numpy())
+    etiers = json.loads((ROOT / "ews/models/metadata.json").read_text())["tiers"]
+    tier = np.array([wl.risk_tier(p, etiers) for p in es.prob])
+    trig = flag_triggers(es.feats)
+    pop_e = ("the 95 offered accounts, as the EWS screen tiers and flags them "
+             "(ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)")
+    pop_eb = ("booked book, all 8,336 accounts, as the EWS screen tiers and flags them "
+              "(computed as ews.tier.* and ews.trigger.*)")
+    src_tier = "ews.src.watchlist.risk_tier with ews metadata.json tiers"
+    for T in TIERS:
+        m = tier == T
+        put(f"li.offers.ews.{T}.n", int(m[off].sum()), ",d", src_tier, pop_e)
+        put(f"li.offers.ews.{T}.share", float(m[off].mean()), ".1%", src_tier, pop_e)
+        put(f"li.book.ews.{T}.share", float(m.mean()), ".1%", src_tier, pop_eb)
+    hm = (tier == "High") | (tier == "Medium")
+    put("li.offers.ews.high_or_medium.share", float(hm[off].mean()), ".1%",
+        src_tier + " (High or Medium)", pop_e)
+    put("li.book.ews.high_or_medium.share", float(hm.mean()), ".1%",
+        src_tier + " (High or Medium)", pop_eb)
+    has = {name: np.array([name in x for x in trig]) for name in EWS_TRIGGER_NAMES}
+    anyt = np.array([len(x) > 0 for x in trig])
+    # HIGH_UTILIZATION and RISING_UTILIZATION are rules on utilization, and offers are selected
+    # for high utilization (an amount needs utilization above target_util): the share flagged
+    # by any OTHER trigger separates the mechanical part of the excess from the rest
+    non_util = np.array([len(set(x) - set(UTIL_TRIGGERS)) > 0 for x in trig])
+    src_t = "ews.src.triggers.flag_triggers"
+    for slug, v, lab in (("any_trigger", anyt, " (at least one)"),
+                         ("non_util_trigger", non_util,
+                          " (at least one other than " + " and ".join(UTIL_TRIGGERS) + ")")):
+        put(f"li.offers.ews.{slug}.n", int(v[off].sum()), ",d", src_t + lab, pop_e)
+        put(f"li.offers.ews.{slug}.share", float(v[off].mean()), ".1%", src_t + lab, pop_e)
+        put(f"li.book.ews.{slug}.share", float(v.mean()), ".1%", src_t + lab, pop_eb)
+    for name in EWS_TRIGGER_NAMES:
+        put(f"li.offers.ews.trigger.{name.lower()}.n", int(has[name][off].sum()), ",d",
+            f"{src_t} ({name})", pop_e)
+        put(f"li.offers.ews.trigger.{name.lower()}.share", float(has[name][off].mean()), ".1%",
+            f"{src_t} ({name})", pop_e)
+        put(f"li.book.ews.trigger.{name.lower()}.share", float(has[name].mean()), ".1%",
+            f"{src_t} ({name})", pop_eb)
+    offered_ids = set(port["business_id"].astype(str)[off])
+    put("li.offers.ews.watchlist_n", int(sum(
+        r["business_id"] in offered_ids for r in wl.watchlist(_ews_scored(es, tier, trig)))),
+        ",d", "ews.src.watchlist.watchlist (default top_n) members that are also offered", pop_e)
+    # the EWS probability as a baseline ranking for this label (lower = better candidate)
+    e_te = es.prob[te]
+    put("li.baseline.ews.auc", float(roc_auc_score(y_te, -e_te)), ".4f",
+        "EWS model probability alone, negated (lower deterioration risk ranks higher)",
+        HOLDOUT + "; the EWS model was fitted on its own split, which puts about 80% of "
+        "these rows in its training data (for a different label)")
+    put("li.baseline.ews.in_ews_train", float(np.isin(te, es.idx_tr).mean()), ".0%",
+        "share of the line-increase held-out rows that are EWS training rows", HOLDOUT)
 
     # --- discrimination with uncertainty, and single-feature baselines (held out) ---
     W = resample_counts(len(te), BOOTSTRAP_N, SEED)
@@ -507,8 +582,7 @@ def compute(ls: LiSplit | None = None, es=None) -> dict[str, Fact]:
                     "annual_revenue alone (higher ranks higher)"),
         "pd_score": (-pd_s, "predict_score_pd's pd alone, negated (lower PD ranks higher)"),
     }
-    if es is not None:
-        baselines["ews"] = (-es.prob, "EWS model probability alone, negated")
+    baselines["ews"] = (-es.prob, "EWS model probability alone, negated")
     for name, (x, label) in baselines.items():
         x_te = x[te]
         if name != "ews":
@@ -540,8 +614,15 @@ def compute(ls: LiSplit | None = None, es=None) -> dict[str, Fact]:
     put("li.baseline.n_pass_lift", n_lift, "d",
         "numeric LI features that, sorted alone (oriented by their AUC), reach LIFT_GATE "
         "under top_ventile_lift", HOLDOUT)
+    # the best single input must be the one the paired interval above is computed against
+    # ("revenue"): chosen on these same held-out rows, which flatters the baseline, so the
+    # model's paired lead over it is if anything understated
+    assert best == "annual_revenue", \
+        f"the best single feature is now {best}: compute its paired interval, not revenue's"
     put("li.baseline.best.feature", best, "",
-        "the numeric LI feature with the highest oriented held-out AUC (max(AUC, 1 - AUC))",
+        "the numeric LI feature with the highest oriented held-out AUC (max(AUC, 1 - AUC)), "
+        "chosen on the held-out rows themselves (conservative for the model); the paired "
+        "interval li.baseline.revenue.* is computed against it",
         HOLDOUT)
     put("li.baseline.best.auc", best_auc, ".4f",
         "roc_auc_score of that feature alone, oriented", HOLDOUT)
@@ -595,7 +676,6 @@ def compute(ls: LiSplit | None = None, es=None) -> dict[str, Fact]:
     put("li.econ.n_near_hurdle", int((sc.roe[off] < market.roe_hurdle + 0.01).sum()), ",d",
         SRC_ROE + " (offers within 1 point of the hurdle)", OFFERS)
     # EAD invariance: per loan exact (every waterfall line is linear in EAD)
-    rate = port["risk_based_rate"].to_numpy(dtype=float)
     tol = 1e-12
     worst = 0.0
     for i in np.nonzero(off)[0]:
@@ -607,14 +687,17 @@ def compute(ls: LiSplit | None = None, es=None) -> dict[str, Fact]:
                  "wiki.facts.li_facts.compute")
     put("li.econ.ead_invariance", f"< {tol:.0e}", "",
         "max over the offers of |ROE at the incremental EAD - ROE at EAD 1|" + src_bound, OFFERS)
-    # the aggregate is an EAD-weighted mean: invariant to a uniform drawdown, not to its shape
-    k_cap = MARKET["capital_ratio"]
+    # the aggregate is an equity-weighted mean: invariant to a uniform scaling of every offer's
+    # EAD, not to a change in their relative sizes. Re-priced, offer by offer, at half its EAD:
     agg = run["agg_roe"]
-    scaled = (sc.net_income[off] * 0.5).sum() / (k_cap * sc.ead[off] * 0.5).sum()
-    if not abs(scaled - agg) < tol:
-        raise AssertionError("aggregate ROE moved under a uniform drawdown scaling")
+    half = [profit_waterfall(pd_s[i], 0.5 * sc.ead[i], rate[i], market)
+            for i in np.nonzero(off)[0]]
+    agg_half = sum(w["net_income"] for w in half) / sum(w["allocated_equity"] for w in half)
+    if not abs(agg_half - agg) < tol:
+        raise AssertionError(f"aggregate ROE moved under a uniform drawdown: {agg_half - agg:.3e}")
     put("li.econ.agg_uniform_invariance", f"< {tol:.0e}", "",
-        "|aggregate ROE with every incremental EAD halved - aggregate ROE|" + src_bound, OFFERS)
+        "|aggregate ROE with every offer re-priced by profit_waterfall at half its incremental "
+        "EAD - aggregate ROE|" + src_bound, OFFERS)
     full_ni = full_eq = 0.0
     full_n = 0
     for i in np.nonzero(sc.amount > 0)[0]:

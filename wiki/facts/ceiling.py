@@ -135,7 +135,12 @@ LI_HOLDOUT = ("held-out 20% of the booked book (line-increase split, seed 42, st
 def li_latent(port, with_deterioration: bool = True) -> np.ndarray:
     """shared/data_generator.py's line_increase_good logit, noise and intercept removed (AUC is
     rank-only): the true PD, on-book utilisation above 0.5, standardised log revenue over the
-    booked book, and -- an outcome realised after the decision -- deterioration."""
+    booked book, and -- an outcome realised after the decision -- deterioration.
+
+    One input differs from the generator's: it uses portfolio.utilization_onbook, which is
+    the generator's util_last3 rounded to 3 dp, because util_last3 itself is not stored. The
+    rounding moves the latent by at most 7.0 x 0.0005 and only ties accounts whose
+    utilisation agrees to 3 dp; its effect on a rank measure is negligible."""
     pd_true = port["pd_default_origination"].to_numpy()       # DGP truth: allowed HERE only
     util_last3 = port["utilization_onbook"].to_numpy()
     out = (-3.0 * pd_true + 7.0 * np.clip(util_last3 - 0.5, 0, None)

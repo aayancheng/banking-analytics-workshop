@@ -86,7 +86,8 @@ def test_only_the_offer_settings_are_read_from_metadata(lf):
     quantiles); every metric and cohort number is recomputed."""
     srcs = {f.source for f in lf.values() if "metadata.json" in f.source}
     # the only metadata.json read: EWS's tier cutoffs, to tier the offers as the EWS screen does
-    assert srcs == {"ews.src.watchlist.risk_tier with ews metadata.json tiers"}
+    assert srcs and all(x.startswith("ews.src.watchlist.risk_tier with ews metadata.json tiers")
+                        for x in srcs), srcs
 
 
 def test_score_population_agrees_row_for_row(ls, lf):
@@ -151,13 +152,53 @@ def test_holdout_offer_calibration_follows_the_floor_rule(lf):
         assert lf[f"{g}.status"].value == want, g
 
 
-def test_three_cohort_gates_cannot_fail(t, lf):
-    assert lf["li.construct.min_util_amount"].value > lf["li.book_util"].value
+def test_three_cohort_gates_cannot_fail_one_by_construction(t, lf):
+    """ROE cannot fail for any book; utilization and PD cannot fail on THIS book only."""
+    cg = "li.cohort_gate"
+    # utilization: an amount needs utilization above target_util (structural), and target_util
+    # is above this book's mean (empirical)
+    assert lf[f"{cg}.util.min_amount"].value > LINE_INCREASE["target_util"] > \
+        lf["li.book_util"].value
+    assert lf[f"{cg}.util.min_amount"].value <= lf[f"{cg}.util.median_amount"].value
+    # PD: the ceiling is the book median (structural), below the book mean (empirical)
+    assert t[f"{cg}.pd.book_median"] == t["li.offer_max_pd"]
     assert lf["li.offer_max_pd"].value < lf["li.book_pd"].value
-    assert lf["li.construct.min_roe_offers"].value >= lf["li.gate.roe_hurdle"].value
-    assert t["li.gate.n_by_construction"] == "3" and t["li.gate.n_gates"] == "6"
-    # the amount rule only gives an amount above target_util
-    assert lf["li.construct.min_util_amount"].value > LINE_INCREASE["target_util"]
+    assert lf[f"{cg}.pd.max_offers"].value <= lf["li.offer_max_pd"].value
+    # ROE: every offer clears alone, so the equity-weighted mean does
+    assert lf[f"{cg}.roe.min_offers"].value >= lf["li.gate.roe_hurdle"].value
+    assert (t[f"{cg}.n_cannot_fail"], t[f"{cg}.n_by_construction"], t[f"{cg}.n_on_this_book"],
+            t["li.gate.n_gates"]) == ("3", "1", "2", "6")
+    assert "by construction" not in lf[f"{cg}.n_on_this_book"].source
+
+
+def test_offers_on_the_ews_screen_have_book_baselines(t):
+    """The book columns are computed as D7's ews.tier.* / ews.trigger.* facts are."""
+    committed = json.loads((ROOT / "wiki/facts/facts.json").read_text())
+    for T in ("High", "Medium", "Low"):
+        assert t[f"li.book.ews.{T}.share"] == committed[f"ews.tier.{T}.share"]["text"], T
+    assert t["li.book.ews.any_trigger.share"] == committed["ews.trigger.any.share"]["text"]
+    for k in ("high_utilization", "rising_utilization", "delinquency", "deposit_decline",
+              "frequent_overdrafts"):
+        assert t[f"li.book.ews.trigger.{k}.share"] == \
+            committed[f"ews.trigger.{k}.share"]["text"], k
+    pct = lambda k: float(t[k].rstrip("%"))
+    # by tier the offers are LESS flagged than the book
+    assert pct("li.offers.ews.High.share") < pct("li.book.ews.High.share")
+    assert pct("li.offers.ews.high_or_medium.share") < pct("li.book.ews.high_or_medium.share")
+    # the trigger excess is mostly the two utilization rules
+    excess_any = pct("li.offers.ews.any_trigger.share") - pct("li.book.ews.any_trigger.share")
+    excess_non = (pct("li.offers.ews.non_util_trigger.share")
+                  - pct("li.book.ews.non_util_trigger.share"))
+    assert excess_non < excess_any / 2
+    assert pct("li.offers.ews.trigger.delinquency.share") < \
+        pct("li.book.ews.trigger.delinquency.share")
+
+
+def test_offer_deterioration_not_distinguishable_from_the_book(lf):
+    for g in ("li.offers", "li.offers_ho"):
+        assert lf[f"{g}.det.p_value"].value > 0.05, g
+        book = lf["li.book.det.rate" if g == "li.offers" else "li.book_ho.det.rate"].value
+        assert lf[f"{g}.det.ci_lo"].value < book < lf[f"{g}.det.ci_hi"].value, g
 
 
 def test_bootstrap_vectorised_equals_a_loop(ls):

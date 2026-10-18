@@ -5,6 +5,6 @@
 | AUC | held-out 20% | 0.8128 | 0.7873 – 0.8376 | ≥ 0.78 | pass | yes |
 | Top-20% lift | held-out 20% | 2.66× | 2.45× – 2.86× | ≥ 2.0× | pass | yes |
 | Accounts offered | whole booked book | 95 |  | > 0 | pass | yes |
-| Cohort mean PD below the book's | offered vs book | 0.0363 vs 0.1171 |  | cohort < book | pass | no: the PD ceiling 0.0741 is below the book mean |
-| Cohort mean utilization above the book's | offered vs book | 0.8371 vs 0.4714 |  | cohort > book | pass | no: every account with an amount is at ≥ 0.652 |
-| Aggregate incremental ROE | offered cohort | 0.2153 |  | ≥ 0.15 | pass | no: every offer clears it alone (lowest 0.1507) |
+| Cohort mean PD below the book's | offered vs book | 0.0363 vs 0.1171 |  | cohort < book | pass | not on this book: the PD ceiling, 0.0741, is the book's median, below its mean |
+| Cohort mean utilization above the book's | offered vs book | 0.8371 vs 0.4714 |  | cohort > book | pass | not on this book: every account with an amount is at ≥ 0.652, above the book's mean |
+| Aggregate incremental ROE | offered cohort | 0.2153 |  | ≥ 0.15 | pass | no, by construction: every offer clears it alone (lowest 0.1507) |

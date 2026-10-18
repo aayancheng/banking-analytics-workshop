@@ -3509,7 +3509,7 @@
   "li.baseline.best.feature": {
     "fmt": "",
     "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
-    "source": "the numeric LI feature with the highest oriented held-out AUC (max(AUC, 1 - AUC))",
+    "source": "the numeric LI feature with the highest oriented held-out AUC (max(AUC, 1 - AUC)), chosen on the held-out rows themselves (conservative for the model); the paired interval li.baseline.revenue.* is computed against it",
     "text": "annual_revenue",
     "value": "annual_revenue"
   },
@@ -3687,6 +3687,83 @@
     "source": "portfolio.deterioration_next_6_12mo (the EWS label, an observed outcome)",
     "text": "18.0%",
     "value": 0.180182
+  },
+  "li.book.ews.High.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "10.0%",
+    "value": 0.099928
+  },
+  "li.book.ews.Low.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "70.0%",
+    "value": 0.699976
+  },
+  "li.book.ews.Medium.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "20.0%",
+    "value": 0.200096
+  },
+  "li.book.ews.any_trigger.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.triggers.flag_triggers (at least one)",
+    "text": "71.5%",
+    "value": 0.714611
+  },
+  "li.book.ews.high_or_medium.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers (High or Medium)",
+    "text": "30.0%",
+    "value": 0.300024
+  },
+  "li.book.ews.non_util_trigger.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.triggers.flag_triggers (at least one other than HIGH_UTILIZATION and RISING_UTILIZATION)",
+    "text": "58.5%",
+    "value": 0.585293
+  },
+  "li.book.ews.trigger.delinquency.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.triggers.flag_triggers (DELINQUENCY)",
+    "text": "50.7%",
+    "value": 0.506838
+  },
+  "li.book.ews.trigger.deposit_decline.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.triggers.flag_triggers (DEPOSIT_DECLINE)",
+    "text": "1.0%",
+    "value": 0.009957
+  },
+  "li.book.ews.trigger.frequent_overdrafts.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.triggers.flag_triggers (FREQUENT_OVERDRAFTS)",
+    "text": "18.9%",
+    "value": 0.18882
+  },
+  "li.book.ews.trigger.high_utilization.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.triggers.flag_triggers (HIGH_UTILIZATION)",
+    "text": "7.5%",
+    "value": 0.075336
+  },
+  "li.book.ews.trigger.rising_utilization.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts, as the EWS screen tiers and flags them (computed as ews.tier.* and ews.trigger.*)",
+    "source": "ews.src.triggers.flag_triggers (RISING_UTILIZATION)",
+    "text": "35.1%",
+    "value": 0.350648
   },
   "li.book_ho.default.rate": {
     "fmt": ".1%",
@@ -3884,6 +3961,90 @@
     "text": "2,084",
     "value": 2084
   },
+  "li.cohort_gate.n_by_construction": {
+    "fmt": "d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "cohort gates that cannot fail for any book: the aggregate incremental ROE (an equity-weighted mean of per-loan ROEs that each clear the hurdle)",
+    "text": "1",
+    "value": 1
+  },
+  "li.cohort_gate.n_cannot_fail": {
+    "fmt": "d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "cohort gates that cannot fail on this book: one by construction (ROE), two given this book's distributions (utilization, PD)",
+    "text": "3",
+    "value": 3
+  },
+  "li.cohort_gate.n_on_this_book": {
+    "fmt": "d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "cohort gates that cannot fail on this book, though they could on another: utilization (every account with an amount is above target_util, which is above the book mean) and PD (the ceiling is the book median, below the book mean)",
+    "text": "2",
+    "value": 2
+  },
+  "li.cohort_gate.pd.book_median": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "predict_score_pd's pd, median",
+    "text": "0.0741",
+    "value": 0.074102
+  },
+  "li.cohort_gate.pd.margin": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "book mean score PD minus offer_max_pd (a cohort capped at the ceiling has a mean at or below it)",
+    "text": "0.0430",
+    "value": 0.043012
+  },
+  "li.cohort_gate.pd.max_offers": {
+    "fmt": ".4f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "predict_score_pd's pd, maximum",
+    "text": "0.0738",
+    "value": 0.073755
+  },
+  "li.cohort_gate.roe.min_offers": {
+    "fmt": ".4f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_roe (minimum)",
+    "text": "0.1507",
+    "value": 0.150723
+  },
+  "li.cohort_gate.util.book_share_above_target": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "portfolio.utilization_onbook > LINE_INCREASE['target_util']",
+    "text": "27.0%",
+    "value": 0.269794
+  },
+  "li.cohort_gate.util.mean_amount": {
+    "fmt": ".4f",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "portfolio.utilization_onbook, mean where recommended_amount > 0",
+    "text": "0.8348",
+    "value": 0.834807
+  },
+  "li.cohort_gate.util.median_amount": {
+    "fmt": ".3f",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "portfolio.utilization_onbook, median where recommended_amount > 0",
+    "text": "0.800",
+    "value": 0.8
+  },
+  "li.cohort_gate.util.min_amount": {
+    "fmt": ".3f",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "portfolio.utilization_onbook, minimum where recommended_amount > 0",
+    "text": "0.652",
+    "value": 0.652
+  },
+  "li.cohort_gate.util.min_offers": {
+    "fmt": ".3f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "portfolio.utilization_onbook, minimum",
+    "text": "0.660",
+    "value": 0.66
+  },
   "li.cohort_pd": {
     "fmt": ".4f",
     "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
@@ -3961,38 +4122,10 @@
     "text": "roe_hurdle",
     "value": "roe_hurdle"
   },
-  "li.construct.min_roe_offers": {
-    "fmt": ".4f",
-    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
-    "source": "line_increase.src.amount_rules.incremental_roe (minimum)",
-    "text": "0.1507",
-    "value": 0.150723
-  },
-  "li.construct.min_util_amount": {
-    "fmt": ".3f",
-    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
-    "source": "portfolio.utilization_onbook, minimum where recommended_amount > 0",
-    "text": "0.652",
-    "value": 0.652
-  },
-  "li.construct.min_util_offers": {
-    "fmt": ".3f",
-    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
-    "source": "portfolio.utilization_onbook, minimum",
-    "text": "0.660",
-    "value": 0.66
-  },
-  "li.construct.pd_margin": {
-    "fmt": ".4f",
-    "population": "booked book, all 8,336 accounts (as the portal scores it)",
-    "source": "book mean score PD minus offer_max_pd (a cohort capped at the ceiling has a mean below it)",
-    "text": "0.0430",
-    "value": 0.043012
-  },
   "li.econ.agg_uniform_invariance": {
     "fmt": "",
     "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
-    "source": "|aggregate ROE with every incremental EAD halved - aggregate ROE| -- asserted below 1e-12 (tests/test_engine.py's tolerance) in wiki.facts.li_facts.compute",
+    "source": "|aggregate ROE with every offer re-priced by profit_waterfall at half its incremental EAD - aggregate ROE| -- asserted below 1e-12 (tests/test_engine.py's tolerance) in wiki.facts.li_facts.compute",
     "text": "< 1e-12",
     "value": "< 1e-12"
   },
@@ -4268,13 +4401,6 @@
     "source": "line_increase.src.train.LIFT_GATE",
     "text": "2.0",
     "value": 2.0
-  },
-  "li.gate.n_by_construction": {
-    "fmt": "d",
-    "population": "booked book, all 8,336 accounts (as the portal scores it)",
-    "source": "cohort gates that cannot fail given the offer rules: utilization (every account with an amount is above the book mean), PD (the ceiling is below the book mean), aggregate ROE (an EAD-weighted mean of ROEs that each clear the hurdle)",
-    "text": "3",
-    "value": 3
   },
   "li.gate.n_gates": {
     "fmt": "d",
@@ -4607,7 +4733,7 @@
   },
   "li.offer_max_pd": {
     "fmt": ".4f",
-    "population": "whole booked book, 8,336 accounts: the scorecard's PD (predict_score_pd), the distribution train.py sets the ceiling on",
+    "population": "whole booked book, 8,336 accounts: the scorecard's PD (predict_score_pd), the distribution train.py sets the ceiling on -- in-sample for the scorecard on most accounts (it was fitted on applicants outside its own held-out 20%)",
     "source": "line_increase.src.train offer calibration (np.quantile of the whole-book probability / score PD, rounded 4dp)",
     "text": "0.0741",
     "value": 0.0741
@@ -4640,12 +4766,33 @@
     "text": "6.3%",
     "value": 0.063158
   },
+  "li.offers.det.ci_hi": {
+    "fmt": ".1%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "Clopper-Pearson 95% interval for the offers' deterioration rate",
+    "text": "30.6%",
+    "value": 0.306242
+  },
+  "li.offers.det.ci_lo": {
+    "fmt": ".1%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "Clopper-Pearson 95% interval for the offers' deterioration rate",
+    "text": "13.4%",
+    "value": 0.133593
+  },
   "li.offers.det.events": {
     "fmt": ",d",
     "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
     "source": "portfolio.deterioration_next_6_12mo (the EWS label, an observed outcome)",
     "text": "20",
     "value": 20
+  },
+  "li.offers.det.p_value": {
+    "fmt": ".2f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "scipy.stats.binomtest (exact, two-sided) of the offers' deterioration count against the book's deterioration rate",
+    "text": "0.42",
+    "value": 0.424305
   },
   "li.offers.det.rate": {
     "fmt": ".1%",
@@ -4668,12 +4815,26 @@
     "text": "7",
     "value": 7
   },
+  "li.offers.ews.High.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "7.4%",
+    "value": 0.073684
+  },
   "li.offers.ews.Low.n": {
     "fmt": ",d",
     "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
     "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
     "text": "71",
     "value": 71
+  },
+  "li.offers.ews.Low.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "74.7%",
+    "value": 0.747368
   },
   "li.offers.ews.Medium.n": {
     "fmt": ",d",
@@ -4682,12 +4843,47 @@
     "text": "17",
     "value": 17
   },
+  "li.offers.ews.Medium.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "17.9%",
+    "value": 0.178947
+  },
   "li.offers.ews.any_trigger.n": {
     "fmt": ",d",
     "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
     "source": "ews.src.triggers.flag_triggers (at least one)",
     "text": "86",
     "value": 86
+  },
+  "li.offers.ews.any_trigger.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (at least one)",
+    "text": "90.5%",
+    "value": 0.905263
+  },
+  "li.offers.ews.high_or_medium.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers (High or Medium)",
+    "text": "25.3%",
+    "value": 0.252632
+  },
+  "li.offers.ews.non_util_trigger.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (at least one other than HIGH_UTILIZATION and RISING_UTILIZATION)",
+    "text": "60",
+    "value": 60
+  },
+  "li.offers.ews.non_util_trigger.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (at least one other than HIGH_UTILIZATION and RISING_UTILIZATION)",
+    "text": "63.2%",
+    "value": 0.631579
   },
   "li.offers.ews.trigger.delinquency.n": {
     "fmt": ",d",
@@ -4696,12 +4892,26 @@
     "text": "43",
     "value": 43
   },
+  "li.offers.ews.trigger.delinquency.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (DELINQUENCY)",
+    "text": "45.3%",
+    "value": 0.452632
+  },
   "li.offers.ews.trigger.deposit_decline.n": {
     "fmt": ",d",
     "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
     "source": "ews.src.triggers.flag_triggers (DEPOSIT_DECLINE)",
     "text": "4",
     "value": 4
+  },
+  "li.offers.ews.trigger.deposit_decline.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (DEPOSIT_DECLINE)",
+    "text": "4.2%",
+    "value": 0.042105
   },
   "li.offers.ews.trigger.frequent_overdrafts.n": {
     "fmt": ",d",
@@ -4710,6 +4920,13 @@
     "text": "32",
     "value": 32
   },
+  "li.offers.ews.trigger.frequent_overdrafts.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (FREQUENT_OVERDRAFTS)",
+    "text": "33.7%",
+    "value": 0.336842
+  },
   "li.offers.ews.trigger.high_utilization.n": {
     "fmt": ",d",
     "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
@@ -4717,12 +4934,26 @@
     "text": "29",
     "value": 29
   },
+  "li.offers.ews.trigger.high_utilization.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (HIGH_UTILIZATION)",
+    "text": "30.5%",
+    "value": 0.305263
+  },
   "li.offers.ews.trigger.rising_utilization.n": {
     "fmt": ",d",
     "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
     "source": "ews.src.triggers.flag_triggers (RISING_UTILIZATION)",
     "text": "62",
     "value": 62
+  },
+  "li.offers.ews.trigger.rising_utilization.share": {
+    "fmt": ".1%",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (RISING_UTILIZATION)",
+    "text": "65.3%",
+    "value": 0.652632
   },
   "li.offers.ews.watchlist_n": {
     "fmt": ",d",
@@ -4773,12 +5004,33 @@
     "text": "12.5%",
     "value": 0.125
   },
+  "li.offers_ho.det.ci_hi": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "Clopper-Pearson 95% interval for the offers' deterioration rate",
+    "text": "52.4%",
+    "value": 0.523771
+  },
+  "li.offers_ho.det.ci_lo": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "Clopper-Pearson 95% interval for the offers' deterioration rate",
+    "text": "7.3%",
+    "value": 0.072662
+  },
   "li.offers_ho.det.events": {
     "fmt": ",d",
     "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
     "source": "portfolio.deterioration_next_6_12mo (the EWS label, an observed outcome)",
     "text": "4",
     "value": 4
+  },
+  "li.offers_ho.det.p_value": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "scipy.stats.binomtest (exact, two-sided) of the offers' deterioration count against the book's deterioration rate",
+    "text": "0.50",
+    "value": 0.503445
   },
   "li.offers_ho.det.rate": {
     "fmt": ".1%",

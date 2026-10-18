@@ -338,7 +338,10 @@ LI_CAPS = [("headroom_to_target_util", "Headroom to target utilization"),
 
 
 def li_headline_table(t: dict[str, str]) -> str:
-    min_util, book_util = float(t["li.construct.min_util_amount"]), float(t["li.book_util"])
+    """'Can fail?': only the ROE gate cannot fail by construction; the utilization and PD gates
+    cannot fail on THIS book (they would on a book whose distributions differed)."""
+    cg = "li.cohort_gate"
+    min_util, book_util = float(t[f"{cg}.util.min_amount"]), float(t["li.book_util"])
     return _table(["Gate (`line_increase/src/train.py`)", "Measured on", "Value",
                    "95% interval", "Gate", "Result", "Can fail?"], [
         ["AUC", "held-out 20%", t["li.auc"], f"{t['li.boot.auc.lo']} – {t['li.boot.auc.hi']}",
@@ -352,15 +355,17 @@ def li_headline_table(t: dict[str, str]) -> str:
          f"{t['li.cohort_pd']} vs {t['li.book_pd']}", "", "cohort < book",
          "pass" if float(t["li.cohort_pd"]) < float(t["li.book_pd"]) else "**fail**",
          "yes" if not float(t["li.offer_max_pd"]) < float(t["li.book_pd"]) else
-         f"no: the PD ceiling {t['li.offer_max_pd']} is below the book mean"],
+         f"not on this book: the PD ceiling, {t['li.offer_max_pd']}, is the book's median, "
+         f"below its mean"],
         ["Cohort mean utilization above the book's", "offered vs book",
          f"{t['li.cohort_util']} vs {t['li.book_util']}", "", "cohort > book",
          "pass" if float(t["li.cohort_util"]) > book_util else "**fail**",
          "yes" if not min_util > book_util else
-         f"no: every account with an amount is at ≥ {t['li.construct.min_util_amount']}"],
+         f"not on this book: every account with an amount is at ≥ {t[f'{cg}.util.min_amount']}, "
+         f"above the book's mean"],
         ["Aggregate incremental ROE", "offered cohort", t["li.agg_roe"], "",
          f"≥ {t['li.gate.roe_hurdle']}", _pass(t["li.agg_roe"], t["li.gate.roe_hurdle"]),
-         f"no: every offer clears it alone (lowest {t['li.construct.min_roe_offers']})"],
+         f"no, by construction: every offer clears it alone (lowest {t[f'{cg}.roe.min_offers']})"],
     ])
 
 
@@ -393,12 +398,20 @@ def li_cohort_table(t: dict[str, str]) -> str:
 
 
 def li_cohort_ews_table(t: dict[str, str]) -> str:
-    rows = [[f"EWS tier {T}", t[f"li.offers.ews.{T}.n"]] for T in EWS_TIERS]
-    rows.append(["At least one EWS trigger", t["li.offers.ews.any_trigger.n"]])
-    rows += [[f"`{k.upper()}`", t[f"li.offers.ews.trigger.{k}.n"]] for k in EWS_TRIGGERS]
-    rows.append(["On the EWS watchlist (top 100)", t["li.offers.ews.watchlist_n"]])
-    return _table([f"The {t['li.n_offered']} offered accounts on the EWS screen", "Accounts"],
-                  rows)
+    """Each measure on the offers beside the same measure over the whole book."""
+    def row(label, slug):
+        return [label, t[f"li.offers.ews.{slug}.n"], t[f"li.offers.ews.{slug}.share"],
+                t[f"li.book.ews.{slug}.share"]]
+    rows = [row(f"EWS tier {T}", T) for T in EWS_TIERS]
+    rows.append(["EWS tier High or Medium", "", t["li.offers.ews.high_or_medium.share"],
+                 t["li.book.ews.high_or_medium.share"]])
+    rows.append(row("At least one EWS trigger", "any_trigger"))
+    rows.append(row("At least one trigger other than the two utilization rules",
+                    "non_util_trigger"))
+    rows += [row(f"`{k.upper()}`", f"trigger.{k}") for k in EWS_TRIGGERS]
+    rows.append(["On the EWS watchlist (top 100)", t["li.offers.ews.watchlist_n"], "", ""])
+    return _table([f"On the EWS screen", f"Offered accounts (of {t['li.n_offered']})",
+                   "Share of the offers", "Share of the booked book"], rows)
 
 
 def li_economics_table(t: dict[str, str]) -> str:
