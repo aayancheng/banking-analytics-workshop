@@ -22,6 +22,15 @@ book:
     - mdd/score/monitoring.qmd
     - mdd/score/gate.qmd
     - mdd/adjudication/index.qmd
+    - mdd/adjudication/purpose.qmd
+    - mdd/adjudication/data.qmd
+    - mdd/adjudication/methodology.qmd
+    - mdd/adjudication/assumptions.qmd
+    - mdd/adjudication/performance.qmd
+    - mdd/adjudication/sensitivity.qmd
+    - mdd/adjudication/limitations.qmd
+    - mdd/adjudication/monitoring.qmd
+    - mdd/adjudication/gate.qmd
     - mdd/pricing/index.qmd
     - mdd/ews/index.qmd
     - mdd/line_increase/index.qmd

@@ -193,6 +193,20 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   (`tests/test_wiki_site.py` pins it). Calibration misses in bands A/AAA on all held-out applicants
   (5 and 4 defaults) and on the held-out booked (5 and 4) are *observations*: below the floor. D11's
   open-findings table repeats D4.7's six rows character for character.
+- **D5 (Loan Adjudication) raises five open findings about its model and policy**, documented, not
+  fixed (the author chose "document only": `adjudication/src`, models and `train.py` are untouched):
+  1. On the held-out booked, AUC 0.7355 is below the 0.78 AUC gate value and below the scorecard's
+     0.7447 on the same rows (lift 2.35x still passes; the gap to the scorecard is inside the interval).
+  2. Two policy rules can never fire: leverage cap 6.0 vs max leverage 0.80 (debt/revenue), and
+     request-to-revenue cap 0.75 vs max 0.50 (generator draws U(0.05, 0.50)). Untested controls.
+  3. The Approve PD zone under-predicts: 1.66 on 60 defaults (held-out booked), 1.44 on all held-out;
+     the booked Decline zone over-predicts (0.73 on 15). All clear the floor, so all are in finding 3.
+  4. `t_low`/`t_high` are quantiles over all 12,000, held-out included; training-only (in-sample)
+     quantiles change 7 of 2,400 held-out decisions. Control weakness, immaterial.
+  5. `top_ventile_lift` measures the top 20%, not a ventile. Number right, name misleading.
+  Observations: knockouts carry 90.2% of held-out Declines (adjudication is mostly a rules engine);
+  the top SHAP reasons are `pd_score`/`business_score`, one signal in two columns. D11 now has a D4
+  and a D5 subsection; `tests/test_wiki_site.py` pins each row-for-row and the D5 floor rule.
 
 ## The DGP, in numbers
 
@@ -239,7 +253,7 @@ repo is decoration.
 - Student-facing wording matters more than usual here: these people are choosing whether to
   trust the material.
 
-## Where things stand — updated 2026-09-29
+## Where things stand — updated 2026-10-17
 
 **v1.4** is the public release. **Session 1 ran Thu 10 Sep** (recording recut to 58:53 and a
 3:04 LinkedIn promo — see *Session recordings* below). **Session 2 ran Thu 17 Sep** at the
@@ -256,15 +270,13 @@ at it and at `S1transcript.txt`. The S1 ladder callout now quotes the screen (0.
 Local `main` may be ahead of `origin/main` — check `git status -sb`; nothing is pushed without
 being asked.
 
-**The model wiki and the S4 finale materials are built, on branch `model-wiki` — not yet on `main`.**
-The wiki (`wiki/`) is D4 in full (the worked example), the platform chapters, two navigation spines,
-the template, the validation PDF and the agent homework with its self-checker. The S4 deck, lab, run of
-show, polls and the T-1 reminder email are in `workshop/`. Verified in a clean clone: `stage-0..5` report
-identically to the commit the branch started from, `verify.py` on the branch (fast and `--full`) passes
-with the wiki check, the facts rebuild is a no-op, all three render profiles build. **Merge to `main`
-and the push are pending Yan's go-ahead, and the reminder email goes only after that** (it tells
-students to pull `main` and open the wiki, which must exist there first). The `v1.5` tag message is
-drafted, not created.
+**The model wiki is on `main`** (tagged `v1.5`) and **GitHub Pages is live** at
+https://aayancheng.github.io/banking-analytics-workshop/, republished on every push to `main` that
+touches `wiki/`. It holds D4 and D5 in full, the platform chapters, two navigation spines, the
+template, the validation PDF and the agent homework with its self-checker; the S4 finale materials are
+in `workshop/`. **D5 (Loan Adjudication) is complete on branch `wiki-d5`** (2026-10-17): facts in
+`wiki/facts/adj_facts.py`, nine parts under `wiki/mdd/adjudication/`, five findings in D5.7 and D11 —
+not yet merged or pushed. D6–D8 remain stubs.
 
 ### Recutting sessions into chapter videos — the house method
 
@@ -376,10 +388,10 @@ address (invariant 6).
 
 ### Open threads
 
-- **Wiki v1 leftovers:** D5–D8 in full (adjudication, pricing, EWS, line increase chapters are stubs
-  that follow the template), E1–E10 (explainers), book packaging (the EPUB/PDF is a stub: preface, Explain index, the template page and D10),
-  GitHub Pages enablement (the manual workflow exists; the setting is Yan's), and the Codespace test
-  of the Quarto devcontainer (needs a push).
+- **Wiki v1 leftovers:** D6–D8 in full (pricing, EWS, line increase chapters are stubs that follow
+  the template; D5 is done, on `wiki-d5`), E1–E10 (explainers), book packaging (the EPUB/PDF is a stub:
+  preface, Explain index, the template page and D10), and the Codespace test of the Quarto devcontainer
+  (needs a push). Pages is live (above).
 
 - A *"how these ten were chosen"* subsection for the reading note, between §3 and §4: the
   sentence test, unarguable signs, routing levels through ratios, excluding what a bank must not

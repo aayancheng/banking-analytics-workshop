@@ -1,0 +1,181 @@
+---
+title: "5.5 Performance"
+order: 5
+---
+
+Every figure on this page names the population it was measured on. Unless stated
+otherwise, that is the held-out {{< var adj.test_share >}} of applicants:
+{{< var adj.n_test >}} rows the model never saw while it was fitted, and the same rows as
+the scorecard's held-out split ([5.2](data.qmd#split-and-seed)). Two things are measured,
+and they are not the same: the **model's PD** (discrimination, calibration) and the
+**decisions** the policy layer makes from it (outcomes by decision, reasons).
+
+## Discrimination {#adj-discrimination}
+
+| Measure | Held-out applicants |
+|---|---|
+| AUC | {{< var adj.auc >}} |
+| AUC, bootstrap 95% interval | {{< var adj.auc_ci_lo >}} – {{< var adj.auc_ci_hi >}} |
+| Lift, riskiest {{< var adj.lift_top_share >}} by PD | {{< var adj.lift >}}× |
+| Gates ([5.9](gate.qmd)) | AUC ≥ {{< var adj.gate_auc >}} — met; lift ≥ {{< var adj.gate_lift >}}× — met |
+
+The interval comes from {{< var score.bootstrap_n >}} bootstrap resamples of the held-out
+rows, drawn with the platform seed, exactly as D4's (`wiki/facts/adj_facts.py`). Its
+half-width, ±{{< var adj.auc_ci_half >}}, is the precision of any AUC quoted for this model
+on this sample. The lower end of the interval sits just above the AUC gate: the gate is met,
+with little room.
+
+Lift is the default rate among the riskiest {{< var adj.lift_top_share >}} of files, ranked
+by PD, over the default rate of all of them. It asks a narrower question than AUC — does the
+model put the defaulters at the top? — and it is the one closer to how the PD is used, since
+the Decline zone is the top of the ranking. The function that computes it is named
+`top_ventile_lift`, but it measures the top {{< var adj.lift_top_share >}}, not a ventile:
+finding 5 ([5.7](limitations.qmd)).
+
+### By population
+
+{{< include ../../_generated/adj-populations.md >}}
+
+On the held-out booked, the AUC is {{< var adj.pop.booked.auc >}}: **below the
+{{< var adj.gate_auc >}} AUC gate value**, while lift, at {{< var adj.pop.booked.lift >}}×,
+still clears its gate. As in D4, much of the AUC over all applicants comes from separating
+the obvious rejections from the obvious approvals; among the loans the bank booked, the
+remaining differences are harder to rank. That is finding 1 ([5.7](limitations.qmd)).
+
+### Benchmark: the scorecard it consumes
+
+| Model | Held-out applicants | Held-out booked | Held-out rejected |
+|---|---|---|---|
+| Business Credit Score (D4) | {{< var score.pop.everyone.auc >}} | {{< var score.pop.booked.auc >}} | {{< var score.pop.rejected.auc >}} |
+| Adjudication, LightGBM | {{< var adj.pop.everyone.auc >}} | {{< var adj.pop.booked.auc >}} | {{< var adj.pop.rejected.auc >}} |
+
+AUC, same rows in each column. The LightGBM is slightly below the scorecard in every
+population — by less than the interval half-width, so no detectable difference, and in
+particular no gain from the richer model ([5.3](methodology.qmd#adj-why-lightgbm)).
+
+### The ceiling
+
+Because the data are generated, the best AUC any model could reach on these held-out rows is
+known: {{< var ceiling.signal_holdout >}}, from ranking by the generator's noise-free default
+logit (D4.5). The scorecard sits indistinguishably close to it; the LightGBM is a little
+further below. A better learner has little left to find on this data: the rest of the
+distance to a perfect ranking is the generator's noise.
+
+## Calibration by PD zone {#adj-calibration}
+
+The PD's job in the decision is to place a file in a zone, so calibration is measured by
+zone: for the files whose PD alone puts them in each zone — before knockouts and overrides —
+the observed default rate against the mean predicted PD. As in D4, two populations: all
+held-out applicants, and the held-out **booked**, the loans whose outcomes a bank observes.
+
+{{< include ../../_generated/adj-calibration.md >}}
+
+A ratio of 1 means the PD is right on average in that zone; above 1, the model
+under-predicts. The tolerance the monitoring plan applies is {{< var monitoring.ratio_lo >}}
+to {{< var monitoring.ratio_hi >}}, and a breach counts only on at least
+{{< var monitoring.min_band_defaults >}} defaults ([5.8](monitoring.qmd#adj-redevelopment-triggers)),
+the same rule as D4's.
+
+**All held-out applicants.** The Refer and Decline zones are inside the tolerance
+({{< var adj.zone.everyone.Refer.ratio >}} and {{< var adj.zone.everyone.Decline.ratio >}}).
+The Approve zone is not: observed {{< var adj.zone.everyone.Approve.observed >}} against
+predicted {{< var adj.zone.everyone.Approve.predicted >}}, a ratio of
+{{< var adj.zone.everyone.Approve.ratio >}} on {{< var adj.zone.everyone.Approve.defaults >}}
+defaults — above the floor.
+
+**Held-out booked.** The Approve zone under-predicts further: observed
+{{< var adj.zone.booked.Approve.observed >}} against predicted
+{{< var adj.zone.booked.Approve.predicted >}}, a ratio of
+{{< var adj.zone.booked.Approve.ratio >}} on {{< var adj.zone.booked.Approve.defaults >}}
+defaults. The Refer zone is inside the tolerance ({{< var adj.zone.booked.Refer.ratio >}}).
+The Decline zone over-predicts: {{< var adj.zone.booked.Decline.ratio >}}, on
+{{< var adj.zone.booked.Decline.defaults >}} defaults among
+{{< var adj.zone.booked.Decline.n >}} booked files. That is the selection effect D4 sees in
+its band D: booking was drawn from the true PD, so the booked files the model puts in its
+Decline zone are the ones whose true risk was lower than their PD says.
+
+All three breaches rest on at least the floor's {{< var monitoring.min_band_defaults >}}
+defaults, so all three count, and together they are finding 3 ([5.7](limitations.qmd)).
+The one that matters is the Approve zone: it is where the bank lends without a person
+looking, and there the PD is too low on both populations. No zone misses the tolerance on
+fewer defaults than the floor, so there is no calibration observation below it.
+
+## Decisions and outcomes {#adj-decisions-and-outcomes}
+
+The decisions, after knockouts and overrides, with the outcomes the generator gives every
+applicant:
+
+{{< include ../../_generated/adj-decisions.md >}}
+
+**The decisions rank.** In every population the observed default rate rises from Approve
+to Refer to Decline: on all held-out applicants from {{< var adj.dec.everyone.Approve.dr >}}
+to {{< var adj.dec.everyone.Refer.dr >}} to {{< var adj.dec.everyone.Decline.dr >}}.
+
+**The booked include files this model would decline.** Of the
+{{< var adj.pop.booked.n >}} held-out booked applicants, {{< var adj.dec.booked.Decline.n >}}
+({{< var adj.dec.booked.Decline.share >}}) are Declines here, with an observed default rate
+of {{< var adj.dec.booked.Decline.dr >}} against {{< var adj.pop.booked.dr >}} for the booked
+as a whole. The booking was the generator's, not this model's
+([5.1](purpose.qmd#the-population-it-is-for)); on a real book, these are the loans a new
+adjudication policy would stop making, and their default rate is the case for it.
+
+**Approvals default more than the PD says.** Among held-out booked Approvals, the observed
+default rate is {{< var adj.dec.booked.Approve.dr >}} against a mean model PD of
+{{< var adj.dec.booked.Approve.pd >}} — the decision-level view of finding 3.
+
+## Agreement with the scorecard's zone
+
+Applying the PD-zone rule to the scorecard's PD instead of the LightGBM's
+([5.3](methodology.qmd#alternative-considered-pd-zones-on-the-scorecards-pd)) moves
+{{< var adj.score_zone.differ.n >}} held-out files ({{< var adj.score_zone.differ.share >}})
+into a different zone, and {{< var adj.score_zone.opposite.n >}} between Approve and Decline.
+Every disagreement is one zone apart: the two PDs agree on which files are clearly safe and
+which clearly risky, and differ only at the edges of the Refer zone.
+
+## Reasons among Declines {#adj-reasons-among-declines}
+
+What a declined applicant would be told. Over the {{< var adj.decline.n >}} held-out
+Declines:
+
+| Reason source | Most frequent | Second | Third |
+|---|---|---|---|
+| Rule hits | {{< var adj.decline.rule1.reason >}}: {{< var adj.decline.rule1.n >}} ({{< var adj.decline.rule1.share >}}) | {{< var adj.decline.rule2.reason >}}: {{< var adj.decline.rule2.n >}} ({{< var adj.decline.rule2.share >}}) | {{< var adj.decline.rule3.reason >}}: {{< var adj.decline.rule3.n >}} ({{< var adj.decline.rule3.share >}}) |
+| SHAP, among each file's top three adverse | {{< var adj.decline.shap1.feature >}}: {{< var adj.decline.shap1.n >}} ({{< var adj.decline.shap1.share >}}) | {{< var adj.decline.shap2.feature >}}: {{< var adj.decline.shap2.n >}} ({{< var adj.decline.shap2.share >}}) | {{< var adj.decline.shap3.feature >}}: {{< var adj.decline.shap3.n >}} ({{< var adj.decline.shap3.share >}}) |
+
+Counts are files; a file can carry more than one reason, so the shares do not add up.
+
+**Rule reasons.** {{< var adj.decline.rule_share >}} of Declines carry at least one rule hit,
+and the same share carry a knockout ([5.3](methodology.qmd#adj-knockouts-dominate)): every
+Decline with a reason string has a knockout behind it. The third most frequent string is an
+override's, {{< var adj.decline.rule3.reason >}}. By the code's decision order it can sit
+on a Decline only beside a knockout: the override fired on an Approve-zone PD, and the
+knockout set the decision ([5.3](methodology.qmd#adj-policy-layer)). It is a rule hit, not
+the reason for the Decline.
+
+**SHAP reasons.** The two most frequent adverse SHAP features on Declines are the
+scorecard's outputs, `pd_score` and `business_score` — one signal in two columns
+([5.3](methodology.qmd#adj-reason-codes)) — and the first raw feature, `dscr`, comes a long
+way behind. Three things follow:
+
+- **The model's dependency on D4 is direct and heavy.** When the model pushes a file towards
+  Decline, it is mostly the score doing the pushing. A defect in the scorecard is a defect in
+  these decisions ([D3](../d3-dependencies.qmd)), and D4's own findings travel with it
+  ([5.4](assumptions.qmd#adj-reuse-of-the-score)).
+- **SHAP reasons are not adverse-action reasons.** "Your score" is not a reason a declined
+  applicant can act on, and naming it twice is naming it once. Where a SHAP reason is the
+  score, the applicant-facing reasons have to come from the score's own exact reason codes
+  (`feature_contributions`, D4.3).
+- **Most Declines are explained by a rule first.** With knockouts on
+  {{< var adj.decline.knockout_share >}} of them, the rule hit is the primary reason; SHAP
+  explains the PD, which decided only the rest.
+
+The SHAP leaning on the score is recorded as an observation in
+[5.7](limitations.qmd#adj-observations).
+
+## Stability
+
+No population stability index is computed for adjudication itself. Its inputs are the
+generator's columns and the score, whose stability D4 measures (D4.5); and the training and
+held-out splits are a random partition of one cross-section, so a PSI between them would
+measure sampling noise, not drift. Stability over time is untested here for the same reason
+as in D4 (D4 finding 1), and the monitoring plan carries it ([5.8](monitoring.qmd)).

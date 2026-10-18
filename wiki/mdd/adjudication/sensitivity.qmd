@@ -1,0 +1,73 @@
+---
+title: "5.6 Sensitivity and stress"
+order: 6
+---
+
+## Cutoff sensitivity
+
+The two zone cutoffs are the only fitted values in the policy layer
+([5.3](methodology.qmd#adj-pd-zones)), so they are the first thing a validator moves. Each
+scenario moves one cutoff by {{< var adj.sens.step >}} of its value, leaves everything else
+as committed — the model, its PDs, every knockout and override — and re-runs `decide` on the
+held-out applicants (`wiki/facts/adj_facts.py`):
+
+```python
+c2 = replace(cfg, **{field: getattr(cfg, field) * factor})     # wiki/facts/adj_facts.py
+d2 = decide(X_all.iloc[te], p_te, c2)["decision"].to_numpy()
+```
+
+{{< include ../../_generated/adj-cutoffs.md >}}
+
+Decision mix and changed files are on the {{< var adj.n_test >}} held-out applicants. The
+last row is not a sensitivity scenario; it is the evidence for finding 4 and is read there.
+
+## Reading the table
+
+**The decisions barely move.** Moving `t_low` by {{< var adj.sens.step >}} either way
+changes {{< var adj.sens.t_low_down.changed >}} and {{< var adj.sens.t_low_up.changed >}}
+held-out decisions; moving `t_high` changes {{< var adj.sens.t_high_down.changed >}} each
+way. No decision share moves by as much as a percentage point. Two reasons, both from the
+code:
+
+- **The knockouts absorb the Decline edge.** Most Declines are knockouts
+  ([5.3](methodology.qmd#adj-knockouts-dominate)), and a knockout Decline does not depend on
+  `t_high` at all. Moving `t_high` reaches only the files in the narrow band of PDs around
+  it that carry no knockout.
+- **The overrides absorb part of the Approve edge.** A file that `t_low` moves into the
+  Approve zone is still referred if its coverage is thin or its score is under the floor;
+  only the files that pass every override and every knockout change decision.
+
+**What this does and does not establish.** The decisions are robust to a modest error in
+either cutoff, so the in-sample quantiles behind them ([5.4](assumptions.qmd#adj-thresholds-are-quantiles))
+do little damage on this data. The same robustness is a reminder of what
+[5.3](methodology.qmd#adj-knockouts-dominate) found: the policy layer, not the PD, decides
+most of the Declines, so a stress test of this component is mainly a stress test of its
+rules.
+
+## Policy limits
+
+The other seven policy values are not varied in the facts. Two of them could be moved a long
+way without any effect, because they never fire (finding 2, [5.7](limitations.qmd)). The
+v2 loan workbench lets a reviewer move any of the nine values and see the decision for one
+file, and how many decisions flip across the whole book (`flipped_count`), recomputed by the
+same `decide` the batch uses ([5.1](purpose.qmd#who-consumes-it-and-how)). It is the tool
+for exploring a limit; this chapter records only the cutoff scenarios, which are fixed in
+code and rerun identically by `python verify.py`.
+
+## Reduced-input refits: not run
+
+D4 refits the scorecard on reduced inputs and documents a gate failure when the bureau feed
+is down (D4.6). No such refit is run for adjudication. What can be said without one:
+
+- **The bureau feed reaches adjudication twice**: through its own bureau columns
+  ([5.2](data.qmd#adj-features)) and through the score, which loses its gate without them
+  (D4.6). An adjudication model refitted without the bureau is therefore not the validated
+  model either, and the documented response is the same as D4's: refer an applicant whose
+  bureau data are missing to an underwriter.
+- **As the code stands, a missing value is not referred.** It becomes zero in the features
+  and in the policy layer, and a zero `dscr` is a knockout: a file with a missing coverage
+  ratio would be declined for `dscr` below the floor, with a reason that is not true
+  ([5.7](limitations.qmd#adj-observations)).
+
+A reduced-input refit, with the score recomputed from the same reduced inputs, is listed for
+the next redevelopment ([5.8](monitoring.qmd#adj-redevelopment-triggers)).

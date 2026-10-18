@@ -187,6 +187,8 @@ adj:
       n_all: "1,549"
       share: "10.9%"
       text: "weak credit score"
+  score_pd:
+    order_breaks: "0"
   score_zone:
     differ:
       n: "345"
@@ -238,18 +240,21 @@ adj:
         observed: "5.9%"
         predicted: "3.5%"
         ratio: "1.66"
+        share: "62.3%"
       Decline:
         defaults: "15"
         n: "33"
         observed: "45.5%"
         predicted: "62.5%"
         ratio: "0.73"
+        share: "2.0%"
       Refer:
         defaults: "108"
         n: "587"
         observed: "18.4%"
         predicted: "19.6%"
         ratio: "0.94"
+        share: "35.7%"
     everyone:
       Approve:
         defaults: "66"
@@ -257,18 +262,25 @@ adj:
         observed: "5.2%"
         predicted: "3.6%"
         ratio: "1.44"
+        share: "52.5%"
       Decline:
         defaults: "120"
         n: "185"
         observed: "64.9%"
         predicted: "68.0%"
         ratio: "0.95"
+        share: "7.7%"
       Refer:
         defaults: "215"
         n: "955"
         observed: "22.5%"
         predicted: "21.7%"
         ratio: "1.04"
+        share: "39.8%"
+  zone_target:
+    Approve: "55%"
+    Decline: "10%"
+    Refer: "35%"
 ceiling:
   gap_holdout: "0.018"
   signal_all: "0.8177"

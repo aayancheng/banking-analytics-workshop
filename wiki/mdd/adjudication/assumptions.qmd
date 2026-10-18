@@ -1,0 +1,125 @@
+---
+title: "5.4 Assumptions"
+order: 4
+---
+
+Four assumptions carry the decision. For each: what it is, the evidence, and what breaks
+if it fails. One holds, two hold only in part, and the last is the same one D4 rests on.
+
+## The zone cutoffs are quantiles of the PD distribution {#adj-thresholds-are-quantiles}
+
+**The assumption.** The two cutoffs, `t_low` and `t_high`, are not risk limits stated in PD
+terms. They are positions in the model's own PD distribution, re-taken on every retrain
+([5.3](methodology.qmd#adj-pd-zones)): the {{< var adj.q_low >}} and {{< var adj.q_high >}}
+quantiles. What the bank fixes, in effect, is the **decision mix** — about
+{{< var adj.zone_target.Approve >}} of applicants in the Approve zone and
+{{< var adj.zone_target.Decline >}} in the Decline zone — and the PD that separates them
+follows from the model. The assumption is that a fixed mix is the right policy for this
+book, and that the distribution the quantiles are taken over is the one new applicants will
+come from.
+
+**The evidence.** The quantiles are taken over all {{< var adj.n_applicants >}} applicants,
+of whom {{< var adj.n_train >}} are the training rows. On training rows the model's PDs are
+in-sample: the trees were fitted on them, so their PDs spread wider than PDs for applicants
+the model has not seen. On the held-out applicants, the zones do not hold the target mix:
+
+| PD zone | Share by construction, all applicants | Share on the held-out applicants |
+|---|---|---|
+| Approve | {{< var adj.zone_target.Approve >}} | {{< var adj.zone.everyone.Approve.share >}} |
+| Refer | {{< var adj.zone_target.Refer >}} | {{< var adj.zone.everyone.Refer.share >}} |
+| Decline | {{< var adj.zone_target.Decline >}} | {{< var adj.zone.everyone.Decline.share >}} |
+
+The held-out Decline zone is smaller than the target because out-of-sample PDs are less
+extreme. A new applicant is out-of-sample, so the held-out row is the better guide to the
+mix the zones will give in use. (These are the zones from the PD alone; the decision mix,
+after knockouts and overrides, is in [5.5](performance.qmd#adj-decisions-and-outcomes).)
+
+Taking the quantiles over the training rows only would not cure this: those PDs are all
+in-sample, and give `t_low` = {{< var adj.trainonly.t_low >}} and `t_high` =
+{{< var adj.trainonly.t_high >}} — a calibration on in-sample PDs, not an out-of-sample
+one. What it would cure is the held-out rows' part in setting a policy parameter, which is
+finding 4 ([5.7](limitations.qmd)). The assumption **holds in part**: the cutoffs do what
+the code says, but the mix they give on new applicants is not the mix they were set for.
+
+**What breaks if it fails.** If the applicant population shifts, a quantile recalibration
+moves the cutoffs with it: the mix is held and the risk accepted changes. A retrain on a
+riskier cohort would raise `t_low` and approve riskier files at the same Approve share. The
+monitoring plan therefore watches the cutoffs themselves, not only the mix
+([5.8](monitoring.qmd)).
+
+## The knockout and override limits are policy {#adj-knockout-limits-are-policy}
+
+**The assumption.** Seven of the nine values in `PolicyConfig` are not estimated from data.
+They are limits a credit policy would set — a debt-service coverage floor, no public
+records, a cap on prior delinquencies, a leverage cap, a refer band above the coverage
+floor, a score floor, a cap on the request relative to revenue — and they are copied from
+`shared/config.py::ADJ_POLICY` into `policy_config.json` unchanged. The assumption is that
+each limit is meaningful on the data it is applied to.
+
+**The evidence.** Five of the seven hit files on the held-out applicants
+([5.3](methodology.qmd#rule-hits-on-the-held-out-applicants)). Two cannot:
+
+- the leverage cap is {{< var adj.policy.leverage_cap >}}, but `leverage` in this data is
+  total debt over annual revenue, drawn so that it never exceeds
+  {{< var adj.max_leverage >}} over all {{< var adj.n_applicants >}} applicants. A cap of
+  that size reads like a debt-to-EBITDA limit applied to a different ratio;
+- the request-to-revenue cap is {{< var adj.policy.req_to_rev_cap >}}, but the generator
+  draws `requested_amount` as revenue times a uniform draw whose maximum is below it; the
+  largest ratio over all applicants is {{< var adj.max_req_to_rev >}}.
+
+The assumption **holds in part**: five limits are live, two are untested controls — finding
+2 ([5.7](limitations.qmd)).
+
+**What breaks if it fails.** A limit on the wrong scale is a control that appears in the
+policy, in the rule ledger of the v2 workbench, and in this chapter's rule table, and
+protects against nothing. A reviewer reading the configuration would believe high leverage
+and oversized requests are stopped; on this data, neither rule could ever stop one.
+
+## The score is a valid input {#adj-reuse-of-the-score}
+
+**The assumption.** `business_score` and `pd_score` come from the saved scorecard
+([5.1](purpose.qmd#inputs)), and adjudication relies on them being what D4 documents: a
+valid ranking of applicants at decision time, computed without leakage.
+
+**The evidence.** Three parts:
+
+- **Computed at decision time, from the saved model.** `compute_adjudication_features` calls
+  `predict_score_pd`, the scorecard's own scoring function, and never reads the generator's
+  true PD ([5.2](data.qmd#leakage-controls)).
+- **In-sample on the training rows.** The scorecard was fitted on the same
+  {{< var adj.n_train >}} training rows ([5.2](data.qmd#split-and-seed)). On those rows the
+  LightGBM learns from `pd_score` values that are in-sample for the scorecard, and so can
+  separate defaulters slightly better than `pd_score` does on a new applicant. This is
+  the usual risk of stacking one model on another's output: the second stage can learn to
+  trust the first more than it should. Every held-out figure in this chapter is measured
+  with out-of-sample `pd_score` values, so whatever over-trust there is, the held-out
+  numbers already include its cost.
+- **D4's findings arrive with the score.** The scorecard ranks less well on the booked
+  (D4 finding 2) and under-predicts in band B on the booked (D4 finding 6). Both reach
+  adjudication through `pd_score`: the first is mirrored in finding 1 of
+  [5.7](limitations.qmd), the second in finding 3.
+
+The assumption **holds**, with the dependency stated: the model's strongest inputs are the
+score ([5.5](performance.qmd#adj-reasons-among-declines)), so the adjudication model is
+only as valid as D4.
+
+**What breaks if it fails.** Everything downstream of the score: a scorecard change is an
+adjudication change ([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)), and
+must be followed by a retrain, a recalibration of the zones and the gates in
+[5.9](gate.qmd).
+
+## The generator as ground truth
+
+**The assumption.** As in D4 (D4.4): every `default` in the data was drawn by
+`shared/data_generator.py`, and every claim in this chapter is a statement about that
+generator, not about a real book ([D1](../d1-purpose.qmd#scope-synthetic-data-real-methods)).
+
+**The evidence.** The generator is code, which is how [5.7](limitations.qmd) can say that
+two policy rules cannot fire and which features have no causal role. The same code sets the
+`booked` population, drawn from the true PD, not from this model's decisions
+([D2](../d2-data.qmd#two-populations-applicants-and-booked)).
+
+**What breaks if it fails.** On real data, the booked population would be the product of
+past adjudication decisions, and the outcomes of declined applicants would not exist. The
+comparisons between populations in [5.5](performance.qmd) would then need reject inference;
+here they need none, because the generator gives every applicant an outcome.

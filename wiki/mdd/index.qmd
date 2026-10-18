@@ -22,7 +22,7 @@ OSFI E-23 (Canada) and PRA SS1/23 (UK).
 | D2 | [Data](d2-data.qmd) | drafted |
 | D3 | [Model dependencies](d3-dependencies.qmd) | drafted |
 | D4 | [Business Credit Score](score/index.qmd) | complete: the worked example of the template |
-| D5 | [Loan Adjudication](adjudication/index.qmd) | in progress |
+| D5 | [Loan Adjudication](adjudication/index.qmd) | complete |
 | D6 | [Pricing](pricing/index.qmd) | in progress |
 | D7 | [Early Warning](ews/index.qmd) | in progress |
 | D8 | [Line Increase](line_increase/index.qmd) | in progress |
@@ -57,8 +57,8 @@ platform's own module functions and stored, with the population it was measured 
 [fact index](../reference/facts.qmd) lists every one with its source and population.
 
 `python verify.py` recomputes the facts through the modules from the committed models and
-data every time it runs — or reads them from the committed artifact named under Source,
-as for the `adj.*` facts; the stress refits only under `--full` — and fails naming the key
+data every time it runs — or, for the one fact whose Source names a committed artifact,
+reads it from there; the stress refits only under `--full` — and fails naming the key
 if any page would print a stale value. A lint fails the
 build on any hand-typed metric. Two consequences for a reader:
 

@@ -1,0 +1,114 @@
+---
+title: "5.9 Gate record"
+order: 9
+---
+
+::: {.callout-important}
+## The gates
+
+**Held-out AUC ≥ {{< var adj.gate_auc >}}** and **lift ≥ {{< var adj.gate_lift >}}×** in the
+riskiest {{< var adj.lift_top_share >}} by PD, both on the held-out
+{{< var adj.test_share >}} of all applicants ([5.2](data.qmd#split-and-seed)). Current
+values {{< var adj.auc >}} and {{< var adj.lift >}}×: **both met**. The gates are on the
+model's PD, not on the decisions: no gate covers the policy layer.
+:::
+
+## Where they are asserted
+
+At the end of training, in `adjudication/src/train.py`:
+
+```python
+AUC_GATE = 0.78
+LIFT_GATE = 2.0
+...
+    assert auc >= AUC_GATE, f"GATE FAIL: AUC {auc:.4f} < {AUC_GATE}"
+    assert lift >= LIFT_GATE, f"GATE FAIL: lift {lift:.2f} < {LIFT_GATE}"
+```
+
+`auc` and `lift` are computed on the held-out rows' PDs, the lift by `top_ventile_lift`
+(finding 5, [5.7](limitations.qmd)). The asserts are the script's last step: the model,
+`policy_config.json`, `metadata.json` and the validation report are written **before** them,
+so a model that misses a gate still leaves its artifacts behind. The run fails, and
+`verify.py` then fails on those artifacts (below). Both gate values are also written into
+`adjudication/models/metadata.json`, under `["gate"]["auc_min"]` and `["gate"]["lift_min"]`.
+
+## Where they are recomputed, independently
+
+`verify.py` carries its own copies of both gates:
+
+```python
+ADJ_AUC_GATE = 0.78     # verify.py
+ADJ_LIFT_GATE = 2.0
+```
+
+Its adjudication check, `check_adjudication`, reads no stored metric. It:
+
+1. fails at once, naming them, if `adjudication_model.pkl`, `policy_config.json` or
+   `metadata.json` is missing;
+2. loads `adjudication_model.pkl`, builds the features from the committed data with
+   `compute_adjudication_features` — which recomputes the score through
+   `predict_score_pd` — and redraws the held-out split with the platform seed and
+   stratification;
+3. recomputes the AUC with `roc_auc_score`, and the lift **with its own code**, not by
+   importing `top_ventile_lift`:
+
+   ```python
+   cut = np.quantile(p, 0.80)                            # verify.py
+   lift = float(y_te[p >= cut].mean() / y_te.mean())
+   ```
+
+4. fails if either is below its own constant, reporting both values against both gates.
+
+It does not read `policy_config.json`'s values, re-run `decide`, or check the decision mix:
+the policy layer is outside the gate. On `main`, `verify.py` then recomputes every fact in
+this chapter — the gates as `adjudication.src.train` reads them, the decisions through
+`decide`, every rule hit — and fails, naming the key, if any page would print a stale value
+([D9](../d9-implementation.qmd)). Its portal check additionally asserts that the v2
+workbench's what-if with no overrides returns the batch decision
+([5.1](purpose.qmd#who-consumes-it-and-how)).
+
+This is why **a relaxed local gate cannot pass.** Lowering `AUC_GATE` or `LIFT_GATE` in
+`train.py` lets a weaker model finish training, but `verify.py` recomputes that model's AUC
+and lift against the constants it carries itself, and fails. Because `verify.py` computes the
+lift with its own two lines, renaming `top_ventile_lift` (finding 5) cannot change what it
+checks.
+
+## Why these values
+
+The AUC gate is the scorecard's ({{< var score.gate >}}, D4.9): set below the ceiling this
+data allows ([5.5](performance.qmd#the-ceiling)), demanding but reachable. A challenger that
+consumes the score is held to the same bar on the same applicants. The lift gate asks the
+question the decision depends on: whether the riskiest files by PD — where the Decline zone
+sits — hold at least twice the average default rate.
+
+The committed model meets the AUC gate with the lower end of its bootstrap interval
+({{< var adj.auc_ci_lo >}} – {{< var adj.auc_ci_hi >}}) just above it: met, with less room
+than the scorecard.
+
+## What the gates do not cover
+
+- **The booked population.** On the held-out booked the AUC is {{< var adj.pop.booked.auc >}},
+  below the AUC gate value; lift, {{< var adj.pop.booked.lift >}}×, passes. Finding 1
+  ([5.7](limitations.qmd)) and the monitoring plan ([5.8](monitoring.qmd)) carry this.
+- **The decisions.** Most Declines come from knockouts
+  ([5.3](methodology.qmd#adj-knockouts-dominate)), which no gate measures; two of the rules
+  cannot fire at all (finding 2). The decisions are measured against outcomes in
+  [5.5](performance.qmd#adj-decisions-and-outcomes) and monitored by rule hit and by decision
+  in [5.8](monitoring.qmd).
+- **Calibration.** Both gates measure ranking. The Approve zone's under-prediction
+  (finding 3) passes both.
+- **The zone cutoffs.** They are written to `policy_config.json` by the same run, from
+  quantiles that include the held-out rows (finding 4), and no check compares them with
+  anything.
+
+## History
+
+| Version | Change | Gates |
+|---|---|---|
+| `stage-3` (commit `dfbd30e`) | gates introduced with the adjudication model, in `train.py` and `verify.py` | AUC {{< var adj.gate_auc >}}, lift {{< var adj.gate_lift >}}× |
+| `stage-4`, `stage-5`, `v1.0` to `v1.5`, `main` | unchanged | AUC {{< var adj.gate_auc >}}, lift {{< var adj.gate_lift >}}× |
+
+The gates have not changed since they were introduced, and they are never relaxed to let a
+model pass ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
+A change to either would be a change of the committed promise: made on `main`, recorded in a
+new version tag, and shown in this table.

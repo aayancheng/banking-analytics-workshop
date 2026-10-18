@@ -34,9 +34,19 @@ KS (Kolmogorov–Smirnov statistic)
 : The largest gap between the cumulative score distributions of defaulters and
   non-defaulters. Like AUC it measures separation, and it too depends on the population.
 
+Knockout
+: A policy rule that declines an application whatever the model says — in adjudication, a
+  debt-service coverage floor, public records, prior delinquencies or leverage (D5.3). Its
+  reason is the rule, not the model.
+
 LGD (loss given default)
 : The share of the exposure lost if the borrower defaults, after recoveries. Here it is a
   market assumption in `shared.config.MARKET`, not an estimate.
+
+Lift
+: The default rate among the riskiest share of a population, ranked by a model, divided by
+  the default rate of the whole population. A lift of 2 means the riskiest group defaults at
+  twice the average rate. It depends on the share chosen, so these pages always name it.
 
 PD (probability of default)
 : The model's estimate that a borrower defaults over the outcome window. The scorecard's PD
@@ -61,6 +71,13 @@ RAROC (risk-adjusted return on capital)
 ROE (return on equity)
 : Net income on a loan divided by the equity allocated to it. The pricing engine solves for
   the rate at which a loan's ROE meets the hurdle.
+
+SHAP (Shapley additive explanations)
+: An attribution method that splits one prediction among the model's features, so that a base
+  value plus the features' contributions equals the prediction (in log-odds, for a classifier).
+  Adjudication's reasons are SHAP values (D5.3). It is exact in that sense, but how it shares
+  credit between correlated features is a choice of the method, which a validator has to
+  assess as well as the model.
 
 Structural zero
 : A feature the data generator gives no role in default at all. Any pattern it shows against

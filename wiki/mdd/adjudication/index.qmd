@@ -3,20 +3,55 @@ title: "D5 Loan Adjudication"
 order: 0
 ---
 
-**Status: in progress.** This chapter is being written from the nine-part template; the
-headline below is already live.
+**Status: complete.** All nine parts of the template are written.
+
+::: {.callout-note}
+## D5 at a glance
+
+- **Discrimination:** held-out AUC {{< var adj.auc >}} on the held-out
+  {{< var adj.test_share >}} of applicants (bootstrap 95% interval
+  {{< var adj.auc_ci_lo >}}–{{< var adj.auc_ci_hi >}}); lift {{< var adj.lift >}}× in the
+  riskiest {{< var adj.lift_top_share >}} by PD.
+- **Gates:** AUC ≥ {{< var adj.gate_auc >}} and lift ≥ {{< var adj.gate_lift >}}× on that
+  population, asserted at training and recomputed by `verify.py` — both met.
+- **On the loans the bank books:** held-out AUC {{< var adj.pop.booked.auc >}} on the
+  {{< var adj.pop.booked.n >}} booked applicants in the held-out split — below the AUC gate
+  value, and below the scorecard's {{< var score.pop.booked.auc >}} on the same rows; lift
+  {{< var adj.pop.booked.lift >}}× still passes.
+- **Mostly rules:** {{< var adj.decline.knockout_share >}} of held-out Declines carry a hard
+  knockout. Adjudication is largely a rules engine with a model attached.
+- **Five open findings** the chapter raises about its own model and policy
+  ([5.7](limitations.qmd)).
+:::
+
+Loan Adjudication decides, for every applicant, Approve, Refer or Decline, with reasons
+([5.1](purpose.qmd)). It is two components in sequence: a gradient-boosted model (LightGBM)
+on {{< var adj.n_features >}} inputs — two of them the Business Credit Score's own output,
+the score and its PD ([D3](../d3-dependencies.qmd)) — and a policy layer of hard knockouts,
+PD zones and refer overrides that turns the model's PD into the decision
+([5.3](methodology.qmd)). It decides who gets credit, which makes it Tier 1
+([D0](../d0-summary.qmd#risk-tiering)).
 
 {{< include ../../_generated/adj-headline.md >}}
 
 Measured on the held-out {{< var adj.test_share >}} of the {{< var adj.n_applicants >}}
-applicants, as adjudication's training script draws its split — the same rows the scorecard
-uses, split with the same seed.
+applicants — the same rows as the scorecard's held-out split, drawn with the same seed and
+stratification ([5.2](data.qmd#split-and-seed)).
 
-The chapter will cover the gradient-boosted model and the policy layer that turns its PD
-into Approve, Refer or Decline: the {{< var adj.n_features >}} inputs, including the
-score it consumes (D3); how the PD zones are calibrated at training time; the hard
-knockouts and refer overrides and why each exists; the reasons returned with every
-decision; performance against both gates, AUC and lift; how the decision mix moves when a
-cutoff moves; and its limitations and monitoring.
+The chapter follows the nine-part [template](../index.qmd#the-template), with D4 as the
+worked example. Every number in it is a named fact, recomputed through the module's own
+functions — the saved model, `compute_adjudication_features` and `policy.decide` — by
+`python verify.py`; the [fact index](../../reference/facts.qmd) gives each one's source and
+population. The chapter documents the model and policy as committed: it changes neither.
 
-The chapter follows the [template](../index.qmd#the-template); D4 is the worked example.
+| § | Part | What it establishes |
+|---|---|---|
+| 5.1 | [Purpose and use](purpose.qmd) | the decision it supports, its inputs from D4, its consumers, prohibited uses |
+| 5.2 | [Data and sample](data.qmd) | the split (the scorecard's), the two populations, leakage controls |
+| 5.3 | [Methodology and alternatives](methodology.qmd) | LightGBM and the policy layer in decision order; knockouts dominate; why a challenger, why SHAP |
+| 5.4 | [Assumptions](assumptions.qmd) | cutoffs as quantiles, limits as policy, the score as an input, the generator as truth |
+| 5.5 | [Performance](performance.qmd) | discrimination by population, calibration by zone, outcomes by decision, reasons among Declines |
+| 5.6 | [Sensitivity and stress](sensitivity.qmd) | the zone cutoffs moved by {{< var adj.sens.step >}}; what was not stressed |
+| 5.7 | [Limitations and compensating controls](limitations.qmd) | five open findings, each with a control and an owner |
+| 5.8 | [Monitoring plan](monitoring.qmd) | metrics, thresholds, rule-hit and dead-rule detection, triggers |
+| 5.9 | [Gate record](gate.qmd) | the two gates, where they are asserted and recomputed, their history |

@@ -59,10 +59,47 @@ def test_d4_has_an_index_and_the_nine_parts_in_order():
         assert "TEMPLATE" not in text, f"{part}: template brief not replaced"
 
 
+def _finding_rows(text: str) -> list[str]:
+    return [l for l in text.splitlines() if l[:4] in {f"| {n} " for n in "123456789"}]
+
+
+def _signoff_section(chapter: str) -> str:
+    """D11's open-findings subsection for one chapter ("D4", "D5", ...)."""
+    text = (WIKI / "mdd" / "d11-signoff.qmd").read_text()
+    return text.split(f"\n### {chapter} ", 1)[1].split("\n## ", 1)[0].split("\n### ", 1)[0]
+
+
 def test_signoff_open_findings_are_d4_limitations_word_for_word():
-    rows = lambda p: [l for l in p.read_text().splitlines() if l[:4] in {f"| {n} " for n in "123456"}]
-    d11 = rows(WIKI / "mdd" / "d11-signoff.qmd")
-    assert len(d11) == 6 and d11 == rows(WIKI / "mdd" / "score" / "limitations.qmd")
+    d11 = _finding_rows(_signoff_section("D4"))
+    assert len(d11) == 6
+    assert d11 == _finding_rows((WIKI / "mdd" / "score" / "limitations.qmd").read_text())
+
+
+def test_signoff_open_findings_are_d5_limitations_word_for_word():
+    d11 = _finding_rows(_signoff_section("D5"))
+    assert len(d11) == 5
+    assert d11 == _finding_rows((WIKI / "mdd" / "adjudication" / "limitations.qmd").read_text())
+
+
+def test_signoff_lists_every_finding_row_once():
+    text = (WIKI / "mdd" / "d11-signoff.qmd").read_text()
+    assert len(_finding_rows(text)) == 6 + 5
+
+
+def test_d5_has_an_index_and_the_nine_parts_in_order():
+    index = (WIKI / "mdd" / "adjudication" / "index.qmd").read_text()
+    assert "order: 0" in index and "Status: complete" in index
+    for i, part in enumerate(TEMPLATE_PARTS, 1):
+        text = (WIKI / "mdd" / "adjudication" / f"{part}.qmd").read_text()
+        assert f'title: "5.{i} ' in text and f"order: {i}" in text, part
+        assert "TEMPLATE" not in text, f"{part}: template brief not replaced"
+
+
+def test_validation_book_lists_every_model_chapter_page():
+    book = (WIKI / "_quarto-validation.yml").read_text()
+    for chapter in ("score", "adjudication"):
+        pos = [book.index(f"mdd/{chapter}/{p}.qmd") for p in ["index"] + TEMPLATE_PARTS]
+        assert pos == sorted(pos), chapter
 
 
 def test_calibration_findings_follow_the_monitoring_floor():
@@ -90,3 +127,43 @@ def test_calibration_findings_follow_the_monitoring_floor():
     for key in observations:
         assert f"{key}.ratio" in obs, key
     assert "score.band_booked.B." not in obs
+
+
+def test_d5_zone_calibration_findings_follow_the_monitoring_floor():
+    """D5.7 applies D4's floor rule to the PD zones: a zone outside the tolerance on at least
+    the floor's defaults is part of finding 3; below the floor it would be an observation."""
+    import json
+    f = {k: v["text"] for k, v in json.loads((WIKI / "facts" / "facts.json").read_text()).items()}
+    lo, hi = float(f["monitoring.ratio_lo"]), float(f["monitoring.ratio_hi"])
+    floor = int(f["monitoring.min_band_defaults"])
+    findings, observations = set(), set()
+    for pop in ("everyone", "booked"):
+        for z in ("Approve", "Refer", "Decline"):
+            key = f"adj.zone.{pop}.{z}"
+            if not lo <= float(f[f"{key}.ratio"]) <= hi:
+                n = int(f[f"{key}.defaults"].replace(",", ""))
+                (findings if n >= floor else observations).add(key)
+    assert findings == {"adj.zone.everyone.Approve", "adj.zone.booked.Approve",
+                        "adj.zone.booked.Decline"}
+    assert observations == set()
+    text = (WIKI / "mdd" / "adjudication" / "limitations.qmd").read_text()
+    f3 = text.split("## Finding 3", 1)[1].split("\n## ", 1)[0]
+    for key in findings:
+        assert f"{key}.ratio" in f3, key
+    assert "monitoring.min_band_defaults" in f3
+    obs = next(l for l in text.splitlines() if l.startswith("| No calibration miss below the floor"))
+    assert "monitoring.min_band_defaults" in obs
+
+
+def test_d5_inert_rules_finding_matches_the_facts():
+    """Finding 2 names exactly the rules that fire on no applicant."""
+    import json
+    f = {k: v["text"] for k, v in json.loads((WIKI / "facts" / "facts.json").read_text()).items()}
+    rules = ["dscr_floor", "public_records", "prior_delinquencies", "leverage",
+             "thin_dscr", "weak_score", "large_request"]
+    dead = {r for r in rules if f[f"adj.rule.{r}.n_all"] == "0"}
+    assert dead == {"leverage", "large_request"}
+    text = (WIKI / "mdd" / "adjudication" / "limitations.qmd").read_text()
+    f2 = text.split("## Finding 2", 1)[1].split("\n## ", 1)[0]
+    for r in dead:
+        assert f"adj.rule.{r}.n_all" in f2, r

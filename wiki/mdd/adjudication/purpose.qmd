@@ -1,0 +1,111 @@
+---
+title: "5.1 Purpose and use"
+order: 1
+---
+
+## The decision it supports
+
+Loan Adjudication answers the origination question the score leaves open: **should the
+bank lend to this applicant — yes, no, or not without a person looking?** For every
+applicant it returns one of three decisions, with the reasons behind it:
+
+| Decision | Meaning |
+|---|---|
+| Approve | the model's PD is low enough and no policy rule objects |
+| Refer | the file goes to an underwriter: the PD is in the middle zone, or a refer rule fired on a low-PD file |
+| Decline | the PD is high enough, or a hard knockout fired, whatever the PD |
+
+It is two components in sequence ([5.3](methodology.qmd)): a gradient-boosted model
+(LightGBM) that estimates a probability of default, and a policy layer that turns that PD,
+together with a few affordability and bureau values, into the decision. The model
+estimates; the policy decides. This chapter documents both, because a validator cannot
+assess the decision by assessing the model alone.
+
+{{< yt S3-c1 >}}
+
+## The output
+
+`decide` (`adjudication/src/policy.py`) is the one decision function. Given the
+applicants' features, the model's PD for each and the policy configuration, it returns a
+frame aligned to the applicants:
+
+| Output | What it is |
+|---|---|
+| `decision` | Approve, Refer or Decline |
+| `decision_reasons` | the reason string of every policy rule that fired on the file, in the order the rules ran; empty if none did |
+| `pd` | the model's PD, as passed in |
+
+Two explanations accompany a decision, and they explain different things:
+
+- **Rule hits** (`decision_reasons`) say which policy rules fired. They are exact: each is
+  a comparison of one input with one threshold.
+- **SHAP reasons** explain the model's PD. `shap.TreeExplainer` attributes the PD's
+  log-odds to the {{< var adj.n_features >}} features, and `top_adverse_shap`
+  (`adjudication/src/reason_codes.py`) keeps the three largest positive contributions —
+  the features pushing the PD up. They are an attribution, not a decomposition the model
+  computes itself ([5.3](methodology.qmd#adj-reason-codes)).
+
+## Inputs
+
+The model takes the {{< var adj.n_features >}} columns of `ADJ_FEATURE_COLUMNS`
+(`adjudication/src/feature_engineering.py`), listed in [5.2](data.qmd#adj-features).
+Two of them are not data: they are the output of the Business Credit Score (D4).
+`compute_adjudication_features` calls the scorecard's own scoring function and copies its
+result into the feature frame:
+
+```python
+sp = predict_score_pd(df)                       # adjudication/src/feature_engineering.py
+out["business_score"] = sp["business_score"].to_numpy()
+out["pd_score"] = sp["pd"].to_numpy()
+```
+
+`business_score` is used a second time, by the policy layer, whose score floor turns a
+low-PD Approve into a Refer ([5.3](methodology.qmd#adj-policy-layer)). The dependency is
+drawn in [D3](../d3-dependencies.qmd): adjudication consumes the saved scorecard's output,
+never the generator's true PD, and a change to the scorecard forces a retrain here
+([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)). How much of the model rests
+on those two inputs is measured in [5.5](performance.qmd#adj-reasons-among-declines).
+
+## The population it is for
+
+Small-business loan applicants of the kind the data generator draws
+([D2](../d2-data.qmd)): every applicant, at origination, before any booking decision. It is
+trained and gated on a split of all {{< var adj.n_applicants >}} applicants
+([5.2](data.qmd)). The bank lends to the {{< var score.n_booked >}} it books, and on those
+the model ranks noticeably worse — finding 1 in [5.7](limitations.qmd).
+
+One feature of this platform matters for reading every number in the chapter: **the
+booked population was not chosen by this model.** The generator draws `booked` from the
+true PD with noise; it stands in for the bank's historical lending decision
+([D2](../d2-data.qmd#two-populations-applicants-and-booked)). Pricing, early warning and
+line increase operate on that population. Adjudication's decisions are therefore an
+output of the platform, shown in the portal, not an input to any other module — and the
+held-out booked applicants include loans this model would have declined
+([5.5](performance.qmd#adj-decisions-and-outcomes)).
+
+## Who consumes it, and how
+
+Every consumer loads the saved model and `policy_config.json`, builds features with
+`compute_adjudication_features` and calls `decide`. None re-implements the policy.
+
+| Consumer | What it takes |
+|---|---|
+| Portal (v1), `/api/adjudicate/{business_id}` | the decision, the rule hits and the model PD for one applicant, scored at start-up for all applicants in one batch (`app/main.py`); no SHAP reasons |
+| Portal (v1), `/api/dashboard/summary` and `/api/customer/{business_id}` | the decision mix over all applicants; one applicant's decision and rule hits |
+| Loan workbench (v2), `/api/v2/loan/{business_id}/decision` | the decision and rule hits from the same batch; the PD against both zone cutoffs; every policy rule with its threshold and this file's value, fired or not; the full SHAP ledger of the model's PD; the score's own ledger |
+| Loan workbench (v2), `.../decision/whatif` | `decide` re-run with the reviewer's overrides of the policy values; with no overrides it must equal the batch decision, which `verify.py` and the test suite check |
+
+The v1 adjudication endpoint returns rule hits only. SHAP explanations of an adjudication
+PD are served by the v2 workbench, as a ledger of all {{< var adj.n_features >}}
+contributions rather than as the top three of `top_adverse_shap`. The two views rank the
+same values: the top three adverse rows of the ledger are the top-three reasons.
+
+## Prohibited uses
+
+| Use | Why it is prohibited |
+|---|---|
+| Declining an applicant on the model's PD without the policy layer | The gate measures the PD's ranking, not a decision. The decision is the policy layer's, and most Declines come from its knockouts, not from the PD ([5.3](methodology.qmd#adj-knockouts-dominate)). |
+| Telling a declined applicant only the SHAP reasons | A knockout Decline has a rule as its reason, whatever the SHAP values say. Adverse-action reasons start from the rule hits, then the SHAP reasons. |
+| Reading the PD as calibrated on booked loans | On held-out booked loans the Approve zone under-predicts default (finding 3, [5.7](limitations.qmd)). The PD is for ranking and for placing a file in a zone. Pricing takes its PD from the scorecard (D6), not from this model. |
+| Changing a zone cutoff without re-running the decision mix | The cutoffs are quantiles of the PD distribution, recalibrated on every retrain ([5.4](assumptions.qmd)); a cutoff carried over from another model version means something different. |
+| Any decision about a real business | The model was fitted to synthetic data ([D1](../d1-purpose.qmd#prohibited-uses)). |

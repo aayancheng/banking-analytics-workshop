@@ -57,21 +57,21 @@ title: "Every number in this documentation"
 | `adj.dec.rejected.Refer.n` | 285 | held-out rejected applicants (adjudication split, seed 42) | `adjudication.src.policy.decide` |
 | `adj.dec.rejected.Refer.pd` | 19.9% | held-out rejected applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.dec.rejected.Refer.share` | 37.7% | held-out rejected applicants (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.knockout_share` | 90.2% | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
+| `adj.decline.knockout_share` | 90.2% | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.decline.n` | 778 | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule1.key` | dscr_floor | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule1.n` | 501 | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule1.reason` | dscr<1.0 | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule1.share` | 64.4% | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule2.key` | public_records | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule2.n` | 211 | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule2.reason` | public_records present | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule2.share` | 27.1% | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule3.key` | weak_score | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule3.n` | 60 | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule3.reason` | weak credit score | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule3.share` | 7.7% | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
-| `adj.decline.rule_share` | 90.2% | held-out Declines (adjudication split, seed 42) | `adjudication.src.policy.decide` |
+| `adj.decline.rule1.key` | dscr_floor | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule1.n` | 501 | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule1.reason` | dscr<1.0 | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule1.share` | 64.4% | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule2.key` | public_records | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule2.n` | 211 | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule2.reason` | public_records present | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule2.share` | 27.1% | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule3.key` | weak_score | held-out Declines (adjudication split, seed 42) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule3.n` | 60 | held-out Declines (adjudication split, seed 42) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule3.reason` | weak credit score | held-out Declines (adjudication split, seed 42) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule3.share` | 7.7% | held-out Declines (adjudication split, seed 42) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.decline.rule_share` | 90.2% | held-out Declines (adjudication split, seed 42) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.decline.shap1.feature` | pd_score | held-out Declines (adjudication split, seed 42) | `shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap` |
 | `adj.decline.shap1.n` | 575 | held-out Declines (adjudication split, seed 42) | `shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap` |
 | `adj.decline.shap1.share` | 73.9% | held-out Declines (adjudication split, seed 42) | `shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap` |
@@ -81,8 +81,8 @@ title: "Every number in this documentation"
 | `adj.decline.shap3.feature` | dscr | held-out Declines (adjudication split, seed 42) | `shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap` |
 | `adj.decline.shap3.n` | 157 | held-out Declines (adjudication split, seed 42) | `shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap` |
 | `adj.decline.shap3.share` | 20.2% | held-out Declines (adjudication split, seed 42) | `shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap` |
-| `adj.gate_auc` | 0.78 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.train.AUC_GATE` |
-| `adj.gate_lift` | 2.0 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.train.LIFT_GATE` |
+| `adj.gate_auc` | 0.78 | policy constant (gate, measured on the held-out 20% of applicants) | `adjudication.src.train.AUC_GATE` |
+| `adj.gate_lift` | 2.0 | policy constant (gate, measured on the held-out 20% of applicants) | `adjudication.src.train.LIFT_GATE` |
 | `adj.lift` | 2.86 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.train.top_ventile_lift` |
 | `adj.lift_function` | top_ventile_lift | function name | `adjudication.src.train.top_ventile_lift` |
 | `adj.lift_top_share` | 20% | measured on the function (one default among 10,000 ranked rows) | `adjudication.src.train.top_ventile_lift` |
@@ -92,7 +92,7 @@ title: "Every number in this documentation"
 | `adj.mix.Decline` | 32.4% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
 | `adj.mix.Refer` | 36.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
 | `adj.n_applicants` | 12,000 | all 12,000 applicants | `adjudication.src.train split (train_test_split, seed 42, stratified)` |
-| `adj.n_features` | 21 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.feature_engineering.ADJ_FEATURE_COLUMNS` |
+| `adj.n_features` | 21 | module constant | `adjudication.src.feature_engineering.ADJ_FEATURE_COLUMNS` |
 | `adj.n_test` | 2,400 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.train split (train_test_split, seed 42, stratified)` |
 | `adj.n_train` | 9,600 | training 80% of applicants (adjudication split, seed 42) | `adjudication.src.train split (train_test_split, seed 42, stratified)` |
 | `adj.policy.dscr_floor` | 1.0 | policy constant | `adjudication/models/policy_config.json` |
@@ -116,47 +116,48 @@ title: "Every number in this documentation"
 | `adj.pop.rejected.n` | 756 | held-out rejected applicants (adjudication split, seed 42) | `businesses.booked` |
 | `adj.q_high` | 90% | policy constant | `adjudication.src.train (quantile for t_high)` |
 | `adj.q_low` | 55% | policy constant | `adjudication.src.train (quantile for t_low)` |
-| `adj.rule.any.n` | 994 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.any_knockout.n` | 702 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.any_knockout.share` | 29.2% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.any_override.n` | 354 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.any_override.share` | 14.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
+| `adj.rule.any.n` | 994 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.any_knockout.n` | 702 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.any_knockout.share` | 29.2% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.any_override.n` | 354 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.any_override.share` | 14.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.rule.dscr_floor.kind` | knockout | policy constant | `adjudication.src.policy (decision order)` |
-| `adj.rule.dscr_floor.n` | 501 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.dscr_floor.n_all` | 2,529 | all 12,000 applicants | `adjudication.src.policy.decide` |
-| `adj.rule.dscr_floor.share` | 20.9% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
+| `adj.rule.dscr_floor.n` | 501 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.dscr_floor.n_all` | 2,529 | all 12,000 applicants -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.dscr_floor.share` | 20.9% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.rule.dscr_floor.text` | dscr<1.0 | policy constant | `adjudication.src.policy.decide` |
 | `adj.rule.knockout_overturns.n` | 593 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
 | `adj.rule.large_request.kind` | override | policy constant | `adjudication.src.policy (decision order)` |
-| `adj.rule.large_request.n` | 0 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.large_request.n_all` | 0 | all 12,000 applicants | `adjudication.src.policy.decide` |
-| `adj.rule.large_request.share` | 0.0% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
+| `adj.rule.large_request.n` | 0 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.large_request.n_all` | 0 | all 12,000 applicants -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.large_request.share` | 0.0% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.rule.large_request.text` | large request vs revenue | policy constant | `adjudication.src.policy.decide` |
 | `adj.rule.leverage.kind` | knockout | policy constant | `adjudication.src.policy (decision order)` |
-| `adj.rule.leverage.n` | 0 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.leverage.n_all` | 0 | all 12,000 applicants | `adjudication.src.policy.decide` |
-| `adj.rule.leverage.share` | 0.0% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
+| `adj.rule.leverage.n` | 0 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.leverage.n_all` | 0 | all 12,000 applicants -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.leverage.share` | 0.0% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.rule.leverage.text` | leverage>6.0 | policy constant | `adjudication.src.policy.decide` |
 | `adj.rule.prior_delinquencies.kind` | knockout | policy constant | `adjudication.src.policy (decision order)` |
-| `adj.rule.prior_delinquencies.n` | 41 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.prior_delinquencies.n_all` | 263 | all 12,000 applicants | `adjudication.src.policy.decide` |
-| `adj.rule.prior_delinquencies.share` | 1.7% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
+| `adj.rule.prior_delinquencies.n` | 41 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.prior_delinquencies.n_all` | 263 | all 12,000 applicants -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.prior_delinquencies.share` | 1.7% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.rule.prior_delinquencies.text` | prior_delinquencies>=3 | policy constant | `adjudication.src.policy.decide` |
 | `adj.rule.public_records.kind` | knockout | policy constant | `adjudication.src.policy (decision order)` |
-| `adj.rule.public_records.n` | 211 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.public_records.n_all` | 959 | all 12,000 applicants | `adjudication.src.policy.decide` |
-| `adj.rule.public_records.share` | 8.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
+| `adj.rule.public_records.n` | 211 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.public_records.n_all` | 959 | all 12,000 applicants -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.public_records.share` | 8.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: a file is counted when the rule fires, whatever decide() finally returns | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.rule.public_records.text` | public_records present | policy constant | `adjudication.src.policy.decide` |
 | `adj.rule.thin_dscr.kind` | override | policy constant | `adjudication.src.policy (decision order)` |
-| `adj.rule.thin_dscr.n` | 129 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.thin_dscr.n_all` | 716 | all 12,000 applicants | `adjudication.src.policy.decide` |
-| `adj.rule.thin_dscr.share` | 5.4% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
+| `adj.rule.thin_dscr.n` | 129 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.thin_dscr.n_all` | 716 | all 12,000 applicants -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.thin_dscr.share` | 5.4% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.rule.thin_dscr.text` | thin affordability margin (dscr) | policy constant | `adjudication.src.policy.decide` |
 | `adj.rule.weak_score.kind` | override | policy constant | `adjudication.src.policy (decision order)` |
-| `adj.rule.weak_score.n` | 261 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
-| `adj.rule.weak_score.n_all` | 1,549 | all 12,000 applicants | `adjudication.src.policy.decide` |
-| `adj.rule.weak_score.share` | 10.9% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide` |
+| `adj.rule.weak_score.n` | 261 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.weak_score.n_all` | 1,549 | all 12,000 applicants -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
+| `adj.rule.weak_score.share` | 10.9% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the same file still makes it a Decline | `adjudication.src.policy.decide (rule hits read from decision_reasons)` |
 | `adj.rule.weak_score.text` | weak credit score | policy constant | `adjudication.src.policy.decide` |
+| `adj.score_pd.order_breaks` | 0 | all 12,000 applicants | `predict_score_pd: business_score in ascending pd order, rises counted` |
 | `adj.score_zone.differ.n` | 345 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `PD-zone rule on predict_score_pd's pd vs the LightGBM PD` |
 | `adj.score_zone.differ.share` | 14.4% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `PD-zone rule on predict_score_pd's pd vs the LightGBM PD` |
 | `adj.score_zone.opposite.n` | 0 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `PD-zone rule on predict_score_pd's pd vs the LightGBM PD` |
@@ -184,42 +185,51 @@ title: "Every number in this documentation"
 | `adj.t_high` | 0.4943 | all 12,000 applicants | `adjudication.src.train calibration (np.quantile of model PD, rounded 4dp)` |
 | `adj.t_low` | 0.0955 | all 12,000 applicants | `adjudication.src.train calibration (np.quantile of model PD, rounded 4dp)` |
 | `adj.test_share` | 20% | all 12,000 applicants | `adjudication.src.train split (train_test_split, seed 42, stratified)` |
-| `adj.trainonly.changed` | 7 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide with thresholds from training-row PDs only` |
-| `adj.trainonly.mix.Approve` | 30.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide with thresholds from training-row PDs only` |
-| `adj.trainonly.mix.Decline` | 32.1% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide with thresholds from training-row PDs only` |
-| `adj.trainonly.mix.Refer` | 37.1% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide with thresholds from training-row PDs only` |
-| `adj.trainonly.t_high` | 0.5117 | training 80% of applicants (adjudication split, seed 42) | `adjudication.src.train calibration (np.quantile of model PD, rounded 4dp)` |
-| `adj.trainonly.t_low` | 0.0939 | training 80% of applicants (adjudication split, seed 42) | `adjudication.src.train calibration (np.quantile of model PD, rounded 4dp)` |
+| `adj.trainonly.changed` | 7 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide with thresholds from in-sample training-row PDs only (not an out-of-sample recalibration)` |
+| `adj.trainonly.mix.Approve` | 30.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide with thresholds from in-sample training-row PDs only (not an out-of-sample recalibration)` |
+| `adj.trainonly.mix.Decline` | 32.1% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide with thresholds from in-sample training-row PDs only (not an out-of-sample recalibration)` |
+| `adj.trainonly.mix.Refer` | 37.1% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication.src.policy.decide with thresholds from in-sample training-row PDs only (not an out-of-sample recalibration)` |
+| `adj.trainonly.t_high` | 0.5117 | training 80% of applicants, in-sample model PDs (the model was fitted on these rows, so their PDs spread wider than out-of-sample ones: the 55% quantile is biased low); not an out-of-sample recalibration | `adjudication.src.train calibration (np.quantile of model PD, rounded 4dp) applied to the in-sample PDs of the training rows only` |
+| `adj.trainonly.t_low` | 0.0939 | training 80% of applicants, in-sample model PDs (the model was fitted on these rows, so their PDs spread wider than out-of-sample ones: the 55% quantile is biased low); not an out-of-sample recalibration | `adjudication.src.train calibration (np.quantile of model PD, rounded 4dp) applied to the in-sample PDs of the training rows only` |
 | `adj.zone.booked.Approve.defaults` | 60 | held-out booked applicants (adjudication split, seed 42) | `businesses.default` |
 | `adj.zone.booked.Approve.n` | 1,024 | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.booked.Approve.observed` | 5.9% | held-out booked applicants (adjudication split, seed 42) | `businesses.default` |
 | `adj.zone.booked.Approve.predicted` | 3.5% | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.booked.Approve.ratio` | 1.66 | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
+| `adj.zone.booked.Approve.share` | 62.3% | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.booked.Decline.defaults` | 15 | held-out booked applicants (adjudication split, seed 42) | `businesses.default` |
 | `adj.zone.booked.Decline.n` | 33 | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.booked.Decline.observed` | 45.5% | held-out booked applicants (adjudication split, seed 42) | `businesses.default` |
 | `adj.zone.booked.Decline.predicted` | 62.5% | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.booked.Decline.ratio` | 0.73 | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
+| `adj.zone.booked.Decline.share` | 2.0% | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.booked.Refer.defaults` | 108 | held-out booked applicants (adjudication split, seed 42) | `businesses.default` |
 | `adj.zone.booked.Refer.n` | 587 | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.booked.Refer.observed` | 18.4% | held-out booked applicants (adjudication split, seed 42) | `businesses.default` |
 | `adj.zone.booked.Refer.predicted` | 19.6% | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.booked.Refer.ratio` | 0.94 | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
+| `adj.zone.booked.Refer.share` | 35.7% | held-out booked applicants (adjudication split, seed 42) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.everyone.Approve.defaults` | 66 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `businesses.default` |
 | `adj.zone.everyone.Approve.n` | 1,260 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.everyone.Approve.observed` | 5.2% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `businesses.default` |
 | `adj.zone.everyone.Approve.predicted` | 3.6% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.everyone.Approve.ratio` | 1.44 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
+| `adj.zone.everyone.Approve.share` | 52.5% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.everyone.Decline.defaults` | 120 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `businesses.default` |
 | `adj.zone.everyone.Decline.n` | 185 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.everyone.Decline.observed` | 64.9% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `businesses.default` |
 | `adj.zone.everyone.Decline.predicted` | 68.0% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.everyone.Decline.ratio` | 0.95 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
+| `adj.zone.everyone.Decline.share` | 7.7% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.everyone.Refer.defaults` | 215 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `businesses.default` |
 | `adj.zone.everyone.Refer.n` | 955 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.everyone.Refer.observed` | 22.5% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `businesses.default` |
 | `adj.zone.everyone.Refer.predicted` | 21.7% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
 | `adj.zone.everyone.Refer.ratio` | 1.04 | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
+| `adj.zone.everyone.Refer.share` | 39.8% | held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score) | `adjudication_model.pkl predict_proba on compute_adjudication_features` |
+| `adj.zone_target.Approve` | 55% | policy constant (share of all 12,000 applicants' PDs in each zone, by construction) | `adjudication.src.train calibration quantiles (55% / 90%)` |
+| `adj.zone_target.Decline` | 10% | policy constant (share of all 12,000 applicants' PDs in each zone, by construction) | `adjudication.src.train calibration quantiles (55% / 90%)` |
+| `adj.zone_target.Refer` | 35% | policy constant (share of all 12,000 applicants' PDs in each zone, by construction) | `adjudication.src.train calibration quantiles (55% / 90%)` |
 | `ceiling.gap_holdout` | 0.018 | held-out 20% (score split) | `wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)` |
 | `ceiling.signal_all` | 0.8177 | all 12,000 applicants | `wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)` |
 | `ceiling.signal_holdout` | 0.8353 | held-out 20% (score split) | `wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix)` |

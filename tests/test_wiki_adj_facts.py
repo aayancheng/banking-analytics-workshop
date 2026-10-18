@@ -128,3 +128,19 @@ def test_tables_render_from_the_facts(t):
         assert body.startswith(tables.HEADER) and "| " in body
     assert t["adj.pop.booked.auc"] in files["_generated/adj-populations.md"]
     assert t["adj.trainonly.t_high"] in files["_generated/adj-cutoffs.md"]
+
+
+def test_labels_say_what_was_measured(adj):
+    """Constants are not held-out measurements; rule counts are hits, not decisions; the
+    training-only thresholds are in-sample quantiles, not an out-of-sample recalibration."""
+    from wiki.facts.adj_facts import HOLDOUT
+    for k in ("adj.n_features", "adj.gate_auc", "adj.gate_lift"):
+        assert adj[k].population != HOLDOUT and "constant" in adj[k].population, k
+    for k in ("adj.trainonly.t_low", "adj.trainonly.t_high"):
+        assert "in-sample" in adj[k].population and "not an out-of-sample" in adj[k].population
+    for k in ("thin_dscr", "weak_score", "large_request"):
+        for f in ("n", "share", "n_all"):
+            pop = adj[f"adj.rule.{k}.{f}"].population
+            assert "hit" in pop and "knockout" in pop, (k, f)
+    for k in ("dscr_floor", "public_records", "prior_delinquencies", "leverage"):
+        assert "hit" in adj[f"adj.rule.{k}.n"].population, k

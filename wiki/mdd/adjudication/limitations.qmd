@@ -1,0 +1,217 @@
+---
+title: "5.7 Limitations and compensating controls"
+order: 7
+---
+
+The chapter raises five open findings about its own model and policy. Each has evidence
+drawn from the facts, a compensating control and an owner. The same five, in the same
+words, are D5's open findings in the validation sign-off (D11, in the validation PDF). The
+model and the policy are not changed by this chapter: it documents them as committed.
+
+| # | Finding | Evidence | Compensating control | Owner | Status |
+|--|--------------|----------------|------------------|-------|------|
+| 1 | On the loans the bank books, held-out AUC is below the AUC gate value, and below the scorecard the model consumes. | Held-out AUC {{< var adj.pop.everyone.auc >}} on all applicants (the gate, {{< var adj.gate_auc >}}); {{< var adj.pop.booked.auc >}} on the booked only, against the scorecard's {{< var score.pop.booked.auc >}} on the same rows. Lift on the booked, {{< var adj.pop.booked.lift >}}×, still clears its {{< var adj.gate_lift >}}× gate. | Report both populations on every run; track the booked-only AUC and lift beside the gates; at redevelopment, weigh gating on the booked population and placing the zones on the scorecard's PD instead. | Model developer | open |
+| 2 | Two policy rules can never fire on this data: the leverage cap and the request-to-revenue cap. | Leverage cap {{< var adj.policy.leverage_cap >}} against a largest leverage of {{< var adj.max_leverage >}}; request-to-revenue cap {{< var adj.policy.req_to_rev_cap >}} against a largest ratio of {{< var adj.max_req_to_rev >}}; {{< var adj.rule.leverage.n_all >}} and {{< var adj.rule.large_request.n_all >}} hits over all {{< var adj.n_applicants >}} applicants. | Treat both as untested controls: restate each limit on this data's definition of its ratio, or remove it, at the next policy review; until then, monitor every rule's hit rate and flag any rule with no hits. | Credit policy owner | open |
+| 3 | The Approve zone under-predicts default on held-out booked loans. | Observed / predicted {{< var adj.zone.booked.Approve.ratio >}} in the Approve zone on the held-out booked, on {{< var adj.zone.booked.Approve.defaults >}} defaults ({{< var adj.zone.everyone.Approve.ratio >}} on all held-out applicants); the booked Decline zone over-predicts ({{< var adj.zone.booked.Decline.ratio >}}, {{< var adj.zone.booked.Decline.defaults >}} defaults). Tolerance {{< var monitoring.ratio_lo >}}–{{< var monitoring.ratio_hi >}}; floor {{< var monitoring.min_band_defaults >}} defaults. | Calibrate the PD at the next retrain, then recalibrate the zones; until then, monitor observed / predicted by zone on booked cohorts against the floor, and never read the PD as a booked loan's default rate. | Model developer | open |
+| 4 | The PD-zone cutoffs are set as quantiles over all applicants, held-out rows included. | `t_low` {{< var adj.t_low >}} and `t_high` {{< var adj.t_high >}} from all {{< var adj.n_applicants >}} applicants; from the training rows' in-sample PDs alone, {{< var adj.trainonly.t_low >}} and {{< var adj.trainonly.t_high >}}, which change {{< var adj.trainonly.changed >}} of {{< var adj.n_test >}} held-out decisions. | Take the cutoffs from training rows only, preferably from out-of-sample PDs, at the next retrain. Immaterial in effect today: no interim action beyond this record. | Model developer | open |
+| 5 | The lift gate's function is named `top_ventile_lift` but measures the top {{< var adj.lift_top_share >}}. | Measured on the function, its top group is {{< var adj.lift_top_share >}} of the rows, not a twentieth; the module docstring, the validation report, the metadata key and `verify.py` all call it `top-20%` lift. | Rename the function at the next change to `train.py`. The number is right and the gate is unaffected; until then, this record is the control. | Model developer | open |
+
+## Finding 1 — On the booked, AUC is below the AUC gate value and below the scorecard {#adj-finding-1}
+
+**Finding.** The model trains and is gated on all applicants. On the loans the bank books
+it ranks below the value of its own AUC gate, and below the scorecard whose output is its
+strongest input.
+
+**Evidence.** On the held-out split ([5.5](performance.qmd#by-population)):
+
+- all applicants, the gates' population: AUC {{< var adj.pop.everyone.auc >}}
+  ({{< var adj.pop.everyone.n >}} rows) against the {{< var adj.gate_auc >}} gate; lift
+  {{< var adj.pop.everyone.lift >}}× against {{< var adj.gate_lift >}}×;
+- booked only: AUC {{< var adj.pop.booked.auc >}} ({{< var adj.pop.booked.n >}} rows) —
+  below the gate value; lift {{< var adj.pop.booked.lift >}}× — above it;
+- the scorecard on the same booked rows: AUC {{< var score.pop.booked.auc >}}
+  ([5.3](methodology.qmd#adj-why-lightgbm)).
+
+The gap to the scorecard is smaller than the ±{{< var adj.auc_ci_half >}} half-width of the
+model's bootstrap interval on all held-out applicants, and the booked sample is smaller
+still: the evidence is that the model is *no better* than the scorecard on the booked, not
+that it is measurably worse. The gate value is a different matter: the booked AUC is below
+it by more than that half-width. As in D4 (D4 finding 2), this is not a defect of the
+data: the generator gives every applicant an outcome, and the gap is a property of where the
+gate is measured.
+
+**Impact.** The AUC gate overstates how well the model ranks the applicants who look like
+the bank's borrowers, and the richer model does not earn its cost — SHAP reasons in place of
+exact ones ([5.3](methodology.qmd#adj-reason-codes)) — on the population where lending
+happens. The lift gate still passes on the booked, so the model still concentrates
+defaulters among its riskiest files; what is weaker is its ordering of the rest, which is
+where the Approve / Refer cutoff falls.
+
+**Compensating control.** Report all three populations on every run (the generated table in
+[5.2](data.qmd#two-populations) does); track the booked-only AUC and lift beside the gates
+in monitoring ([5.8](monitoring.qmd)); at redevelopment, weigh gating on the booked
+population and the alternative of placing the zones on the scorecard's PD
+([5.3](methodology.qmd#alternative-considered-pd-zones-on-the-scorecards-pd)). The gates
+themselves are not changed by this finding ([5.9](gate.qmd)). **Owner:** model developer.
+
+## Finding 2 — Two policy rules can never fire on this data {#adj-finding-2}
+
+**Finding.** The leverage knockout and the large-request override are in the policy, in
+`policy_config.json` and in the workbench's rule ledger. On this data neither can ever
+fire.
+
+**Evidence.** Over all {{< var adj.n_applicants >}} applicants
+([5.3](methodology.qmd#rule-hits-on-the-held-out-applicants)):
+
+| Rule | Limit | Largest value in the data | Hits, all applicants |
+|---|---|---|---|
+| `leverage` knockout | leverage above {{< var adj.policy.leverage_cap >}} | {{< var adj.max_leverage >}} | {{< var adj.rule.leverage.n_all >}} |
+| `large_request` override | requested amount over revenue above {{< var adj.policy.req_to_rev_cap >}} | {{< var adj.max_req_to_rev >}} | {{< var adj.rule.large_request.n_all >}} |
+
+The generator explains both. `leverage` is total debt over annual revenue, with total debt
+drawn as revenue times a uniform multiplier whose top is far below the cap; the requested
+amount is revenue times a uniform multiplier whose top is below the request cap
+(`shared/data_generator.py`):
+
+```python
+total_debt = np.clip(annual_revenue * rng.uniform(0.05, 0.80, n), 0, None).round(-3)
+leverage = np.clip(total_debt / np.maximum(annual_revenue, 1.0), 0, 5).round(2)
+requested_amount = np.clip(annual_revenue * rng.uniform(0.05, 0.50, n), 1e4, 5e6).round(-3)
+```
+
+The leverage cap is even above the generator's own clip on `leverage`. A cap of that size
+reads like a debt-to-EBITDA limit applied to a debt-to-revenue ratio. Nor do the unit tests
+exercise either rule: `tests/test_policy.py` tests the coverage knockout, the zones, the
+thin-coverage override and the score floor, and not these two.
+
+**Impact.** Two untested controls. A reviewer reading the configuration would take high
+leverage and oversized requests to be stopped; on this data nothing is stopped by either
+rule, and if the definitions of the ratios are wrong, nothing would be on a real book
+either. Leverage is one of the generator's default drivers (D4.3): it reaches the decision
+only through the model's PD.
+
+**Compensating control.** At the next policy review, restate each limit on the definition of
+the ratio this data uses — or remove the rule and say so — and add a unit test that makes
+each rule fire. Until then, the monitoring plan reports every rule's hit rate on every cohort
+and flags any rule with no hits ([5.8](monitoring.qmd#adj-rule-hits)). **Owner:** credit
+policy owner.
+
+## Finding 3 — The Approve zone under-predicts default on held-out booked loans {#adj-finding-3}
+
+**Finding.** Among the files the model's PD places in the Approve zone, more default than
+the PD predicts, by more than the calibration tolerance, on enough defaults to count. On the
+booked, the Decline zone errs the other way.
+
+**Evidence.** By PD zone, before knockouts and overrides ([5.5](performance.qmd#adj-calibration)):
+
+- held-out booked, Approve zone: {{< var adj.zone.booked.Approve.n >}} files,
+  {{< var adj.zone.booked.Approve.defaults >}} defaults, observed
+  {{< var adj.zone.booked.Approve.observed >}} against predicted
+  {{< var adj.zone.booked.Approve.predicted >}}: observed / predicted
+  {{< var adj.zone.booked.Approve.ratio >}};
+- all held-out applicants, Approve zone: {{< var adj.zone.everyone.Approve.defaults >}}
+  defaults, observed / predicted {{< var adj.zone.everyone.Approve.ratio >}};
+- held-out booked, Decline zone: {{< var adj.zone.booked.Decline.n >}} files,
+  {{< var adj.zone.booked.Decline.defaults >}} defaults, observed / predicted
+  {{< var adj.zone.booked.Decline.ratio >}}.
+
+All three are outside the tolerance of {{< var monitoring.ratio_lo >}} to
+{{< var monitoring.ratio_hi >}}. The monitoring plan counts a breach only on at least
+{{< var monitoring.min_band_defaults >}} defaults
+([5.8](monitoring.qmd#adj-redevelopment-triggers)); all three clear that floor, so the same
+rule D4 applies to its bands makes them a finding at development. The pattern is D4
+finding 6's — under-prediction where the bank lends — with one difference: here the Approve
+zone misses on all held-out applicants too, not only on the booked. The booked Decline zone's
+over-prediction is the selection effect D4 sees in its band D: booking was drawn from the
+true PD, so the booked files the model would decline are the ones whose true risk was lower
+than their PD.
+
+**Impact.** The PD of an approved file is too low. The decision itself is not affected —
+the Approve zone is a position in the ranking, not a PD limit — but any use of the PD as a
+default rate is: expected loss on approved files, a portfolio PD built from them, or a
+comparison of the PD with a risk appetite stated in PD terms. Pricing takes its PD from the
+scorecard (D6), not from this model, so the rate is not affected by this finding; it is
+affected by D4 finding 6, which is in the same place.
+
+**Compensating control.** At the next retrain, add a calibration step to the PD (Platt or
+isotonic, fitted on rows the trees were not fitted on), then recalibrate the zones and
+re-verify the gates ([5.9](gate.qmd)). Until then, monitor observed / predicted by zone on
+each booked cohort with matured outcomes, against the floor; trigger 3 of the monitoring
+plan applies to it as to any zone ([5.8](monitoring.qmd#adj-redevelopment-triggers)); and
+treat the PD as a ranking, not a default rate (a prohibited use, [5.1](purpose.qmd#prohibited-uses)).
+**Owner:** model developer.
+
+## Finding 4 — The zone cutoffs are taken over the held-out rows too {#adj-finding-4}
+
+**Finding.** `train.py` sets `t_low` and `t_high` as quantiles of the model's PD over all
+{{< var adj.n_applicants >}} applicants ([5.3](methodology.qmd#adj-pd-zones)). The
+{{< var adj.n_test >}} held-out rows are among them, so the rows used to measure the
+decisions also helped set a policy parameter.
+
+**Evidence.** The committed cutoffs are {{< var adj.t_low >}} and {{< var adj.t_high >}}.
+Taken over the training rows alone they would be {{< var adj.trainonly.t_low >}} and
+{{< var adj.trainonly.t_high >}}. Re-running `decide` on the held-out applicants with those
+cutoffs changes {{< var adj.trainonly.changed >}} of {{< var adj.n_test >}} decisions, and
+moves the decision mix to {{< var adj.trainonly.mix.Approve >}} /
+{{< var adj.trainonly.mix.Refer >}} / {{< var adj.trainonly.mix.Decline >}}, against the
+committed {{< var adj.mix.Approve >}} / {{< var adj.mix.Refer >}} / {{< var adj.mix.Decline >}}
+([5.6](sensitivity.qmd)). The training-only cutoffs are quantiles of in-sample PDs — the
+trees were fitted on those rows — so they are not an out-of-sample recalibration either
+([5.4](assumptions.qmd#adj-thresholds-are-quantiles)); they show only how much the held-out
+rows moved the cutoffs.
+
+**Impact.** Immaterial in effect: a handful of held-out decisions, and the held-out decision
+mix and outcomes in [5.5](performance.qmd) are essentially what an untouched held-out set
+would show. It is a control weakness, not a performance problem: the held-out set should
+play no part in any fitted value, and here it plays a small one. The gates are unaffected:
+AUC and lift are measured on the PD, which the cutoffs do not touch.
+
+**Compensating control.** At the next retrain, take the cutoffs from the training rows only,
+and preferably from out-of-sample PDs (cross-validated predictions on the training rows), so
+that the zones are set on PDs that behave like a new applicant's. No interim action: this
+record is the control. **Owner:** model developer.
+
+## Finding 5 — The lift function's name misstates what it measures {#adj-finding-5}
+
+**Finding.** The lift gate is computed by `top_ventile_lift`. A ventile is a twentieth; the
+function measures the top {{< var adj.lift_top_share >}}.
+
+**Evidence.** The function cuts at the 80th percentile of the PD:
+
+```python
+def top_ventile_lift(y_true, pd_hat):                     # adjudication/src/train.py
+    y = np.asarray(y_true); p = np.asarray(pd_hat)
+    cut = np.quantile(p, 0.80)
+    top = y[p >= cut]
+    base = y.mean()
+    return float(top.mean() / base) if base > 0 else 0.0
+```
+
+Measured on the function rather than read from its code — one default placed on the riskiest
+of 10,000 ranked rows, so that lift is the inverse of the top group's share — the top group
+is {{< var adj.lift_top_share >}} of the rows (`wiki/facts/adj_facts.py::lift_top_share`).
+Everything else agrees with the measurement: the module docstring (`top-20% lift`), the
+validation report, the metadata key (`top20_lift`) and `verify.py`'s own recomputation, which
+cuts at the same quantile and prints `top-20% lift`.
+
+**Impact.** None on the number: the lift and the gate are what the documentation says. The
+risk is to a reviewer who reads the function name and takes the gate to be on the riskiest
+twentieth — a stricter test than the one run — or who reimplements it from the name and gets
+a different number.
+
+**Compensating control.** Rename the function to what it measures at the next change to
+`train.py`, with the facts and tests that import it. Until then, this record and the
+generated label `Top-20% lift` in every table are the control. **Owner:** model developer.
+
+## Observations {#adj-observations}
+
+Recorded but not raised as findings. Each is policy working as written, minor on this data,
+or covered by a control above, and each is re-examined at redevelopment.
+
+| Observation | Evidence | Why not a finding | Action |
+|---|---|---|---|
+| Hard knockouts decide most Declines | {{< var adj.decline.knockout_share >}} of the {{< var adj.decline.n >}} held-out Declines carry a knockout; knockouts overturn the PD zone on {{< var adj.rule.knockout_overturns.n >}} held-out files ([5.3](methodology.qmd#adj-knockouts-dominate)) | The knockouts are credit policy, applied as written; the decisions rank against outcomes ([5.5](performance.qmd#adj-decisions-and-outcomes)) | Read the gates as gates on the PD, not on the decision; monitor the knockout share of Declines ([5.8](monitoring.qmd#adj-rule-hits)) |
+| The top SHAP reasons on Declines are the score | `{{< var adj.decline.shap1.feature >}}` in {{< var adj.decline.shap1.share >}} and `{{< var adj.decline.shap2.feature >}}` in {{< var adj.decline.shap2.share >}} of held-out Declines' top three; the two are one signal ([5.5](performance.qmd#adj-reasons-among-declines)) | A correct attribution of what the model uses; the dependency on D4 is documented (D3) | Give applicant-facing reasons from the score's own exact codes where a SHAP reason is the score; weigh dropping one of the two columns at redevelopment |
+| No calibration miss below the floor | Every zone outside the tolerance rests on at least {{< var monitoring.min_band_defaults >}} defaults, and all are in finding 3 ([5.5](performance.qmd#adj-calibration)) | Nothing to record below the floor on this data | Zones below the floor on a future cohort are watched, not acted on ([5.8](monitoring.qmd#adj-redevelopment-triggers)) |
+| A missing input is scored as zero, and a zero coverage ratio is a knockout | `compute_adjudication_features` and `decide` both fill missing values with zero; `dscr` of zero is below the floor ([5.6](sensitivity.qmd#reduced-input-refits-not-run)) | The generated data have no missing values | Refer incomplete applications in any production use, rather than decline them for a reason that is not true |
+| The v1 adjudication endpoint returns no model reasons | `/api/adjudicate/{business_id}` returns rule hits only; SHAP reasons are served by the v2 workbench ([5.1](purpose.qmd#who-consumes-it-and-how)) | Every Decline with a reason string has a knockout behind it, and the v2 workbench serves the model's reasons | Any adverse-action use takes its reasons from the workbench's decision view, not from the v1 endpoint |

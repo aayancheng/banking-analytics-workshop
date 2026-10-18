@@ -1,0 +1,114 @@
+---
+title: "5.2 Data and sample"
+order: 2
+---
+
+## Source
+
+The same file as the scorecard, `shared/data/raw/businesses.parquet`:
+{{< var adj.n_applicants >}} applicants, one row each, drawn by the platform's data
+generator ([D2](../d2-data.qmd)). The target is `default`, which the generator gives to every
+applicant, booked or not.
+
+## Features {#adj-features}
+
+The model uses the {{< var adj.n_features >}} columns of `ADJ_FEATURE_COLUMNS`
+(`adjudication/src/feature_engineering.py`). `compute_adjudication_features` reads most
+of them from the data, derives two ratios, and adds the scorecard's two outputs:
+
+| Kind | Columns |
+|---|---|
+| Application and firmographic | `years_in_business`, `employees`, `annual_revenue`, `requested_amount`, `term_months`, `collateral_flag` |
+| Affordability and financial ratios | `dscr`, `leverage`, `current_ratio`, `debt_to_income` (derived), `utilization`, `profit_margin` (derived) |
+| Bureau (credit file) | `credit_history_months`, `prior_delinquencies`, `trade_lines`, `public_records` |
+| The scorecard's output (D4) | `business_score`, `pd_score` |
+| Categorical | `industry`, `entity_type`, `loan_purpose` |
+
+The two derived ratios use the same formulas as the scorecard's feature engineering
+(`debt_to_income` is total debt over net income, `profit_margin` net income over revenue).
+The three categorical columns are passed to LightGBM as categories. Every other column is
+made numeric, and any missing or non-numeric value becomes zero; the generated data contain
+none, so on this data the rule changes nothing. The same holds in the policy layer, where a
+missing value has a sharper effect ([5.7](limitations.qmd#adj-observations)).
+
+Several of these columns have no causal role in how the generator draws default — the
+structural zeros `industry`, `entity_type`, `loan_purpose`, `term_months`,
+`collateral_flag`, `trade_lines` and `employees` — and `requested_amount` is a proxy for
+revenue ([glossary](../../reference/glossary.qmd)). D4 raises the same issue for its own
+three structural zeros (D4 finding 3). Here they are left in, and their fitted weight has
+not been measured feature by feature; the SHAP reasons in
+[5.5](performance.qmd#adj-reasons-among-declines) show which features the model leans on
+for its Declines, and none of the structural zeros is among the top three.
+
+## Split and seed
+
+The split is drawn in `adjudication/src/train.py` with the platform seed and the same
+stratification as the scorecard's:
+
+```python
+X_tr, X_te, y_tr, y_te, idx_tr, idx_te = train_test_split(     # adjudication/src/train.py
+    X, y, np.arange(len(X)), test_size=0.2, random_state=SEED, stratify=y)
+```
+
+That gives {{< var adj.n_train >}} training rows and {{< var adj.n_test >}} held-out rows
+(the held-out {{< var adj.test_share >}}). **They are the scorecard's rows.** `train.py`
+does not check this itself; the facts behind this chapter redraw the split and assert that
+its indices equal the scorecard's (`wiki/facts/adj_facts.py`):
+
+```python
+assert np.array_equal(tr, split.idx_tr) and np.array_equal(te, split.idx_te), \
+    "adjudication's split no longer matches the score split"
+```
+
+Two consequences. Every held-out comparison between D4 and D5 in this chapter is on the
+same applicants. And the scorecard's PD, an input here, was itself fitted on the same
+{{< var adj.n_train >}} training rows, so the held-out rows are unseen by both stages: the
+`pd_score` a held-out applicant carries is an out-of-sample score, as it would be for a new
+applicant.
+
+## Two populations
+
+As in D4, the model **trains and gates on applicants, while the bank lends to the ones it
+books.** Within the held-out split:
+
+{{< include ../../_generated/adj-populations.md >}}
+
+The gates ([5.9](gate.qmd)) are measured on the first row. Lift is the default rate among
+the riskiest {{< var adj.lift_top_share >}} of the rows, ranked by the model's PD, divided by
+the default rate of all of them. On the held-out booked, AUC is below the AUC gate value
+while lift still passes: finding 1 in [5.7](limitations.qmd).
+
+The booked population here is the generator's, not this model's: `booked` is drawn from the
+true PD with noise and stands in for the bank's historical lending decision
+([D2](../d2-data.qmd#two-populations-applicants-and-booked); [5.1](purpose.qmd#the-population-it-is-for)).
+
+## Leakage controls
+
+The platform's deny-list (`shared/config.py::LEAKAGE_COLUMNS`,
+[D2](../d2-data.qmd#leakage-controls)) is enforced for adjudication at all three points:
+
+1. **At feature construction.** `compute_adjudication_features` raises before returning if
+   any column of `ADJ_FEATURE_COLUMNS` is on the deny-list:
+
+   ```python
+   leaked = [c for c in ADJ_FEATURE_COLUMNS if c in LEAKAGE_COLUMNS]
+   if leaked:
+       raise ValueError(f"Leakage columns in feature set: {leaked}")
+   ```
+
+2. **At training.** `train.py` asserts the same before fitting:
+
+   ```python
+   assert set(ADJ_FEATURE_COLUMNS).isdisjoint(set(LEAKAGE_COLUMNS)), "leakage in features"
+   ```
+
+3. **In the test suite.** `tests/test_leakage.py::test_adjudication_features_are_leakage_free`.
+
+The deny-list includes `booked` and the generator's true PD (`pd_default_origination`).
+Adjudication takes its score and PD from `predict_score_pd`, the saved scorecard, never
+from the generator.
+
+## Exclusions
+
+None. Every applicant is in either the training or the held-out split, and every applicant
+is scored and decided by the portal.

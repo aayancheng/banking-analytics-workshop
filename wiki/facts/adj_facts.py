@@ -35,6 +35,13 @@ DECLINES = "held-out Declines (adjudication split, seed 42)"
 TRAIN = "training 80% of applicants (adjudication split, seed 42)"
 ALL = "all 12,000 applicants"
 POLICY_POP = "policy constant"
+MODULE_POP = "module constant"
+TRAIN_INSAMPLE = ("training 80% of applicants, in-sample model PDs (the model was fitted on "
+                  "these rows, so their PDs spread wider than out-of-sample ones: the 55% "
+                  "quantile is biased low); not an out-of-sample recalibration")
+HIT = " -- rule hits: a file is counted when the rule fires, whatever decide() finally returns"
+OV_HIT = (" -- rule hits: an override fires only on a PD-zone Approve, and a knockout on the "
+          "same file still makes it a Decline")
 
 MODEL = "adjudication/models/adjudication_model.pkl"
 POLICY = "adjudication/models/policy_config.json"
@@ -43,6 +50,7 @@ SRC_DECIDE = "adjudication.src.policy.decide"
 SRC_SPLIT = "adjudication.src.train split (train_test_split, seed 42, stratified)"
 SRC_LIFT = "adjudication.src.train.top_ventile_lift"
 SRC_CAL = "adjudication.src.train calibration (np.quantile of model PD, rounded 4dp)"
+SRC_HITS = "adjudication.src.policy.decide (rule hits read from decision_reasons)"
 SRC_SHAP = "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap"
 DECISIONS = ["Approve", "Refer", "Decline"]
 Q_LOW, Q_HIGH = 0.55, 0.90        # the quantiles train.py calibrates t_low / t_high at
@@ -103,9 +111,11 @@ def compute(split) -> dict[str, Fact]:
     put("adj.n_applicants", int(len(biz)), ",d", SRC_SPLIT, ALL)
     put("adj.test_share", len(te) / len(biz), ".0%", SRC_SPLIT, ALL)
     put("adj.n_features", len(ADJ_FEATURE_COLUMNS), "d",
-        "adjudication.src.feature_engineering.ADJ_FEATURE_COLUMNS", HOLDOUT)
-    put("adj.gate_auc", float(AUC_GATE), ".2f", "adjudication.src.train.AUC_GATE", HOLDOUT)
-    put("adj.gate_lift", float(LIFT_GATE), ".1f", "adjudication.src.train.LIFT_GATE", HOLDOUT)
+        "adjudication.src.feature_engineering.ADJ_FEATURE_COLUMNS", MODULE_POP)
+    put("adj.gate_auc", float(AUC_GATE), ".2f", "adjudication.src.train.AUC_GATE",
+        POLICY_POP + " (gate, measured on the held-out 20% of applicants)")
+    put("adj.gate_lift", float(LIFT_GATE), ".1f", "adjudication.src.train.LIFT_GATE",
+        POLICY_POP + " (gate, measured on the held-out 20% of applicants)")
     put("adj.auc", float(roc_auc_score(y_te, p_te)), ".4f", SRC_PD, HOLDOUT)
     put("adj.lift", top_ventile_lift(y_te, p_te), ".2f", SRC_LIFT, HOLDOUT)
     put("adj.lift_top_share", lift_top_share(), ".0%", SRC_LIFT,
@@ -163,11 +173,17 @@ def compute(split) -> dict[str, Fact]:
 
     # --- calibration by PD zone alone (item 8) ---
     z = _zone(p_te, cfg)
+    # the zone shares the calibration aims at, by construction, over the rows it ran on
+    for k, v in [("Approve", Q_LOW), ("Refer", Q_HIGH - Q_LOW), ("Decline", 1 - Q_HIGH)]:
+        put(f"adj.zone_target.{k}", v, ".0%",
+            "adjudication.src.train calibration quantiles (55% / 90%)",
+            "policy constant (share of all 12,000 applicants' PDs in each zone, by construction)")
     for name, m, pop in pops[:2]:
         for k in DECISIONS:
             mk = m & (z == k)
             obs, pred = float(y_te[mk].mean()), float(p_te[mk].mean())
             put(f"adj.zone.{name}.{k}.n", int(mk.sum()), ",d", SRC_PD, pop)
+            put(f"adj.zone.{name}.{k}.share", float(mk.sum() / m.sum()), ".1%", SRC_PD, pop)
             put(f"adj.zone.{name}.{k}.defaults", int(y_te[mk].sum()), ",d",
                 "businesses.default", pop)
             put(f"adj.zone.{name}.{k}.observed", obs, ".1%", "businesses.default", pop)
@@ -178,15 +194,17 @@ def compute(split) -> dict[str, Fact]:
     rules = _rules(cfg)
     for key, (kind, text) in rules.items():
         hit = np.array([text in r for r in reasons])
-        put(f"adj.rule.{key}.n", int(hit.sum()), ",d", SRC_DECIDE, HOLDOUT)
-        put(f"adj.rule.{key}.share", float(hit.mean()), ".1%", SRC_DECIDE, HOLDOUT)
+        pop_hit = HOLDOUT + (OV_HIT if kind == "override" else HIT)
+        put(f"adj.rule.{key}.n", int(hit.sum()), ",d", SRC_HITS, pop_hit)
+        put(f"adj.rule.{key}.share", float(hit.mean()), ".1%", SRC_HITS, pop_hit)
         put(f"adj.rule.{key}.text", text, "", SRC_DECIDE, POLICY_POP)
         put(f"adj.rule.{key}.kind", kind, "", "adjudication.src.policy (decision order)",
             POLICY_POP)
     # the same rules over every applicant: a rule that never fires anywhere is inert
     reasons_all = decide(X_all, p_all, cfg)["decision_reasons"].tolist()
-    for key, (_, text) in rules.items():
-        put(f"adj.rule.{key}.n_all", sum(text in r for r in reasons_all), ",d", SRC_DECIDE, ALL)
+    for key, (kind, text) in rules.items():
+        put(f"adj.rule.{key}.n_all", sum(text in r for r in reasons_all), ",d", SRC_HITS,
+            ALL + (OV_HIT if kind == "override" else HIT))
     rev = np.maximum(X_all["annual_revenue"].to_numpy(dtype=float), 1.0)
     put("adj.max_req_to_rev", float((X_all["requested_amount"].to_numpy(dtype=float) / rev).max()),
         ".2f", "requested_amount / annual_revenue, as decide() computes it", ALL)
@@ -198,12 +216,12 @@ def compute(split) -> dict[str, Fact]:
     ov_texts = known - ko_texts
     any_ko = np.array([bool(ko_texts & set(r)) for r in reasons])
     any_ov = np.array([bool(ov_texts & set(r)) for r in reasons])
-    put("adj.rule.any_knockout.n", int(any_ko.sum()), ",d", SRC_DECIDE, HOLDOUT)
-    put("adj.rule.any_knockout.share", float(any_ko.mean()), ".1%", SRC_DECIDE, HOLDOUT)
-    put("adj.rule.any_override.n", int(any_ov.sum()), ",d", SRC_DECIDE, HOLDOUT)
-    put("adj.rule.any_override.share", float(any_ov.mean()), ".1%", SRC_DECIDE, HOLDOUT)
+    put("adj.rule.any_knockout.n", int(any_ko.sum()), ",d", SRC_HITS, HOLDOUT + HIT)
+    put("adj.rule.any_knockout.share", float(any_ko.mean()), ".1%", SRC_HITS, HOLDOUT + HIT)
+    put("adj.rule.any_override.n", int(any_ov.sum()), ",d", SRC_HITS, HOLDOUT + OV_HIT)
+    put("adj.rule.any_override.share", float(any_ov.mean()), ".1%", SRC_HITS, HOLDOUT + OV_HIT)
     any_hit = np.array([len(r) > 0 for r in reasons])
-    put("adj.rule.any.n", int(any_hit.sum()), ",d", SRC_DECIDE, HOLDOUT)
+    put("adj.rule.any.n", int(any_hit.sum()), ",d", SRC_HITS, HOLDOUT + HIT)
     # a knockout that overturned the PD zone: zone said Approve or Refer, decide() said Decline
     put("adj.rule.knockout_overturns.n", int((any_ko & (z != "Decline")).sum()), ",d",
         SRC_DECIDE, HOLDOUT)
@@ -222,6 +240,11 @@ def compute(split) -> dict[str, Fact]:
         put(f"adj.sens.{name}.changed", int((d2 != d).sum()), ",d", src, HOLDOUT)
     put("adj.sens.step", SENS_STEP, ".0%", "wiki.facts.adj_facts.SENS_STEP", POLICY_POP)
 
+    # --- business_score and pd_score carry one signal: the score never rises with the PD ---
+    o = np.argsort(X_all["pd_score"].to_numpy(), kind="stable")
+    put("adj.score_pd.order_breaks", int((np.diff(X_all["business_score"].to_numpy()[o]) > 0).sum()),
+        ",d", "predict_score_pd: business_score in ascending pd order, rises counted", ALL)
+
     # --- agreement with the scorecard's PD, zone rule alone (item 5) ---
     z_score = _zone(X_all["pd_score"].to_numpy()[te], cfg)
     src_agree = "PD-zone rule on predict_score_pd's pd vs the LightGBM PD"
@@ -235,16 +258,18 @@ def compute(split) -> dict[str, Fact]:
     dm = d == "Decline"
     n_dec = int(dm.sum())
     put("adj.decline.n", n_dec, ",d", SRC_DECIDE, DECLINES)
-    put("adj.decline.rule_share", float(any_hit[dm].mean()), ".1%", SRC_DECIDE, DECLINES)
-    put("adj.decline.knockout_share", float(any_ko[dm].mean()), ".1%", SRC_DECIDE, DECLINES)
+    put("adj.decline.rule_share", float(any_hit[dm].mean()), ".1%", SRC_HITS, DECLINES + HIT)
+    put("adj.decline.knockout_share", float(any_ko[dm].mean()), ".1%", SRC_HITS,
+        DECLINES + HIT)
     by_text = {t: k for k, (_, t) in rules.items()}
     rule_counts = Counter(s for r, m in zip(reasons, dm) if m for s in r)
     top_rules = sorted(rule_counts.items(), key=lambda kv: (-kv[1], kv[0]))[:3]
     for i, (text, n) in enumerate(top_rules, 1):
-        put(f"adj.decline.rule{i}.reason", text, "", SRC_DECIDE, DECLINES)
-        put(f"adj.decline.rule{i}.key", by_text[text], "", SRC_DECIDE, DECLINES)
-        put(f"adj.decline.rule{i}.n", int(n), ",d", SRC_DECIDE, DECLINES)
-        put(f"adj.decline.rule{i}.share", n / n_dec, ".1%", SRC_DECIDE, DECLINES)
+        pop_d = DECLINES + (OV_HIT if text in ov_texts else HIT)
+        put(f"adj.decline.rule{i}.reason", text, "", SRC_HITS, pop_d)
+        put(f"adj.decline.rule{i}.key", by_text[text], "", SRC_HITS, pop_d)
+        put(f"adj.decline.rule{i}.n", int(n), ",d", SRC_HITS, pop_d)
+        put(f"adj.decline.rule{i}.share", n / n_dec, ".1%", SRC_HITS, pop_d)
 
     sv = shap.TreeExplainer(model).shap_values(X.iloc[te][dm])
     sv = sv[1] if isinstance(sv, list) else sv          # as train.py handles it
@@ -258,11 +283,13 @@ def compute(split) -> dict[str, Fact]:
 
     # --- candidate finding: thresholds calibrated on rows that include the held-out (7a) ---
     tr_low, tr_high = (round(float(np.quantile(p_all[tr], q)), 4) for q in (Q_LOW, Q_HIGH))
-    put("adj.trainonly.t_low", tr_low, ".4f", SRC_CAL, TRAIN)
-    put("adj.trainonly.t_high", tr_high, ".4f", SRC_CAL, TRAIN)
+    src_tr = SRC_CAL + " applied to the in-sample PDs of the training rows only"
+    put("adj.trainonly.t_low", tr_low, ".4f", src_tr, TRAIN_INSAMPLE)
+    put("adj.trainonly.t_high", tr_high, ".4f", src_tr, TRAIN_INSAMPLE)
     c3 = replace(cfg, t_low=tr_low, t_high=tr_high)
     d3 = decide(X_all.iloc[te], p_te, c3)["decision"].to_numpy()
-    src3 = f"{SRC_DECIDE} with thresholds from training-row PDs only"
+    src3 = (f"{SRC_DECIDE} with thresholds from in-sample training-row PDs only "
+            "(not an out-of-sample recalibration)")
     for k in DECISIONS:
         put(f"adj.trainonly.mix.{k}", float((d3 == k).mean()), ".1%", src3, HOLDOUT)
     put("adj.trainonly.changed", int((d3 != d).sum()), ",d", src3, HOLDOUT)

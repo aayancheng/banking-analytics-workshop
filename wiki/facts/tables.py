@@ -126,8 +126,8 @@ def adj_cutoff_table(t: dict[str, str]) -> str:
 
 
 def adj_rule_table(t: dict[str, str]) -> str:
-    return _table(["Rule", "Kind", "Reason string", "Held-out files hit", "Share of held-out",
-                   "All applicants hit"],
+    return _table(["Rule", "Kind", "Reason string", "Rule hits, held-out",
+                   "Share of held-out files hit", "Rule hits, all applicants"],
                   [[f"`{r}`", t[f"adj.rule.{r}.kind"], f"`{t[f'adj.rule.{r}.text']}`",
                     t[f"adj.rule.{r}.n"], t[f"adj.rule.{r}.share"], t[f"adj.rule.{r}.n_all"]]
                    for r in ADJ_RULES])

@@ -1,0 +1,213 @@
+---
+title: "5.3 Methodology and alternatives"
+order: 3
+---
+
+Adjudication is two components run in sequence. A gradient-boosted model estimates each
+applicant's probability of default; a policy layer, which is not fitted to anything, turns
+that PD and a handful of raw values into Approve, Refer or Decline. Both are described
+here in the order the code runs them.
+
+## The model: LightGBM
+
+A gradient-boosted tree ensemble, fitted on the {{< var adj.n_train >}} training rows
+([5.2](data.qmd#split-and-seed)) with fixed hyperparameters and the platform seed:
+
+```python
+model = LGBMClassifier(                                  # adjudication/src/train.py
+    n_estimators=400, learning_rate=0.03, num_leaves=31,
+    subsample=0.8, colsample_bytree=0.8, random_state=SEED, n_jobs=-1, verbose=-1,
+)
+model.fit(X_tr, y_tr, categorical_feature=ADJ_CATEGORICAL)
+```
+
+The hyperparameters are constants, not the result of a search, and there is no early
+stopping and no separate validation set: the held-out rows play no part in fitting the
+trees. (They do enter the zone cutoffs, below.) The PD is `predict_proba`'s probability of the default class, uncalibrated: no
+Platt or isotonic step follows the fit. How well it is calibrated is measured, zone by
+zone, in [5.5](performance.qmd#adj-calibration).
+
+## PD zones, calibrated at training {#adj-pd-zones}
+
+After fitting, `train.py` sets the two zone cutoffs as quantiles of the model's PD — over
+**all** {{< var adj.n_applicants >}} applicants, training and held-out rows together — and
+writes them into `policy_config.json`:
+
+```python
+pd_full = model.predict_proba(X)[:, 1]                   # adjudication/src/train.py
+policy_d["t_low"] = float(round(np.quantile(pd_full, 0.55), 4))
+policy_d["t_high"] = float(round(np.quantile(pd_full, 0.90), 4))
+```
+
+By construction, then, {{< var adj.zone_target.Approve >}} of all applicants' PDs fall in
+the Approve zone, {{< var adj.zone_target.Refer >}} in the Refer zone and
+{{< var adj.zone_target.Decline >}} in the Decline zone. The committed cutoffs are
+`t_low` = {{< var adj.t_low >}} and `t_high` = {{< var adj.t_high >}}. They replace the seed
+values in `shared/config.py::ADJ_POLICY`, which are only placeholders. That the cutoffs are
+quantiles, and that the held-out rows are among the rows they are taken over, are
+discussed in [5.4](assumptions.qmd#adj-thresholds-are-quantiles) and finding 4 of
+[5.7](limitations.qmd).
+
+## The policy layer {#adj-policy-layer}
+
+`decide` (`adjudication/src/policy.py`) applies three steps, in this order, to every file:
+
+1. **Hard knockouts.** Four rules on raw values. Each one that fires is recorded, and the
+   file will be declined whatever its PD.
+2. **PD zones.** PD at or below `t_low`: Approve. At or above `t_high`: Decline. Between:
+   Refer.
+3. **Refer overrides.** Three rules that apply only to a file the zones put in Approve, and
+   only downgrade it to Refer. They never touch a Refer or a Decline.
+
+Then **knockouts win**: every file with a knockout is set to Decline last, overriding steps
+2 and 3. A file can therefore carry an override's reason string and still be declined: the
+override fired on its Approve-zone PD, and a knockout on the same file then set the
+decision. Every count of a rule in this chapter is a count of **rule hits** — files on
+which the rule fired — not of decisions the rule alone determined.
+
+```python
+# --- 1. hard knockouts ---                              # adjudication/src/policy.py
+m = dscr < config.dscr_floor; fire(m, f"dscr<{config.dscr_floor}"); knockout |= m
+m = pubrec > config.public_records_cap; fire(m, "public_records present"); knockout |= m
+m = delinq >= config.prior_delinq_cap; fire(m, f"prior_delinquencies>={config.prior_delinq_cap}"); knockout |= m
+m = lev > config.leverage_cap; fire(m, f"leverage>{config.leverage_cap}"); knockout |= m
+
+# --- 2. PD zones ---
+decision = np.where(pd_model <= config.t_low, "Approve",
+           np.where(pd_model >= config.t_high, "Decline", "Refer")).astype(object)
+
+# --- 3. refer overrides (only on current Approve) ---
+appr = decision == "Approve"
+thin_dscr = appr & (dscr >= config.dscr_floor) & (dscr < config.dscr_refer_hi)
+low_score = appr & (score < config.score_floor)
+big_req = appr & (req / rev > config.req_to_rev_cap)
+decision[thin_dscr | low_score | big_req] = "Refer"
+
+# knockouts win over everything
+decision[knockout] = "Decline"
+```
+
+The committed configuration, `adjudication/models/policy_config.json`:
+
+```json
+{
+  "t_low": 0.0955,
+  "t_high": 0.4943,
+  "dscr_floor": 1.0,
+  "dscr_refer_hi": 1.2,
+  "public_records_cap": 0,
+  "prior_delinq_cap": 3,
+  "leverage_cap": 6.0,
+  "req_to_rev_cap": 0.75,
+  "score_floor": 600
+}
+```
+
+Only `t_low` and `t_high` are set by training. The other seven are policy values copied
+from `ADJ_POLICY` unchanged: limits a credit officer would set, not estimates
+([5.4](assumptions.qmd#adj-knockout-limits-are-policy)).
+
+{{< yt S3-c2 >}}
+
+### Rule hits on the held-out applicants
+
+{{< include ../../_generated/adj-rules.md >}}
+
+Two rules have no hits on any of the {{< var adj.n_applicants >}} applicants: the leverage
+cap and the request-to-revenue cap. Neither can fire on this data — finding 2 in
+[5.7](limitations.qmd).
+
+## Knockouts drive most Declines {#adj-knockouts-dominate}
+
+The policy layer is not a light touch on the model. Of the {{< var adj.decline.n >}}
+held-out Declines, **{{< var adj.decline.knockout_share >}} carry a hard knockout**; on the
+rest, the PD alone put the file in the Decline zone. On {{< var adj.rule.knockout_overturns.n >}}
+held-out files a knockout overturned the PD zone, declining a file the model had placed in
+Approve or Refer. On the held-out applicants as a whole, {{< var adj.rule.any_knockout.share >}}
+of files ({{< var adj.rule.any_knockout.n >}}) hit at least one knockout, while the model's
+own Decline zone holds {{< var adj.zone.everyone.Decline.n >}} of them
+([5.5](performance.qmd#adj-calibration)).
+
+**Adjudication is largely a rules engine with a model attached.** The model's PD decides
+the split between Approve and Refer, and a small Decline zone; the knockouts decide most of
+who is declined. A validator should read the gates in [5.9](gate.qmd) with that in mind:
+they measure the PD's ranking, which governs a minority of the Declines. The decisions
+themselves are measured against outcomes in [5.5](performance.qmd#adj-decisions-and-outcomes).
+This dominance is recorded as an observation in [5.7](limitations.qmd#adj-observations),
+not a finding: the knockouts are policy, and they are doing what they say.
+
+## Why a gradient-boosted model {#adj-why-lightgbm}
+
+The model was built as a **challenger to the scorecard**: a flexible learner, given every
+input the scorecard has plus the raw application fields and the score itself, to find
+whatever signal a binned, additive model leaves behind — interactions, non-monotonic
+effects, thresholds the bins smooth over. If such signal existed, the challenger would rank
+the same applicants better than the scorecard.
+
+It does not. On the same held-out applicants ([5.2](data.qmd#split-and-seed)):
+
+| Model | Held-out AUC, same held-out applicants | Held-out AUC, same held-out booked |
+|---|---|---|
+| Business Credit Score (D4) | {{< var score.pop.everyone.auc >}} | {{< var score.pop.booked.auc >}} |
+| Adjudication, LightGBM | {{< var adj.pop.everyone.auc >}} | {{< var adj.pop.booked.auc >}} |
+
+The challenger is slightly below the scorecard on both populations, by less than the
+±{{< var adj.auc_ci_half >}} half-width of its bootstrap interval
+([5.5](performance.qmd#adj-discrimination)): no detectable difference, and no gain. D4
+records the same comparison from the scorecard's side and keeps the scorecard as the score
+spine (D4.3). This chapter records the other half: the model that decides adjudication adds
+no ranking power over the score it consumes, and on the booked it sits below the AUC gate
+(finding 1, [5.7](limitations.qmd)).
+
+### Alternative considered: PD zones on the scorecard's PD
+
+The simplest alternative is to drop the LightGBM and apply the same policy layer to the
+scorecard's PD (`pd_score`) directly. With the PD-zone rule alone, the two PDs place
+{{< var adj.score_zone.differ.share >}} of held-out files ({{< var adj.score_zone.differ.n >}})
+in a different zone, and **{{< var adj.score_zone.opposite.n >}}** in opposite zones — no
+file is Approve under one and Decline under the other. The cutoffs here are the LightGBM's;
+a scorecard version would recalibrate its own at the same quantiles.
+
+The alternative has not been adopted, and it has not been rejected on evidence either: on
+this data the LightGBM buys no discrimination, and it costs the exact reason codes (below).
+What it does give is a model that can use inputs the scorecard does not have —
+`requested_amount`, `term_months`, `loan_purpose`, `collateral_flag` — should a real book
+show them to carry signal. On the generated data none of them has a causal role in default;
+`requested_amount` only borrows revenue's signal ([D2](../d2-data.qmd)). The choice is recorded as an open question for the next
+redevelopment ([5.8](monitoring.qmd#adj-redevelopment-triggers)), not as a finding.
+
+## Reason codes: SHAP, not weights of evidence {#adj-reason-codes}
+
+The scorecard's reason codes are exact by construction: its log-odds are an intercept plus
+one WoE × coefficient term per feature, and the adverse reasons are the largest terms
+(D4.3). A tree ensemble has no such decomposition. Its reasons come from SHAP values:
+
+```python
+explainer = shap.TreeExplainer(model)                    # adjudication/src/train.py
+sv = explainer.shap_values(X_te.iloc[:50])
+sv = sv[1] if isinstance(sv, list) else sv
+_ = top_adverse_shap(sv, ADJ_FEATURE_COLUMNS, k=3)
+```
+
+`top_adverse_shap` keeps, for each file, the three features with the largest positive SHAP
+value — the largest pushes towards default — and drops any non-positive one. `TreeExplainer`
+is exact for a tree ensemble in one sense: the base value plus the SHAP values reproduces the
+model's log-odds, which the v2 workbench checks for every ledger it serves (`app/v2/ledgers.py`).
+It is still an *attribution method*, with choices of its own: how credit is shared between
+correlated features is one of them, and a validator has to validate the method as well as the
+model. `train.py` runs it on fifty held-out rows as a sanity check only; nothing is gated on it.
+
+The sharpest case is the model's two strongest inputs. `business_score` and `pd_score` are
+two transforms of the scorecard's single log-odds: over all {{< var adj.n_applicants >}}
+applicants, sorted by `pd_score`, `business_score` rises {{< var adj.score_pd.order_breaks >}}
+times. They are one signal in two columns, and SHAP splits its credit between them. A file
+whose top-three reasons are `pd_score` and `business_score` has been given one reason twice
+— and a reason that is itself a model output, not a fact about the business. What that means
+for adverse-action notices and for the dependency on D4 is in
+[5.5](performance.qmd#adj-reasons-among-declines).
+
+## Feature selection
+
+None, in the sense of a search: `ADJ_FEATURE_COLUMNS` is a fixed list
+([5.2](data.qmd#adj-features)). LightGBM's column subsampling (`colsample_bytree=0.8`)
+draws a random subset of the columns for each tree, which is regularisation, not selection.

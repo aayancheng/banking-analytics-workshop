@@ -1,0 +1,114 @@
+---
+title: "5.8 Monitoring plan"
+order: 8
+---
+
+## What is monitored
+
+Adjudication is monitored as two things: the model's PD, and the decisions the policy layer
+makes from it. Each new cohort of applicants is compared with the development sample and,
+once outcomes are known, measured against the development performance. The thresholds are
+the same policy constants D4 uses (`wiki/facts/policy.py`), printed here by name.
+
+| Metric | Population | Threshold | Frequency | Action on breach |
+|---|---|---|---|---|
+| PD-zone mix: PSI over the three zones | new applicants vs the held-out development applicants | below {{< var monitoring.psi_watch >}} stable; {{< var monitoring.psi_watch >}} to {{< var monitoring.psi_act >}} watch; above {{< var monitoring.psi_act >}} act | every cohort | Watch: find the inputs that moved, the score first. Act: review with the validator. |
+| Decision mix: PSI over Approve / Refer / Decline | new applicants vs the held-out development applicants | same | every cohort | As above; a shift with a stable zone mix points at the rules, not the model. |
+| Rule-hit rate, each of the seven rules | new applicants | a rule with no hits in a cohort; any rule's hit share moving by more than half its development share | every cohort | No hits: report to the policy owner as an untested control. A large move: check the input's source before the rule. |
+| Share of Declines carrying a knockout | new applicants | reported, not thresholded | every cohort | Read the PD gates against it. |
+| Observed / predicted default rate, by PD zone | booked loans with outcomes | ratio outside {{< var monitoring.ratio_lo >}} to {{< var monitoring.ratio_hi >}}, on at least {{< var monitoring.min_band_defaults >}} defaults | when outcomes mature | Below the floor: record and watch. At or above it: count toward trigger 3. |
+| Observed default rate, by decision | booked loans with outcomes | Approve above Refer, or Refer above Decline | when outcomes mature | The decisions no longer rank: review with the validator. |
+| AUC and lift, all applicants | the cohort's applicants with outcomes | below the gates, {{< var adj.gate_auc >}} and {{< var adj.gate_lift >}}× | when outcomes mature | Gate breach: redevelopment ([5.9](gate.qmd)). |
+| AUC and lift, booked only | the cohort's booked loans with outcomes | AUC falling more than {{< var adj.auc_ci_half >}} from development; lift below {{< var adj.gate_lift >}}× | when outcomes mature | Review with the validator; weigh gating on the booked (finding 1). |
+| Zone cutoffs at a retrain | the retrained model | either cutoff moving by more than {{< var adj.sens.step >}} of its committed value | every retrain | The mix was held and the risk accepted moved: the policy owner signs off the new cutoffs before they are used ([5.4](assumptions.qmd#adj-thresholds-are-quantiles)). |
+
+The booked rows are the control for finding 1; the zone calibration row for finding 3; the
+rule-hit row for finding 2; the cutoff row for the assumption that a fixed mix is the right
+policy. As in D4, the fall that triggers review on the booked AUC is the half-width of the
+all-applicant interval: the booked sample is smaller and its own interval wider, so the
+threshold is deliberately the stricter one.
+
+## Rule hits and dead rules {#adj-rule-hits}
+
+A policy rule that never fires is a control that cannot be shown to work. The rule-hit row
+above is the detection: every cohort's hit count for each of the seven rules, read from the
+reason strings `decide` writes. At development, two rules already have no hits — the leverage
+knockout and the large-request override — on all {{< var adj.n_applicants >}} applicants
+(finding 2). They are flagged from the first cohort, and stay flagged until the policy owner
+restates or removes them. A rule that *stops* firing after firing at development is a
+stronger signal: an input whose definition or source has changed.
+
+Hit counts are rule hits, not decisions: an override can fire on a file that a knockout then
+declines ([5.3](methodology.qmd#adj-policy-layer)).
+
+## Development baselines {#adj-development-baselines}
+
+What "no change" looks like, measured at development. The calibration baselines are on the
+held-out **booked** applicants, the population the calibration check monitors.
+
+| Metric | Development value | Population |
+|---|---|---|
+| AUC | {{< var adj.auc >}} | held-out applicants |
+| Lift, riskiest {{< var adj.lift_top_share >}} | {{< var adj.lift >}}× | held-out applicants |
+| AUC, booked only | {{< var adj.pop.booked.auc >}} | held-out booked applicants |
+| Lift, booked only | {{< var adj.pop.booked.lift >}}× | held-out booked applicants |
+| Decision mix, Approve / Refer / Decline | {{< var adj.mix.Approve >}} / {{< var adj.mix.Refer >}} / {{< var adj.mix.Decline >}} | held-out applicants |
+| PD-zone mix, Approve / Refer / Decline | {{< var adj.zone.everyone.Approve.share >}} / {{< var adj.zone.everyone.Refer.share >}} / {{< var adj.zone.everyone.Decline.share >}} | held-out applicants |
+| Declines carrying a knockout | {{< var adj.decline.knockout_share >}} | held-out Declines |
+| Zone cutoffs, `t_low` / `t_high` | {{< var adj.t_low >}} / {{< var adj.t_high >}} | quantiles over all applicants |
+
+| Rule | Development hit share | Population |
+|---|---|---|
+| `dscr_floor` knockout | {{< var adj.rule.dscr_floor.share >}} | held-out applicants |
+| `public_records` knockout | {{< var adj.rule.public_records.share >}} | held-out applicants |
+| `prior_delinquencies` knockout | {{< var adj.rule.prior_delinquencies.share >}} | held-out applicants |
+| `leverage` knockout | {{< var adj.rule.leverage.share >}} — no hits (finding 2) | held-out applicants |
+| `thin_dscr` override | {{< var adj.rule.thin_dscr.share >}} | held-out applicants |
+| `weak_score` override | {{< var adj.rule.weak_score.share >}} | held-out applicants |
+| `large_request` override | {{< var adj.rule.large_request.share >}} — no hits (finding 2) | held-out applicants |
+
+| PD zone | Observed / predicted | Defaults behind it | Population |
+|---|---|---|---|
+| Approve | {{< var adj.zone.booked.Approve.ratio >}} | {{< var adj.zone.booked.Approve.defaults >}} | held-out booked applicants |
+| Refer | {{< var adj.zone.booked.Refer.ratio >}} | {{< var adj.zone.booked.Refer.defaults >}} | held-out booked applicants |
+| Decline | {{< var adj.zone.booked.Decline.ratio >}} | {{< var adj.zone.booked.Decline.defaults >}} | held-out booked applicants |
+
+The Approve and Decline zones are already outside the tolerance at development, on enough
+defaults to count: finding 3, with its own control. The first cohorts with matured outcomes
+are read against trigger 3 for those two zones before any other.
+
+## Redevelopment triggers {#adj-redevelopment-triggers}
+
+Any one of these starts a redevelopment, with the validator informed:
+
+1. The all-applicant AUC or lift on a cohort with outcomes falls below its gate.
+2. PD-zone or decision-mix PSI above {{< var monitoring.psi_act >}}.
+3. A zone's observed / predicted ratio outside the tolerance in two consecutive cohorts, each
+   with at least {{< var monitoring.min_band_defaults >}} defaults behind that zone. Below
+   that count a breach is recorded and watched, not acted on. The Approve zone already
+   breaches at development (finding 3).
+4. A change to any input's definition or source — including any change to the scorecard,
+   which is an input ([D3](../d3-dependencies.qmd#what-a-scorecard-change-forces)).
+
+Two further events go to the credit policy owner rather than to redevelopment: a change to
+any policy value, after which [5.5](performance.qmd) and [5.6](sensitivity.qmd) are re-run;
+and a rule with no hits (above).
+
+A redevelopment is also where the open findings and observations of [5.7](limitations.qmd)
+are acted on, and where three questions this chapter leaves open are answered: whether the
+zones should sit on the scorecard's PD instead of the LightGBM's
+([5.3](methodology.qmd#alternative-considered-pd-zones-on-the-scorecards-pd)); how the model
+performs refitted on reduced inputs, with the score recomputed from them
+([5.6](sensitivity.qmd#reduced-input-refits-not-run)); and whether a calibrated PD changes
+the zones (finding 3). Every redevelopment re-runs [5.5](performance.qmd) and
+[5.6](sensitivity.qmd) and passes both gates.
+
+## What is automated today
+
+This plan is documented, not yet automated. The platform has one cohort of applicants, so
+there is no new population to compare. What runs today is the development side:
+`python verify.py` recomputes the held-out AUC and lift against its own copies of the gates
+([5.9](gate.qmd)), and recomputes every fact on these pages — every rule's hit count included
+— from the committed model, policy and data on every run ([D9](../d9-implementation.qmd)).
+A rule with no hits is visible in the generated rule table on every build, but nothing yet
+fails on it.

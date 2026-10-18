@@ -23,7 +23,12 @@ the tagged release.
 
 ## Open findings
 
-Raised by the documentation itself, in [D4.7](score/limitations.qmd). Each has a compensating control and an owner.
+Raised by the documentation itself, in each model chapter's part 7. Each has a compensating
+control and an owner, and each row is the chapter's own, word for word.
+
+### D4 Business Credit Score
+
+From [D4.7](score/limitations.qmd).
 
 | # | Finding | Evidence | Compensating control | Owner | Status |
 |--|--------------|----------------|------------------|-------|------|
@@ -33,6 +38,18 @@ Raised by the documentation itself, in [D4.7](score/limitations.qmd). Each has a
 | 4 | The score distribution is concentrated in one band. | {{< var score.band.D.n >}} of {{< var score.n_test >}} held-out applicants ({{< var score.band_d_share >}}) fall in band D, limiting discrimination inside it. | Downstream decisions use the PD, not the band alone; review band boundaries at redevelopment. | Model developer | open |
 | 5 | The weight of evidence of `leverage` is not monotonic, although the generator's effect of leverage is. | Read in bin order, WoE is not monotonic in {{< var score.woe_nonmonotonic >}}; `monotonic_trend` is left at optbinning's `"auto"` default. | Set `monotonic_trend` explicitly for each numeric feature at the next redevelopment and re-verify the gate; until then, discrimination is unaffected, since every performance figure is measured with these bins. | Model developer | open |
 | 6 | The model under-predicts default risk in band B on the booked population. | Observed / predicted {{< var score.band_booked.B.ratio >}} on the held-out booked in band B, outside the {{< var monitoring.ratio_lo >}}–{{< var monitoring.ratio_hi >}} tolerance, on {{< var score.band_booked.B.defaults >}} defaults (the monitoring floor is {{< var monitoring.min_band_defaults >}}). | Recalibrate band B, or apply a calibration overlay to it, at the next review; until then, monitor booked band B's observed / predicted on each cohort against the floor. | Model developer | open |
+
+### D5 Loan Adjudication
+
+From [D5.7](adjudication/limitations.qmd).
+
+| # | Finding | Evidence | Compensating control | Owner | Status |
+|--|--------------|----------------|------------------|-------|------|
+| 1 | On the loans the bank books, held-out AUC is below the AUC gate value, and below the scorecard the model consumes. | Held-out AUC {{< var adj.pop.everyone.auc >}} on all applicants (the gate, {{< var adj.gate_auc >}}); {{< var adj.pop.booked.auc >}} on the booked only, against the scorecard's {{< var score.pop.booked.auc >}} on the same rows. Lift on the booked, {{< var adj.pop.booked.lift >}}×, still clears its {{< var adj.gate_lift >}}× gate. | Report both populations on every run; track the booked-only AUC and lift beside the gates; at redevelopment, weigh gating on the booked population and placing the zones on the scorecard's PD instead. | Model developer | open |
+| 2 | Two policy rules can never fire on this data: the leverage cap and the request-to-revenue cap. | Leverage cap {{< var adj.policy.leverage_cap >}} against a largest leverage of {{< var adj.max_leverage >}}; request-to-revenue cap {{< var adj.policy.req_to_rev_cap >}} against a largest ratio of {{< var adj.max_req_to_rev >}}; {{< var adj.rule.leverage.n_all >}} and {{< var adj.rule.large_request.n_all >}} hits over all {{< var adj.n_applicants >}} applicants. | Treat both as untested controls: restate each limit on this data's definition of its ratio, or remove it, at the next policy review; until then, monitor every rule's hit rate and flag any rule with no hits. | Credit policy owner | open |
+| 3 | The Approve zone under-predicts default on held-out booked loans. | Observed / predicted {{< var adj.zone.booked.Approve.ratio >}} in the Approve zone on the held-out booked, on {{< var adj.zone.booked.Approve.defaults >}} defaults ({{< var adj.zone.everyone.Approve.ratio >}} on all held-out applicants); the booked Decline zone over-predicts ({{< var adj.zone.booked.Decline.ratio >}}, {{< var adj.zone.booked.Decline.defaults >}} defaults). Tolerance {{< var monitoring.ratio_lo >}}–{{< var monitoring.ratio_hi >}}; floor {{< var monitoring.min_band_defaults >}} defaults. | Calibrate the PD at the next retrain, then recalibrate the zones; until then, monitor observed / predicted by zone on booked cohorts against the floor, and never read the PD as a booked loan's default rate. | Model developer | open |
+| 4 | The PD-zone cutoffs are set as quantiles over all applicants, held-out rows included. | `t_low` {{< var adj.t_low >}} and `t_high` {{< var adj.t_high >}} from all {{< var adj.n_applicants >}} applicants; from the training rows' in-sample PDs alone, {{< var adj.trainonly.t_low >}} and {{< var adj.trainonly.t_high >}}, which change {{< var adj.trainonly.changed >}} of {{< var adj.n_test >}} held-out decisions. | Take the cutoffs from training rows only, preferably from out-of-sample PDs, at the next retrain. Immaterial in effect today: no interim action beyond this record. | Model developer | open |
+| 5 | The lift gate's function is named `top_ventile_lift` but measures the top {{< var adj.lift_top_share >}}. | Measured on the function, its top group is {{< var adj.lift_top_share >}} of the rows, not a twentieth; the module docstring, the validation report, the metadata key and `verify.py` all call it `top-20%` lift. | Rename the function at the next change to `train.py`. The number is right and the gate is unaffected; until then, this record is the control. | Model developer | open |
 
 ## Sign-off
 
