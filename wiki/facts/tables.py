@@ -330,6 +330,174 @@ def ews_ceiling_table(t: dict[str, str]) -> str:
     return _table(["", "Measured over", "AUC", "PR-AUC", "Top-decile capture"], rows)
 
 
+LI_FUNNEL = ["book", "prob", "pd", "amount", "roe"]
+LI_SENS = ["offer_quantile", "max_pd_quantile", "target_util", "pct_cap", "revenue_mult_cap"]
+LI_CAPS = [("headroom_to_target_util", "Headroom to target utilization"),
+           ("pct_cap", "Percentage of the current limit (`pct_cap`)"),
+           ("revenue_ceiling", "Revenue ceiling (`revenue_mult_cap`)")]
+
+
+def li_headline_table(t: dict[str, str]) -> str:
+    min_util, book_util = float(t["li.construct.min_util_amount"]), float(t["li.book_util"])
+    return _table(["Gate (`line_increase/src/train.py`)", "Measured on", "Value",
+                   "95% interval", "Gate", "Result", "Can fail?"], [
+        ["AUC", "held-out 20%", t["li.auc"], f"{t['li.boot.auc.lo']} – {t['li.boot.auc.hi']}",
+         f"≥ {t['li.gate.auc_min']}", _pass(t["li.auc"], t["li.gate.auc_min"]), "yes"],
+        ["Top-20% lift", "held-out 20%", t["li.lift"] + "×",
+         f"{t['li.boot.lift.lo']}× – {t['li.boot.lift.hi']}×", f"≥ {t['li.gate.lift_min']}×",
+         _pass(t["li.lift"], t["li.gate.lift_min"]), "yes"],
+        ["Accounts offered", "whole booked book", t["li.n_offered"], "", "> 0",
+         "pass" if int(t["li.n_offered"].replace(",", "")) > 0 else "**fail**", "yes"],
+        ["Cohort mean PD below the book's", "offered vs book",
+         f"{t['li.cohort_pd']} vs {t['li.book_pd']}", "", "cohort < book",
+         "pass" if float(t["li.cohort_pd"]) < float(t["li.book_pd"]) else "**fail**",
+         "yes" if not float(t["li.offer_max_pd"]) < float(t["li.book_pd"]) else
+         f"no: the PD ceiling {t['li.offer_max_pd']} is below the book mean"],
+        ["Cohort mean utilization above the book's", "offered vs book",
+         f"{t['li.cohort_util']} vs {t['li.book_util']}", "", "cohort > book",
+         "pass" if float(t["li.cohort_util"]) > book_util else "**fail**",
+         "yes" if not min_util > book_util else
+         f"no: every account with an amount is at ≥ {t['li.construct.min_util_amount']}"],
+        ["Aggregate incremental ROE", "offered cohort", t["li.agg_roe"], "",
+         f"≥ {t['li.gate.roe_hurdle']}", _pass(t["li.agg_roe"], t["li.gate.roe_hurdle"]),
+         f"no: every offer clears it alone (lowest {t['li.construct.min_roe_offers']})"],
+    ])
+
+
+def li_funnel_table(t: dict[str, str]) -> str:
+    return _table(["Step (`candidates.score_population`'s `eligible`, in order)", "Accounts",
+                   "Share of the book", "Removed at this step"],
+                  [[t[f"li.funnel.{s}.label"], t[f"li.funnel.{s}.n"], t[f"li.funnel.{s}.share"],
+                    "—" if s == "book" else t[f"li.funnel.{s}.dropped"]] for s in LI_FUNNEL] +
+                  [["`recommended_amount > 0` alone (not an offer)", t["li.n_amount_positive"],
+                    "", ""]])
+
+
+def li_cohort_table(t: dict[str, str]) -> str:
+    return _table(["Population", "n", "Line-increase good (the label)",
+                   "Deteriorated (the EWS label)", "Defaulted"], [
+        ["Offered, all (most are training rows)", t["li.n_offered"],
+         f"{t['li.offers.rate']} ({t['li.offers.events']})",
+         f"{t['li.offers.det.rate']} ({t['li.offers.det.events']})",
+         f"{t['li.offers.default.rate']} ({t['li.offers.default.events']})"],
+        ["Booked book", t["li.n_book"], t["li.base_rate"], t["li.book.det.rate"],
+         t["li.book.default.rate"]],
+        ["**Offered, held-out rows only**", t["li.offers.n_holdout"],
+         f"{t['li.offers_ho.observed']} ({t['li.offers_ho.events']}; predicted "
+         f"{t['li.offers_ho.predicted']}, {t['li.offers_ho.status']})",
+         f"{t['li.offers_ho.det.rate']} ({t['li.offers_ho.det.events']})",
+         f"{t['li.offers_ho.default.rate']} ({t['li.offers_ho.default.events']})"],
+        ["Held-out rows", t["li.n_test"], t["li.base_rate_holdout"], t["li.book_ho.det.rate"],
+         t["li.book_ho.default.rate"]],
+    ])
+
+
+def li_cohort_ews_table(t: dict[str, str]) -> str:
+    rows = [[f"EWS tier {T}", t[f"li.offers.ews.{T}.n"]] for T in EWS_TIERS]
+    rows.append(["At least one EWS trigger", t["li.offers.ews.any_trigger.n"]])
+    rows += [[f"`{k.upper()}`", t[f"li.offers.ews.trigger.{k}.n"]] for k in EWS_TRIGGERS]
+    rows.append(["On the EWS watchlist (top 100)", t["li.offers.ews.watchlist_n"]])
+    return _table([f"The {t['li.n_offered']} offered accounts on the EWS screen", "Accounts"],
+                  rows)
+
+
+def li_economics_table(t: dict[str, str]) -> str:
+    e = "li.econ"
+    return _table([f"The {t['li.n_offered']} offers", "Value"], [
+        ["Recommended increase, total (median)",
+         f"\\${t[f'{e}.amount_total']} (\\${t[f'{e}.amount_median']})"],
+        ["Incremental exposure (increase × utilization), total (median)",
+         f"\\${t[f'{e}.exposure_total']} (\\${t[f'{e}.exposure_median']})"],
+        ["Incremental net income, total", f"\\${t[f'{e}.net_income_total']}"],
+        ["Incremental ROE: lowest / median / highest",
+         f"{t[f'{e}.roe_min']} / {t[f'{e}.roe_median']} / {t[f'{e}.roe_max']}"],
+        ["Offers within 1 point of the hurdle", t[f"{e}.n_near_hurdle"]],
+        ["Aggregate incremental ROE (EAD-weighted, the gate)", t["li.agg_roe"]],
+        ["Aggregate incremental ROE if the increase is fully drawn",
+         f"{t[f'{e}.full_draw.agg_roe']} ({t[f'{e}.full_draw.n_offered']} offers)"],
+        ["Per-loan ROE at the incremental EAD vs at EAD 1", t[f"{e}.ead_invariance"]],
+    ])
+
+
+def li_sensitivity_table(t: dict[str, str]) -> str:
+    rows = [["Committed", "—", t["li.n_offered"], t["li.agg_roe"], t["li.cohort_pd"],
+             t["li.cohort_util"], t["li.econ.exposure_total"], "pass"]]
+    step = t["li.sens.step"]
+    for fd in LI_SENS:
+        for name, sign in (("down", "−"), ("up", "+")):
+            k = f"li.sens.{fd}.{name}"
+            rows.append([f"`{fd}` {sign}{step}", t[f"{k}.value"], t[f"{k}.n_offered"],
+                         t[f"{k}.agg_roe"], t[f"{k}.cohort_pd"], t[f"{k}.cohort_util"],
+                         t[f"{k}.exposure"], t[f"{k}.gates"]])
+    return _table(["Scenario", "Setting becomes", "Offers", "Aggregate incremental ROE",
+                   "Cohort mean PD", "Cohort mean utilization", "Incremental exposure (\\$)",
+                   "Cohort gates"], rows)
+
+
+def li_caps_table(t: dict[str, str]) -> str:
+    rows = [[lab, t[f"li.caps.{k}.book"], t[f"li.caps.{k}.amount"], t[f"li.caps.{k}.offers"]]
+            for k, lab in LI_CAPS]
+    return _table(["Binding cap (the lowest of the three)", "Booked book",
+                   "Accounts with an amount", "Offers"], rows)
+
+
+def li_ceiling_table(t: dict[str, str]) -> str:
+    return _table(["Ranking", "Measured over", "AUC", "Top-20% lift",
+                   "Model minus this (95% paired interval)"], [
+        ["Noise-free line-increase logit (the data's ceiling)", "all booked accounts",
+         t["ceiling.li.latent_book"], "", ""],
+        ["Noise-free line-increase logit", "the held-out 20%", t["ceiling.li.latent_holdout"],
+         t["ceiling.li.latent_lift_holdout"] + "×", ""],
+        ["**Committed line-increase model**", "the same held-out 20%", t["li.auc"],
+         t["li.lift"] + "×", ""],
+        ["`annual_revenue` alone", "the same held-out 20%", t["li.baseline.revenue.auc"],
+         t["li.baseline.revenue.lift"] + "×",
+         f"{t['li.baseline.revenue.diff']} ({t['li.baseline.revenue.diff_lo']} – "
+         f"{t['li.baseline.revenue.diff_hi']})"],
+        ["`utilization_onbook` alone", "the same held-out 20%", t["li.baseline.utilization.auc"],
+         t["li.baseline.utilization.lift"] + "×",
+         f"{t['li.baseline.utilization.diff']} ({t['li.baseline.utilization.diff_lo']} – "
+         f"{t['li.baseline.utilization.diff_hi']})"],
+        ["Score PD alone, lower first", "the same held-out 20%", t["li.baseline.pd_score.auc"],
+         t["li.baseline.pd_score.lift"] + "×",
+         f"{t['li.baseline.pd_score.diff']} ({t['li.baseline.pd_score.diff_lo']} – "
+         f"{t['li.baseline.pd_score.diff_hi']})"],
+        ["EWS probability alone, lower first", "the same held-out 20%", t["li.baseline.ews.auc"],
+         t["li.baseline.ews.lift"] + "×",
+         f"{t['li.baseline.ews.diff']} ({t['li.baseline.ews.diff_lo']} – "
+         f"{t['li.baseline.ews.diff_hi']})"],
+        ["Gate", "", f"≥ {t['li.gate.auc_min']}", f"≥ {t['li.gate.lift_min']}×", ""],
+    ])
+
+
+def li_insample_table(t: dict[str, str]) -> str:
+    return _table(["Rows scored", "n", "AUC", "Top-20% lift", "Share above the offer threshold"], [
+        ["**Held-out 20% (the number to quote)**", t["li.n_test"], t["li.auc"],
+         t["li.lift"] + "×", t["li.thr.share_holdout"]],
+        ["Whole booked book (80% in-sample)", t["li.n_book"], t["li.whole.auc"],
+         t["li.whole.lift"] + "×", t["li.thr.share_book"]],
+        ["Training 80% (in-sample)", t["li.n_train"], t["li.train.auc"],
+         t["li.train.lift"] + "×", t["li.thr.share_train"]],
+    ])
+
+
+def li_importance_table(t: dict[str, str]) -> str:
+    n = int(t["li.importance.top_n"])
+    return _table(["Rank", "By gain", "Share of gain", "By split count", "Share of splits"], [
+        [str(i), f"`{t[f'li.importance.gain.top{i}.feature']}`",
+         t[f"li.importance.gain.top{i}.share"],
+         f"`{t[f'li.importance.split.top{i}.feature']}`", t[f"li.importance.split.top{i}.share"]]
+        for i in range(1, n + 1)])
+
+
+def li_band_table(t: dict[str, str]) -> str:
+    return _table(["Score band", "Accounts", "With an amount", "Offers", "Offer rate",
+                   "Incremental exposure offered (\\$)"],
+                  [[b] + [t[f"li.band.{b}.{c}"] for c in
+                          ("n", "amount_positive", "offers", "offer_rate", "exposure")]
+                   for b in BANDS])
+
+
 def fact_index(meta: dict[str, dict]) -> str:
     rows = [[f"`{k}`", d["text"], d["population"], f"`{d['source']}`"]
             for k, d in sorted(meta.items())]
@@ -341,7 +509,9 @@ def fact_index(meta: dict[str, dict]) -> str:
             "`price_population` and the engine's own functions, exactly as the portal "
             "prices the booked book, and the `ews.*` facts through the saved EWS model, "
             "`risk_tier`, `flag_triggers` and `watchlist`, exactly as the portal scores "
-            "the booked book); the `score.stress.*` refits and the "
+            "the booked book, and the `li.*` facts through the saved line-increase model, "
+            "`recommended_amount`, `incremental_roe` and `candidates`, exactly as the portal "
+            "scores the booked book); the `score.stress.*` refits and the "
             "`ceiling.ews.oracle_model.*` refit are recomputed only under "
             "`python verify.py --full`. "
             "Pages print these through `{{</* var key */>}}`; none is typed by hand.\n\n" +
@@ -378,6 +548,17 @@ def render_all(t: dict[str, str], meta: dict[str, dict]) -> dict[str, str]:
         "_generated/ews-importance.md": ews_importance_table(t),
         "_generated/ews-triggers.md": ews_trigger_table(t),
         "_generated/ews-ceiling.md": ews_ceiling_table(t),
+        "_generated/li-headline.md": li_headline_table(t),
+        "_generated/li-funnel.md": li_funnel_table(t),
+        "_generated/li-cohort.md": li_cohort_table(t),
+        "_generated/li-cohort-ews.md": li_cohort_ews_table(t),
+        "_generated/li-economics.md": li_economics_table(t),
+        "_generated/li-sensitivity.md": li_sensitivity_table(t),
+        "_generated/li-caps.md": li_caps_table(t),
+        "_generated/li-ceiling.md": li_ceiling_table(t),
+        "_generated/li-insample.md": li_insample_table(t),
+        "_generated/li-importance.md": li_importance_table(t),
+        "_generated/li-bands.md": li_band_table(t),
         "reference/facts.qmd": fact_index(meta),
     }
     if "score.stress.no_bureau.auc" in t:

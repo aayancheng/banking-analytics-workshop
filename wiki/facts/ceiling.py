@@ -123,3 +123,48 @@ def compute_ews_oracle(es) -> dict[str, Fact]:
         "ceiling.ews.oracle_model.n_columns": Fact(int(X.shape[1]), "d", SRC_ORACLE,
                                                    "module constant"),
     }
+
+
+# --- D8: the line-increase label's ceiling (the DGP's li_logit without its noise term) -------
+SRC_LI = ("wiki.facts.ceiling.li_latent (the DGP's line-increase logit without its N(0, 0.18) "
+          "noise term and intercept)")
+LI_HOLDOUT = ("held-out 20% of the booked book (line-increase split, seed 42, stratified on "
+              "line_increase_good: 1,668 accounts)")
+
+
+def li_latent(port, with_deterioration: bool = True) -> np.ndarray:
+    """shared/data_generator.py's line_increase_good logit, noise and intercept removed (AUC is
+    rank-only): the true PD, on-book utilisation above 0.5, standardised log revenue over the
+    booked book, and -- an outcome realised after the decision -- deterioration."""
+    pd_true = port["pd_default_origination"].to_numpy()       # DGP truth: allowed HERE only
+    util_last3 = port["utilization_onbook"].to_numpy()
+    out = (-3.0 * pd_true + 7.0 * np.clip(util_last3 - 0.5, 0, None)
+           + 1.2 * _z(np.log(port["annual_revenue"].to_numpy())))
+    if with_deterioration:
+        out = out - 0.4 * port["deterioration_next_6_12mo"].to_numpy()
+    return out
+
+
+def compute_li(ls) -> dict[str, Fact]:
+    """ls: wiki.facts.li_facts.LiSplit (train.py's split and the committed model's prob)."""
+    from line_increase.src.train import top_ventile_lift
+    y, te = ls.y, ls.idx_te
+    lat = li_latent(ls.port)
+    lat_nd = li_latent(ls.port, with_deterioration=False)
+    held = float(roc_auc_score(y[te], lat[te]))
+    model = float(roc_auc_score(y[te], ls.prob[te]))
+    src_nd = SRC_LI + ", without the deterioration term (what exists at decision time)"
+    return {
+        "ceiling.li.latent_book": Fact(float(roc_auc_score(y, lat)), ".4f", SRC_LI, EWS_BOOK),
+        "ceiling.li.latent_holdout": Fact(held, ".4f", SRC_LI, LI_HOLDOUT),
+        "ceiling.li.latent_lift_holdout": Fact(top_ventile_lift(y[te], lat[te]), ".2f",
+                                               SRC_LI + " ranked by line_increase.src.train."
+                                               "top_ventile_lift", LI_HOLDOUT),
+        "ceiling.li.latent_no_det_holdout": Fact(float(roc_auc_score(y[te], lat_nd[te])), ".4f",
+                                                 src_nd, LI_HOLDOUT),
+        "ceiling.li.gap_holdout": Fact(held - model, ".3f",
+                                       SRC_LI + " minus the committed line-increase model's AUC",
+                                       LI_HOLDOUT),
+        "ceiling.li.share_of_reach": Fact((model - 0.5) / (held - 0.5), ".0%",
+                                          "(LI AUC - 0.5) / (noise-free AUC - 0.5)", LI_HOLDOUT),
+    }

@@ -75,3 +75,25 @@ def write_ews(t: dict[str, str], out: Path) -> None:
     ax.set_xticks(list(x), labels); ax.set_ylabel("deterioration rate (%)")
     ax.legend(frameon=False, loc="upper left")
     _save(fig, out / "tier-calibration.svg")
+
+
+def write_li(t: dict[str, str], out: Path) -> None:
+    """D8: the offer funnel -- accounts left after each eligibility clause, in the order
+    candidates.score_population ANDs them, with the accounts that merely have a positive
+    recommended amount drawn beside it. Drawn from the printed facts."""
+    out.mkdir(parents=True, exist_ok=True)
+    steps = ["book", "prob", "pd", "amount", "roe"]
+    labels = ["booked book", "probability ≥ threshold", "+ score PD ≤ ceiling",
+              "+ amount > 0", "+ ROE clears hurdle\n(eligible: an offer)"]
+    n = [int(t[f"li.funnel.{s}.n"].replace(",", "")) for s in steps]
+    fig, ax = plt.subplots(figsize=(6.5, 3.6))
+    y = list(range(len(steps)))[::-1]
+    ax.barh(y, n, color=[MUTED] * (len(steps) - 1) + [ACCENT])
+    for yi, v in zip(y, n):
+        ax.text(v, yi, f" {v:,}", va="center", fontsize=9, color=INK)
+    amt = int(t["li.n_amount_positive"].replace(",", ""))
+    ax.axvline(amt, color=INK, ls="--", lw=1, label=f"recommended amount > 0 ({amt:,}, not offers)")
+    ax.set_yticks(y, labels); ax.set_xscale("log"); ax.set_xlim(50, 20000)
+    ax.set_xlabel("accounts (log scale)")
+    ax.legend(frameon=False, loc="lower right", fontsize=8)
+    _save(fig, out / "offer-funnel.svg")

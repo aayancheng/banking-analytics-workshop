@@ -313,6 +313,13 @@ ceiling:
       n_columns: "35"
     share_of_reach: "70%"
   gap_holdout: "0.018"
+  li:
+    gap_holdout: "0.022"
+    latent_book: "0.8430"
+    latent_holdout: "0.8349"
+    latent_lift_holdout: "2.79"
+    latent_no_det_holdout: "0.8342"
+    share_of_reach: "93%"
   signal_all: "0.8177"
   signal_holdout: "0.8353"
   truepd_all: "0.8311"
@@ -591,6 +598,424 @@ ews:
     capture: "54.4%"
     lift: "5.44"
     pr_auc: "0.8984"
+li:
+  agg_roe: "0.2153"
+  amount_offer_ratio: "13.1"
+  auc: "0.8128"
+  band:
+    A:
+      amount_positive: "93"
+      exposure: "524,020"
+      n: "845"
+      offer_rate: "1.4%"
+      offers: "12"
+    AAA:
+      amount_positive: "88"
+      exposure: "457,973"
+      n: "822"
+      offer_rate: "1.9%"
+      offers: "16"
+    B:
+      amount_positive: "179"
+      exposure: "1,368,753"
+      n: "1,497"
+      offer_rate: "2.9%"
+      offers: "43"
+    C:
+      amount_positive: "266"
+      exposure: "523,406"
+      n: "1,851"
+      offer_rate: "1.3%"
+      offers: "24"
+    D:
+      amount_positive: "617"
+      exposure: "0"
+      n: "3,321"
+      offer_rate: "0.0%"
+      offers: "0"
+  base_rate: "22.2%"
+  base_rate_holdout: "22.2%"
+  baseline:
+    best:
+      auc: "0.7371"
+      feature: "annual_revenue"
+    ews:
+      auc: "0.5125"
+      diff: "0.3003"
+      diff_hi: "0.3423"
+      diff_lo: "0.2579"
+      in_ews_train: "79%"
+      lift: "1.16"
+    n_numeric: "17"
+    n_pass_lift: "5"
+    pd_score:
+      auc: "0.5711"
+      diff: "0.2417"
+      diff_hi: "0.2809"
+      diff_lo: "0.2050"
+      lift: "1.21"
+    revenue:
+      auc: "0.7371"
+      diff: "0.0756"
+      diff_hi: "0.1030"
+      diff_lo: "0.0486"
+      lift: "2.17"
+    utilization:
+      auc: "0.6884"
+      diff: "0.1244"
+      diff_hi: "0.1528"
+      diff_lo: "0.0932"
+      lift: "2.19"
+  book:
+    default:
+      rate: "10.9%"
+    det:
+      rate: "18.0%"
+  book_ho:
+    default:
+      rate: "11.9%"
+    det:
+      rate: "17.3%"
+  book_pd: "0.1171"
+  book_util: "0.4714"
+  boot:
+    auc:
+      hi: "0.8376"
+      lo: "0.7873"
+    auc_below_gate: "0.6%"
+    lift:
+      hi: "2.86"
+      lo: "2.45"
+    lift_below_gate: "0.0%"
+    n: "1,000"
+  caps:
+    headroom_to_target_util:
+      amount: "847"
+      book: "6,300"
+      offers: "64"
+    n_dead: "0"
+    no_headroom: "7,070"
+    pct_cap:
+      amount: "113"
+      book: "113"
+      offers: "11"
+    revenue_ceiling:
+      amount: "283"
+      book: "1,923"
+      offers: "20"
+    revenue_negative: "3,691"
+    rounds_to_zero: "23"
+  clause:
+    amount:
+      n: "1,243"
+    clears:
+      n: "423"
+    pd:
+      n: "4,168"
+    prob:
+      n: "2,084"
+  cohort_pd: "0.0363"
+  cohort_util: "0.8371"
+  config:
+    max_pd_quantile: "0.50"
+    n_unread: "1"
+    offer_quantile: "0.75"
+    pct_cap: "0.50"
+    revenue_mult_cap: "0.30"
+    roe_hurdle: "0.15"
+    round_to: "1,000"
+    target_util: "0.65"
+    unread: "roe_hurdle"
+  construct:
+    min_roe_offers: "0.1507"
+    min_util_amount: "0.652"
+    min_util_offers: "0.660"
+    pd_margin: "0.0430"
+  econ:
+    agg_uniform_invariance: "< 1e-12"
+    amount_median: "24,000"
+    amount_total: "3,392,000"
+    ead_invariance: "< 1e-12"
+    exposure_median: "19,000"
+    exposure_total: "2,874,152"
+    full_draw:
+      agg_roe: "0.2156"
+      n_offered: "95"
+    n_clear_amount: "423"
+    n_near_hurdle: "18"
+    net_income_total: "74,265"
+    pricing_agree: "1,243"
+    roe_max: "63.2%"
+    roe_mean: "22.4%"
+    roe_median: "18.6%"
+    roe_min: "15.1%"
+  funnel:
+    amount:
+      dropped: "907"
+      label: "and recommended_amount > 0"
+      n: "347"
+      share: "4.2%"
+    book:
+      dropped: "0"
+      label: "the booked book"
+      n: "8,336"
+      share: "100.0%"
+    pd:
+      dropped: "830"
+      label: "and score PD <= offer_max_pd"
+      n: "1,254"
+      share: "15.0%"
+    prob:
+      dropped: "6,252"
+      label: "probability >= offer_threshold"
+      n: "2,084"
+      share: "25.0%"
+    roe:
+      dropped: "252"
+      label: "and the incremental ROE clears the hurdle"
+      n: "95"
+      share: "1.1%"
+  gate:
+    auc_margin: "0.0328"
+    auc_min: "0.78"
+    lift_margin: "0.66"
+    lift_min: "2.0"
+    n_by_construction: "3"
+    n_gates: "6"
+    roe_hurdle: "0.15"
+  importance:
+    gain:
+      pd_score_rank: "5"
+      top1:
+        feature: "current_balance"
+        share: "18.1%"
+      top2:
+        feature: "annual_revenue"
+        share: "15.5%"
+      top3:
+        feature: "utilization_onbook"
+        share: "13.1%"
+      top4:
+        feature: "util_headroom"
+        share: "7.9%"
+      top5:
+        feature: "pd_score"
+        share: "5.8%"
+    pair_gain_share: "21.0%"
+    revenue_gain_share: "17.6%"
+    split:
+      pd_score_rank: "3"
+      top1:
+        feature: "annual_revenue"
+        share: "9.2%"
+      top2:
+        feature: "years_in_business"
+        share: "8.6%"
+      top3:
+        feature: "pd_score"
+        share: "8.5%"
+      top4:
+        feature: "utilization_onbook"
+        share: "7.5%"
+      top5:
+        feature: "dscr"
+        share: "7.2%"
+    top_n: "5"
+  inputs:
+    from_score: "pd_score"
+    headroom_identity: "8,031"
+    log_revenue_monotone: "yes"
+    n_shared_ews: "11"
+    shared_ews: "utilization_onbook, credit_limit, current_balance, tenure_months, dscr, leverage, current_ratio, prior_delinquencies, pd_score, industry, entity_type"
+    uses_ews_output: "no"
+    util_above_one: "305"
+  lift: "2.66"
+  model:
+    n_estimators: "400"
+    num_leaves: "31"
+  n_amount_not_offered: "1,148"
+  n_amount_positive: "1,243"
+  n_book: "8,336"
+  n_categorical: "3"
+  n_events: "1,850"
+  n_events_holdout: "370"
+  n_features: "20"
+  n_offered: "95"
+  n_test: "1,668"
+  n_train: "6,668"
+  offer_max_pd: "0.0741"
+  offer_share: "1.1%"
+  offer_threshold: "0.3121"
+  offers:
+    default:
+      events: "6"
+      rate: "6.3%"
+    det:
+      events: "20"
+      rate: "21.1%"
+    events: "71"
+    ews:
+      High:
+        n: "7"
+      Low:
+        n: "71"
+      Medium:
+        n: "17"
+      any_trigger:
+        n: "86"
+      trigger:
+        delinquency:
+          n: "43"
+        deposit_decline:
+          n: "4"
+        frequent_overdrafts:
+          n: "32"
+        high_utilization:
+          n: "29"
+        rising_utilization:
+          n: "62"
+      watchlist_n: "0"
+    n_holdout: "16"
+    n_train: "79"
+    rate: "74.7%"
+    train_share: "83%"
+  offers_ho:
+    default:
+      events: "2"
+      rate: "12.5%"
+    det:
+      events: "4"
+      rate: "25.0%"
+    events: "11"
+    lift: "3.10"
+    observed: "68.8%"
+    predicted: "59.8%"
+    ratio: "1.15"
+    status: "within tolerance"
+  page_n: "10"
+  portal_n: "25"
+  sens:
+    max_pd_quantile:
+      down:
+        agg_roe: "0.2087"
+        cohort_pd: "0.0311"
+        cohort_util: "0.8338"
+        exposure: "2,636,329"
+        gates: "pass"
+        n_offered: "82"
+        value: "0.450"
+      up:
+        agg_roe: "0.2157"
+        cohort_pd: "0.0428"
+        cohort_util: "0.8363"
+        exposure: "3,417,037"
+        gates: "pass"
+        n_offered: "112"
+        value: "0.550"
+    offer_quantile:
+      down:
+        agg_roe: "0.2118"
+        cohort_pd: "0.0374"
+        cohort_util: "0.8259"
+        exposure: "3,360,839"
+        gates: "pass"
+        n_offered: "115"
+        value: "0.675"
+      up:
+        agg_roe: "0.2137"
+        cohort_pd: "0.0352"
+        cohort_util: "0.8476"
+        exposure: "2,561,554"
+        gates: "pass"
+        n_offered: "74"
+        value: "0.825"
+    pct_cap:
+      down:
+        agg_roe: "0.2152"
+        cohort_pd: "0.0363"
+        cohort_util: "0.8371"
+        exposure: "2,841,291"
+        gates: "pass"
+        n_offered: "95"
+        value: "0.450"
+      up:
+        agg_roe: "0.2156"
+        cohort_pd: "0.0363"
+        cohort_util: "0.8371"
+        exposure: "2,904,140"
+        gates: "pass"
+        n_offered: "95"
+        value: "0.550"
+    revenue_mult_cap:
+      down:
+        agg_roe: "0.2111"
+        cohort_pd: "0.0364"
+        cohort_util: "0.8378"
+        exposure: "2,352,722"
+        gates: "pass"
+        n_offered: "87"
+        value: "0.270"
+      up:
+        agg_roe: "0.2197"
+        cohort_pd: "0.0368"
+        cohort_util: "0.8384"
+        exposure: "3,395,508"
+        gates: "pass"
+        n_offered: "104"
+        value: "0.330"
+    step: "10%"
+    target_util:
+      down:
+        agg_roe: "0.2145"
+        cohort_pd: "0.0363"
+        cohort_util: "0.8008"
+        exposure: "4,318,089"
+        gates: "pass"
+        n_offered: "114"
+        value: "0.585"
+      up:
+        agg_roe: "0.2153"
+        cohort_pd: "0.0354"
+        cohort_util: "0.8737"
+        exposure: "1,743,073"
+        gates: "pass"
+        n_offered: "76"
+        value: "0.715"
+  served:
+    page:
+      n: "10"
+      n_train: "9"
+      rate: "100.0%"
+    portal:
+      n: "25"
+      n_train: "23"
+      rate: "100.0%"
+  target: "line_increase_good"
+  test_share: "20%"
+  thr:
+    holdout_only: "0.2794"
+    share_book: "25.0%"
+    share_holdout: "23.6%"
+    share_train: "25.4%"
+    train_only: "0.3188"
+  thr_ho:
+    events: "214"
+    n: "393"
+    observed: "54.5%"
+    predicted: "60.6%"
+    ratio: "0.90"
+    status: "within tolerance"
+  top20:
+    capture: "53.2%"
+    events: "197"
+    n: "334"
+    rate: "59.0%"
+  train:
+    auc: "0.9897"
+    lift: "4.24"
+  whole:
+    auc: "0.9573"
+    lift: "3.94"
 market:
   base_margin: "2.0%"
   capital_ratio: "12%"

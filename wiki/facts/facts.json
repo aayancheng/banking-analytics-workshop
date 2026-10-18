@@ -1721,6 +1721,48 @@
     "text": "0.018",
     "value": 0.017736
   },
+  "ceiling.li.gap_holdout": {
+    "fmt": ".3f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "wiki.facts.ceiling.li_latent (the DGP's line-increase logit without its N(0, 0.18) noise term and intercept) minus the committed line-increase model's AUC",
+    "text": "0.022",
+    "value": 0.022078
+  },
+  "ceiling.li.latent_book": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts",
+    "source": "wiki.facts.ceiling.li_latent (the DGP's line-increase logit without its N(0, 0.18) noise term and intercept)",
+    "text": "0.8430",
+    "value": 0.843021
+  },
+  "ceiling.li.latent_holdout": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "wiki.facts.ceiling.li_latent (the DGP's line-increase logit without its N(0, 0.18) noise term and intercept)",
+    "text": "0.8349",
+    "value": 0.834871
+  },
+  "ceiling.li.latent_lift_holdout": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "wiki.facts.ceiling.li_latent (the DGP's line-increase logit without its N(0, 0.18) noise term and intercept) ranked by line_increase.src.train.top_ventile_lift",
+    "text": "2.79",
+    "value": 2.793947
+  },
+  "ceiling.li.latent_no_det_holdout": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "wiki.facts.ceiling.li_latent (the DGP's line-increase logit without its N(0, 0.18) noise term and intercept), without the deterioration term (what exists at decision time)",
+    "text": "0.8342",
+    "value": 0.834221
+  },
+  "ceiling.li.share_of_reach": {
+    "fmt": ".0%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "(LI AUC - 0.5) / (noise-free AUC - 0.5)",
+    "text": "93%",
+    "value": 0.934071
+  },
   "ceiling.signal_all": {
     "fmt": ".4f",
     "population": "all 12,000 applicants",
@@ -3246,6 +3288,2246 @@
     "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
     "text": "0.8984",
     "value": 0.898436
+  },
+  "li.agg_roe": {
+    "fmt": ".4f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "sum incremental net income / sum (capital_ratio x incremental EAD), as train.py",
+    "text": "0.2153",
+    "value": 0.215325
+  },
+  "li.amount_offer_ratio": {
+    "fmt": ".1f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "accounts with recommended_amount > 0 per eligible account",
+    "text": "13.1",
+    "value": 13.084211
+  },
+  "li.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "0.8128",
+    "value": 0.812793
+  },
+  "li.band.A.amount_positive": {
+    "fmt": ",d",
+    "population": "booked book, score band A",
+    "source": "line_increase.src.amount_rules.recommended_amount (> 0)",
+    "text": "93",
+    "value": 93
+  },
+  "li.band.A.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, score band A",
+    "source": "line_increase.src.candidates.segments (expected_incremental_exposure)",
+    "text": "524,020",
+    "value": 524020.0
+  },
+  "li.band.A.n": {
+    "fmt": ",d",
+    "population": "booked book, score band A",
+    "source": "line_increase.src.candidates.segments",
+    "text": "845",
+    "value": 845
+  },
+  "li.band.A.offer_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band A",
+    "source": "line_increase.src.candidates.segments (offer_rate, unrounded)",
+    "text": "1.4%",
+    "value": 0.014201
+  },
+  "li.band.A.offers": {
+    "fmt": ",d",
+    "population": "booked book, score band A",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)",
+    "text": "12",
+    "value": 12
+  },
+  "li.band.AAA.amount_positive": {
+    "fmt": ",d",
+    "population": "booked book, score band AAA",
+    "source": "line_increase.src.amount_rules.recommended_amount (> 0)",
+    "text": "88",
+    "value": 88
+  },
+  "li.band.AAA.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, score band AAA",
+    "source": "line_increase.src.candidates.segments (expected_incremental_exposure)",
+    "text": "457,973",
+    "value": 457973.0
+  },
+  "li.band.AAA.n": {
+    "fmt": ",d",
+    "population": "booked book, score band AAA",
+    "source": "line_increase.src.candidates.segments",
+    "text": "822",
+    "value": 822
+  },
+  "li.band.AAA.offer_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band AAA",
+    "source": "line_increase.src.candidates.segments (offer_rate, unrounded)",
+    "text": "1.9%",
+    "value": 0.019465
+  },
+  "li.band.AAA.offers": {
+    "fmt": ",d",
+    "population": "booked book, score band AAA",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)",
+    "text": "16",
+    "value": 16
+  },
+  "li.band.B.amount_positive": {
+    "fmt": ",d",
+    "population": "booked book, score band B",
+    "source": "line_increase.src.amount_rules.recommended_amount (> 0)",
+    "text": "179",
+    "value": 179
+  },
+  "li.band.B.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, score band B",
+    "source": "line_increase.src.candidates.segments (expected_incremental_exposure)",
+    "text": "1,368,753",
+    "value": 1368753.0
+  },
+  "li.band.B.n": {
+    "fmt": ",d",
+    "population": "booked book, score band B",
+    "source": "line_increase.src.candidates.segments",
+    "text": "1,497",
+    "value": 1497
+  },
+  "li.band.B.offer_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band B",
+    "source": "line_increase.src.candidates.segments (offer_rate, unrounded)",
+    "text": "2.9%",
+    "value": 0.028724
+  },
+  "li.band.B.offers": {
+    "fmt": ",d",
+    "population": "booked book, score band B",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)",
+    "text": "43",
+    "value": 43
+  },
+  "li.band.C.amount_positive": {
+    "fmt": ",d",
+    "population": "booked book, score band C",
+    "source": "line_increase.src.amount_rules.recommended_amount (> 0)",
+    "text": "266",
+    "value": 266
+  },
+  "li.band.C.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, score band C",
+    "source": "line_increase.src.candidates.segments (expected_incremental_exposure)",
+    "text": "523,406",
+    "value": 523406.0
+  },
+  "li.band.C.n": {
+    "fmt": ",d",
+    "population": "booked book, score band C",
+    "source": "line_increase.src.candidates.segments",
+    "text": "1,851",
+    "value": 1851
+  },
+  "li.band.C.offer_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band C",
+    "source": "line_increase.src.candidates.segments (offer_rate, unrounded)",
+    "text": "1.3%",
+    "value": 0.012966
+  },
+  "li.band.C.offers": {
+    "fmt": ",d",
+    "population": "booked book, score band C",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)",
+    "text": "24",
+    "value": 24
+  },
+  "li.band.D.amount_positive": {
+    "fmt": ",d",
+    "population": "booked book, score band D",
+    "source": "line_increase.src.amount_rules.recommended_amount (> 0)",
+    "text": "617",
+    "value": 617
+  },
+  "li.band.D.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, score band D",
+    "source": "line_increase.src.candidates.segments (expected_incremental_exposure)",
+    "text": "0",
+    "value": 0.0
+  },
+  "li.band.D.n": {
+    "fmt": ",d",
+    "population": "booked book, score band D",
+    "source": "line_increase.src.candidates.segments",
+    "text": "3,321",
+    "value": 3321
+  },
+  "li.band.D.offer_rate": {
+    "fmt": ".1%",
+    "population": "booked book, score band D",
+    "source": "line_increase.src.candidates.segments (offer_rate, unrounded)",
+    "text": "0.0%",
+    "value": 0.0
+  },
+  "li.band.D.offers": {
+    "fmt": ",d",
+    "population": "booked book, score band D",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)",
+    "text": "0",
+    "value": 0
+  },
+  "li.base_rate": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "portfolio.line_increase_good",
+    "text": "22.2%",
+    "value": 0.221929
+  },
+  "li.base_rate_holdout": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "portfolio.line_increase_good",
+    "text": "22.2%",
+    "value": 0.221823
+  },
+  "li.baseline.best.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "roc_auc_score of that feature alone, oriented",
+    "text": "0.7371",
+    "value": 0.737144
+  },
+  "li.baseline.best.feature": {
+    "fmt": "",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "the numeric LI feature with the highest oriented held-out AUC (max(AUC, 1 - AUC))",
+    "text": "annual_revenue",
+    "value": "annual_revenue"
+  },
+  "li.baseline.ews.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts); the EWS model was fitted on its own split, which puts about 80% of these rows in its training data (for a different label)",
+    "source": "EWS model probability alone, negated (lower deterioration risk ranks higher)",
+    "text": "0.5125",
+    "value": 0.512464
+  },
+  "li.baseline.ews.diff": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "model AUC minus EWS model probability alone, negated AUC",
+    "text": "0.3003",
+    "value": 0.300329
+  },
+  "li.baseline.ews.diff_hi": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: model AUC minus EWS model probability alone, negated AUC on the same resampled rows",
+    "text": "0.3423",
+    "value": 0.342332
+  },
+  "li.baseline.ews.diff_lo": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: model AUC minus EWS model probability alone, negated AUC on the same resampled rows",
+    "text": "0.2579",
+    "value": 0.257908
+  },
+  "li.baseline.ews.in_ews_train": {
+    "fmt": ".0%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "share of the line-increase held-out rows that are EWS training rows",
+    "text": "79%",
+    "value": 0.785971
+  },
+  "li.baseline.ews.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability) on EWS model probability alone, negated",
+    "text": "1.16",
+    "value": 1.16077
+  },
+  "li.baseline.n_numeric": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "numeric columns of LI_FEATURE_COLUMNS",
+    "text": "17",
+    "value": 17
+  },
+  "li.baseline.n_pass_lift": {
+    "fmt": "d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "numeric LI features that, sorted alone (oriented by their AUC), reach LIFT_GATE under top_ventile_lift",
+    "text": "5",
+    "value": 5
+  },
+  "li.baseline.pd_score.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "predict_score_pd's pd alone, negated (lower PD ranks higher)",
+    "text": "0.5711",
+    "value": 0.571136
+  },
+  "li.baseline.pd_score.diff": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "model AUC minus predict_score_pd's pd alone, negated (lower PD ranks higher) AUC",
+    "text": "0.2417",
+    "value": 0.241657
+  },
+  "li.baseline.pd_score.diff_hi": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: model AUC minus predict_score_pd's pd alone, negated (lower PD ranks higher) AUC on the same resampled rows",
+    "text": "0.2809",
+    "value": 0.280904
+  },
+  "li.baseline.pd_score.diff_lo": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: model AUC minus predict_score_pd's pd alone, negated (lower PD ranks higher) AUC on the same resampled rows",
+    "text": "0.2050",
+    "value": 0.205029
+  },
+  "li.baseline.pd_score.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability) on predict_score_pd's pd alone, negated (lower PD ranks higher)",
+    "text": "1.21",
+    "value": 1.21476
+  },
+  "li.baseline.revenue.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "annual_revenue alone (higher ranks higher)",
+    "text": "0.7371",
+    "value": 0.737144
+  },
+  "li.baseline.revenue.diff": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "model AUC minus annual_revenue alone (higher ranks higher) AUC",
+    "text": "0.0756",
+    "value": 0.075649
+  },
+  "li.baseline.revenue.diff_hi": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: model AUC minus annual_revenue alone (higher ranks higher) AUC on the same resampled rows",
+    "text": "0.1030",
+    "value": 0.102986
+  },
+  "li.baseline.revenue.diff_lo": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: model AUC minus annual_revenue alone (higher ranks higher) AUC on the same resampled rows",
+    "text": "0.0486",
+    "value": 0.04856
+  },
+  "li.baseline.revenue.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability) on annual_revenue alone (higher ranks higher)",
+    "text": "2.17",
+    "value": 2.166583
+  },
+  "li.baseline.utilization.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "utilization_onbook alone (higher ranks higher)",
+    "text": "0.6884",
+    "value": 0.688436
+  },
+  "li.baseline.utilization.diff": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "model AUC minus utilization_onbook alone (higher ranks higher) AUC",
+    "text": "0.1244",
+    "value": 0.124357
+  },
+  "li.baseline.utilization.diff_hi": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: model AUC minus utilization_onbook alone (higher ranks higher) AUC on the same resampled rows",
+    "text": "0.1528",
+    "value": 0.152813
+  },
+  "li.baseline.utilization.diff_lo": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "paired bootstrap, 1000 resamples, seed 42: model AUC minus utilization_onbook alone (higher ranks higher) AUC on the same resampled rows",
+    "text": "0.0932",
+    "value": 0.093178
+  },
+  "li.baseline.utilization.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability) on utilization_onbook alone (higher ranks higher)",
+    "text": "2.19",
+    "value": 2.187366
+  },
+  "li.book.default.rate": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "portfolio.default (an observed outcome)",
+    "text": "10.9%",
+    "value": 0.109165
+  },
+  "li.book.det.rate": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "portfolio.deterioration_next_6_12mo (the EWS label, an observed outcome)",
+    "text": "18.0%",
+    "value": 0.180182
+  },
+  "li.book_ho.default.rate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "portfolio.default (an observed outcome)",
+    "text": "11.9%",
+    "value": 0.118705
+  },
+  "li.book_ho.det.rate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "portfolio.deterioration_next_6_12mo (the EWS label, an observed outcome)",
+    "text": "17.3%",
+    "value": 0.173261
+  },
+  "li.book_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "predict_score_pd's pd, mean",
+    "text": "0.1171",
+    "value": 0.117112
+  },
+  "li.book_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "portfolio.utilization_onbook, mean",
+    "text": "0.4714",
+    "value": 0.471397
+  },
+  "li.boot.auc.hi": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "0.8376",
+    "value": 0.837571
+  },
+  "li.boot.auc.lo": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "0.7873",
+    "value": 0.787257
+  },
+  "li.boot.auc_below_gate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42: share of resamples whose AUC is below AUC_GATE",
+    "text": "0.6%",
+    "value": 0.006
+  },
+  "li.boot.lift.hi": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "2.86",
+    "value": 2.864068
+  },
+  "li.boot.lift.lo": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "2.45",
+    "value": 2.44918
+  },
+  "li.boot.lift_below_gate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42: share of resamples whose lift is below LIFT_GATE",
+    "text": "0.0%",
+    "value": 0.0
+  },
+  "li.boot.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "bootstrap, 1000 resamples, seed 42",
+    "text": "1,000",
+    "value": 1000
+  },
+  "li.caps.headroom_to_target_util.amount": {
+    "fmt": ",d",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie)",
+    "text": "847",
+    "value": 847
+  },
+  "li.caps.headroom_to_target_util.book": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie)",
+    "text": "6,300",
+    "value": 6300
+  },
+  "li.caps.headroom_to_target_util.offers": {
+    "fmt": ",d",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie)",
+    "text": "64",
+    "value": 64
+  },
+  "li.caps.n_dead": {
+    "fmt": "d",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie) (caps that bind on no account with an amount)",
+    "text": "0",
+    "value": 0
+  },
+  "li.caps.no_headroom": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.amount_rules.recommended_amount (the lowest cap is <= 0: amount 0)",
+    "text": "7,070",
+    "value": 7070
+  },
+  "li.caps.pct_cap.amount": {
+    "fmt": ",d",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie)",
+    "text": "113",
+    "value": 113
+  },
+  "li.caps.pct_cap.book": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie)",
+    "text": "113",
+    "value": 113
+  },
+  "li.caps.pct_cap.offers": {
+    "fmt": ",d",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie)",
+    "text": "11",
+    "value": 11
+  },
+  "li.caps.revenue_ceiling.amount": {
+    "fmt": ",d",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie)",
+    "text": "283",
+    "value": 283
+  },
+  "li.caps.revenue_ceiling.book": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie)",
+    "text": "1,923",
+    "value": 1923
+  },
+  "li.caps.revenue_ceiling.offers": {
+    "fmt": ",d",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "app.v2.li_amounts.caps (the binding cap: the lowest of the three, first on a tie)",
+    "text": "20",
+    "value": 20
+  },
+  "li.caps.revenue_negative": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.amount_rules.recommended_amount (revenue ceiling <= 0: the limit already exceeds revenue_mult_cap x revenue)",
+    "text": "3,691",
+    "value": 3691
+  },
+  "li.caps.rounds_to_zero": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.amount_rules.recommended_amount (a positive lowest cap that rounds to 0)",
+    "text": "23",
+    "value": 23
+  },
+  "li.clause.amount.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.amount_rules.recommended_amount (this clause alone)",
+    "text": "1,243",
+    "value": 1243
+  },
+  "li.clause.clears.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.amount_rules.incremental_roe (this clause alone)",
+    "text": "423",
+    "value": 423
+  },
+  "li.clause.pd.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "predict_score_pd's pd (this clause alone)",
+    "text": "4,168",
+    "value": 4168
+  },
+  "li.clause.prob.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population) (this clause alone)",
+    "text": "2,084",
+    "value": 2084
+  },
+  "li.cohort_pd": {
+    "fmt": ".4f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "predict_score_pd's pd, mean",
+    "text": "0.0363",
+    "value": 0.036265
+  },
+  "li.cohort_util": {
+    "fmt": ".4f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "portfolio.utilization_onbook, mean",
+    "text": "0.8371",
+    "value": 0.837116
+  },
+  "li.config.max_pd_quantile": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "shared.config.LINE_INCREASE['max_pd_quantile']",
+    "text": "0.50",
+    "value": 0.5
+  },
+  "li.config.n_unread": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "keys of shared.config.LINE_INCREASE that no file in line_increase/src reads",
+    "text": "1",
+    "value": 1
+  },
+  "li.config.offer_quantile": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "shared.config.LINE_INCREASE['offer_quantile']",
+    "text": "0.75",
+    "value": 0.75
+  },
+  "li.config.pct_cap": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "shared.config.LINE_INCREASE['pct_cap']",
+    "text": "0.50",
+    "value": 0.5
+  },
+  "li.config.revenue_mult_cap": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "shared.config.LINE_INCREASE['revenue_mult_cap']",
+    "text": "0.30",
+    "value": 0.3
+  },
+  "li.config.roe_hurdle": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "shared.config.LINE_INCREASE['roe_hurdle']",
+    "text": "0.15",
+    "value": 0.15
+  },
+  "li.config.round_to": {
+    "fmt": ",d",
+    "population": "policy constant",
+    "source": "shared.config.LINE_INCREASE['round_to']",
+    "text": "1,000",
+    "value": 1000
+  },
+  "li.config.target_util": {
+    "fmt": ".2f",
+    "population": "policy constant",
+    "source": "shared.config.LINE_INCREASE['target_util']",
+    "text": "0.65",
+    "value": 0.65
+  },
+  "li.config.unread": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "keys of shared.config.LINE_INCREASE that no file in line_increase/src reads (regex over the source)",
+    "text": "roe_hurdle",
+    "value": "roe_hurdle"
+  },
+  "li.construct.min_roe_offers": {
+    "fmt": ".4f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_roe (minimum)",
+    "text": "0.1507",
+    "value": 0.150723
+  },
+  "li.construct.min_util_amount": {
+    "fmt": ".3f",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "portfolio.utilization_onbook, minimum where recommended_amount > 0",
+    "text": "0.652",
+    "value": 0.652
+  },
+  "li.construct.min_util_offers": {
+    "fmt": ".3f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "portfolio.utilization_onbook, minimum",
+    "text": "0.660",
+    "value": 0.66
+  },
+  "li.construct.pd_margin": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "book mean score PD minus offer_max_pd (a cohort capped at the ceiling has a mean below it)",
+    "text": "0.0430",
+    "value": 0.043012
+  },
+  "li.econ.agg_uniform_invariance": {
+    "fmt": "",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "|aggregate ROE with every incremental EAD halved - aggregate ROE| -- asserted below 1e-12 (tests/test_engine.py's tolerance) in wiki.facts.li_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
+  },
+  "li.econ.amount_median": {
+    "fmt": ",.0f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.recommended_amount",
+    "text": "24,000",
+    "value": 24000.0
+  },
+  "li.econ.amount_total": {
+    "fmt": ",.0f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.recommended_amount",
+    "text": "3,392,000",
+    "value": 3392000.0
+  },
+  "li.econ.ead_invariance": {
+    "fmt": "",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "max over the offers of |ROE at the incremental EAD - ROE at EAD 1| -- asserted below 1e-12 (tests/test_engine.py's tolerance) in wiki.facts.li_facts.compute",
+    "text": "< 1e-12",
+    "value": "< 1e-12"
+  },
+  "li.econ.exposure_median": {
+    "fmt": ",.0f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_exposure",
+    "text": "19,000",
+    "value": 19000.0
+  },
+  "li.econ.exposure_total": {
+    "fmt": ",.0f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_exposure (delta x utilization)",
+    "text": "2,874,152",
+    "value": 2874152.0
+  },
+  "li.econ.full_draw.agg_roe": {
+    "fmt": ".4f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "aggregate incremental ROE with the increment fully drawn (EAD = delta)",
+    "text": "0.2156",
+    "value": 0.215642
+  },
+  "li.econ.full_draw.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "train.py's cohort rule with the increment fully drawn (EAD = delta)",
+    "text": "95",
+    "value": 95
+  },
+  "li.econ.n_clear_amount": {
+    "fmt": ",d",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "line_increase.src.amount_rules.incremental_roe",
+    "text": "423",
+    "value": 423
+  },
+  "li.econ.n_near_hurdle": {
+    "fmt": ",d",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_roe (offers within 1 point of the hurdle)",
+    "text": "18",
+    "value": 18
+  },
+  "li.econ.net_income_total": {
+    "fmt": ",.0f",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_roe",
+    "text": "74,265",
+    "value": 74265.320731
+  },
+  "li.econ.pricing_agree": {
+    "fmt": ",d",
+    "population": "booked accounts with recommended_amount > 0 (eligible or not)",
+    "source": "accounts whose incremental clears_hurdle equals pricing.src.engine.price_loan's clears_hurdle on the loan itself (requested_amount, quoted risk_based_rate)",
+    "text": "1,243",
+    "value": 1243
+  },
+  "li.econ.roe_max": {
+    "fmt": ".1%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_roe",
+    "text": "63.2%",
+    "value": 0.631581
+  },
+  "li.econ.roe_mean": {
+    "fmt": ".1%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_roe (unweighted mean)",
+    "text": "22.4%",
+    "value": 0.223886
+  },
+  "li.econ.roe_median": {
+    "fmt": ".1%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_roe",
+    "text": "18.6%",
+    "value": 0.185566
+  },
+  "li.econ.roe_min": {
+    "fmt": ".1%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.amount_rules.incremental_roe",
+    "text": "15.1%",
+    "value": 0.150723
+  },
+  "li.funnel.amount.dropped": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- removed at this step (and recommended_amount > 0)",
+    "text": "907",
+    "value": 907
+  },
+  "li.funnel.amount.label": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "wiki.facts.li_facts (funnel step)",
+    "text": "and recommended_amount > 0",
+    "value": "and recommended_amount > 0"
+  },
+  "li.funnel.amount.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- and recommended_amount > 0",
+    "text": "347",
+    "value": 347
+  },
+  "li.funnel.amount.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- and recommended_amount > 0",
+    "text": "4.2%",
+    "value": 0.041627
+  },
+  "li.funnel.book.dropped": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- removed at this step (the booked book)",
+    "text": "0",
+    "value": 0
+  },
+  "li.funnel.book.label": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "wiki.facts.li_facts (funnel step)",
+    "text": "the booked book",
+    "value": "the booked book"
+  },
+  "li.funnel.book.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- the booked book",
+    "text": "8,336",
+    "value": 8336
+  },
+  "li.funnel.book.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- the booked book",
+    "text": "100.0%",
+    "value": 1.0
+  },
+  "li.funnel.pd.dropped": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- removed at this step (and score PD <= offer_max_pd)",
+    "text": "830",
+    "value": 830
+  },
+  "li.funnel.pd.label": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "wiki.facts.li_facts (funnel step)",
+    "text": "and score PD <= offer_max_pd",
+    "value": "and score PD <= offer_max_pd"
+  },
+  "li.funnel.pd.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- and score PD <= offer_max_pd",
+    "text": "1,254",
+    "value": 1254
+  },
+  "li.funnel.pd.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- and score PD <= offer_max_pd",
+    "text": "15.0%",
+    "value": 0.150432
+  },
+  "li.funnel.prob.dropped": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- removed at this step (probability >= offer_threshold)",
+    "text": "6,252",
+    "value": 6252
+  },
+  "li.funnel.prob.label": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "wiki.facts.li_facts (funnel step)",
+    "text": "probability >= offer_threshold",
+    "value": "probability >= offer_threshold"
+  },
+  "li.funnel.prob.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- probability >= offer_threshold",
+    "text": "2,084",
+    "value": 2084
+  },
+  "li.funnel.prob.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- probability >= offer_threshold",
+    "text": "25.0%",
+    "value": 0.25
+  },
+  "li.funnel.roe.dropped": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- removed at this step (and the incremental ROE clears the hurdle)",
+    "text": "252",
+    "value": 252
+  },
+  "li.funnel.roe.label": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "wiki.facts.li_facts (funnel step)",
+    "text": "and the incremental ROE clears the hurdle",
+    "value": "and the incremental ROE clears the hurdle"
+  },
+  "li.funnel.roe.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- and the incremental ROE clears the hurdle",
+    "text": "95",
+    "value": 95
+  },
+  "li.funnel.roe.share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle) -- and the incremental ROE clears the hurdle",
+    "text": "1.1%",
+    "value": 0.011396
+  },
+  "li.gate.auc_margin": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "held-out AUC minus AUC_GATE",
+    "text": "0.0328",
+    "value": 0.032793
+  },
+  "li.gate.auc_min": {
+    "fmt": ".2f",
+    "population": "policy constant (gate, measured on the held-out 20% of the booked book)",
+    "source": "line_increase.src.train.AUC_GATE",
+    "text": "0.78",
+    "value": 0.78
+  },
+  "li.gate.lift_margin": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "held-out lift minus LIFT_GATE",
+    "text": "0.66",
+    "value": 0.658974
+  },
+  "li.gate.lift_min": {
+    "fmt": ".1f",
+    "population": "policy constant (gate, measured on the held-out 20% of the booked book)",
+    "source": "line_increase.src.train.LIFT_GATE",
+    "text": "2.0",
+    "value": 2.0
+  },
+  "li.gate.n_by_construction": {
+    "fmt": "d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "cohort gates that cannot fail given the offer rules: utilization (every account with an amount is above the book mean), PD (the ceiling is below the book mean), aggregate ROE (an EAD-weighted mean of ROEs that each clear the hurdle)",
+    "text": "3",
+    "value": 3
+  },
+  "li.gate.n_gates": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "line_increase.src.train.main (six GATE FAIL asserts)",
+    "text": "6",
+    "value": 6
+  },
+  "li.gate.roe_hurdle": {
+    "fmt": ".2f",
+    "population": "policy constant (cohort gate, measured on the offered cohort vs the book)",
+    "source": "shared.config.MARKET['roe_hurdle'] (train.py's agg incremental ROE gate and incremental_roe's clears_hurdle)",
+    "text": "0.15",
+    "value": 0.15
+  },
+  "li.importance.gain.pd_score_rank": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain)",
+    "text": "5",
+    "value": 5
+  },
+  "li.importance.gain.top1.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain)",
+    "text": "current_balance",
+    "value": "current_balance"
+  },
+  "li.importance.gain.top1.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain), share of total",
+    "text": "18.1%",
+    "value": 0.180509
+  },
+  "li.importance.gain.top2.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain)",
+    "text": "annual_revenue",
+    "value": "annual_revenue"
+  },
+  "li.importance.gain.top2.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain), share of total",
+    "text": "15.5%",
+    "value": 0.155336
+  },
+  "li.importance.gain.top3.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain)",
+    "text": "utilization_onbook",
+    "value": "utilization_onbook"
+  },
+  "li.importance.gain.top3.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain), share of total",
+    "text": "13.1%",
+    "value": 0.131057
+  },
+  "li.importance.gain.top4.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain)",
+    "text": "util_headroom",
+    "value": "util_headroom"
+  },
+  "li.importance.gain.top4.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain), share of total",
+    "text": "7.9%",
+    "value": 0.078834
+  },
+  "li.importance.gain.top5.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain)",
+    "text": "pd_score",
+    "value": "pd_score"
+  },
+  "li.importance.gain.top5.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain), share of total",
+    "text": "5.8%",
+    "value": 0.057812
+  },
+  "li.importance.pair_gain_share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain), utilization_onbook + util_headroom",
+    "text": "21.0%",
+    "value": 0.209891
+  },
+  "li.importance.revenue_gain_share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (gain), annual_revenue + log_revenue",
+    "text": "17.6%",
+    "value": 0.176319
+  },
+  "li.importance.split.pd_score_rank": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split)",
+    "text": "3",
+    "value": 3
+  },
+  "li.importance.split.top1.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split)",
+    "text": "annual_revenue",
+    "value": "annual_revenue"
+  },
+  "li.importance.split.top1.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split), share of total",
+    "text": "9.2%",
+    "value": 0.092167
+  },
+  "li.importance.split.top2.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split)",
+    "text": "years_in_business",
+    "value": "years_in_business"
+  },
+  "li.importance.split.top2.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split), share of total",
+    "text": "8.6%",
+    "value": 0.08625
+  },
+  "li.importance.split.top3.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split)",
+    "text": "pd_score",
+    "value": "pd_score"
+  },
+  "li.importance.split.top3.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split), share of total",
+    "text": "8.5%",
+    "value": 0.08475
+  },
+  "li.importance.split.top4.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split)",
+    "text": "utilization_onbook",
+    "value": "utilization_onbook"
+  },
+  "li.importance.split.top4.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split), share of total",
+    "text": "7.5%",
+    "value": 0.074917
+  },
+  "li.importance.split.top5.feature": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split)",
+    "text": "dscr",
+    "value": "dscr"
+  },
+  "li.importance.split.top5.share": {
+    "fmt": ".1%",
+    "population": "module constant",
+    "source": "line_increase_model.pkl booster feature_importance (split), share of total",
+    "text": "7.2%",
+    "value": 0.07225
+  },
+  "li.importance.top_n": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "wiki.facts.li_facts.TOP_FEATURES",
+    "text": "5",
+    "value": 5
+  },
+  "li.inputs.from_score": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase.src.feature_engineering (predict_score_pd's pd)",
+    "text": "pd_score",
+    "value": "pd_score"
+  },
+  "li.inputs.headroom_identity": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "rows where util_headroom == 1 - utilization_onbook (it is clipped at 0 elsewhere)",
+    "text": "8,031",
+    "value": 8031
+  },
+  "li.inputs.log_revenue_monotone": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "log_revenue never decreases as annual_revenue increases (trees split both alike)",
+    "text": "yes",
+    "value": "yes"
+  },
+  "li.inputs.n_shared_ews": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "LI_FEATURE_COLUMNS also in EWS_FEATURE_COLUMNS",
+    "text": "11",
+    "value": 11
+  },
+  "li.inputs.shared_ews": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "LI_FEATURE_COLUMNS also in EWS_FEATURE_COLUMNS",
+    "text": "utilization_onbook, credit_limit, current_balance, tenure_months, dscr, leverage, current_ratio, prior_delinquencies, pd_score, industry, entity_type",
+    "value": "utilization_onbook, credit_limit, current_balance, tenure_months, dscr, leverage, current_ratio, prior_delinquencies, pd_score, industry, entity_type"
+  },
+  "li.inputs.uses_ews_output": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase.src.feature_engineering (no EWS probability, tier or trigger)",
+    "text": "no",
+    "value": "no"
+  },
+  "li.inputs.util_above_one": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "portfolio.utilization_onbook > 1 (util_headroom clipped to 0)",
+    "text": "305",
+    "value": 305
+  },
+  "li.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability)",
+    "text": "2.66",
+    "value": 2.658974
+  },
+  "li.model.n_estimators": {
+    "fmt": ",d",
+    "population": "module constant",
+    "source": "line_increase/models/line_increase_model.pkl",
+    "text": "400",
+    "value": 400
+  },
+  "li.model.num_leaves": {
+    "fmt": ",d",
+    "population": "module constant",
+    "source": "line_increase/models/line_increase_model.pkl",
+    "text": "31",
+    "value": 31
+  },
+  "li.n_amount_not_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.amount_rules.recommended_amount (> 0) and not eligible",
+    "text": "1,148",
+    "value": 1148
+  },
+  "li.n_amount_positive": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.amount_rules.recommended_amount (> 0)",
+    "text": "1,243",
+    "value": 1243
+  },
+  "li.n_book": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "8,336",
+    "value": 8336
+  },
+  "li.n_categorical": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "line_increase.src.feature_engineering.LI_CATEGORICAL",
+    "text": "3",
+    "value": 3
+  },
+  "li.n_events": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "portfolio.line_increase_good",
+    "text": "1,850",
+    "value": 1850
+  },
+  "li.n_events_holdout": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "portfolio.line_increase_good",
+    "text": "370",
+    "value": 370
+  },
+  "li.n_features": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "line_increase.src.feature_engineering.LI_FEATURE_COLUMNS",
+    "text": "20",
+    "value": 20
+  },
+  "li.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.candidates.candidates (len)",
+    "text": "95",
+    "value": 95
+  },
+  "li.n_test": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "1,668",
+    "value": 1668
+  },
+  "li.n_train": {
+    "fmt": ",d",
+    "population": "training 80% of the booked book (line-increase split, seed 42), in-sample: the model was fitted on these rows",
+    "source": "line_increase.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "6,668",
+    "value": 6668
+  },
+  "li.offer_max_pd": {
+    "fmt": ".4f",
+    "population": "whole booked book, 8,336 accounts: the scorecard's PD (predict_score_pd), the distribution train.py sets the ceiling on",
+    "source": "line_increase.src.train offer calibration (np.quantile of the whole-book probability / score PD, rounded 4dp)",
+    "text": "0.0741",
+    "value": 0.0741
+  },
+  "li.offer_share": {
+    "fmt": ".1%",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "line_increase.src.candidates.candidates",
+    "text": "1.1%",
+    "value": 0.011396
+  },
+  "li.offer_threshold": {
+    "fmt": ".4f",
+    "population": "whole booked book, 8,336 accounts, in-sample probabilities (80% are training rows) -- the distribution train.py sets the threshold on",
+    "source": "line_increase.src.train offer calibration (np.quantile of the whole-book probability / score PD, rounded 4dp)",
+    "text": "0.3121",
+    "value": 0.3121
+  },
+  "li.offers.default.events": {
+    "fmt": ",d",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "portfolio.default (an observed outcome)",
+    "text": "6",
+    "value": 6
+  },
+  "li.offers.default.rate": {
+    "fmt": ".1%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "portfolio.default (an observed outcome)",
+    "text": "6.3%",
+    "value": 0.063158
+  },
+  "li.offers.det.events": {
+    "fmt": ",d",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "portfolio.deterioration_next_6_12mo (the EWS label, an observed outcome)",
+    "text": "20",
+    "value": 20
+  },
+  "li.offers.det.rate": {
+    "fmt": ".1%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "portfolio.deterioration_next_6_12mo (the EWS label, an observed outcome)",
+    "text": "21.1%",
+    "value": 0.210526
+  },
+  "li.offers.events": {
+    "fmt": ",d",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "portfolio.line_increase_good",
+    "text": "71",
+    "value": 71
+  },
+  "li.offers.ews.High.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "7",
+    "value": 7
+  },
+  "li.offers.ews.Low.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "71",
+    "value": 71
+  },
+  "li.offers.ews.Medium.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "17",
+    "value": 17
+  },
+  "li.offers.ews.any_trigger.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (at least one)",
+    "text": "86",
+    "value": 86
+  },
+  "li.offers.ews.trigger.delinquency.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (DELINQUENCY)",
+    "text": "43",
+    "value": 43
+  },
+  "li.offers.ews.trigger.deposit_decline.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (DEPOSIT_DECLINE)",
+    "text": "4",
+    "value": 4
+  },
+  "li.offers.ews.trigger.frequent_overdrafts.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (FREQUENT_OVERDRAFTS)",
+    "text": "32",
+    "value": 32
+  },
+  "li.offers.ews.trigger.high_utilization.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (HIGH_UTILIZATION)",
+    "text": "29",
+    "value": 29
+  },
+  "li.offers.ews.trigger.rising_utilization.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.triggers.flag_triggers (RISING_UTILIZATION)",
+    "text": "62",
+    "value": 62
+  },
+  "li.offers.ews.watchlist_n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.watchlist.watchlist (default top_n) members that are also offered",
+    "text": "0",
+    "value": 0
+  },
+  "li.offers.n_holdout": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "line_increase.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "16",
+    "value": 16
+  },
+  "li.offers.n_train": {
+    "fmt": ",d",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "79",
+    "value": 79
+  },
+  "li.offers.rate": {
+    "fmt": ".1%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "portfolio.line_increase_good",
+    "text": "74.7%",
+    "value": 0.747368
+  },
+  "li.offers.train_share": {
+    "fmt": ".0%",
+    "population": "the 95 offered (eligible) accounts, whole booked book: most are the model's own training rows (see li.offers.n_train)",
+    "source": "line_increase.src.train split (train_test_split, test_size 0.2, seed 42, stratified)",
+    "text": "83%",
+    "value": 0.831579
+  },
+  "li.offers_ho.default.events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "portfolio.default (an observed outcome)",
+    "text": "2",
+    "value": 2
+  },
+  "li.offers_ho.default.rate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "portfolio.default (an observed outcome)",
+    "text": "12.5%",
+    "value": 0.125
+  },
+  "li.offers_ho.det.events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "portfolio.deterioration_next_6_12mo (the EWS label, an observed outcome)",
+    "text": "4",
+    "value": 4
+  },
+  "li.offers_ho.det.rate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "portfolio.deterioration_next_6_12mo (the EWS label, an observed outcome)",
+    "text": "25.0%",
+    "value": 0.25
+  },
+  "li.offers_ho.events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "portfolio.line_increase_good",
+    "text": "11",
+    "value": 11
+  },
+  "li.offers_ho.lift": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "portfolio.line_increase_good / book base rate",
+    "text": "3.10",
+    "value": 3.097838
+  },
+  "li.offers_ho.observed": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "portfolio.line_increase_good",
+    "text": "68.8%",
+    "value": 0.6875
+  },
+  "li.offers_ho.predicted": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "59.8%",
+    "value": 0.597949
+  },
+  "li.offers_ho.ratio": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "1.15",
+    "value": 1.149764
+  },
+  "li.offers_ho.status": {
+    "fmt": "",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- offered (eligible) accounts only",
+    "source": "wiki.facts.policy ratio tolerance and MIN_BAND_DEFAULTS (events = line_increase_good outcomes)",
+    "text": "within tolerance",
+    "value": "within tolerance"
+  },
+  "li.page_n": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "app/static/index.html (fetch /api/line-increase/candidates?n=10)",
+    "text": "10",
+    "value": 10
+  },
+  "li.portal_n": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "app/main.py li_candidates_endpoint (default n)",
+    "text": "25",
+    "value": 25
+  },
+  "li.sens.max_pd_quantile.down.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 0.90",
+    "text": "0.2087",
+    "value": 0.208653
+  },
+  "li.sens.max_pd_quantile.down.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 0.90",
+    "text": "0.0311",
+    "value": 0.031128
+  },
+  "li.sens.max_pd_quantile.down.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 0.90",
+    "text": "0.8338",
+    "value": 0.833817
+  },
+  "li.sens.max_pd_quantile.down.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 0.90",
+    "text": "2,636,329",
+    "value": 2636329.0
+  },
+  "li.sens.max_pd_quantile.down.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 0.90 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.max_pd_quantile.down.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 0.90",
+    "text": "82",
+    "value": 82
+  },
+  "li.sens.max_pd_quantile.down.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 0.90",
+    "text": "0.450",
+    "value": 0.45
+  },
+  "li.sens.max_pd_quantile.up.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 1.10",
+    "text": "0.2157",
+    "value": 0.215704
+  },
+  "li.sens.max_pd_quantile.up.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 1.10",
+    "text": "0.0428",
+    "value": 0.042811
+  },
+  "li.sens.max_pd_quantile.up.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 1.10",
+    "text": "0.8363",
+    "value": 0.83633
+  },
+  "li.sens.max_pd_quantile.up.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 1.10",
+    "text": "3,417,037",
+    "value": 3417037.0
+  },
+  "li.sens.max_pd_quantile.up.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 1.10 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.max_pd_quantile.up.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- max_pd_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 1.10",
+    "text": "112",
+    "value": 112
+  },
+  "li.sens.max_pd_quantile.up.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's max_pd_quantile x 1.10",
+    "text": "0.550",
+    "value": 0.55
+  },
+  "li.sens.offer_quantile.down.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 0.90",
+    "text": "0.2118",
+    "value": 0.211773
+  },
+  "li.sens.offer_quantile.down.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 0.90",
+    "text": "0.0374",
+    "value": 0.037371
+  },
+  "li.sens.offer_quantile.down.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 0.90",
+    "text": "0.8259",
+    "value": 0.825939
+  },
+  "li.sens.offer_quantile.down.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 0.90",
+    "text": "3,360,839",
+    "value": 3360839.0
+  },
+  "li.sens.offer_quantile.down.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 0.90 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.offer_quantile.down.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 0.90",
+    "text": "115",
+    "value": 115
+  },
+  "li.sens.offer_quantile.down.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 0.90",
+    "text": "0.675",
+    "value": 0.675
+  },
+  "li.sens.offer_quantile.up.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 1.10",
+    "text": "0.2137",
+    "value": 0.213688
+  },
+  "li.sens.offer_quantile.up.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 1.10",
+    "text": "0.0352",
+    "value": 0.035241
+  },
+  "li.sens.offer_quantile.up.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 1.10",
+    "text": "0.8476",
+    "value": 0.847608
+  },
+  "li.sens.offer_quantile.up.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 1.10",
+    "text": "2,561,554",
+    "value": 2561554.0
+  },
+  "li.sens.offer_quantile.up.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 1.10 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.offer_quantile.up.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- offer_quantile x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 1.10",
+    "text": "74",
+    "value": 74
+  },
+  "li.sens.offer_quantile.up.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's offer_quantile x 1.10",
+    "text": "0.825",
+    "value": 0.825
+  },
+  "li.sens.pct_cap.down.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 0.90",
+    "text": "0.2152",
+    "value": 0.215157
+  },
+  "li.sens.pct_cap.down.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 0.90",
+    "text": "0.0363",
+    "value": 0.036265
+  },
+  "li.sens.pct_cap.down.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 0.90",
+    "text": "0.8371",
+    "value": 0.837116
+  },
+  "li.sens.pct_cap.down.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 0.90",
+    "text": "2,841,291",
+    "value": 2841291.0
+  },
+  "li.sens.pct_cap.down.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 0.90 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.pct_cap.down.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 0.90",
+    "text": "95",
+    "value": 95
+  },
+  "li.sens.pct_cap.down.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 0.90",
+    "text": "0.450",
+    "value": 0.45
+  },
+  "li.sens.pct_cap.up.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 1.10",
+    "text": "0.2156",
+    "value": 0.215634
+  },
+  "li.sens.pct_cap.up.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 1.10",
+    "text": "0.0363",
+    "value": 0.036265
+  },
+  "li.sens.pct_cap.up.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 1.10",
+    "text": "0.8371",
+    "value": 0.837116
+  },
+  "li.sens.pct_cap.up.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 1.10",
+    "text": "2,904,140",
+    "value": 2904140.0
+  },
+  "li.sens.pct_cap.up.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 1.10 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.pct_cap.up.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- pct_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 1.10",
+    "text": "95",
+    "value": 95
+  },
+  "li.sens.pct_cap.up.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's pct_cap x 1.10",
+    "text": "0.550",
+    "value": 0.55
+  },
+  "li.sens.revenue_mult_cap.down.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 0.90",
+    "text": "0.2111",
+    "value": 0.211087
+  },
+  "li.sens.revenue_mult_cap.down.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 0.90",
+    "text": "0.0364",
+    "value": 0.036386
+  },
+  "li.sens.revenue_mult_cap.down.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 0.90",
+    "text": "0.8378",
+    "value": 0.837828
+  },
+  "li.sens.revenue_mult_cap.down.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 0.90",
+    "text": "2,352,722",
+    "value": 2352722.0
+  },
+  "li.sens.revenue_mult_cap.down.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 0.90 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.revenue_mult_cap.down.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 0.90",
+    "text": "87",
+    "value": 87
+  },
+  "li.sens.revenue_mult_cap.down.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 0.90",
+    "text": "0.270",
+    "value": 0.27
+  },
+  "li.sens.revenue_mult_cap.up.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 1.10",
+    "text": "0.2197",
+    "value": 0.219681
+  },
+  "li.sens.revenue_mult_cap.up.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 1.10",
+    "text": "0.0368",
+    "value": 0.036837
+  },
+  "li.sens.revenue_mult_cap.up.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 1.10",
+    "text": "0.8384",
+    "value": 0.838375
+  },
+  "li.sens.revenue_mult_cap.up.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 1.10",
+    "text": "3,395,508",
+    "value": 3395508.0
+  },
+  "li.sens.revenue_mult_cap.up.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 1.10 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.revenue_mult_cap.up.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- revenue_mult_cap x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 1.10",
+    "text": "104",
+    "value": 104
+  },
+  "li.sens.revenue_mult_cap.up.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's revenue_mult_cap x 1.10",
+    "text": "0.330",
+    "value": 0.33
+  },
+  "li.sens.step": {
+    "fmt": ".0%",
+    "population": "module constant",
+    "source": "wiki.facts.li_facts.SENS_STEP",
+    "text": "10%",
+    "value": 0.1
+  },
+  "li.sens.target_util.down.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 0.90",
+    "text": "0.2145",
+    "value": 0.214486
+  },
+  "li.sens.target_util.down.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 0.90",
+    "text": "0.0363",
+    "value": 0.036277
+  },
+  "li.sens.target_util.down.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 0.90",
+    "text": "0.8008",
+    "value": 0.800781
+  },
+  "li.sens.target_util.down.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 0.90",
+    "text": "4,318,089",
+    "value": 4318089.0
+  },
+  "li.sens.target_util.down.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 0.90 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.target_util.down.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 0.90",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 0.90",
+    "text": "114",
+    "value": 114
+  },
+  "li.sens.target_util.down.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 0.90",
+    "text": "0.585",
+    "value": 0.585
+  },
+  "li.sens.target_util.up.agg_roe": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 1.10",
+    "text": "0.2153",
+    "value": 0.21535
+  },
+  "li.sens.target_util.up.cohort_pd": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 1.10",
+    "text": "0.0354",
+    "value": 0.03542
+  },
+  "li.sens.target_util.up.cohort_util": {
+    "fmt": ".4f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 1.10",
+    "text": "0.8737",
+    "value": 0.873684
+  },
+  "li.sens.target_util.up.exposure": {
+    "fmt": ",.0f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 1.10",
+    "text": "1,743,073",
+    "value": 1743073.0
+  },
+  "li.sens.target_util.up.gates": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 1.10 (the four cohort gates)",
+    "text": "pass",
+    "value": "pass"
+  },
+  "li.sens.target_util.up.n_offered": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it) -- target_util x 1.10",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 1.10",
+    "text": "76",
+    "value": 76
+  },
+  "li.sens.target_util.up.value": {
+    "fmt": ".3f",
+    "population": "policy constant",
+    "source": "wiki.facts.li_facts.offer_run (train.py's cohort loop: recommended_amount and incremental_roe with the stressed setting) with LINE_INCREASE's target_util x 1.10",
+    "text": "0.715",
+    "value": 0.715
+  },
+  "li.served.page.n": {
+    "fmt": ",d",
+    "population": "the top 10 of candidates() (eligible accounts ranked by probability), in-sample: training rows are scored by the model fitted on them",
+    "source": "line_increase.src.candidates.candidates(top_n=10)",
+    "text": "10",
+    "value": 10
+  },
+  "li.served.page.n_train": {
+    "fmt": ",d",
+    "population": "the top 10 of candidates() (eligible accounts ranked by probability), in-sample: training rows are scored by the model fitted on them",
+    "source": "line_increase.src.candidates.candidates(top_n=10)",
+    "text": "9",
+    "value": 9
+  },
+  "li.served.page.rate": {
+    "fmt": ".1%",
+    "population": "the top 10 of candidates() (eligible accounts ranked by probability), in-sample: training rows are scored by the model fitted on them",
+    "source": "portfolio.line_increase_good",
+    "text": "100.0%",
+    "value": 1.0
+  },
+  "li.served.portal.n": {
+    "fmt": ",d",
+    "population": "the top 25 of candidates() (eligible accounts ranked by probability), in-sample: training rows are scored by the model fitted on them",
+    "source": "line_increase.src.candidates.candidates(top_n=25)",
+    "text": "25",
+    "value": 25
+  },
+  "li.served.portal.n_train": {
+    "fmt": ",d",
+    "population": "the top 25 of candidates() (eligible accounts ranked by probability), in-sample: training rows are scored by the model fitted on them",
+    "source": "line_increase.src.candidates.candidates(top_n=25)",
+    "text": "23",
+    "value": 23
+  },
+  "li.served.portal.rate": {
+    "fmt": ".1%",
+    "population": "the top 25 of candidates() (eligible accounts ranked by probability), in-sample: training rows are scored by the model fitted on them",
+    "source": "portfolio.line_increase_good",
+    "text": "100.0%",
+    "value": 1.0
+  },
+  "li.target": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "line_increase.src.train.TARGET",
+    "text": "line_increase_good",
+    "value": "line_increase_good"
+  },
+  "li.test_share": {
+    "fmt": ".0%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train split (train_test_split, test_size 0.2, seed 42, stratified) (test_size)",
+    "text": "20%",
+    "value": 0.200096
+  },
+  "li.thr.holdout_only": {
+    "fmt": ".4f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train offer calibration (np.quantile of the whole-book probability / score PD, rounded 4dp) over the held-out rows only",
+    "text": "0.2794",
+    "value": 0.2794
+  },
+  "li.thr.share_book": {
+    "fmt": ".1%",
+    "population": "whole booked book, 8,336 accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "25.0%",
+    "value": 0.25
+  },
+  "li.thr.share_holdout": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "23.6%",
+    "value": 0.235612
+  },
+  "li.thr.share_train": {
+    "fmt": ".1%",
+    "population": "training 80% of the booked book (line-increase split, seed 42), in-sample: the model was fitted on these rows",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "25.4%",
+    "value": 0.253599
+  },
+  "li.thr.train_only": {
+    "fmt": ".4f",
+    "population": "training 80% of the booked book (line-increase split, seed 42), in-sample: the model was fitted on these rows",
+    "source": "line_increase.src.train offer calibration (np.quantile of the whole-book probability / score PD, rounded 4dp) over the training rows only",
+    "text": "0.3188",
+    "value": 0.3188
+  },
+  "li.thr_ho.events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- probability >= offer_threshold",
+    "source": "portfolio.line_increase_good",
+    "text": "214",
+    "value": 214
+  },
+  "li.thr_ho.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- probability >= offer_threshold",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "393",
+    "value": 393
+  },
+  "li.thr_ho.observed": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- probability >= offer_threshold",
+    "source": "portfolio.line_increase_good",
+    "text": "54.5%",
+    "value": 0.544529
+  },
+  "li.thr_ho.predicted": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- probability >= offer_threshold",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "60.6%",
+    "value": 0.605542
+  },
+  "li.thr_ho.ratio": {
+    "fmt": ".2f",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- probability >= offer_threshold",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "0.90",
+    "value": 0.899242
+  },
+  "li.thr_ho.status": {
+    "fmt": "",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts) -- probability >= offer_threshold",
+    "source": "wiki.facts.policy ratio tolerance and MIN_BAND_DEFAULTS (events = line_increase_good outcomes)",
+    "text": "within tolerance",
+    "value": "within tolerance"
+  },
+  "li.top20.capture": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability) (share of all held-out positives in the top 20%)",
+    "text": "53.2%",
+    "value": 0.532432
+  },
+  "li.top20.events": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability)",
+    "text": "197",
+    "value": 197
+  },
+  "li.top20.n": {
+    "fmt": ",d",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability) (rows selected)",
+    "text": "334",
+    "value": 334
+  },
+  "li.top20.rate": {
+    "fmt": ".1%",
+    "population": "held-out 20% of the booked book (line-increase split, seed 42, stratified on line_increase_good: 1,668 accounts)",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability)",
+    "text": "59.0%",
+    "value": 0.58982
+  },
+  "li.train.auc": {
+    "fmt": ".4f",
+    "population": "training 80% of the booked book (line-increase split, seed 42), in-sample: the model was fitted on these rows",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "0.9897",
+    "value": 0.989713
+  },
+  "li.train.lift": {
+    "fmt": ".2f",
+    "population": "training 80% of the booked book (line-increase split, seed 42), in-sample: the model was fitted on these rows",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability)",
+    "text": "4.24",
+    "value": 4.238594
+  },
+  "li.whole.auc": {
+    "fmt": ".4f",
+    "population": "whole booked book, 8,336 accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure",
+    "source": "line_increase_model.pkl predict_proba on compute_line_increase_features (as candidates.score_population)",
+    "text": "0.9573",
+    "value": 0.957289
+  },
+  "li.whole.lift": {
+    "fmt": ".2f",
+    "population": "whole booked book, 8,336 accounts, in-sample: 80% are the model's own training rows, so this is not a performance measure -- quote the held-out figure",
+    "source": "line_increase.src.train.top_ventile_lift (top 20% by probability)",
+    "text": "3.94",
+    "value": 3.935949
   },
   "market.base_margin": {
     "fmt": ".1%",

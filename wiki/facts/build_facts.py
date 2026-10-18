@@ -5,7 +5,7 @@
 
 Writes wiki/facts/facts.json (committed), wiki/_variables.yml (for {{< var key >}}, via
 tables.render_all so verify.py checks it too),
-the generated tables in wiki/_generated/, reference/facts.qmd, the D4 figures, the D6 figure and the D7 figure.
+the generated tables in wiki/_generated/, reference/facts.qmd, the D4 figures, the D6 figure, the D7 figure and the D8 figure.
 verify.py recomputes the fast facts (the slow refits only under --full), checks every
 generated file, and fails on any difference.
 """
@@ -16,8 +16,8 @@ import os
 import re
 
 from shared.config import ROOT
-from wiki.facts import (adj_facts, ceiling, ews_facts, figures, policy, pricing_facts,
-                        score_facts, score_stress, tables)
+from wiki.facts import (adj_facts, ceiling, ews_facts, figures, li_facts, policy,
+                        pricing_facts, score_facts, score_stress, tables)
 from wiki.facts.core import Fact, dump_facts, load_facts
 from wiki.facts.data import score_split
 
@@ -27,6 +27,7 @@ GENERATED = WIKI / "_generated"
 FIG_DIR = WIKI / "mdd" / "score" / "fig"
 PRICING_FIG_DIR = WIKI / "mdd" / "pricing" / "fig"
 EWS_FIG_DIR = WIKI / "mdd" / "ews" / "fig"
+LI_FIG_DIR = WIKI / "mdd" / "line_increase" / "fig"
 FACT_INDEX = WIKI / "reference" / "facts.qmd"
 KEY_SEGMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")   # also enforced by wiki/tools/lint.py
 SLOW_PREFIXES = ("score.stress.", "ceiling.ews.oracle_model.")
@@ -42,6 +43,9 @@ def compute(full: bool) -> tuple[dict[str, Fact], dict]:
     es = ews_facts.ews_split()
     facts.update(ews_facts.compute(es))
     facts.update(ceiling.compute_ews(es))
+    ls = li_facts.li_split()
+    facts.update(li_facts.compute(ls, es))
+    facts.update(ceiling.compute_li(ls))
     facts.update(policy.compute())
     if full:
         facts.update(score_stress.compute(split))
@@ -70,6 +74,7 @@ def main(argv: list[str] | None = None) -> None:
     figures.write_all(exhibits, FIG_DIR)
     figures.write_pricing(text, PRICING_FIG_DIR)
     figures.write_ews(text, EWS_FIG_DIR)
+    figures.write_li(text, LI_FIG_DIR)
     print(f"{len(facts)} facts → {FACTS_JSON.relative_to(ROOT)}")
 
 
