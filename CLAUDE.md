@@ -279,7 +279,7 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   `LINE_INCREASE`, app untouched). Not findings, on purpose: the model ranks well (held-out AUC 0.8128,
   lift 2.66x, 93% of the way to the noise-free logit's 0.8349 on the same rows, beats every single
   input with paired CIs above zero), and the offers' overlap with EWS flags is mostly mechanical
-  (observation: by tier offers are *less* flagged — High 7.4% vs 10.0%, High+Medium 25.3% vs 30.0%;
+  (observation: by tier offers are no more flagged — High 7.4% vs 10.0%, p 0.49; High+Medium 25.3% vs 30.0%;
   any trigger 90.5% vs 71.5%, but excluding HIGH_/RISING_UTILIZATION only 63.2% vs 58.5%, and offers
   are selected for utilization; deterioration 21.1% vs 18.0%, exact binomial p 0.42). The six:
   1. 3 of the 6 train.py gates cannot fail — say it precisely: aggregate ROE **by construction**
@@ -294,6 +294,16 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   5. Incremental EAD = increase x current utilization, unvalidated: $3,392,000 committed vs
      $2,874,152 reported; per-loan ROE invariant, aggregate 0.2153 -> 0.2156 fully drawn, same 95.
   6. The label is constructed for every account; no increase was ever granted (selection on a real book).
+  Gate history (8.9): the label — not the gate — was redesigned in the reference build, before this
+  repo's first commit (generator comment: "noise-capped below its metric gate"; reading note §7;
+  doc pack's "escalated ... twice, with opposite resolutions" — D7 is one, this the other). The
+  move EWS declined (Option A); nothing records the first label, its gate, approver or date; the
+  label has its committed form since stage-1 (`e37a49d`). It is the generator's last rng draw, so
+  it cannot have moved another column (reasoned, test-pinned, not checksummed), and it carries
+  EWS's `- 0.4 * deterioration`, so Option A would change it. Never write "changed to fit the
+  gate". The S3-c6 offer is BIZ100132 (`li.video.*`: Refer at origination, $71,000 at 16.7%,
+  High tier but EWS rank 377, not on the watchlist, only HIGH_UTILIZATION). By tier offers are
+  "no more flagged" than the book (p 0.49), not "less".
   Prose says "top-quintile lift" (the lint rejects a typed "20%"). D11 has a D8 subsection; tests pin it
   row-for-row, the offers' floor rule, the prose conclusions and the code claims.
 

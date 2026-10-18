@@ -732,3 +732,40 @@ def test_d8_code_claims_hold():
     assert "line_increase" not in (ROOT / "tests" / "test_leakage.py").read_text()
     # candidates() ranks eligible, never a positive amount
     assert 'df[df["eligible"]]' in inspect.getsource(candidates.candidates)
+
+
+def test_d8_fix_round_claims_hold():
+    """Validator fix round: the gate history, the video's account, the tier comparison."""
+    import inspect
+    from shared import data_generator
+    f = _facts()
+    # 8.9: the label is the last random draw in generate_portfolio_and_panel, so a change to it
+    # cannot alter any other column ("a reasoned argument, not a checksum")
+    src = inspect.getsource(data_generator.generate_portfolio_and_panel)
+    after = src.split("line_increase_good = ", 1)[1]
+    assert "rng." in after.split("\n", 1)[0]                     # the draw itself
+    assert "rng." not in after.split("\n", 1)[1]
+    # 8.2 / 8.9: the label carries EWS's deterioration; Option A's notes say it would change
+    assert "- 0.4 * deterioration" in src
+    notes = (ROOT / "ews" / "docs" / "enhancement_notes.md").read_text()
+    assert "`line_increase_good`, which depends" in notes
+    # 8.9: the label carries the generator's smallest noise; the committed form since stage-1
+    gen = (ROOT / "shared" / "data_generator.py").read_text()
+    assert "rng.normal(0, 0.18, m)" in gen and "rng.normal(0, 0.4, m)" in gen
+    assert "twice, with opposite resolutions" in (ROOT / "tools" / "build_doc_pack.py").read_text()
+    gate = (WIKI / "mdd" / "line_increase" / "gate.qmd").read_text()
+    assert "redrawn until" not in gate and "to fit the gate" not in gate
+    # 8.3: the video's account -- offered, High tier, not on the watchlist, one utilisation
+    # trigger, referred at origination
+    assert (f["li.video.business_id"], f["li.video.eligible"], f["li.video.ews_tier"],
+            f["li.video.on_watchlist"], f["li.video.triggers"], f["adj.li_video.decision"]) == \
+        ("BIZ100132", "yes", "High", "no", "HIGH_UTILIZATION", "Refer")
+    assert _num(f["li.video.ews_rank"]) > _num(f["ews.watchlist.top_n_default"])
+    # 8.5: "no more flagged than the book by tier" -- not distinguishable
+    assert _num(f["li.offers.ews.High.p_value"]) > 0.05
+    assert f["li.offers.ews.high_or_medium.n"] == str(int(_num(f["li.offers.ews.High.n"]) +
+                                                          _num(f["li.offers.ews.Medium.n"])))
+    # finding 4's control is worded the same way in the table and the prose
+    lim = (WIKI / "mdd" / "line_increase" / "limitations.qmd").read_text()
+    assert lim.count("pass it to `incremental_roe` as the hurdle") == 2   # table and prose
+    assert "pass it to `incremental_roe` as the hurdle, with\na test" in lim

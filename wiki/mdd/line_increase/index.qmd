@@ -24,7 +24,7 @@ order: 0
 - **Quote the held-out offers:** {{< var li.offers.n_train >}} of the offers are the model's
   training rows; the held-out offers' label rate is {{< var li.offers_ho.observed >}}
   against a predicted {{< var li.offers_ho.predicted >}}, within tolerance (finding 2).
-- **Offers and Early Warning:** by tier the offers are flagged less than the book; by trigger
+- **Offers and Early Warning:** by tier the offers are no more flagged than the book; by trigger
   more, mostly through the utilisation rules they are selected on; their deterioration rate,
   {{< var li.offers.det.rate >}} against {{< var li.book.det.rate >}}, is not distinguishable
   from the book's ([8.5](performance.qmd#li-ews)).

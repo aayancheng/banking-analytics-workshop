@@ -5,7 +5,7 @@
 | EWS tier High | 7 | 7.4% | 10.0% |
 | EWS tier Medium | 17 | 17.9% | 20.0% |
 | EWS tier Low | 71 | 74.7% | 70.0% |
-| EWS tier High or Medium |  | 25.3% | 30.0% |
+| EWS tier High or Medium | 24 | 25.3% | 30.0% |
 | At least one EWS trigger | 86 | 90.5% | 71.5% |
 | At least one trigger other than the two utilization rules | 60 | 63.2% | 58.5% |
 | `HIGH_UTILIZATION` | 29 | 30.5% | 7.5% |

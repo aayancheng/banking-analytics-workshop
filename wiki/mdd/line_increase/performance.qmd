@@ -63,11 +63,12 @@ matters).
 **Compare only within a row's sample.** On the held-out accounts the noise-free logit reaches
 {{< var ceiling.li.latent_holdout >}}; the model falls short by
 {{< var ceiling.li.gap_holdout >}} and gets {{< var ceiling.li.share_of_reach >}} of the way
-from a coin toss to the ceiling. The ceiling barely depends on the one driver a bank could not
-know at decision time: without the deterioration term it is
+from a coin toss to the ceiling. The ceiling barely depends on the one driver that does not exist
+at decision time: without the deterioration term it is
 {{< var ceiling.li.latent_no_det_holdout >}}. Unlike Early Warning's, this label is
 learnable: the noise is small, and the gate at {{< var li.gate.auc_min >}} sits below what the
-data allow.
+data allow — small by design: the label was redesigned so that the gate became reachable
+([8.9](gate.qmd#history)); the two ceilings are not comparable evidence about the two modules.
 
 ## Baselines: single inputs {#li-baselines}
 
@@ -179,10 +180,11 @@ measure over the whole book, computed as D7 computes its own:
 
 What the table shows, and what it does not:
 
-- **By tier, the offers are flagged less than the book.** {{< var li.offers.ews.High.share >}}
-  of offers are High-tier against {{< var li.book.ews.High.share >}} of the book, and
-  {{< var li.offers.ews.high_or_medium.share >}} are High or Medium against
-  {{< var li.book.ews.high_or_medium.share >}}. None is on Early Warning's default watchlist of the riskiest
+- **By tier, the offers are no more flagged than the book.** {{< var li.offers.ews.High.share >}}
+  of offers are High-tier against {{< var li.book.ews.High.share >}} of the book — not
+  distinguishable on {{< var li.n_offered >}} offers (exact binomial p
+  {{< var li.offers.ews.High.p_value >}}) — and {{< var li.offers.ews.high_or_medium.share >}}
+  are High or Medium against {{< var li.book.ews.high_or_medium.share >}}. None is on Early Warning's default watchlist of the riskiest
   {{< var ews.watchlist.top_n_default >}}.
 - **By trigger, they are flagged more, and the excess is largely mechanical.**
   {{< var li.offers.ews.any_trigger.share >}} carry at least one trigger against

@@ -39,6 +39,8 @@ assert agg_incr_roe >= MARKET["roe_hurdle"], (
 
 `auc` and `lift` are computed on the held-out probabilities, lift by `top_ventile_lift`: the
 label rate among accounts at or above the 80th percentile of probability, over the base rate.
+Despite its name, the function computes a top-quintile lift, not a top-ventile one — a name that
+says less than the code does, as D5 finding 5 records for adjudication's function of the same name.
 The cohort is built by `train.py`'s own loop over the whole book, with the threshold and PD
 ceiling it has just set ([8.3](methodology.qmd#li-threshold)); `agg_incr_roe` is total
 incremental net income over total `capital_ratio` × incremental EAD. The hurdle is `MARKET`'s;
@@ -126,17 +128,28 @@ the four clauses of `eligible`; it must never disagree with the batch:
 
 | Version | Change | Gates |
 |---|---|---|
-| development, before `stage-4` | The generator's comment records that the reference build's first version of the label was noise-capped below its gate, and describes the committed label as leaning on observable drivers with modest noise: the fix was made to the label, not the gate (quoted in [8.2](data.qmd#li-label)). The commit history holds only the final label; how the change was made and approved is not recorded. | not committed |
+| reference build, before this repository's first commit | The generator's comment records that the first version of this label "was noise-capped below its metric gate", and that the committed version leans on observable drivers with modest noise (quoted in [8.2](data.qmd#li-label)): the label was redesigned so that the gate became reachable; the gate was not changed. The project's reading note on the generator gives the same account (`workshop/reading/S1-data-generation.html`, §7). The documentation pack records that the reference build escalated a gate the data could not reach to a human twice, with opposite resolutions (`tools/build_doc_pack.py`); Early Warning's is one ([D7.9](../ews/gate.qmd#history)), and the course materials place the other here. The first label, the gate it was measured against, the approver and the date are not recorded. In this repository the label has had its committed form since `stage-1` (commit `e37a49d`); neither the generator nor `portfolio.parquet` has changed since. | not committed |
 | `stage-4` (commit `dbca721`) | gates introduced with the line-increase model, in `train.py` and `verify.py` | AUC {{< var li.gate.auc_min >}}, lift {{< var li.gate.lift_min >}}×, the four cohort conditions |
 | `stage-5`, `v1.0` to `v1.5`, `main` | unchanged | as above |
 
 The committed gates have not changed since they were committed, and they are never relaxed to
 let a model pass ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
-The one change came before the first commit and went the other way from Early Warning's: there
-the gate was re-specified to fit the data, here the data's label was changed to fit the gate.
-A label redrawn until a model passes is the kind of change a validator should see recorded;
-the generator's comment is the only record, and it calls when such a fix is safe "a Session 4
-story". On the committed label the gate is reachable with room — the noise-free logit reaches
-{{< var ceiling.li.latent_holdout >}} on the held-out accounts ([8.5](performance.qmd#li-ceiling))
-— and the label's construction is finding 6. Any change now would be a change of the committed
-promise: made on `main`, recorded in a new version tag, and shown in this table.
+The one change came before this repository existed, and it is the move Early Warning declined.
+There, Option A — reduce the label's noise in the generator and restore the stronger gate — was
+documented and deferred, and the gate was re-specified to what the data support
+([D7.9](../ews/gate.qmd#history)). Here the label was redesigned instead: the committed label
+carries the smallest noise of the generator's labels and leans on drivers the model can see.
+Because the label is generated, not observed, redesigning it changes what the model is asked to
+predict rather than the evidence it is judged on; on synthetic data that is legitimate when the
+first label, not the gate, was what was wrong, and the record does not show which it was. A
+validator would need the first label, the gate and ceiling it was measured against, and who
+approved the change and when; none is recorded. Whether any column another model consumes
+changed is not recorded either: in the committed generator this label is the last random draw
+in `generate_portfolio_and_panel`, so a change to it cannot alter any other column — a reasoned
+argument, not a checksum. The dependency also runs the other way: the label carries Early
+Warning's (`- 0.4 * deterioration`), so Option A, if it were ever taken, would change this label
+too, as its notes say (`ews/docs/enhancement_notes.md`). On the committed label the gate is
+reachable with room — the noise-free logit reaches {{< var ceiling.li.latent_holdout >}} on the
+held-out accounts ([8.5](performance.qmd#li-ceiling)) — and the label's construction is
+finding 6. Any change now would be a change of the committed promise: made on `main`, recorded
+in a new version tag, and shown in this table.

@@ -20,7 +20,15 @@ funnel facts in [8.1](purpose.qmd#li-funnel): {{< var li.funnel.book.n >}},
 {{< var li.funnel.pd.n >}}, {{< var li.funnel.amount.n >}} and {{< var li.funnel.roe.n >}}.
 The "growth probability" the video names is the model's probability of
 `{{< var li.target >}}`, and the "origination PD" is the scorecard's PD on the booked
-account. The video's lesson is that a funnel which says no to most of the book is protecting
+account. The referred client the video shows receiving an offer of
+\${{< var li.video.amount >}}, at an incremental ROE of {{< var li.video.roe >}}, while "high on
+the watchlist" is `{{< var li.video.business_id >}}` (adjudication's decision on it at
+origination: {{< var adj.li_video.decision >}}): one of the
+{{< var li.offers.ews.High.n >}} offers in Early Warning's {{< var li.video.ews_tier >}} tier
+(ranked {{< var li.video.ews_rank >}} by Early Warning's probability), but it is not on the
+watchlist the portal serves (no offer is), and its only trigger is
+`{{< var li.video.triggers >}}`, a rule offers trip by selection
+([8.5](performance.qmd#li-ews)). The video's lesson is that a funnel which says no to most of the book is protecting
 it; this chapter adds that {{< var li.cohort_gate.n_cannot_fail >}} of the gates that
 check the cohort cannot fail on this book, so the restraint is the rules', and the gate does
 not test it (finding 1, [8.7](limitations.qmd)).

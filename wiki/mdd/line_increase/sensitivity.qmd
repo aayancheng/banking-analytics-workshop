@@ -5,7 +5,7 @@ order: 6
 
 Line Increase has five settings a validator would move: the two quantiles that set the offer
 threshold and the PD ceiling, and three of the four amount settings (`round_to`, the rounding
-step, is not moved). Each was moved by {{< var li.sens.step >}} either way, one at a time, and the offered
+step, is not moved). Each was moved by {{< var li.sens.step >}} of its value either way, one at a time, and the offered
 cohort rebuilt through `train.py`'s own cohort loop — `recommended_amount` with the stressed
 setting, `incremental_roe` with the committed market — over the whole booked book
 (`wiki/facts/li_facts.py`, `offer_run`). The model is not refitted; the quantile scenarios

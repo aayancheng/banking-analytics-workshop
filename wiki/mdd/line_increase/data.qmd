@@ -92,7 +92,10 @@ Four things follow, each used later in the chapter:
 - **One driver is an outcome after the decision.** `deterioration` is Early Warning's label,
   drawn over the same simulated months; a bank deciding today would not know it. Its weight is
   small, and the ceiling with and without it is measured in
-  [8.5](performance.qmd#li-ceiling).
+  [8.5](performance.qmd#li-ceiling). It also makes this label depend on Early Warning's: a
+  change to how deterioration is drawn — D7's deferred Option A, which reduces its noise
+  ([D7.9](../ews/gate.qmd#history)) — would change this label too, as
+  `ews/docs/enhancement_notes.md` says.
 - **No increase was ever granted.** The label is drawn for every booked account from the
   account's state; nothing in the data records an increase being offered, taken up or repaid.
   What "good" would mean on a real book, and who would ever be observed to be good, is

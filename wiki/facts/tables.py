@@ -403,8 +403,7 @@ def li_cohort_ews_table(t: dict[str, str]) -> str:
         return [label, t[f"li.offers.ews.{slug}.n"], t[f"li.offers.ews.{slug}.share"],
                 t[f"li.book.ews.{slug}.share"]]
     rows = [row(f"EWS tier {T}", T) for T in EWS_TIERS]
-    rows.append(["EWS tier High or Medium", "", t["li.offers.ews.high_or_medium.share"],
-                 t["li.book.ews.high_or_medium.share"]])
+    rows.append(row("EWS tier High or Medium", "high_or_medium"))
     rows.append(row("At least one EWS trigger", "any_trigger"))
     rows.append(row("At least one trigger other than the two utilization rules",
                     "non_util_trigger"))

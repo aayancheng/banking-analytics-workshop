@@ -234,7 +234,13 @@ def compute(split) -> dict[str, Fact]:
         put(f"adj.rule.{key}.kind", kind, "", "adjudication.src.policy (decision order)",
             POLICY_POP)
     # the same rules over every applicant: a rule that never fires anywhere is inert
-    reasons_all = decide(X_all, p_all, cfg)["decision_reasons"].tolist()
+    dec_all = decide(X_all, p_all, cfg)
+    reasons_all = dec_all["decision_reasons"].tolist()
+    # the line-increase offer Session 3 shows live (D8.3, video S3-c6): its origination decision
+    from wiki.facts.li_facts import VIDEO_ACCOUNT
+    vi = int(np.nonzero(biz["business_id"].astype(str).to_numpy() == VIDEO_ACCOUNT)[0][0])
+    put("adj.li_video.decision", str(dec_all["decision"].iloc[vi]), "", SRC_DECIDE,
+        f"one applicant, {VIDEO_ACCOUNT}: the line-increase offer Session 3 shows (S3-c6)")
     for key, (kind, text) in rules.items():
         put(f"adj.rule.{key}.n_all", sum(text in r for r in reasons_all), ",d", SRC_HITS,
             ALL + (OV_HIT if kind == "override" else HIT))

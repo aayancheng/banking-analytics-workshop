@@ -96,6 +96,7 @@ TIERS = ["High", "Medium", "Low"]
 EWS_TRIGGER_NAMES = ["HIGH_UTILIZATION", "RISING_UTILIZATION", "DELINQUENCY", "DEPOSIT_DECLINE",
                      "FREQUENT_OVERDRAFTS"]
 UTIL_TRIGGERS = ["HIGH_UTILIZATION", "RISING_UTILIZATION"]   # rules on utilization itself
+VIDEO_ACCOUNT = "BIZ100132"   # the offer Session 3 shows live (S3-c6)
 
 
 @dataclass(frozen=True)
@@ -548,9 +549,30 @@ def compute(ls: LiSplit, es) -> dict[str, Fact]:
         put(f"li.book.ews.trigger.{name.lower()}.share", float(has[name].mean()), ".1%",
             f"{src_t} ({name})", pop_eb)
     offered_ids = set(port["business_id"].astype(str)[off])
-    put("li.offers.ews.watchlist_n", int(sum(
-        r["business_id"] in offered_ids for r in wl.watchlist(_ews_scored(es, tier, trig)))),
+    wl_ids = {r["business_id"] for r in wl.watchlist(_ews_scored(es, tier, trig))}
+    put("li.offers.ews.watchlist_n", len(wl_ids & offered_ids),
         ",d", "ews.src.watchlist.watchlist (default top_n) members that are also offered", pop_e)
+    put("li.offers.ews.high_or_medium.n", int(hm[off].sum()), ",d",
+        src_tier + " (High or Medium)", pop_e)
+    # is the offers' High-tier share distinguishable from the book's?
+    put("li.offers.ews.High.p_value", float(binomtest(int((tier[off] == "High").sum()), n_off,
+                                                      float((tier == "High").mean())).pvalue),
+        ".2f", "scipy.stats.binomtest (exact, two-sided) of the offers' High-tier count against "
+        "the book's High-tier share", pop_e)
+    # the account Session 3's video (S3-c6) shows receiving an offer
+    vid = VIDEO_ACCOUNT
+    i = int(np.nonzero(port["business_id"].astype(str).to_numpy() == vid)[0][0])
+    pop_v = f"one account, {vid}: the example Session 3 shows receiving an offer (video S3-c6)"
+    put("li.video.business_id", vid, "", "wiki.facts.li_facts.VIDEO_ACCOUNT", MODULE_POP)
+    put("li.video.eligible", "yes" if off[i] else "no", "", SRC_ELIG, pop_v)
+    put("li.video.amount", float(sc.amount[i]), ",.0f", SRC_AMT, pop_v)
+    put("li.video.roe", float(sc.roe[i]), ".1%", SRC_ROE, pop_v)
+    put("li.video.ews_tier", str(tier[i]), "", src_tier, pop_v)
+    put("li.video.ews_rank", int((es.prob > es.prob[i]).sum()) + 1, ",d",
+        "rank by the EWS probability over the booked book (1 = riskiest)", pop_v)
+    put("li.video.on_watchlist", "yes" if vid in wl_ids else "no", "",
+        "ews.src.watchlist.watchlist (default top_n)", pop_v)
+    put("li.video.triggers", ", ".join(trig[i]) if len(trig[i]) else "none", "", src_t, pop_v)
     # the EWS probability as a baseline ranking for this label (lower = better candidate)
     e_te = es.prob[te]
     put("li.baseline.ews.auc", float(roc_auc_score(y_te, -e_te)), ".4f",

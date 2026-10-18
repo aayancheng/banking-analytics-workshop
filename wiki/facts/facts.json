@@ -538,6 +538,13 @@
     "text": "2.0",
     "value": 2.0
   },
+  "adj.li_video.decision": {
+    "fmt": "",
+    "population": "one applicant, BIZ100132: the line-increase offer Session 3 shows (S3-c6)",
+    "source": "adjudication.src.policy.decide",
+    "text": "Refer",
+    "value": "Refer"
+  },
   "adj.lift": {
     "fmt": ".2f",
     "population": "held-out 20% of applicants (adjudication split, seed 42, same 12,000 rows as score)",
@@ -4850,6 +4857,13 @@
     "text": "7",
     "value": 7
   },
+  "li.offers.ews.High.p_value": {
+    "fmt": ".2f",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "scipy.stats.binomtest (exact, two-sided) of the offers' High-tier count against the book's High-tier share",
+    "text": "0.49",
+    "value": 0.494255
+  },
   "li.offers.ews.High.share": {
     "fmt": ".1%",
     "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
@@ -4898,6 +4912,13 @@
     "source": "ews.src.triggers.flag_triggers (at least one)",
     "text": "90.5%",
     "value": 0.905263
+  },
+  "li.offers.ews.high_or_medium.n": {
+    "fmt": ",d",
+    "population": "the 95 offered accounts, as the EWS screen tiers and flags them (ews.src.watchlist.risk_tier, ews.src.triggers.flag_triggers)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers (High or Medium)",
+    "text": "24",
+    "value": 24
   },
   "li.offers.ews.high_or_medium.share": {
     "fmt": ".1%",
@@ -5801,6 +5822,62 @@
     "source": "line_increase.src.train.top_ventile_lift (top 20% by probability)",
     "text": "4.24",
     "value": 4.238594
+  },
+  "li.video.amount": {
+    "fmt": ",.0f",
+    "population": "one account, BIZ100132: the example Session 3 shows receiving an offer (video S3-c6)",
+    "source": "line_increase.src.amount_rules.recommended_amount",
+    "text": "71,000",
+    "value": 71000.0
+  },
+  "li.video.business_id": {
+    "fmt": "",
+    "population": "module constant",
+    "source": "wiki.facts.li_facts.VIDEO_ACCOUNT",
+    "text": "BIZ100132",
+    "value": "BIZ100132"
+  },
+  "li.video.eligible": {
+    "fmt": "",
+    "population": "one account, BIZ100132: the example Session 3 shows receiving an offer (video S3-c6)",
+    "source": "candidates.score_population's eligible (prob >= offer_threshold, pd <= offer_max_pd, recommended_amount > 0, incremental_roe clears_hurdle)",
+    "text": "yes",
+    "value": "yes"
+  },
+  "li.video.ews_rank": {
+    "fmt": ",d",
+    "population": "one account, BIZ100132: the example Session 3 shows receiving an offer (video S3-c6)",
+    "source": "rank by the EWS probability over the booked book (1 = riskiest)",
+    "text": "377",
+    "value": 377
+  },
+  "li.video.ews_tier": {
+    "fmt": "",
+    "population": "one account, BIZ100132: the example Session 3 shows receiving an offer (video S3-c6)",
+    "source": "ews.src.watchlist.risk_tier with ews metadata.json tiers",
+    "text": "High",
+    "value": "High"
+  },
+  "li.video.on_watchlist": {
+    "fmt": "",
+    "population": "one account, BIZ100132: the example Session 3 shows receiving an offer (video S3-c6)",
+    "source": "ews.src.watchlist.watchlist (default top_n)",
+    "text": "no",
+    "value": "no"
+  },
+  "li.video.roe": {
+    "fmt": ".1%",
+    "population": "one account, BIZ100132: the example Session 3 shows receiving an offer (video S3-c6)",
+    "source": "line_increase.src.amount_rules.incremental_roe",
+    "text": "16.7%",
+    "value": 0.166853
+  },
+  "li.video.triggers": {
+    "fmt": "",
+    "population": "one account, BIZ100132: the example Session 3 shows receiving an offer (video S3-c6)",
+    "source": "ews.src.triggers.flag_triggers",
+    "text": "HIGH_UTILIZATION",
+    "value": "HIGH_UTILIZATION"
   },
   "li.whole.auc": {
     "fmt": ".4f",
