@@ -1,7 +1,14 @@
-# Renders the wiki's site profile to GitHub Pages. Manual until Yan enables Pages
-# (Settings → Pages → Source: GitHub Actions); then add `push: branches: [main]`.
+# Renders the wiki's site profile to GitHub Pages (Settings → Pages → Source: GitHub Actions).
+# Runs on every push to main that touches the wiki, and by hand from the Actions tab.
+# The lint runs --strict first so missing video ids show in the log, then non-strict so they
+# never block a deploy; a real lint failure still fails the build.
 name: wiki
 on:
+  push:
+    branches: [main]
+    paths:
+      - "wiki/**"
+      - ".github/workflows/wiki.yml"
   workflow_dispatch:
 permissions:
   contents: read
@@ -9,7 +16,7 @@ permissions:
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false  # never cancel a deploy half-way
 jobs:
   build:
     runs-on: ubuntu-latest
