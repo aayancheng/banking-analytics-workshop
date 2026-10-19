@@ -7783,6 +7783,13 @@
     "text": "80.4%",
     "value": 0.8041
   },
+  "pricing.worst_ead_band": {
+    "fmt": "",
+    "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",
+    "source": "pricing.src.portfolio.price_population (bands ranked by mispriced EAD)",
+    "text": "D",
+    "value": "D"
+  },
   "pricing.worst_industry": {
     "fmt": "",
     "population": "booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate)",

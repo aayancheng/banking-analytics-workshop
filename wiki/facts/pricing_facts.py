@@ -179,6 +179,10 @@ def compute() -> dict[str, Fact]:
         put(f"pricing.{tag}", b, "", SRC_SUM + " (bands ranked by mispriced rate)", BOOKED)
         put(f"pricing.{tag}_rate", by_band[b]["mispriced_rate"], ".1%", SRC_SUM,
             f"booked book, score band {b}")
+    mis_ead = {b: float(df.loc[(df["score_band"] == b) & df["mispriced"], "ead"].sum())
+               for b in BANDS}
+    put("pricing.worst_ead_band", max(BANDS, key=lambda b: (mis_ead[b], b)), "",
+        SRC_PP + " (bands ranked by mispriced EAD)", BOOKED)
 
     by_ind = {r["key"]: r for r in s["by_industry"]}
     for name, r in by_ind.items():

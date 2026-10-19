@@ -46,8 +46,9 @@ python -m wiki.homework.check H3.2
 ```
 
 The check prices the book itself. It wants the band with the highest mispriced share named
-beside its share, the band with the most mispriced EAD named beside its amount (in
-millions, in billions or as the full figure), and no sentence that calls that band worst
+beside its share and a sentence of your own (not only a table) saying it is worst by share;
+the band with the most mispriced EAD named beside its amount (in millions, in billions or as
+the full figure); and no sentence calling that band worst by share, "by every measure", or
 without a money measure. Quoting the transcript's claim is fine.
 
 ## The trap

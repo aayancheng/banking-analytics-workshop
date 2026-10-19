@@ -22,8 +22,9 @@ decision layer can matter as much as the model.
 {{< yt S3-c2 >}}
 
 Adjudication: hard knockouts decline whatever the PD, PD zones sort the rest, and refer
-overrides send thin files to a person. Over all applicants, as the portal decides them:
-Approve {{< var adj.book.Approve.n >}}, Refer {{< var adj.book.Refer.n >}}, Decline
+overrides send thin files to a person. Over all applicants, as the portal decides them —
+a description of what it decides, not a performance measure: the model was trained on
+four in five of these rows, so their PDs are in-sample — Approve {{< var adj.book.Approve.n >}}, Refer {{< var adj.book.Refer.n >}}, Decline
 {{< var adj.book.Decline.n >}}. Most Declines are knockouts, not the model
 ([D5.3](../mdd/adjudication/methodology.qmd#adj-knockouts-dominate)).
 
@@ -42,7 +43,8 @@ quote can only be judged against the bank's own PD. It does not show a pricing p
 generator quotes without the capital charge, so the level is a property of the data
 ([D6.7, finding 1](../mdd/pricing/limitations.qmd)). And "worst" needs a measure: by share of
 loans, mispricing is worst in band {{< var pricing.worst_band >}}
-({{< var pricing.worst_band_rate >}}); by mispriced exposure, in band D
+({{< var pricing.worst_band_rate >}}); by mispriced exposure, in band
+{{< var pricing.worst_ead_band >}}
 ([D6.5](../mdd/pricing/performance.qmd#pr-by-band)). Homework H3.2 is about exactly that.
 
 {{< yt S3-c5 >}}
@@ -62,8 +64,10 @@ then the funnel over the book — {{< var li.funnel.book.n >}} booked accounts,
 {{< var li.funnel.pd.n >}} after the probability and PD clauses,
 {{< var li.funnel.amount.n >}} with a positive amount, {{< var li.funnel.roe.n >}} offers. The
 video's lesson is that a funnel which says no to most of the book is protecting it. D8 adds
-that {{< var li.cohort_gate.n_cannot_fail >}} of the gates that check the cohort cannot fail on
-this book, so the restraint is the rules', and the gate does not test it
+that all {{< var li.cohort_gate.n_cannot_fail >}} of the gates that check the offered cohort
+cannot fail — {{< var li.cohort_gate.n_by_construction >}} by construction,
+{{< var li.cohort_gate.n_on_this_book >}} on this book — so the restraint is the rules', and the
+gate does not test it
 ([D8.3](../mdd/line_increase/methodology.qmd),
 [D8.7, finding 1](../mdd/line_increase/limitations.qmd)).
 
@@ -133,5 +137,5 @@ changes returns the batch decision.
 
 Three exercises: move a policy threshold through `decide` and explain why the decision mix
 moves the way it does; catch an agent that says mispricing is worst in band D; and audit a
-what-if that re-tiers the watchlist from a rounded column — a defect the workbench shipped
-with. Each has a self-check: [Session 3 homework](homework-s3.qmd).
+what-if that re-tiers the watchlist from a rounded column — a defect the workbench's first
+build had, which the final review caught before it was merged. Each has a self-check: [Session 3 homework](homework-s3.qmd).

@@ -1120,6 +1120,7 @@ title: "Every number in this documentation"
 | `pricing.whatif.pd_max_diff` | < 1e-12 | booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) | `predict_score_pd on all 12,000 applicants (the portal) vs on the booked rows alone (price_population): max abs PD difference -- asserted below tests/test_engine.py's tolerance (pytest.approx abs=) in wiki.facts.pricing_facts.compute` |
 | `pricing.worst_band` | AAA | booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) | `pricing.src.portfolio.portfolio_summary (bands ranked by mispriced rate)` |
 | `pricing.worst_band_rate` | 80.4% | booked book, score band AAA | `pricing.src.portfolio.portfolio_summary` |
+| `pricing.worst_ead_band` | D | booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) | `pricing.src.portfolio.price_population (bands ranked by mispriced EAD)` |
 | `pricing.worst_industry` | Construction | booked book, 8,336 loans (PD from predict_score_pd, EAD = requested_amount, quoted rate = risk_based_rate) | `pricing.src.portfolio.portfolio_summary (industries ranked by mispriced rate)` |
 | `pricing.worst_industry_rate` | 76.7% | booked book, industry Construction | `pricing.src.portfolio.portfolio_summary` |
 | `score.auc_ci_half` | 0.02 | held-out 20% of applicants (score split, seed 42) | `bootstrap, 1000 resamples, seed 42` |

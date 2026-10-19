@@ -1425,6 +1425,7 @@ pricing:
     pd_max_diff: "< 1e-12"
   worst_band: "AAA"
   worst_band_rate: "80.4%"
+  worst_ead_band: "D"
   worst_industry: "Construction"
   worst_industry_rate: "76.7%"
 score:

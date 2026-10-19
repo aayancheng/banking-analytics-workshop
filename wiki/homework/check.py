@@ -124,12 +124,13 @@ def _git(*args: str) -> str | None:
     return r.stdout if r.returncode == 0 else None
 
 
-def _untouched(*paths: str) -> tuple[bool, str]:
+def _untouched(*paths: str) -> tuple[bool | None, str]:
     """Nothing under these paths is modified, added or deleted (an answer belongs in
     wiki/homework/_answers/, which git ignores)."""
     out = _git("status", "--porcelain", "--", *paths)
     if out is None:
-        return True, f"could not ask git about {', '.join(paths)}; check git status yourself"
+        return None, (f"could not ask git about {', '.join(paths)} — not checked; run git "
+                      "status yourself and restore anything the agent changed")
     changed = sorted({line[3:] for line in out.splitlines() if line.strip()})
     if not changed:
         return True, f"nothing changed under {', '.join(paths)}"
@@ -263,12 +264,17 @@ def _evidence(raw: str, facts: dict, i: int) -> tuple[bool, str]:
 
 
 # --- Session 1 -------------------------------------------------------------------------------
-LEAK_LINE = re.compile(r"^[ \t]*(?:[-*][ \t]+)?\*{0,2}LEAK\*{0,2}[ \t]*:\*{0,2}[ \t]*`?([A-Za-z_]\w*)`?"
-                       r"[ \t]*[—–:-]*[ \t]*(.*)$", re.M)
+LEAK_LINE = re.compile(r"^[ \t]*(?:(?:[-*]|\d+[.)])[ \t]+)?\*{0,2}LEAK\*{0,2}[ \t]*:\*{0,2}[ \t]*"
+                       r"`?([A-Za-z_]\w*)`?[ \t]*[—–:-]*[ \t]*(.*)$", re.M | re.I)
 DECISION_TIME = re.compile(r"decision|origination|application|underwrit", re.I)
 ABSENT = re.compile(r"\b(not exist|doesn't exist|does not exist|not available|unavailable|"
-                    r"not known|unknown|never|cannot|can't|no such|not observed|unobserved)\b",
-                    re.I)
+                    r"not known|unknown|never|cannot|can't|no such|not observed|unobserved)\b"
+                    r"|\bno \w+ (has|have|observes|sees|knows)\b", re.I)
+ONLY_SIM = re.compile(r"(exists?|lives?) only (inside|in) the (simulator|generator|simulation)",
+                      re.I)
+ABOUT_PD = re.compile(r"pd_default_origination|true PD|true probability|the truth", re.I)
+CAN_SHIP = re.compile(r"\b(can|could|should|may)\s+(safely\s+)?(ship|be shipped|go live|be "
+                      r"deployed)\b|safe to (ship|deploy)", re.I)
 LABEL_WORD = re.compile(r"(?<![\w])default(?![\w])|\blabel\b|\boutcome\b|\banswer itself\b", re.I)
 TRUEPD_WORD = re.compile(r"pd_default_origination|true PD|true probability", re.I)
 WHY_NOT_ONE = re.compile(r"bernoulli|binomial|coin|draw|drawn|random|noise|noisy|chance|stochastic|"
@@ -309,12 +315,20 @@ def h1_2(args):
     truepd, honest = lk["leakage.truepd.auc"], lk["leakage.honest.auc"]
     yield _quotes(ans, truepd.value, f"you quote the true-PD rung ({truepd.text()}, recomputed)")
     yield _quotes(ans, honest.value, f"you quote the honest rung ({honest.text()}, recomputed)")
-    said = any(DECISION_TIME.search(s) and ABSENT.search(s) for s in _sentences(ans))
-    yield said, ("you say the true PD does not exist when the decision is made" if said else
-                 "say, in one sentence, why this rung cannot ship: the true PD does not exist "
-                 "at decision time")
+    said = any(ABOUT_PD.search(s) and (ONLY_SIM.search(s) or (DECISION_TIME.search(s)
+                                                              and ABSENT.search(s)))
+               for s in _sentences(ans))
+    ships = [s for s in _sentences(ans) if CAN_SHIP.search(s)]
+    yield said and not ships, (
+        f"you say it can ship: \"{ships[0][:90]}\"" if ships else
+        "you say the true PD does not exist when the decision is made" if said else
+        "say, in one sentence, why this rung cannot ship: the true PD does not exist "
+        "at decision time")
     probes = _probes_left()
-    if probes is not None:
+    if probes is None:
+        yield None, ("could not ask git for untracked files — not checked; delete the probe "
+                     "script yourself")
+    else:
         yield not probes, ("no probe script left in the repository" if not probes else
                            f"delete the probe now you have its number: {', '.join(probes)}")
     yield _leakage_intact()
@@ -341,7 +355,7 @@ def h1_3(args):
     truepd, label = lk["leakage.truepd.auc"], lk["leakage.label.auc"]
     rows = [l for l in ans.splitlines() if l.lstrip().startswith("|")]
     pd_rows = [r for r in rows if TRUEPD_WORD.search(r)]
-    lab_rows = [r for r in rows if LABEL_WORD.search(r) and not TRUEPD_WORD.search(r)]
+    lab_rows = [r for r in rows if LABEL_WORD.search(r)]
     ok_pd = any(_matches(truepd.value, v, dp) for r in pd_rows for _, v, dp in _numbers(r))
     yield ok_pd, (f"your table gives the true-PD leak its AUC ({truepd.text()}, recomputed)"
                   if ok_pd else f"no table row naming the true PD (pd_default_origination) "
@@ -361,9 +375,14 @@ def h1_3(args):
 # --- Session 3 -------------------------------------------------------------------------------
 DECISIONS = ["Approve", "Refer", "Decline"]
 BOOK_WORD = re.compile(r"book|applicant|12000|population|portal", re.I)
-OVERRIDE_WORD = re.compile(r"override|dscr_refer_hi|thin", re.I)
-ROUND_WORD = re.compile(r"\bround|\b4 ?dp\b|four decimal|decimal places|precision", re.I)
-RAW_WORD = re.compile(r"unrounded|raw prob|full[- ]precision|predict_proba|not rounded|"
+OVERRIDE_WORD = re.compile(r"override|dscr_refer_hi|thin|affordability|refer rule", re.I)
+APPROVE_SAME = re.compile(r"\b(no|0|zero|none of the)\s+approv\w*\s+(decisions?\s+|files?\s+)?"
+                          r"(change|move|flip)|approv\w*[^.;:]*?\b(unchanged|(does|did|do) not "
+                          r"(move|change)|(doesn't|didn't|don't) (move|change)|not affected|"
+                          r"stays?|remains?|the same)\b", re.I)
+ROUND_WORD = re.compile(r"\bround|\btruncat|\b4 ?dp\b|four decimal|decimal places|precision",
+                        re.I)
+RAW_WORD = re.compile(r"un-?rounded|raw prob|full[- ]precision|exact prob|predict_proba|not rounded|"
                       r"before (it is |it's )?round|ews_prob_raw", re.I)
 MONEY_WORD = re.compile(r"\bEAD\b|exposure|dollar|\$|money|amount|balance|million|\bbn\b|"
                         r"billion", re.I)
@@ -408,12 +427,28 @@ def h3_1(args):
         ok = n in counts or any(_matches(share, v, dp) for _, v, dp in _numbers(ans))
         yield ok, (f"you give the new {k} count or share ({n:,}, {share:.1%})" if ok else
                    f"the new {k} count or share is missing ({n:,}, {share:.1%}, recomputed)")
-    scoped = [s for s in _sentences(_plain(ans)) if str(flipped) in s]
-    named = any(BOOK_WORD.search(s) for s in scoped)
+    plain = _plain(ans)
+    scoped = [s for s in _sentences(plain) if str(flipped) in s]
+    named = (any(BOOK_WORD.search(s) for s in scoped)
+             or bool(re.search(r"all 12000 applicants|whole book|as the portal", plain, re.I)))
     yield named or not scoped, ("you say which population the change is counted on" if named
                                 or not scoped else
                                 "the sentence that gives the changed decisions does not say "
                                 "on whom: all applicants, as the portal decides them")
+    # Approve does not move. Any other Approve count or share stated is wrong.
+    good_n = {int((x == k).sum()) for x in (base, moved) for k in DECISIONS} | {flipped, len(base)}
+    good_sh = [float((x == k).mean()) for x in (base, moved) for k in DECISIONS]
+    wrong = [shown for ctx in _contexts(plain) if re.search(r"approv", ctx, re.I)
+             for shown, v, dp in _numbers(ctx)
+             if (shown.endswith("%") and not any(_matches(g, v, dp, (1, 2, 3, 4, 5, 6))
+                                                  for g in good_sh))
+             or (dp == 0 and v >= 100 and int(v) not in good_n)]
+    yield not wrong, ("no other Approve count is given" if not wrong else
+                      f"Approve does not move ({int((base == 'Approve').sum()):,} before and "
+                      f"after, recomputed); your answer gives {', '.join(wrong)}")
+    same = bool(APPROVE_SAME.search(ans))
+    yield same, ("you say Approve does not change" if same else
+                 "say in words that Approve does not change — and why")
     why = bool(OVERRIDE_WORD.search(ans))
     yield why, ("you name the override that explains why Approve does not move" if why else
                 "explain the Approve count: which rule already holds the files between the "
@@ -449,12 +484,46 @@ def h3_2(args):
                f"name the band with the most mispriced EAD and the amount: recomputed, band "
                f"{by_ead} at ${ead[by_ead]:,.0f}, in one sentence or table row")
     own = "\n".join(l for l in ans.splitlines()        # the claim, quoted, is not yours
-                    if not l.lstrip().startswith(("#", ">")))
+                    if not l.lstrip().startswith(("#", ">", "|")))
     own = re.sub(r'"[^"\n]*"|“[^”\n]*”', '""', own)
-    bare = [s for s in _sentences(own) if re.search(rf"\bband {by_ead}\b", s, re.I)
-            and WORST_WORD.search(s) and not MONEY_WORD.search(s)]
+    items = [l for l in own.splitlines() if LIST_ITEM.match(l)]
+    prose = [s for s in _sentences("\n".join(l for l in own.splitlines() if l not in items))]
+    said = prose + [s for l in items for s in _sentences(l)]
+    rate_band, ead_band = _band_word(by_rate), _band_word(by_ead)
+    by_share = [s for s in prose if _worst_claim(s) and rate_band.search(s)
+                and SHARE_WORD.search(s)]
+    yield bool(by_share), (f"you say, in a sentence, that by share band {by_rate} is worst"
+                           if by_share else
+                           f"say in a sentence of your own (not only a table or list) which band "
+                           f"is worst by share of loans mispriced: recomputed, {by_rate}")
+    wrong = [s for s in said if _worst_claim(s) and ead_band.search(s)
+             and (EVERY.search(s) or (SHARE_WORD.search(s) and not rate_band.search(s)))]
+    yield not wrong, ("no sentence says band {0} is worst by share".format(by_ead) if not wrong
+                      else f"band {by_ead} is not worst by share: \"{wrong[0][:90]}\"")
+    bare = [s for s in said if _worst_claim(s) and ead_band.search(s)
+            and not MONEY_WORD.search(s)]
     yield not bare, ("every 'worst' says by what measure" if not bare else
                      f"'worst' without its measure: \"{bare[0][:90]}\" — by share or by EAD?")
+
+
+LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
+SHARE_WORD = re.compile(r"\bshare\b|\brate\b|proportion|percentage|% of (the )?loans|"
+                        r"\bof (the )?loans\b|by count|how often", re.I)
+EVERY = re.compile(r"every measure|all measures|both measures|any measure|by all|on every count",
+                   re.I)
+
+
+def _band_word(b: str) -> re.Pattern:
+    """A score band named as a word: 'band D', 'D band', 'The riskiest band, D, ...' -- but
+    not D6.5 or a D inside another word."""
+    return re.compile(rf"(?<![\w.]){re.escape(b)}(?!\w)(?!\.\w)")
+
+
+def _worst_claim(s: str) -> bool:
+    """'worst', or 'most / highest / largest' about mispricing. 'Band D has the highest PD'
+    is not a claim about where mispricing is worst."""
+    return bool(re.search(r"\bworst\b", s, re.I)
+                or (WORST_WORD.search(s) and re.search(r"mispric", s, re.I)))
 
 
 @lru_cache(maxsize=1)
@@ -508,7 +577,7 @@ def run(hid: str, part: str | None = None) -> tuple[bool, list[str]]:
     try:
         for passed, msg in CHECKS[hid](argparse.Namespace(part=part)):
             ok &= bool(passed)
-            lines.append(("✅ " if passed else "❌ ") + msg)
+            lines.append(("⚠️ " if passed is None else "✅ " if passed else "❌ ") + msg)
     except Missing as e:
         return False, [f"❌ {e}"]
     return ok, lines

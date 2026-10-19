@@ -35,7 +35,7 @@ full recordings.
    - **Do the homework** with your agent, and run its self-check:
      `python -m wiki.homework.check <ID>`.
    - **Check** that `python verify.py` still passes. If it does not, your agent changed
-     something it should not have; the chapter says how to put it back.
+     something it should not have; each homework page ends with how to put it back.
 
 | Session | Chapter | Homework |
 |---|---|---|

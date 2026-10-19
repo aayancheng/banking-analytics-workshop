@@ -450,3 +450,203 @@ def test_every_checked_exercise_has_a_prompt_card_and_a_page_section():
         assert f"python -m wiki.homework.check {hid}" in pages, hid
         if hid not in ("H4.3",):
             assert (root / "workshop/prompt-cards" / f"HW-{hid}.md").exists(), hid
+
+
+# --- fix round: review cases (reproduction harness /tmp/hwrev) -----------------------------
+
+def _p(key):
+    return _fact(key)
+
+
+# C1. H3.2 must not pass the transcript's own conclusion beside a table or a list.
+
+def _h3_2_table():
+    rows = "".join(f"| {b} | {_p(f'pricing.band.{b}.n')} | {_p(f'pricing.band.{b}.mispriced_rate')} "
+                   f"| ${_p(f'pricing.band.{b}.mispriced_ead')} |\n"
+                   for b in ("AAA", "A", "B", "C", "D"))
+    return "| Band | Loans | Mispriced share | Mispriced EAD |\n|---|---|---|---|\n" + rows
+
+
+def test_h3_2_fails_the_transcript_conclusion_beside_a_table(answers):
+    (answers / "H3.2.md").write_text(
+        _h3_2_table() + "\nThe agent was right: mispricing is worst in band D, which holds "
+        f"${_p('pricing.band.D.mispriced_ead')} of mispriced EAD. The pricing desk should start there.\n")
+    ok, lines = check.run("H3.2")
+    assert not ok and any("worst by share" in l for l in lines if l.startswith("❌")), lines
+
+
+def test_h3_2_fails_the_transcript_conclusion_beside_a_list(answers):
+    shares = ", ".join(f"{b} {_p(f'pricing.band.{b}.mispriced_rate')}" for b in ("AAA", "A", "B", "C", "D"))
+    (answers / "H3.2.md").write_text(
+        f"Mispriced share by band: {shares}.\n"
+        f"Mispriced EAD: D ${_p('pricing.band.D.mispriced_ead')}.\n"
+        f"Mispricing is worst in band D, with ${_p('pricing.band.D.mispriced_ead')} of exposure "
+        "below the hurdle.\n")
+    ok, lines = check.run("H3.2")
+    assert not ok, lines
+
+
+def test_h3_2_the_share_reading_in_a_list_item_alone_is_not_enough(answers):
+    (answers / "H3.2.md").write_text(
+        f"- By share of loans, {_p('pricing.worst_band')} is worst at "
+        f"{_p('pricing.worst_band_rate')}.\n"
+        f"- By mispriced EAD, band D is worst, with ${_p('pricing.band.D.mispriced_ead')}.\n")
+    ok, lines = check.run("H3.2")
+    assert not ok and "not only a table or list" in lines[2], lines
+
+
+@pytest.mark.parametrize("claim", [
+    "By share of loans mispriced, band D is the worst.",
+    "Band D is worst by every measure, with ${ead} of mispriced EAD.",
+    "The riskiest band, D, is worst by mispriced share.",
+])
+def test_h3_2_fails_band_d_worst_by_share_or_by_every_measure(answers, claim):
+    (answers / "H3.2.md").write_text(_h3_2() + " " + claim.format(ead=_p("pricing.band.D.mispriced_ead")))
+    ok, lines = check.run("H3.2")
+    assert not ok, lines
+
+
+def test_h3_2_d_is_a_band_without_the_word_band(answers):
+    (answers / "H3.2.md").write_text(_h3_2() + " The riskiest band, D, is the worst one.")
+    ok, lines = check.run("H3.2")
+    assert not ok and "without its measure" in lines[-1], lines
+
+
+def test_h3_2_a_fact_about_band_d_is_not_a_worst_claim(answers):
+    (answers / "H3.2.md").write_text(_h3_2() + " Band D has the highest PD and the most loans.")
+    ok, lines = check.run("H3.2")
+    assert ok, lines
+
+
+def test_h3_2_the_check_and_the_fact_agree_on_the_bands():
+    rate, ead = check._by_band()
+    assert max(ead, key=ead.get) == _p("pricing.worst_ead_band")
+    assert max(rate, key=rate.get) == _p("pricing.worst_band")
+
+
+# C2. H3.1: Approve does not change, and the answer must say so.
+
+def test_h3_1_fails_a_different_after_approve_count(answers, clean_git):
+    (answers / "H3.1.md").write_text(_h3_1() + " Approve falls to 3,512 after the change.")
+    ok, lines = check.run("H3.1")
+    assert not ok and any("3512" in l for l in lines if l.startswith("❌")), lines
+
+
+def test_h3_1_fails_a_different_approve_count_in_a_table(answers, clean_git):
+    (answers / "H3.1.md").write_text(
+        "| Decision | Before | After |\n|---|---|---|\n"
+        f"| Approve | {_p('adj.book.Approve.n')} | 3,512 |\n" + _h3_1())
+    ok, lines = check.run("H3.1")
+    assert not ok, lines
+
+
+def test_h3_1_fails_a_different_approve_share(answers, clean_git):
+    (answers / "H3.1.md").write_text(_h3_1() + " Approve's share drops to 29.3%.")
+    ok, lines = check.run("H3.1")
+    assert not ok, lines
+
+
+def test_h3_1_requires_saying_approve_does_not_change(answers, clean_git):
+    (answers / "H3.1.md").write_text(_h3_1().replace(
+        "Approve does not move: the thin-margin override already sent those files to Refer.",
+        "The thin-margin override explains the Approve row."))
+    ok, lines = check.run("H3.1")
+    assert not ok and any("Approve does not change" in l for l in lines if l.startswith("❌")), lines
+
+
+@pytest.mark.parametrize("same", ["Approve is unchanged.", "No Approve decisions change.",
+                                  "0 Approve changes.", "Approvals stay the same."])
+def test_h3_1_accepts_ways_of_saying_approve_is_unchanged(answers, clean_git, same):
+    text = _h3_1().replace("Approve does not move: the thin-margin override already sent those "
+                           "files to Refer.", same + " The thin-margin override holds those files.")
+    (answers / "H3.1.md").write_text(text)
+    ok, lines = check.run("H3.1")
+    assert ok, lines
+
+
+# I2. Correct prose that must not false-fail; wrong prose that must not pass.
+
+@pytest.mark.parametrize("why", [
+    "No bank has the true PD at decision time.",
+    "The true PD exists only inside the simulator.",
+    "The true PD is not available at decision time.",
+])
+def test_h1_2_accepts_other_ways_of_saying_the_true_pd_is_absent(answers, clean_git, why):
+    (answers / "H1.2.md").write_text(
+        f"Honest {_p('leakage.honest.auc')}; with the true PD {_p('leakage.truepd.auc')}. {why}")
+    ok, lines = check.run("H1.2")
+    assert ok, lines
+
+
+@pytest.mark.parametrize("why", [
+    "It can ship once the true PD is available at decision time.",
+    "The model cannot be beaten at decision time.",
+])
+def test_h1_2_fails_the_wrong_reason(answers, clean_git, why):
+    (answers / "H1.2.md").write_text(
+        f"Honest {_p('leakage.honest.auc')}; with the true PD {_p('leakage.truepd.auc')}. {why}")
+    ok, lines = check.run("H1.2")
+    assert not ok and lines[2].startswith("❌"), lines
+
+
+def test_h1_1_accepts_numbered_and_lower_case_leak_lines(answers):
+    text = GOOD_H1_1.replace("- **LEAK:**", "1. **leak:**").replace("- LEAK:", "2) Leak:")
+    (answers / "H1.1.md").write_text(text)
+    ok, lines = check.run("H1.1")
+    assert ok, lines
+
+
+def test_h1_3_a_label_row_that_mentions_the_true_pd_still_counts(answers):
+    (answers / "H1.3.md").write_text(_h1_3().replace(
+        "| `default`, the label |", "| `default`, the label (not the true PD) |"))
+    ok, lines = check.run("H1.3")
+    assert ok, lines
+
+
+def test_h3_1_population_in_its_own_sentence_and_change_in_a_table(answers, clean_git):
+    (answers / "H3.1.md").write_text(
+        "Counted over all 12,000 applicants, as the portal decides them.\n\n"
+        "| Decision | Before | After |\n|---|---|---|\n"
+        + "".join(f"| {k} | {_p(f'adj.book.{k}.n')} | {_p(f'adj.dscr_whatif.{k}.n')} |\n"
+                  for k in ("Approve", "Refer", "Decline"))
+        + f"| changed | | {_p('adj.dscr_whatif.flipped')} |\n\n"
+        "Approve is unchanged: the policy's \"thin affordability margin (dscr)\" reason already "
+        "held those files.\n")
+    ok, lines = check.run("H3.1")
+    assert ok, lines
+
+
+def test_h3_1_accepts_the_affordability_refer_rule(answers, clean_git):
+    (answers / "H3.1.md").write_text(_h3_1().replace(
+        "the thin-margin override", "the affordability refer rule"))
+    ok, lines = check.run("H3.1")
+    assert ok, lines
+
+
+@pytest.mark.parametrize("cause, fix", [
+    ("score_population stores prob truncated to 4 places", "re-tier from the un-rounded value"),
+    ("the stored prob is rounded", "re-tier from the exact probability"),
+    ("the stored prob is rounded", "use the full-precision probability"),
+])
+def test_h3_3_accepts_other_words_for_the_cause_and_the_fix(answers, clean_git, cause, fix):
+    (answers / "H3.3.md").write_text(
+        f"{_p('ews.rounded_retier.flip1.business_id')} and "
+        f"{_p('ews.rounded_retier.flip2.business_id')} change tier: {cause}. Fix: {fix}.")
+    ok, lines = check.run("H3.3")
+    assert ok, lines
+
+
+# Minor: a git that cannot be asked is never reported as a pass.
+
+def test_untouched_is_not_a_pass_when_git_cannot_be_asked(answers, monkeypatch):
+    monkeypatch.setattr(check, "_git", lambda *a: None)
+    (answers / "H3.3.md").write_text(_h3_3())
+    ok, lines = check.run("H3.3")
+    assert not ok and lines[-1].startswith("⚠️") and "not checked" in lines[-1]
+
+
+def test_probe_check_warns_when_git_cannot_be_asked(answers, monkeypatch):
+    monkeypatch.setattr(check, "_git", lambda *a: None)
+    (answers / "H1.2.md").write_text(_h1_2(_p("leakage.truepd.auc")))
+    ok, lines = check.run("H1.2")
+    assert not ok and lines[3].startswith("⚠️") and "delete the probe" in lines[3]

@@ -68,9 +68,15 @@ borrower, so a model fed it is reading another model's answer", and that `booked
 about this data. Reading `shared/data_generator.py` showed the stronger reason for each:
 
 ```python
-risk_based_rate = (MARKET["cost_of_funds"] + pd_true * MARKET["lgd"]
-                   + MARKET["opex_rate"] + MARKET["base_margin"] + rng.normal(0.0, 0.003, n)).round(4)
-approve_logit = 2.0 - 6.0 * pd_true + rng.normal(0.0, 0.5, n)
+    risk_based_rate = (                                   # shared/data_generator.py, verbatim
+        MARKET["cost_of_funds"]
+        + pd_true * MARKET["lgd"]
+        + MARKET["opex_rate"]
+        + MARKET["base_margin"]
+        + rng.normal(0.0, 0.003, n)
+    ).round(4)
+
+    approve_logit = 2.0 - 6.0 * pd_true + rng.normal(0.0, 0.5, n)
 ```
 
 Both columns are the true PD in disguise. The check confirms the list, not the reasons; the
@@ -170,7 +176,7 @@ sentence. The facts already held an AUC for the true PD — {{< var ceiling.true
 all applicants — which is *below* the rung. Set beside {{< var leakage.truepd.auc >}}, it says
 a model leaking the truth beats the truth. It does not: the two numbers are measured on
 different samples. On the rung's own held-out rows the true PD scores
-{{< var leakage.truepd.alone_auc >}}, above the rung, as it must. Compare an AUC only with
+{{< var leakage.truepd.alone_auc >}}, above the rung, as expected. Compare an AUC only with
 another measured on the same rows.
 
 **Rehearsed.** The transcript's own version — the label's AUC on the true-PD row and the

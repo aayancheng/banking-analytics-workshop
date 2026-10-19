@@ -44,8 +44,9 @@ python -m wiki.homework.check H3.1
 ```
 
 The check re-runs `decide` both ways itself. It wants the number of changed decisions, the
-new count or share of each decision, a population beside the changed count, the rule that
-explains why Approve does not move, and nothing changed under `adjudication/`.
+new count or share of each decision, the population, a sentence saying Approve does not
+change and the rule that explains it, no other Approve count, and nothing changed under
+`adjudication/`.
 
 ## The trap
 
@@ -54,5 +55,7 @@ explains why Approve does not move, and nothing changed under `adjudication/`.
 - **Editing the policy.** Changing `policy_config.json` changes the platform, not a what-if.
   Every later module, the portal and `verify.py` read it. If that happened:
   `git checkout -- adjudication/`.
-- **Which population.** The portal decides the whole book; D5 measures the held-out 20%. Both
-  are legitimate, and they give different counts. Say which one you used.
+- **Which population.** This exercise uses the whole book — all applicants, as the portal
+  decides them — not the held-out 20% that D5 measures. The counts differ; say which you used.
+  The whole book's PDs are mostly in-sample, so this describes what the platform decides, not
+  how well the model performs.

@@ -114,9 +114,12 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   not the label — which measures **0.8326**. Only leaking `default` reaches 1.0000. It is now a
   three-rung ladder (**0.7299 / 0.8326 / 1.0000**) and the teaching point is the *middle* rung:
   +0.10 AUC, plausible-looking, passes review, ships, then performs at 0.73 because at decision
-  time the true PD does not exist. If you change one artifact's numbers, change all five —
-  notebook cell 35, `S1-lab.md`, `S1.md` (twice), `S1-run-of-show.md`, `run-of-show-app.html`.
-  The wiki prints the ladder as facts (`leakage.*`, recomputed by `verify.py`), so it needs no hand edit.
+  time the true PD does not exist. The hand-typed artifacts quote the ladder rounded,
+  **0.73 / 0.83 / 1.00** (and "+0.10", "performs at 0.73"): the markdown cell after notebook 01's
+  probe cell (0-based cell 36; the probe itself, cell 35, prints the four-decimal values),
+  `S1-lab.md` (twice: the "Expect roughly" line and the "performs at 0.73" line), `S1.md` (twice),
+  `S1-run-of-show.md`, `run-of-show-app.html`. If you change one, change them all. The wiki's ladder
+  is generated (`leakage.*`, recomputed by `verify.py`), so it needs no hand edit.
 - **`localStorage` throws, it does not return null.** Chrome disables it on `data:` URLs and
   restricts some `file://` contexts. An unguarded `save()` in `run-of-show-app.html` killed a
   change handler silently, and once it was also called from `render()` it would have killed the
@@ -380,14 +383,14 @@ template, the validation PDF and the agent homework with its self-checker; the S
 in `workshop/`. **D5 (Loan Adjudication) is complete and on `main` and `origin/main`** (2026-10-17): facts in
 `wiki/facts/adj_facts.py`, nine parts under `wiki/mdd/adjudication/`, six findings in D5.7 and D11.
 **D6 (Pricing) is complete on branch `wiki-d6`** (2026-10-18), branched from that `main`: facts in
-`wiki/facts/pricing_facts.py`, nine parts under `wiki/mdd/pricing/`, five findings in D6.7 and D11 — not yet merged or pushed.
+`wiki/facts/pricing_facts.py`, nine parts under `wiki/mdd/pricing/`, five findings in D6.7 and D11 — since merged into `main` and pushed.
 **D7 (Early Warning) is complete on branch `wiki-d7`** (2026-10-18), on top of `wiki-d6`: facts in
 `wiki/facts/ews_facts.py` (+ `ceiling.ews.*`), nine parts under `wiki/mdd/ews/`, findings in D7.7
-and D11 (eight after the fix round) — not merged or pushed. **D8 (Line Increase) is complete on branch
+and D11 (eight after the fix round) — since merged and pushed. **D8 (Line Increase) is complete on branch
 `wiki-d8`** (2026-10-18), on top of `wiki-d7`: facts in `wiki/facts/li_facts.py` (+ `ceiling.li.*`),
-nine parts under `wiki/mdd/line_increase/`, six findings in D8.7 and D11 — not merged or pushed.
-**All module chapters, D4–D8, are now complete** (the `wiki-d6..d8` branches have since been merged:
-`main` = `origin/main` at `bb6b06a` when the course work started). **The Course tab is complete on branch
+nine parts under `wiki/mdd/line_increase/`, six findings in D8.7 and D11 — since merged and pushed.
+**All module chapters, D4–D8, are now complete and on `main` = `origin/main`** (`bb6b06a` when the
+course work started; the `wiki-d6..d8` branches are gone). **The Course tab is complete on branch
 `wiki-course`** (2026-10-18, branched from that `main`; not merged or pushed): `course/c1-data-leakage.qmd`
 and `c3-decisions.qmd` join c0/c2/c4, each with its homework page (`homework-s1..s4.qmd`), and the
 sidebar and `course/index.qmd` give the self-study route (Codespace → verify → per session: videos,

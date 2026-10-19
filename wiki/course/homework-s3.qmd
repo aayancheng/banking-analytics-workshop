@@ -30,16 +30,18 @@ it.
 **Goal.** The credit committee proposes raising the DSCR knockout floor from
 {{< var adj.policy.dscr_floor >}} to {{< var adj.dscr_whatif.floor >}}, the upper edge of the
 thin-margin override. Have the agent re-run `decide` over all applicants, as the portal
-decides them, with that one value moved; report the decision mix before and after and how
+decides them — a description of what the platform decides, not a performance measure, since
+four in five of those rows trained the model — with that one value moved; report the decision mix before and after and how
 many decisions change; and explain the shift from `adjudication/src/policy.py`. The policy
 file stays as committed. The layer itself is described in
 [D5.3](../mdd/adjudication/methodology.qmd#adj-policy-layer); D5.6 moves the PD cutoffs the
 same way ([cutoff sensitivity](../mdd/adjudication/sensitivity.qmd#cutoff-sensitivity)).
 
 **Check:** `python -m wiki.homework.check H3.1` — it re-runs `decide` both ways, and wants the
-number of changed decisions, the new count or share of each decision, a population in the
-sentence that gives the changed count, the rule that explains why Approve does not move, and
-nothing changed under `adjudication/`.
+number of changed decisions, the new count or share of each decision, the population they are
+counted on, a statement in words that Approve does not change and the rule that explains it,
+no Approve count or share other than the committed one, and nothing changed under
+`adjudication/`.
 
 **The trap.** The expected answer. Raise a knockout floor and you expect fewer approvals; an
 agent that writes its explanation before it reads the counts will explain a fall that did
@@ -75,8 +77,9 @@ same kind of dead rule D5 raises as finding 2
 ([5.7](../mdd/adjudication/limitations.qmd#adj-finding-2)).
 
 **Rehearsed.** An answer that gives the committed Decline count as the new one fails ("the
-new Decline count or share is missing"); one whose explanation names no rule for the Approve
-row fails; so does any answer while `policy_config.json` is modified.
+new Decline count or share is missing"); so does one that gives Approve a new count, one that
+never says Approve is unchanged, one whose explanation names no rule for the Approve row, and
+any answer while `policy_config.json` is modified.
 :::
 
 ## H3.2 Catch: "mispricing is worst in band D" {#h3-2}
@@ -91,10 +94,12 @@ that hides a choice, have both readings measured with `price_population` and
 the same table in [6.5](../mdd/pricing/performance.qmd#pr-by-band).
 
 **Check:** `python -m wiki.homework.check H3.2` — it prices the book, then wants the band with
-the highest mispriced share named beside its share, the band with the most mispriced EAD
-named beside its amount (in millions, in billions or as the full figure), and no
-sentence that calls that band worst without a money measure. The transcript's claim, quoted,
-does not count against you.
+the highest mispriced share named beside its share, and a sentence of your own — not only a
+table or a list — saying that band is worst by share; the band with the most mispriced EAD
+named beside its amount (in millions, in billions or as the full figure); and no sentence
+that calls that band worst by share, "by every measure", or without a money measure. The
+transcript's claim, quoted, does not count against you; "band D has the highest PD" is not a
+claim about mispricing.
 
 **The trap.** The story fits the wrong answer. "The riskiest band has the most mispricing"
 sounds like risk management, and by money it is true. By share of loans it is not — and the
@@ -116,14 +121,16 @@ recording carries a correction card at exactly this point.
 >
 > By share of loans, mispricing is worst in the prime bands: {{< var pricing.worst_band >}} at
 > {{< var pricing.worst_band_rate >}}, then {{< var pricing.second_band >}} at
-> {{< var pricing.second_band_rate >}}. Band D's share is below the book's. By money, band D is
-> worst: it holds the most mispriced EAD of any band, because it is the largest band. The
+> {{< var pricing.second_band_rate >}}. Band D's share is below the book's. By money, band
+> {{< var pricing.worst_ead_band >}} is worst: it holds the most mispriced EAD of any band, because it is the largest band. The
 > claim is half right.
 
-**Where it first went wrong.** In the checking, not the answer. The first run of the check
-failed the answer on its own title, which quoted the claim being caught. That was the check's
-fault: it now ignores a claim inside quotation marks, a heading or a blockquote, so an answer
-can name what it is correcting.
+**Where it first went wrong.** In the checking, twice. The first run of the check failed the
+answer on its own title, which quoted the claim being caught; the check now ignores a claim
+inside quotation marks, a heading or a blockquote. A review then showed the opposite fault:
+the check passed the transcript's own conclusion — "mispricing is worst in band D", with its
+dollar figure — as long as a table elsewhere listed the shares. A table is not a claim. The
+check now wants the share reading said in a sentence.
 
 What the agent did not say, and a reviewer should: the level of mispricing is a property of
 the generated quotes, which carry no capital charge
@@ -187,10 +194,11 @@ every screen.
 > explicitly and requiring every tier in the book to equal the batch.
 
 **Where it first went wrong.** Not in the audit: the card prescribes the explicit-cutoff call,
-and the defect showed on the first run. It went wrong in this repository's history. The agent
-that built the loan workbench wrote this defect, wrote the false docstring beside it, and
-shipped it with a test that sent an empty body — which took the shortcut and passed. A final
-review found it by sending what the browser actually sends. The fix is `retier_book` in
+and the defect showed on the first run. It went wrong in this repository's history. The workbench's
+first build had this defect: the agent that built it wrote the defect and the false docstring
+beside it, with a test that sent an empty body — which took the shortcut and passed. The
+final review caught it before the workbench was merged, by sending what the browser actually
+sends. The fix is `retier_book` in
 `app/v2/ews_whatif.py`, and `tests/test_app_v2_ui_bodies.py` now pins every tier in the book
 under the bodies the screen sends. A test of the path nobody calls proves nothing about the
 path everybody does.

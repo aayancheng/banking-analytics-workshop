@@ -2,7 +2,8 @@
 
 **Kind: Audit.** You are the validator. Below is a what-if function for the early-warning
 tiers. It looks reasonable and its simplest test passes. The defect in it is a real one: the
-loan workbench shipped with it, and its fix is in this repository's history.
+loan workbench's first build had it, the final review caught it before merge, and the fix is in
+this repository's history.
 
 **Goal.** A finding: which accounts the what-if gets wrong with the committed cutoffs, why,
 whether its docstring is true, and the fix.

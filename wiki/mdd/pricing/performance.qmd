@@ -123,7 +123,7 @@ Two readings of the same table, and they point at different bands:
   over-predicts on the held-out booked (observed / predicted {{< var score.band_booked.D.ratio >}},
   inside the tolerance), which by the same algebra would push band D quotes below the
   hurdle-clearing rate.
-- **By money, band D.** Band D holds \${{< var pricing.band.D.mispriced_ead >}} of
+- **By money, band {{< var pricing.worst_ead_band >}}.** Band D holds \${{< var pricing.band.D.mispriced_ead >}} of
   mispriced EAD, the most of any band, and the lowest median ROE,
   {{< var pricing.band.D.median_roe >}}. Its share mispriced,
   {{< var pricing.band.D.mispriced_rate >}}, is below the book's; its exposure is the largest.
