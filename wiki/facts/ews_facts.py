@@ -450,7 +450,39 @@ def compute(es: EwsSplit | None = None) -> dict[str, Fact]:
     put("ews.importance.top_n", TOP_FEATURES, "d", "wiki.facts.ews_facts.TOP_FEATURES", MODULE_POP)
     put("ews.model.n_estimators", int(model.n_estimators), ",d", MODEL, MODULE_POP)
     put("ews.model.num_leaves", int(model.num_leaves), ",d", MODEL, MODULE_POP)
+
+    # --- re-tiering from the persisted, rounded prob (the v2 what-if defect, homework H3.3) ---
+    # score_population tiers on the unrounded probability but persists `prob` rounded; a
+    # what-if that re-tiers from the persisted column moves every account whose probability
+    # sits within half a unit in the last place below a cutoff.
+    dp = prob_dp()
+    tier_r = np.array([wl.risk_tier(p, tiers) for p in np.round(prob, dp)])
+    src_r = (f"ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded "
+             f"to {dp} dp as score_population persists it, against the batch tier from the "
+             "unrounded prob")
+    put("ews.rounded_retier.dp", dp, "d", "ews.src.watchlist.score_population (np.round of prob)",
+        MODULE_POP)
+    flips = sorted(np.nonzero(tier_r != tier)[0], key=lambda i: port["business_id"].iloc[i])
+    put("ews.rounded_retier.n_flipped", len(flips), ",d", src_r, BOOK)
+    for j, i in enumerate(flips, 1):
+        g = f"ews.rounded_retier.flip{j}"
+        cut = t_high if "High" in (tier[i], tier_r[i]) else t_med   # recomputed, = tiers
+        put(f"{g}.business_id", str(port["business_id"].iloc[i]), "", src_r, BOOK)
+        put(f"{g}.batch", str(tier[i]), "", src_r, BOOK)
+        put(f"{g}.rounded", str(tier_r[i]), "", src_r, BOOK)
+        put(f"{g}.prob", float(prob[i]), ".6f", SRC_PROB + " (unrounded)", BOOK)
+        put(f"{g}.cutoff", float(cut), ".4f", SRC_CAL, cal_pop)
+    for T in TIERS:
+        put(f"ews.rounded_retier.book.{T}.n", int((tier_r == T).sum()), ",d", src_r, BOOK)
     return f
+
+
+def prob_dp() -> int:
+    """The decimal places score_population rounds the persisted prob to, read from its source."""
+    import re
+    m = re.search(r'"prob":\s*np\.round\(prob,\s*(\d+)\)', inspect.getsource(wl.score_population))
+    assert m, "ews.src.watchlist.score_population no longer rounds prob with np.round(prob, n)"
+    return int(m.group(1))
 
 
 def _auc_with_ties(y: np.ndarray, p: np.ndarray, W: np.ndarray) -> np.ndarray:

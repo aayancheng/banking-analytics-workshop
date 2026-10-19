@@ -4,6 +4,16 @@ adj:
   auc_ci_half: "0.02"
   auc_ci_hi: "0.8319"
   auc_ci_lo: "0.7868"
+  book:
+    Approve:
+      n: "3,760"
+      share: "31.3%"
+    Decline:
+      n: "4,011"
+      share: "33.4%"
+    Refer:
+      n: "4,229"
+      share: "35.2%"
   dec:
     booked:
       Approve:
@@ -96,6 +106,20 @@ adj:
       feature: "dscr"
       n: "157"
       share: "20.2%"
+  dscr_whatif:
+    Approve:
+      n: "3,760"
+      share: "31.3%"
+    Decline:
+      n: "5,293"
+      share: "44.1%"
+    Refer:
+      n: "2,947"
+      share: "24.6%"
+    approve_below_floor: "0"
+    flipped: "1,282"
+    floor: "1.2"
+    refer_to_decline: "1,282"
   gate_auc: "0.78"
   gate_lift: "2.0"
   li_video:
@@ -423,6 +447,28 @@ ews:
   pr_auc_over_base: "1.71"
   q_high: "90%"
   q_med: "70%"
+  rounded_retier:
+    book:
+      High:
+        n: "834"
+      Low:
+        n: "5,834"
+      Medium:
+        n: "1,668"
+    dp: "4"
+    flip1:
+      batch: "Low"
+      business_id: "BIZ103657"
+      cutoff: "0.1649"
+      prob: "0.164862"
+      rounded: "Medium"
+    flip2:
+      batch: "Medium"
+      business_id: "BIZ108170"
+      cutoff: "0.5073"
+      prob: "0.507254"
+      rounded: "High"
+    n_flipped: "2"
   t_high: "0.5073"
   t_med: "0.1649"
   target: "deterioration_next_6_12mo"
@@ -600,6 +646,16 @@ ews:
     capture: "54.4%"
     lift: "5.44"
     pr_auc: "0.8984"
+leakage:
+  honest:
+    auc: "0.7299"
+  label:
+    auc: "1.0000"
+  n_honest: "4"
+  truepd:
+    alone_auc: "0.8428"
+    auc: "0.8326"
+    gain: "0.10"
 li:
   agg_roe: "0.2153"
   amount_offer_ratio: "13.1"

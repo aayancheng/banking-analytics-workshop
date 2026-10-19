@@ -34,6 +34,8 @@ REJECTED = "held-out rejected applicants (adjudication split, seed 42)"
 DECLINES = "held-out Declines (adjudication split, seed 42)"
 TRAIN = "training 80% of applicants (adjudication split, seed 42)"
 ALL = "all 12,000 applicants"
+BOOK_PORTAL = ("all 12,000 applicants, as the portal decides them (app/main.py); 80% are the "
+               "model's training rows, so their PDs are in-sample")
 POLICY_POP = "policy constant"
 MODULE_POP = "module constant"
 _INSAMPLE = ("training 80% of applicants, in-sample model PDs (the model was fitted on "
@@ -337,4 +339,27 @@ def compute(split) -> dict[str, Fact]:
     for k in DECISIONS:
         put(f"adj.trainonly.mix.{k}", float((d3 == k).mean()), ".1%", src3, HOLDOUT)
     put("adj.trainonly.changed", int((d3 != d).sum()), ",d", src3, HOLDOUT)
+
+    # --- the whole book, as the portal decides it (app/main.py: decide(X_all, pd_hat, cfg)) ---
+    # The mix Session 3 shows on screen, and the base of homework H3.1: the DSCR knockout
+    # floor raised to the thin-margin override's upper edge (dscr_refer_hi), all else as
+    # committed. In-sample PDs on the training rows, as the portal has them: not a
+    # performance claim, a description of what the platform decides.
+    book = decide(X_all, p_all, cfg)["decision"].to_numpy()
+    for k in DECISIONS:
+        put(f"adj.book.{k}.n", int((book == k).sum()), ",d", SRC_DECIDE, BOOK_PORTAL)
+        put(f"adj.book.{k}.share", float((book == k).mean()), ".1%", SRC_DECIDE, BOOK_PORTAL)
+    floor = cfg.dscr_refer_hi
+    wi = decide(X_all, p_all, replace(cfg, dscr_floor=floor))["decision"].to_numpy()
+    src_wi = f"{SRC_DECIDE} with dscr_floor = dscr_refer_hi, every other value as committed"
+    put("adj.dscr_whatif.floor", float(floor), ".1f", src_wi, POLICY_POP)
+    for k in DECISIONS:
+        put(f"adj.dscr_whatif.{k}.n", int((wi == k).sum()), ",d", src_wi, BOOK_PORTAL)
+        put(f"adj.dscr_whatif.{k}.share", float((wi == k).mean()), ".1%", src_wi, BOOK_PORTAL)
+    put("adj.dscr_whatif.flipped", int((wi != book).sum()), ",d", src_wi, BOOK_PORTAL)
+    put("adj.dscr_whatif.refer_to_decline", int(((book == "Refer") & (wi == "Decline")).sum()),
+        ",d", src_wi, BOOK_PORTAL)
+    dscr = X_all["dscr"].to_numpy()
+    put("adj.dscr_whatif.approve_below_floor", int(((book == "Approve") & (dscr < floor)).sum()),
+        ",d", src_wi + " (committed Approves with dscr below the new floor)", BOOK_PORTAL)
     return f

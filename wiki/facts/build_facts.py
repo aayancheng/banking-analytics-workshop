@@ -16,7 +16,7 @@ import os
 import re
 
 from shared.config import ROOT
-from wiki.facts import (adj_facts, ceiling, ews_facts, figures, li_facts, policy,
+from wiki.facts import (adj_facts, ceiling, ews_facts, figures, leakage, li_facts, policy,
                         pricing_facts, score_facts, score_stress, tables)
 from wiki.facts.core import Fact, dump_facts, load_facts
 from wiki.facts.data import score_split
@@ -40,6 +40,9 @@ def compute(full: bool) -> tuple[dict[str, Fact], dict]:
     facts.update(adj_facts.compute(split))
     facts.update(pricing_facts.compute())
     facts.update(ceiling.compute(split))
+    lk = leakage.compute(split)
+    facts.update(lk)
+    facts.update(ceiling.compute_leakage(split, lk["leakage.honest.auc"].value))
     es = ews_facts.ews_split()
     facts.update(ews_facts.compute(es))
     facts.update(ceiling.compute_ews(es))

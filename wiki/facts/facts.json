@@ -27,6 +27,48 @@
     "text": "0.7868",
     "value": 0.78679
   },
+  "adj.book.Approve.n": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide",
+    "text": "3,760",
+    "value": 3760
+  },
+  "adj.book.Approve.share": {
+    "fmt": ".1%",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide",
+    "text": "31.3%",
+    "value": 0.313333
+  },
+  "adj.book.Decline.n": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide",
+    "text": "4,011",
+    "value": 4011
+  },
+  "adj.book.Decline.share": {
+    "fmt": ".1%",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide",
+    "text": "33.4%",
+    "value": 0.33425
+  },
+  "adj.book.Refer.n": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide",
+    "text": "4,229",
+    "value": 4229
+  },
+  "adj.book.Refer.share": {
+    "fmt": ".1%",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide",
+    "text": "35.2%",
+    "value": 0.352417
+  },
   "adj.dec.booked.Approve.defaults": {
     "fmt": ",d",
     "population": "held-out booked applicants (adjudication split, seed 42)",
@@ -523,6 +565,76 @@
     "source": "shap.TreeExplainer + adjudication.src.reason_codes.top_adverse_shap",
     "text": "20.2%",
     "value": 0.201799
+  },
+  "adj.dscr_whatif.Approve.n": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed",
+    "text": "3,760",
+    "value": 3760
+  },
+  "adj.dscr_whatif.Approve.share": {
+    "fmt": ".1%",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed",
+    "text": "31.3%",
+    "value": 0.313333
+  },
+  "adj.dscr_whatif.Decline.n": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed",
+    "text": "5,293",
+    "value": 5293
+  },
+  "adj.dscr_whatif.Decline.share": {
+    "fmt": ".1%",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed",
+    "text": "44.1%",
+    "value": 0.441083
+  },
+  "adj.dscr_whatif.Refer.n": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed",
+    "text": "2,947",
+    "value": 2947
+  },
+  "adj.dscr_whatif.Refer.share": {
+    "fmt": ".1%",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed",
+    "text": "24.6%",
+    "value": 0.245583
+  },
+  "adj.dscr_whatif.approve_below_floor": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed (committed Approves with dscr below the new floor)",
+    "text": "0",
+    "value": 0
+  },
+  "adj.dscr_whatif.flipped": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed",
+    "text": "1,282",
+    "value": 1282
+  },
+  "adj.dscr_whatif.floor": {
+    "fmt": ".1f",
+    "population": "policy constant",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed",
+    "text": "1.2",
+    "value": 1.2
+  },
+  "adj.dscr_whatif.refer_to_decline": {
+    "fmt": ",d",
+    "population": "all 12,000 applicants, as the portal decides them (app/main.py); 80% are the model's training rows, so their PDs are in-sample",
+    "source": "adjudication.src.policy.decide with dscr_floor = dscr_refer_hi, every other value as committed",
+    "text": "1,282",
+    "value": 1282
   },
   "adj.gate_auc": {
     "fmt": ".2f",
@@ -2288,6 +2400,111 @@
     "text": "70%",
     "value": 0.7
   },
+  "ews.rounded_retier.book.High.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "834",
+    "value": 834
+  },
+  "ews.rounded_retier.book.Low.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "5,834",
+    "value": 5834
+  },
+  "ews.rounded_retier.book.Medium.n": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "1,668",
+    "value": 1668
+  },
+  "ews.rounded_retier.dp": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "ews.src.watchlist.score_population (np.round of prob)",
+    "text": "4",
+    "value": 4
+  },
+  "ews.rounded_retier.flip1.batch": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "Low",
+    "value": "Low"
+  },
+  "ews.rounded_retier.flip1.business_id": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "BIZ103657",
+    "value": "BIZ103657"
+  },
+  "ews.rounded_retier.flip1.cutoff": {
+    "fmt": ".4f",
+    "population": "whole booked book, 8,336 accounts, in-sample probabilities (80% are training rows) -- the distribution train.py sets the cutoffs on",
+    "source": "ews.src.train tier calibration (np.quantile of whole-book prob, rounded 4dp)",
+    "text": "0.1649",
+    "value": 0.1649
+  },
+  "ews.rounded_retier.flip1.prob": {
+    "fmt": ".6f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population) (unrounded)",
+    "text": "0.164862",
+    "value": 0.164862
+  },
+  "ews.rounded_retier.flip1.rounded": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "Medium",
+    "value": "Medium"
+  },
+  "ews.rounded_retier.flip2.batch": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "Medium",
+    "value": "Medium"
+  },
+  "ews.rounded_retier.flip2.business_id": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "BIZ108170",
+    "value": "BIZ108170"
+  },
+  "ews.rounded_retier.flip2.cutoff": {
+    "fmt": ".4f",
+    "population": "whole booked book, 8,336 accounts, in-sample probabilities (80% are training rows) -- the distribution train.py sets the cutoffs on",
+    "source": "ews.src.train tier calibration (np.quantile of whole-book prob, rounded 4dp)",
+    "text": "0.5073",
+    "value": 0.5073
+  },
+  "ews.rounded_retier.flip2.prob": {
+    "fmt": ".6f",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population) (unrounded)",
+    "text": "0.507254",
+    "value": 0.507254
+  },
+  "ews.rounded_retier.flip2.rounded": {
+    "fmt": "",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "High",
+    "value": "High"
+  },
+  "ews.rounded_retier.n_flipped": {
+    "fmt": ",d",
+    "population": "booked book, all 8,336 accounts (as the portal scores it)",
+    "source": "ews.src.watchlist.risk_tier with the committed cutoffs, applied to prob rounded to 4 dp as score_population persists it, against the batch tier from the unrounded prob",
+    "text": "2",
+    "value": 2
+  },
   "ews.t_high": {
     "fmt": ".4f",
     "population": "whole booked book, 8,336 accounts, in-sample probabilities (80% are training rows) -- the distribution train.py sets the cutoffs on",
@@ -3295,6 +3512,48 @@
     "source": "ews_model.pkl predict_proba on compute_ews_features (as watchlist.score_population)",
     "text": "0.8984",
     "value": 0.898436
+  },
+  "leakage.honest.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "wiki.facts.leakage.probe_auc (notebook 01 leakage cell / S1 lab leakage_probe.py: LGBMClassifier(verbose=-1) on four honest features)",
+    "text": "0.7299",
+    "value": 0.729943
+  },
+  "leakage.label.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "wiki.facts.leakage.probe_auc (notebook 01 leakage cell / S1 lab leakage_probe.py: LGBMClassifier(verbose=-1) on four honest features plus the label `default` itself)",
+    "text": "1.0000",
+    "value": 1.0
+  },
+  "leakage.n_honest": {
+    "fmt": "d",
+    "population": "module constant",
+    "source": "wiki.facts.leakage.HONEST",
+    "text": "4",
+    "value": 4
+  },
+  "leakage.truepd.alone_auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "wiki.facts.ceiling (DGP logit without noise; S1 reading note appendix): the true PD itself, ranked",
+    "text": "0.8428",
+    "value": 0.842754
+  },
+  "leakage.truepd.auc": {
+    "fmt": ".4f",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "wiki.facts.ceiling.compute_leakage (notebook 01 leakage cell / S1 lab leakage_probe.py: LGBMClassifier(verbose=-1) on four honest features plus the true PD, fitted by wiki.facts.leakage.probe_auc)",
+    "text": "0.8326",
+    "value": 0.832638
+  },
+  "leakage.truepd.gain": {
+    "fmt": ".2f",
+    "population": "held-out 20% of applicants (score split, seed 42)",
+    "source": "wiki.facts.ceiling.compute_leakage (notebook 01 leakage cell / S1 lab leakage_probe.py: LGBMClassifier(verbose=-1) on four honest features plus the true PD, fitted by wiki.facts.leakage.probe_auc) minus wiki.facts.leakage's honest rung",
+    "text": "0.10",
+    "value": 0.102695
   },
   "li.agg_roe": {
     "fmt": ".4f",

@@ -41,6 +41,31 @@ def compute(split) -> dict[str, Fact]:
     }
 
 
+# --- S1: the leakage ladder's middle rung (the true PD leaked into a model) ----------------
+SRC_LEAK = ("wiki.facts.ceiling.compute_leakage (notebook 01 leakage cell / S1 lab "
+            "leakage_probe.py: LGBMClassifier(verbose=-1) on four honest features plus the "
+            "true PD, fitted by wiki.facts.leakage.probe_auc)")
+
+
+def compute_leakage(split, honest_auc: float) -> dict[str, Fact]:
+    """The probe's middle rung: the four honest features plus the generator's true PD. Also
+    the true PD's own AUC on the same held-out rows, which bounds what any model leaking it
+    can reach: the outcome is a Bernoulli draw on the PD, so even the truth ranks it
+    imperfectly. honest_auc is wiki.facts.leakage's honest rung, for the gain."""
+    from wiki.facts.leakage import HONEST, POP, probe_auc
+    b, te = split.biz, split.idx_te
+    pd_true = b["pd_default_origination"]                     # DGP truth: allowed HERE only
+    rung = probe_auc(b[HONEST].assign(cheat=pd_true), b["default"], split)
+    alone = float(roc_auc_score(split.y[te], pd_true.to_numpy()[te]))
+    return {
+        "leakage.truepd.auc": Fact(rung, ".4f", SRC_LEAK, POP),
+        "leakage.truepd.gain": Fact(rung - honest_auc, ".2f",
+                                    SRC_LEAK + " minus wiki.facts.leakage's honest rung", POP),
+        "leakage.truepd.alone_auc": Fact(alone, ".4f",
+                                         SRC + ": the true PD itself, ranked", POP),
+    }
+
+
 # --- D7: the deterioration label's ceiling (mirrors workshop/labs/oracle_ceiling.py) ---------
 SRC_EWS = ("wiki.facts.ceiling.ews_latent (the DGP's deterioration logit without its noise "
            "term; mirrors workshop/labs/oracle_ceiling.py)")
