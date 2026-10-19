@@ -1,0 +1,184 @@
+---
+title: "1 Homework: data and leakage, with an agent"
+---
+
+Three exercises for after Session 1. In each you direct an AI coding agent — any agent that
+can read files and run commands in your Codespace — and then check what it produced against
+the repository. The skill is not getting an answer; it is knowing whether the answer is right.
+
+**Before you start.** Work on `main` (`git checkout main`), at the repository's root. Each
+answer goes in `wiki/homework/_answers/<ID>.md`; that folder is ignored by git, so nothing you
+write there is committed or shared. Scripts the agent writes belong in a scratch folder
+outside the repository. Each self-check recomputes every number itself and never trusts one
+pasted into your answer:
+
+```bash
+python -m wiki.homework.check <ID>
+```
+
+Each solution below was written by running the exercise with an agent (Claude Code) in this
+repository, including where its first attempt went wrong. Try the exercise before you open
+it.
+
+## H1.1 Ask: which columns leak? {#h1-1}
+
+**Kind:** Ask. **Prompt card:**
+[`workshop/prompt-cards/HW-H1.1.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H1.1.md).
+**Answer:** `wiki/homework/_answers/H1.1.md`.
+
+**Goal.** Have the agent go through the columns of the applicant file and decide, for each,
+whether it would exist when the credit decision is made — before it reads the deny-list. Then
+have it compare its list with `LEAKAGE_COLUMNS` in `shared/config.py`
+([D2, leakage controls](../mdd/d2-data.qmd#leakage-controls)).
+
+**Check:** `python -m wiki.homework.check H1.1` — it reads the deny-list and the file's
+columns itself, and wants one `LEAK:` line for each deny-listed column of
+`businesses.parquet`, no other column, a reason on every line, and the deny-list exactly as
+committed.
+
+**The trap.** Two of them. An agent that reads the deny-list first returns it, and you learn
+nothing about whether it can tell a leak from a predictor. And predictive is not leaky:
+`net_income` and `requested_amount` predict default because the generator builds them from
+`annual_revenue`, but they are on the application. A third, smaller one: the deny-list names
+two columns that are not in this file at all.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The prompt that worked** is the card as written — in a fresh agent session, for the
+reason below.
+
+**The agent's answer** (excerpt):
+
+> - **LEAK:** `pd_default_origination` — the generator's true probability of default; no
+>   bank observes it, at decision time or ever.
+> - **LEAK:** `default` — the outcome the model predicts; it is known only months after the
+>   loan is booked.
+> - **LEAK:** `booked` — whether the loan was funded: decided after the credit decision, and
+>   in this generator drawn from the true PD.
+> - **LEAK:** `risk_based_rate` — the quoted rate. The generator builds it as cost of funds
+>   plus the true PD times LGD plus opex and margin, plus a small noise term: the true PD,
+>   rescaled.
+>
+> The deny-list's other two columns, `deterioration_next_6_12mo` and `line_increase_good`,
+> live in `portfolio.parquet` only: later outcomes on booked accounts.
+
+**Where it first went wrong.** The list was right first time, and the check passed. The
+reasons were not. The first draft said `risk_based_rate` was "set from a risk view of the
+borrower, so a model fed it is reading another model's answer", and that `booked` was
+"decided after the credit decision". Both are plausible about a real bank and say nothing
+about this data. Reading `shared/data_generator.py` showed the stronger reason for each:
+
+```python
+risk_based_rate = (MARKET["cost_of_funds"] + pd_true * MARKET["lgd"]
+                   + MARKET["opex_rate"] + MARKET["base_margin"] + rng.normal(0.0, 0.003, n)).round(4)
+approve_logit = 2.0 - 6.0 * pd_true + rng.normal(0.0, 0.5, n)
+```
+
+Both columns are the true PD in disguise. The check confirms the list, not the reasons; the
+reasons are yours to judge.
+
+The blind was not blind, either: the agent had read `shared/config.py` earlier in the same
+session, so step 1 of the card could not be honoured. That is why the card says to start a
+fresh session.
+
+**Rehearsed.** A `LEAK:` line for `line_increase_good` fails with "it is on the deny-list, but
+it lives in portfolio.parquet only"; one for `net_income` fails as "not on the deny-list".
+:::
+
+## H1.2 Build: the ladder's middle rung {#h1-2}
+
+**Kind:** Build. **Prompt card:**
+[`workshop/prompt-cards/HW-H1.2.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H1.2.md).
+**Answer:** `wiki/homework/_answers/H1.2.md`.
+
+**Goal.** Have the agent fit the leakage probe's honest model and the same model with the
+generator's true PD added, report both held-out AUCs, and say in one sentence why the second
+cannot ship. Then delete the probe.
+
+**Check:** `python -m wiki.homework.check H1.2` — it refits both rungs and compares them with
+your answer (three or four decimals, or as a percentage), looks for a sentence saying the
+true PD does not exist at decision time, fails if a script that fits a model on the true PD
+is left untracked in the repository, and fails if the deny-list has moved.
+
+**The trap.** The number looks fine. The middle rung is not a suspicious near-perfect AUC; it
+is the kind of number a good scorecard reaches, so a review that reads only metrics passes
+it. A second trap is the recipe: another seed, another split or more trees give another
+number, and then the gain over the honest rung means nothing.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The prompt that worked** is the card as written.
+
+**The agent's reply** (excerpt):
+
+> Same recipe for both models, AUC on the {{< var score.n_test >}} held-out applicants:
+> honest, {{< var leakage.honest.auc >}}; with `pd_default_origination` added,
+> {{< var leakage.truepd.auc >}} — a gain of about {{< var leakage.truepd.gain >}}. Nothing
+> about the second number looks wrong. It cannot ship, because the true PD does not exist at
+> decision time: no bank observes it, so in production the model would be fed something else.
+
+**Where it first went wrong.** It followed the lab sheet too literally. The sheet names the
+script `leakage_probe.py`, so the agent wrote it at the repository's root, ran it and wrote
+the answer. The check failed: "delete the probe now you have its number:
+leakage_probe.py". The script's first line in the lab sheet says the same — run it, read
+the numbers, then delete the file — and the agent had skipped it. A probe left in a repository
+is a leak waiting for someone to import it. Deleting it passed the check.
+
+**Rehearsed.** An answer that quotes the true PD's own AUC over all applicants,
+{{< var ceiling.truepd_all >}}, instead of the rung fails, and the check names it as the
+nearest number in the answer: a true number from a different experiment.
+:::
+
+## H1.3 Catch: "leaking the true PD gives AUC ≈ 1.0" {#h1-3}
+
+**Kind:** Catch. **Prompt card:**
+[`workshop/prompt-cards/HW-H1.3.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H1.3.md)
+— it carries the transcript to catch. **Answer:** `wiki/homework/_answers/H1.3.md`.
+
+**Goal.** An agent's summary of the probe says that leaking the true PD pushes the AUC to
+about 1.0, and that leakage is therefore easy to catch. Find what is wrong with it, have the
+ladder measured, and write the correction: a table giving each leaked column its AUC, and the
+reason even the true PD cannot rank defaults perfectly.
+
+**Check:** `python -m wiki.homework.check H1.3` — it refits the ladder, then wants the table
+row naming the true PD to carry the true-PD rung's AUC, the row naming `default` to carry the
+label rung's, and a sentence outside the table saying why the true PD cannot reach 1.0. The
+check reads the table, not your prose about the transcript, so the sentence on what "easy to
+catch" gets wrong is yours to judge.
+
+**The trap.** The transcript's numbers are real; it pins them on the wrong columns. The 1.0
+belongs to the label. A correction that only changes the digits misses the lesson: the leak
+that ships is the one whose number looks like a good model.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The prompt that worked** is the card as written.
+
+**The agent's correction** (excerpt):
+
+> | Leaked column | AUC |
+> |---|---|
+> | none — the honest model | {{< var leakage.honest.auc >}} |
+> | `pd_default_origination`, the true PD | {{< var leakage.truepd.auc >}} |
+> | `default`, the label itself | {{< var leakage.label.auc >}} |
+>
+> The near-perfect AUC comes from leaking the label. Why the true PD cannot reach 1.0: in
+> `shared/data_generator.py` each default is drawn from it, `default = rng.binomial(1, pd_true)`.
+> A loan with a low true PD still defaults sometimes and one with a high PD often does not,
+> so even a perfect estimate ranks the outcomes imperfectly. On the same held-out rows the
+> true PD itself, used directly as the score, has an AUC of {{< var leakage.truepd.alone_auc >}}.
+
+**Where it nearly went wrong.** The check passed first time. The trap was in the last
+sentence. The facts already held an AUC for the true PD — {{< var ceiling.truepd_all >}}, over
+all applicants — which is *below* the rung. Set beside {{< var leakage.truepd.auc >}}, it says
+a model leaking the truth beats the truth. It does not: the two numbers are measured on
+different samples. On the rung's own held-out rows the true PD scores
+{{< var leakage.truepd.alone_auc >}}, above the rung, as it must. Compare an AUC only with
+another measured on the same rows.
+
+**Rehearsed.** The transcript's own version — the label's AUC on the true-PD row and the
+true PD's on the label's — fails both table checks.
+:::
+
+## Check your own work
+
+After any exercise, `python verify.py` should still pass. If it does not, the agent changed
+something it was told not to: `git status` shows what, and `git checkout -- <path>` puts it
+back.

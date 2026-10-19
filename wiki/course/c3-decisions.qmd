@@ -1,0 +1,137 @@
+---
+title: "3 Decisions, price and watch"
+---
+
+A score decides nothing. Session 3 builds the four decisions that consume it: adjudication
+turns a PD into Approve, Refer or Decline; pricing turns a booked loan into a return on equity
+against a hurdle; early warning ranks the book for deterioration and names the triggers; line
+increase offers more credit only where risk and economics clear together. Each is gated or
+checked in its own way, and each can matter as much as the model under it. The session ends
+with the loan workbench, the same four decisions for one loan at a time, rebuilt by prompting
+an agent on the same engine.
+
+## The videos
+
+Seven chapters, one idea each, in session order.
+
+{{< yt S3-c1 >}}
+
+One score, four decisions: what each decision consumes from the score spine, and why a
+decision layer can matter as much as the model.
+
+{{< yt S3-c2 >}}
+
+Adjudication: hard knockouts decline whatever the PD, PD zones sort the rest, and refer
+overrides send thin files to a person. Over all applicants, as the portal decides them:
+Approve {{< var adj.book.Approve.n >}}, Refer {{< var adj.book.Refer.n >}}, Decline
+{{< var adj.book.Decline.n >}}. Most Declines are knockouts, not the model
+([D5.3](../mdd/adjudication/methodology.qmd#adj-knockouts-dominate)).
+
+{{< yt S3-c3 >}}
+
+Pricing is one fraction: the return on equity a loan earns at its quoted rate, against a
+hurdle of {{< var market.roe_hurdle >}}. Simple arithmetic with subjective inputs, and
+deterministic — the platform lists pricing as a tool, not a model.
+
+{{< yt S3-c4 >}}
+
+Of the {{< var pricing.n >}} booked loans, {{< var pricing.share_clears >}} clear the hurdle at
+their quoted rates; the video calls the rest's exposure, \${{< var pricing.mispriced_ead >}},
+"below the hurdle". It teaches how the profit waterfall and the hurdle test work, and that a
+quote can only be judged against the bank's own PD. It does not show a pricing practice: the
+generator quotes without the capital charge, so the level is a property of the data
+([D6.7, finding 1](../mdd/pricing/limitations.qmd)). And "worst" needs a measure: by share of
+loans, mispricing is worst in band {{< var pricing.worst_band >}}
+({{< var pricing.worst_band_rate >}}); by mispriced exposure, in band D
+([D6.5](../mdd/pricing/performance.qmd#pr-by-band)). Homework H3.2 is about exactly that.
+
+{{< yt S3-c5 >}}
+
+Early warning predicts a different target, and its gate is on the action — call the riskiest
+tenth and capture at least {{< var ews.gate.capture_min >}} of future deterioration — with the
+AUC, {{< var ews.auc >}}, reported, not gated. On held-out accounts the model captures
+{{< var ews.capture >}}. Over the whole book it appears to capture
+{{< var ews.whole.capture >}}, because most of the book is its own training data
+([D7.5](../mdd/ews/performance.qmd#ews-held-out-vs-whole-book)). Always quote the held-out
+figure.
+
+{{< yt S3-c6 >}}
+
+Line increase: four clauses and the smallest of three caps, walked through on two accounts,
+then the funnel over the book — {{< var li.funnel.book.n >}} booked accounts,
+{{< var li.funnel.pd.n >}} after the probability and PD clauses,
+{{< var li.funnel.amount.n >}} with a positive amount, {{< var li.funnel.roe.n >}} offers. The
+video's lesson is that a funnel which says no to most of the book is protecting it. D8 adds
+that {{< var li.cohort_gate.n_cannot_fail >}} of the gates that check the cohort cannot fail on
+this book, so the restraint is the rules', and the gate does not test it
+([D8.3](../mdd/line_increase/methodology.qmd),
+[D8.7, finding 1](../mdd/line_increase/limitations.qmd)).
+
+{{< yt S3-c7 >}}
+
+The loan workbench (v2): rebuilt by prompting an agent, beside the untouched portfolio portal
+(v1), with no new analytics. Every number on its screen comes from the module that owns it,
+and every what-if must equal the batch result exactly. Then: prompt your own agent to
+improve one module.
+
+## Read
+
+The four module chapters of the Model Documentation tab, each in the same nine parts as D4:
+
+- [D5, Loan Adjudication](../mdd/adjudication/index.qmd) — the model, the policy layer and
+  the decision mix.
+- [D6, Pricing](../mdd/pricing/index.qmd) — the engine's arithmetic, what the tool reports
+  about the book, and why the level of mispricing describes the data.
+- [D7, Early Warning](../mdd/ews/index.qmd) — a gate on capture, an AUC reported against the
+  data's own ceiling, tiers and named triggers.
+- [D8, Line Increase](../mdd/line_increase/index.qmd) — the funnel, the amount rules and the
+  incremental economics.
+
+How the four depend on the score is [D3](../mdd/d3-dependencies.qmd); how the workbench is
+held to the batch pipeline is in [D9](../mdd/d9-implementation.qmd) and in each chapter's
+"who consumes it" section.
+
+## Notebook, lab and workbench
+
+- Notebook: [`notebooks/03_04_adjudication_pricing_monitoring.ipynb`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/notebooks/03_04_adjudication_pricing_monitoring.ipynb)
+  — one section per decision, then one account followed through all four. Its flowcharts
+  are mermaid diagrams; the Codespace installs the VS Code extension that draws them.
+- Lab: [`workshop/labs/S3_4-lab.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/labs/S3_4-lab.md)
+  — adjudication, pricing, monitoring and line increases, by hand or with an agent, ending in
+  a decision memo for one account.
+- Workbench: run `make run`, then open the portfolio portal at `http://localhost:8100` and
+  the loan workbench at `http://localhost:8100/v2`. In a Codespace, open the forwarded port
+  8100 from the *Ports* tab. Pick a loan, read its four tabs, and move a slider: the what-if
+  re-runs the same module function the batch run uses. Nothing is saved.
+
+Session 3 runs on `main`. If you prefer to work from a stage tag, it must be `stage-4` or
+later, never `stage-3` — `main`'s portal cannot load at `stage-3`:
+
+```bash
+git stash -u
+git checkout stage-4
+git checkout main -- app notebooks workshop wiki
+python verify.py
+```
+
+The homework assumes `main` (`git checkout main`).
+
+## Check
+
+```bash
+make stop
+python verify.py
+```
+
+`make stop` shuts down the portal if it is still running. The adjudication, early warning
+and line increase lines check each model's gates against its saved model. The apps line
+starts the portal in-process, calls an endpoint of every module, compares the priced book
+with the committed pricing summary, and checks that a workbench what-if sent with no
+changes returns the batch decision.
+
+## Homework with an agent
+
+Three exercises: move a policy threshold through `decide` and explain why the decision mix
+moves the way it does; catch an agent that says mispricing is worst in band D; and audit a
+what-if that re-tiers the watchlist from a rounded column — a defect the workbench shipped
+with. Each has a self-check: [Session 3 homework](homework-s3.qmd).

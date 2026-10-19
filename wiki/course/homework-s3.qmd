@@ -1,0 +1,203 @@
+---
+title: "3 Homework: decisions, price and watch, with an agent"
+---
+
+Three exercises for after Session 3. In each you direct an AI coding agent and then check what
+it produced against the repository. All three are about the layer between a model and a
+decision — a policy value, a measure, a what-if — which is where a correct model most often
+produces a wrong answer.
+
+**Before you start.** Work on `main` (`git checkout main`), at the repository's root. Each
+answer goes in `wiki/homework/_answers/<ID>.md`, a folder git ignores. Scripts the agent
+writes belong in a scratch folder outside the repository, and nothing under `adjudication/`,
+`pricing/`, `ews/` or `app/` changes. Each self-check recomputes through the module's own
+functions and never trusts a number pasted into your answer:
+
+```bash
+python -m wiki.homework.check <ID>
+```
+
+Each solution below was written by running the exercise with an agent (Claude Code) in this
+repository, including where its first attempt went wrong. Try the exercise before you open
+it.
+
+## H3.1 Build: move a policy threshold {#h3-1}
+
+**Kind:** Build. **Prompt card:**
+[`workshop/prompt-cards/HW-H3.1.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H3.1.md).
+**Answer:** `wiki/homework/_answers/H3.1.md`.
+
+**Goal.** The credit committee proposes raising the DSCR knockout floor from
+{{< var adj.policy.dscr_floor >}} to {{< var adj.dscr_whatif.floor >}}, the upper edge of the
+thin-margin override. Have the agent re-run `decide` over all applicants, as the portal
+decides them, with that one value moved; report the decision mix before and after and how
+many decisions change; and explain the shift from `adjudication/src/policy.py`. The policy
+file stays as committed. The layer itself is described in
+[D5.3](../mdd/adjudication/methodology.qmd#adj-policy-layer); D5.6 moves the PD cutoffs the
+same way ([cutoff sensitivity](../mdd/adjudication/sensitivity.qmd#cutoff-sensitivity)).
+
+**Check:** `python -m wiki.homework.check H3.1` — it re-runs `decide` both ways, and wants the
+number of changed decisions, the new count or share of each decision, a population in the
+sentence that gives the changed count, the rule that explains why Approve does not move, and
+nothing changed under `adjudication/`.
+
+**The trap.** The expected answer. Raise a knockout floor and you expect fewer approvals; an
+agent that writes its explanation before it reads the counts will explain a fall that did
+not happen. The other trap is the tool: editing `policy_config.json` is not a what-if, it is a
+change to the platform that every later module reads.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The prompt that worked** is the card as written. What made it work is step 3: the script
+printed a cross-tab of old against new decisions, not only the totals.
+
+**The agent's reply** (excerpt):
+
+> | Decision | Committed | `dscr_floor` raised |
+> |---|---|---|
+> | Approve | {{< var adj.book.Approve.n >}} | {{< var adj.dscr_whatif.Approve.n >}} |
+> | Refer | {{< var adj.book.Refer.n >}} | {{< var adj.dscr_whatif.Refer.n >}} |
+> | Decline | {{< var adj.book.Decline.n >}} | {{< var adj.dscr_whatif.Decline.n >}} |
+>
+> Over all {{< var adj.n_applicants >}} applicants, as the portal decides them,
+> {{< var adj.dscr_whatif.flipped >}} decisions change, and every one moves from Refer to
+> Decline. No Approve changes. An applicant whose DSCR lies between the old floor and the new
+> one could never be approved: if its PD put it in the Approve zone, the thin-affordability
+> override (`dscr < dscr_refer_hi`) already sent it to Refer. Raising the knockout floor to
+> the override's upper edge turns the files the override was holding into Declines — and
+> leaves the override with nothing to catch.
+
+**Where it first went wrong.** It did not, and the reason is worth copying: the cross-tab was
+in the script before any explanation was written, and the count of committed Approves with a
+DSCR below the new floor — {{< var adj.dscr_whatif.approve_below_floor >}} — settled the
+Approve row by measurement rather than by argument. The last sentence of the reply is a
+finding in its own right: after the change, one of the policy's rules can never fire, the
+same kind of dead rule D5 raises as finding 2
+([5.7](../mdd/adjudication/limitations.qmd#adj-finding-2)).
+
+**Rehearsed.** An answer that gives the committed Decline count as the new one fails ("the
+new Decline count or share is missing"); one whose explanation names no rule for the Approve
+row fails; so does any answer while `policy_config.json` is modified.
+:::
+
+## H3.2 Catch: "mispricing is worst in band D" {#h3-2}
+
+**Kind:** Catch. **Prompt card:**
+[`workshop/prompt-cards/HW-H3.2.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H3.2.md)
+— it carries the transcript to catch. **Answer:** `wiki/homework/_answers/H3.2.md`.
+
+**Goal.** An agent tells the pricing desk that mispricing is worst in band D. Find the word
+that hides a choice, have both readings measured with `price_population` and
+`portfolio_summary`, and write an answer in which every "worst" says by what measure. D6 reads
+the same table in [6.5](../mdd/pricing/performance.qmd#pr-by-band).
+
+**Check:** `python -m wiki.homework.check H3.2` — it prices the book, then wants the band with
+the highest mispriced share named beside its share, the band with the most mispriced EAD
+named beside its amount (in millions, in billions or as the full figure), and no
+sentence that calls that band worst without a money measure. The transcript's claim, quoted,
+does not count against you.
+
+**The trap.** The story fits the wrong answer. "The riskiest band has the most mispricing"
+sounds like risk management, and by money it is true. By share of loans it is not — and the
+share is what tells a pricing desk where its quotes are most often wrong. Session 3's
+recording carries a correction card at exactly this point.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The prompt that worked** is the card as written.
+
+**The agent's reply** (excerpt):
+
+> | Band | Mispriced share | Mispriced EAD |
+> |---|---|---|
+> | AAA | {{< var pricing.band.AAA.mispriced_rate >}} | \${{< var pricing.band.AAA.mispriced_ead >}} |
+> | A | {{< var pricing.band.A.mispriced_rate >}} | \${{< var pricing.band.A.mispriced_ead >}} |
+> | B | {{< var pricing.band.B.mispriced_rate >}} | \${{< var pricing.band.B.mispriced_ead >}} |
+> | C | {{< var pricing.band.C.mispriced_rate >}} | \${{< var pricing.band.C.mispriced_ead >}} |
+> | D | {{< var pricing.band.D.mispriced_rate >}} | \${{< var pricing.band.D.mispriced_ead >}} |
+>
+> By share of loans, mispricing is worst in the prime bands: {{< var pricing.worst_band >}} at
+> {{< var pricing.worst_band_rate >}}, then {{< var pricing.second_band >}} at
+> {{< var pricing.second_band_rate >}}. Band D's share is below the book's. By money, band D is
+> worst: it holds the most mispriced EAD of any band, because it is the largest band. The
+> claim is half right.
+
+**Where it first went wrong.** In the checking, not the answer. The first run of the check
+failed the answer on its own title, which quoted the claim being caught. That was the check's
+fault: it now ignores a claim inside quotation marks, a heading or a blockquote, so an answer
+can name what it is correcting.
+
+What the agent did not say, and a reviewer should: the level of mispricing is a property of
+the generated quotes, which carry no capital charge
+([D6.7, finding 1](../mdd/pricing/limitations.qmd)). The *pattern* across bands is measured;
+why the best bands miss most often is explained in 6.5 only as a reading of the generator's
+code. An answer that turns the table into advice for a real pricing desk has gone further
+than the data allows.
+:::
+
+## H3.3 Audit: a what-if that re-tiers from a rounded column {#h3-3}
+
+**Kind:** Audit. **Prompt card:**
+[`workshop/prompt-cards/HW-H3.3.md`](https://github.com/aayancheng/banking-analytics-workshop/blob/main/workshop/prompt-cards/HW-H3.3.md)
+— it carries the code to audit. **Answer:** `wiki/homework/_answers/H3.3.md`.
+
+**Goal.** The card gives a short what-if function for the early-warning tiers. With no
+arguments it returns the batch tiers, so its simplest test passes. Have the agent test it the
+way a screen with sliders calls it — with the committed cutoffs sent explicitly — and report
+every account it gets wrong, the cause, whether its docstring is true, and the fix. The
+requirement is the one the workbench is held to: a what-if with the committed values equals
+the batch, exactly ([D7.9](../mdd/ews/gate.qmd)).
+
+**Check:** `python -m wiki.homework.check H3.3` — it re-runs the defect from
+`score_population`'s own columns, and wants every account it re-tiers named by ID, the cause
+(what was done to the stored `prob`), the fix (which probability to re-tier from), and nothing
+changed under `ews/` or `app/`. It does not judge the test you propose; read that yourself.
+
+**The trap.** The easy test passes, and the failure is small: a handful of accounts out of
+{{< var ews.n_book >}}. "Immaterial" is the wrong verdict. A what-if that moves a loan to
+another tier when nothing was changed is lying, and a reviewer who sees it once stops trusting
+every screen.
+
+::: {.callout-tip collapse="true" title="Solution"}
+**The prompt that worked** is the card as written.
+
+**The agent's finding** (excerpt):
+
+> With no cutoffs the what-if returns the batch tiers. With the committed cutoffs sent
+> explicitly it re-tiers {{< var ews.rounded_retier.n_flipped >}} accounts:
+>
+> | Account | Batch | What-if | `prob` unrounded | cutoff |
+> |---|---|---|---|---|
+> | {{< var ews.rounded_retier.flip1.business_id >}} | {{< var ews.rounded_retier.flip1.batch >}} | {{< var ews.rounded_retier.flip1.rounded >}} | {{< var ews.rounded_retier.flip1.prob >}} | {{< var ews.rounded_retier.flip1.cutoff >}} |
+> | {{< var ews.rounded_retier.flip2.business_id >}} | {{< var ews.rounded_retier.flip2.batch >}} | {{< var ews.rounded_retier.flip2.rounded >}} | {{< var ews.rounded_retier.flip2.prob >}} | {{< var ews.rounded_retier.flip2.cutoff >}} |
+>
+> The book moves from High {{< var ews.tier.High.n >}}, Medium {{< var ews.tier.Medium.n >}},
+> Low {{< var ews.tier.Low.n >}} to High {{< var ews.rounded_retier.book.High.n >}}, Medium
+> {{< var ews.rounded_retier.book.Medium.n >}}, Low {{< var ews.rounded_retier.book.Low.n >}}.
+>
+> **Cause.** `score_population` decides `risk_tier` on the unrounded probability but stores
+> `prob` rounded to {{< var ews.rounded_retier.dp >}} decimal places. Both accounts sit just
+> below a cutoff; rounding puts them exactly on it, and `risk_tier` compares with `>=`, so
+> they move up a tier.
+>
+> **The docstring is false.** The stored column is not "the best probability available": the
+> model is committed, and `predict_proba` on `compute_ews_features` — what `score_population`
+> runs before rounding — gives the unrounded value.
+>
+> **Fix.** Re-tier from the unrounded probability on every path, and drop the no-cutoffs
+> shortcut so there is one path for every call. Test it by sending the committed cutoffs
+> explicitly and requiring every tier in the book to equal the batch.
+
+**Where it first went wrong.** Not in the audit: the card prescribes the explicit-cutoff call,
+and the defect showed on the first run. It went wrong in this repository's history. The agent
+that built the loan workbench wrote this defect, wrote the false docstring beside it, and
+shipped it with a test that sent an empty body — which took the shortcut and passed. A final
+review found it by sending what the browser actually sends. The fix is `retier_book` in
+`app/v2/ews_whatif.py`, and `tests/test_app_v2_ui_bodies.py` now pins every tier in the book
+under the bodies the screen sends. A test of the path nobody calls proves nothing about the
+path everybody does.
+:::
+
+## Check your own work
+
+After any exercise, `python verify.py` should still pass. If it does not, the agent changed
+something it was told not to: `git status` shows what, and `git checkout -- <path>` puts it
+back.

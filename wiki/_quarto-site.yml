@@ -29,8 +29,12 @@ website:
       contents:
         - course/index.qmd
         - course/c0-start.qmd
+        - course/c1-data-leakage.qmd
+        - course/homework-s1.qmd
         - course/c2-score-spine.qmd
         - course/homework-s2.qmd
+        - course/c3-decisions.qmd
+        - course/homework-s3.qmd
         - course/c4-governance.qmd
         - course/homework-s4.qmd
     - id: mdd

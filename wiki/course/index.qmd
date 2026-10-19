@@ -12,18 +12,37 @@ each.
 
 | Session | Theme | What you build or read |
 |---|---|---|
-| 1 | Data and leakage | a synthetic lending book you can reason about, and a model that cheats |
+| 1 | [Data and leakage](c1-data-leakage.qmd) | a synthetic lending book you can reason about, and a model that cheats |
 | 2 | [The score spine](c2-score-spine.qmd) | a weight-of-evidence scorecard, trained and gated |
-| 3 | Decisions, price and watch | adjudication, pricing, early warning and line increases, and the loan workbench |
+| 3 | [Decisions, price and watch](c3-decisions.qmd) | adjudication, pricing, early warning and line increases, and the loan workbench |
 | 4 | [Governance](c4-governance.qmd) | the model documentation in this site, written and checked with an agent |
 
-Take them in order: each session consumes what the one before produced. The chapters for
-Sessions 1 and 3 are being written; their videos are already listed in the
-[video index](../reference/videos.qmd).
+Take them in order: each session consumes what the one before produced. Every video is also
+listed in the [video index](../reference/videos.qmd), with each session's highlights and the
+full recordings.
 
-Each chapter has the same shape: the videos, a short read, a notebook, a lab, a
-`verify.py` check, and homework you do with an AI agent and then check against the
-repository.
+## The route, session by session
+
+1. **Once:** [start here](c0-start.qmd) — open a Codespace, run `python verify.py`, choose an
+   agent.
+2. **Then, for each session:**
+   - **Watch** the chapter videos. Each is one idea, a few minutes to a quarter of an hour;
+     watch the ones you need.
+   - **Read** the pages of the Model Documentation tab the chapter points to. They are what a
+     validator would read about the same model.
+   - **Run the notebook** in the Codespace, top to bottom.
+   - **Do the lab**, by hand or with an agent.
+   - **Do the homework** with your agent, and run its self-check:
+     `python -m wiki.homework.check <ID>`.
+   - **Check** that `python verify.py` still passes. If it does not, your agent changed
+     something it should not have; the chapter says how to put it back.
+
+| Session | Chapter | Homework |
+|---|---|---|
+| 1 | [Data and leakage](c1-data-leakage.qmd) | [H1.1–H1.3](homework-s1.qmd) |
+| 2 | [The score spine](c2-score-spine.qmd) | [H2.1–H2.3](homework-s2.qmd) |
+| 3 | [Decisions, price and watch](c3-decisions.qmd) | [H3.1–H3.3](homework-s3.qmd) |
+| 4 | [Governance](c4-governance.qmd) | [H4.1–H4.3](homework-s4.qmd) |
 
 ## Where you work: a Codespace
 

@@ -116,6 +116,7 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   +0.10 AUC, plausible-looking, passes review, ships, then performs at 0.73 because at decision
   time the true PD does not exist. If you change one artifact's numbers, change all five —
   notebook cell 35, `S1-lab.md`, `S1.md` (twice), `S1-run-of-show.md`, `run-of-show-app.html`.
+  The wiki prints the ladder as facts (`leakage.*`, recomputed by `verify.py`), so it needs no hand edit.
 - **`localStorage` throws, it does not return null.** Chrome disables it on `data:` URLs and
   restricts some `file://` contexts. An unguarded `save()` in `run-of-show-app.html` killed a
   change handler silently, and once it was also called from `render()` it would have killed the
@@ -385,7 +386,18 @@ in `workshop/`. **D5 (Loan Adjudication) is complete and on `main` and `origin/m
 and D11 (eight after the fix round) — not merged or pushed. **D8 (Line Increase) is complete on branch
 `wiki-d8`** (2026-10-18), on top of `wiki-d7`: facts in `wiki/facts/li_facts.py` (+ `ceiling.li.*`),
 nine parts under `wiki/mdd/line_increase/`, six findings in D8.7 and D11 — not merged or pushed.
-**All module chapters, D4–D8, are now complete.** Next: the course spine (S1, S3), E1–E10, book packaging.
+**All module chapters, D4–D8, are now complete** (the `wiki-d6..d8` branches have since been merged:
+`main` = `origin/main` at `bb6b06a` when the course work started). **The Course tab is complete on branch
+`wiki-course`** (2026-10-18, branched from that `main`; not merged or pushed): `course/c1-data-leakage.qmd`
+and `c3-decisions.qmd` join c0/c2/c4, each with its homework page (`homework-s1..s4.qmd`), and the
+sidebar and `course/index.qmd` give the self-study route (Codespace → verify → per session: videos,
+read, notebook, lab, homework, check). New facts: the leakage ladder (`leakage.*`; the honest and label
+rungs in `wiki/facts/leakage.py`, the true-PD rung in `ceiling.compute_leakage`, DGP truth staying in
+`ceiling.py`), the whole-book decision mix and the H3.1 what-if (`adj.book.*`, `adj.dscr_whatif.*`),
+and the rounded-prob re-tier behind H3.3 (`ews.rounded_retier.*`); pinned in
+`tests/test_wiki_course_facts.py`. Homework H1.1–H1.3 and H3.1–H3.3 have prompt cards
+(`workshop/prompt-cards/HW-H1.*`, `HW-H3.*`) and self-checks in `wiki/homework/check.py`; only H2.3 and
+H4.3 are solution-only. Next: E1–E10, then book packaging.
 
 ### Recutting sessions into chapter videos — the house method
 
@@ -497,8 +509,8 @@ address (invariant 6).
 
 ### Open threads
 
-- **Wiki v1 leftovers:** D4–D8 are all complete (D5 on `main`; D6, D7 and D8 on stacked branches
-  `wiki-d6` → `wiki-d7` → `wiki-d8`, unmerged). Next: the course pages for S1 and S3, E1–E10 (explainers), book packaging (the EPUB/PDF is a stub:
+- **Wiki v1 leftovers:** D4–D8 and the Course tab are complete (the course on branch `wiki-course`,
+  unmerged). Next: E1–E10 (explainers), then book packaging (the EPUB/PDF is a stub:
   preface, Explain index, the template page and D10), and the Codespace test of the Quarto devcontainer
   (needs a push). Pages is live (above).
 
