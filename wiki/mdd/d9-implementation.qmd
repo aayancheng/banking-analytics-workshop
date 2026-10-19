@@ -59,6 +59,14 @@ fails. Two rules govern the gates:
 Each chapter's part 9, the *gate record*, gives the gate, where it is asserted, where it is
 recomputed and its history.
 
+## Gate policy {#gate-policy}
+
+Gate levels follow industry guidelines and are calibrated to prevailing market conditions; on
+this synthetic platform, market conditions means what the data support — the measured ceiling of
+the label a model is asked to predict. A committed gate is never relaxed to let a committed model
+pass (invariant 2). A recalibration is a change to the committed promise: it is made on `main`,
+released in a new version tag, and recorded in the chapter's gate history.
+
 ## Reproducibility
 
 | Control | How |

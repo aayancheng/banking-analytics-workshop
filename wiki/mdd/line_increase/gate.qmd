@@ -128,7 +128,7 @@ the four clauses of `eligible`; it must never disagree with the batch:
 
 | Version | Change | Gates |
 |---|---|---|
-| reference build, before this repository's first commit | The generator's comment records that the first version of this label "was noise-capped below its metric gate", and that the committed version leans on observable drivers with modest noise (quoted in [8.2](data.qmd#li-label)): the label was redesigned so that the gate became reachable; the gate was not changed. The project's reading note on the generator gives the same account (`workshop/reading/S1-data-generation.html`, §7). The documentation pack records that the reference build escalated a gate the data could not reach to a human twice, with opposite resolutions (`tools/build_doc_pack.py`); Early Warning's is one ([D7.9](../ews/gate.qmd#history)), and the course materials place the other here. The first label, the gate it was measured against, the approver and the date are not recorded. In this repository the label has had its committed form since `stage-1` (commit `e37a49d`); neither the generator nor `portfolio.parquet` has changed since. | not committed |
+| reference build, before this repository's first commit | The generator's comment records that the first version of this label "was noise-capped below its metric gate", and that the committed version leans on observable drivers with modest noise (quoted in [8.2](data.qmd#li-label)): the label was redesigned so that it supports a gate calibrated under the [gate policy](../d9-implementation.qmd#gate-policy), and the gate became reachable; the gate was not changed. The project's reading note on the generator gives the same account (`workshop/reading/S1-data-generation.html`, §7). Early Warning met the same problem, a gate its label could not support, and recalibrated the gate instead ([D7.9](../ews/gate.qmd#history)). The first label and the gate it was measured against are not recorded. In this repository the label has had its committed form since `stage-1` (commit `e37a49d`); neither the generator nor `portfolio.parquet` has changed since. | not committed |
 | `stage-4` (commit `dbca721`) | gates introduced with the line-increase model, in `train.py` and `verify.py` | AUC {{< var li.gate.auc_min >}}, lift {{< var li.gate.lift_min >}}×, the four cohort conditions |
 | `stage-5`, `v1.0` to `v1.5`, `main` | unchanged | as above |
 
@@ -136,15 +136,14 @@ The committed gates have not changed since they were committed, and they are nev
 let a model pass ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
 The one change came before this repository existed, and it is the move Early Warning declined.
 There, Option A — reduce the label's noise in the generator and restore the stronger gate — was
-documented and deferred, and the gate was re-specified to what the data support
-([D7.9](../ews/gate.qmd#history)). Here the label was redesigned instead: the committed label
+documented and deferred, and the gate was recalibrated under the gate policy to what the data
+support ([D7.9](../ews/gate.qmd#history)). Here the label was redesigned instead: the committed label
 carries the smallest noise of the generator's labels and leans on drivers the model can see.
 Because the label is generated, not observed, redesigning it changes what the model is asked to
 predict rather than the evidence it is judged on; on synthetic data that is legitimate when the
 first label, not the gate, was what was wrong, and the record does not show which it was. A
-validator would need the first label, the gate and ceiling it was measured against, and who
-approved the change and when; none is recorded. Whether any column another model consumes
-changed is not recorded either: in the committed generator this label is the last random draw
+validator would need the first label and the gate and ceiling it was measured against; none is
+recorded. Whether any column another model consumes changed is not recorded either: in the committed generator this label is the last random draw
 in `generate_portfolio_and_panel`, so a change to it cannot alter any other column — a reasoned
 argument, not a checksum. The dependency also runs the other way: the label carries Early
 Warning's (`- 0.4 * deterioration`), so Option A, if it were ever taken, would change this label

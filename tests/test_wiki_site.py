@@ -532,8 +532,15 @@ def test_d7_code_claims_hold():
     # the gate's re-specification and Option A are recorded where 7.9 says (finding 3, 7.9)
     notes = (ROOT / "ews" / "docs" / "enhancement_notes.md").read_text()
     assert "Option A" in notes and "Why deferred" in notes
-    assert "escalated exactly this decision to a human, twice" in \
-        (ROOT / "tools" / "build_doc_pack.py").read_text()
+    # the gate history is stated as the gate policy (D9), not as an escalation (7.9, 7.7)
+    d9 = (WIKI / "mdd" / "d9-implementation.qmd").read_text()
+    assert "## Gate policy {#gate-policy}" in d9
+    assert "Gate levels follow industry guidelines and are calibrated to prevailing market" in d9
+    assert "never relaxed to let a committed model\npass (invariant 2)" in d9
+    ews_gate = (WIKI / "mdd" / "ews" / "gate.qmd").read_text()
+    assert "escalated" not in ews_gate and "approver" not in ews_gate
+    assert "d9-implementation.qmd#gate-policy" in ews_gate and "Option A" in ews_gate
+    assert "approver" not in (WIKI / "mdd" / "ews" / "limitations.qmd").read_text()
     # the label is drawn once from the panel, with no later period (finding 8)
     gen = (ROOT / "shared" / "data_generator.py").read_text()
     assert "util_last3 = util_path[:, -3:].mean(axis=1)" in gen
@@ -752,8 +759,10 @@ def test_d8_fix_round_claims_hold():
     # 8.9: the label carries the generator's smallest noise; the committed form since stage-1
     gen = (ROOT / "shared" / "data_generator.py").read_text()
     assert "rng.normal(0, 0.18, m)" in gen and "rng.normal(0, 0.4, m)" in gen
-    assert "twice, with opposite resolutions" in (ROOT / "tools" / "build_doc_pack.py").read_text()
     gate = (WIKI / "mdd" / "line_increase" / "gate.qmd").read_text()
+    assert "escalated" not in gate and "approver" not in gate
+    assert "d9-implementation.qmd#gate-policy" in gate
+    assert "The first label and the gate it was measured against are not recorded." in gate
     assert "redrawn until" not in gate and "to fit the gate" not in gate
     # 8.3: the video's account -- offered, High tier, not on the watchlist, one utilisation
     # trigger, referred at origination

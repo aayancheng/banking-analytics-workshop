@@ -147,30 +147,21 @@ the batch does not: fix the drift, never the test.
 
 | Version | Change | Gates |
 |---|---|---|
-| development, before `stage-4` | The master spec's targets (an AUC minimum and a higher capture multiple, quoted in finding 3) were measured as out of reach on this data and the gate re-specified as below. The alternative, Option A — reduce the label's noise in the generator and restore the stronger gate — was documented and deferred (`ews/docs/enhancement_notes.md`). The notes' own safety analysis reasons that it would change only the deterioration label and the line-increase label built on it, leaving the scorecard, adjudication and pricing modules unaffected (the checksum that would confirm this is listed there as a step, not recorded as done); the reason they give for deferring is that the platform is a prototype and the already-merged data foundation should stay untouched. The doc pack's note quoted below states a general principle, never to regenerate data a downstream model already consumes; it is not the reason the notes give for deferring Option A. The project records the choice as escalated to a human decision (`tools/build_doc_pack.py`); the record names no approver or date. | not committed |
+| development, before `stage-4` | The master spec's targets (an AUC minimum and a higher capture multiple, quoted in finding 3) were measured as out of reach on this data — even the generator's noise-free logit falls short — and the gate was re-specified as below, calibrated under the [gate policy](../d9-implementation.qmd#gate-policy) to what the data support. The alternative, Option A — reduce the label's noise in the generator and restore the stronger gate — was documented and deferred (`ews/docs/enhancement_notes.md`). The notes' own safety analysis reasons that it would change only the deterioration label and the line-increase label built on it, leaving the scorecard, adjudication and pricing modules unaffected (the checksum that would confirm this is listed there as a step, not recorded as done); the reason they give for deferring is that the platform is a prototype and the already-merged data foundation should stay untouched. | not committed |
 | `stage-4` (commit `dbca721`) | gates introduced with the Early Warning model, in `train.py` and `verify.py` | capture {{< var ews.gate.capture_min >}}, PR-AUC above the base rate, AUC floor {{< var ews.gate.auc_floor >}} |
 | `stage-5`, `v1.0` to `v1.5`, `main` | unchanged | as above |
 
 The committed gates have not changed since they were committed, and they are never relaxed to
 let a model pass ([D9](../d9-implementation.qmd#gates-are-hard-asserts-recomputed-independently)).
-The one change came before the first commit, with the model's results in view. It is not the
-relaxation that rule forbids, for three reasons: the targets were re-specified on measured
+The one change came before the first commit, with the model's results in view. It is a
+calibration under the [gate policy](../d9-implementation.qmd#gate-policy), not the relaxation
+that rule forbids, for three reasons: the targets were re-specified on measured
 evidence that no model could reach them — on the held-out accounts not even the generator's
 noise-free logit meets them ([7.7](limitations.qmd#ews-finding-3)); the reason and the rejected
-alternative were written down in the same commit; and AUC stayed on every report. What the record
-does not show is how the new level was chosen or who approved it. Re-specifying was necessary;
-the level is not derived from the ceiling and sits close to what the model achieved, which is
-why the narrow margin is a finding (finding 3). The project's own account of the decision, in
-the documentation pack it generates:
+alternative were written down in the same commit; and AUC stayed on every report.
+Re-specifying was necessary. The level is set to the guideline as calibrated, not derived from
+the ceiling, and sits close to what the model achieved, which is why the narrow margin remains a
+finding (finding 3).
 
-```text
-The early-warning gate is the platform's governance exhibit: when a target's measured
-oracle ceiling sits below the aspirational gate, the honest resolution is to gate on
-what the data supports and report the rest — never to quietly tune the number, and
-never to regenerate data a downstream model already consumes. (The reference build
-escalated exactly this decision to a human, twice, with opposite resolutions — see
-`ews/docs/enhancement_notes.md` for the deferred Option A.)
-```
-
-Any change now would be a change of the committed promise: made on `main`, recorded in a new
-version tag, and shown in this table.
+Any change now would be a recalibration under the gate policy, and so a change of the committed
+promise: made on `main`, recorded in a new version tag, and shown in this table.

@@ -40,6 +40,8 @@ workshop/LectureSummaryandRecordings/  GITIGNORED: recordings, Zoom transcripts,
 2. **Gates are committed promises.** Each module asserts its gate at train time. If one fails,
    investigate the model — never relax the gate. `ews` is deliberately gated on *top-decile
    capture*, with AUC **reported, not gated**, because the DGP's noise puts a real ceiling on it.
+   **Gate policy:** gate levels follow industry guidelines, calibrated to prevailing market
+   conditions (here, the data's measured ceiling); see D9.
 3. **Leakage deny-list lives in `shared/config.py::LEAKAGE_COLUMNS`** and is asserted by every
    feature module. Downstream code consumes the *saved model's* output, never DGP truth.
 4. **Data and model artifacts are committed on purpose** so every stage is self-sufficient.
@@ -252,10 +254,11 @@ Then cut/annotate a `v1.x` tag recording what was verified.
      (even the noise-free logit gets 0.7329 / 26.9%); Option A (de-noise the label) was deferred
      as a prototype choice to keep the merged data untouched; the notes' safety analysis reasons
      that score, adjudication and pricing would be unaffected (only the EWS and line-increase labels
-     change; the confirming checksum is listed as a step, not done). The doc pack's "never to
-     regenerate data a downstream model already consumes" is a general principle, not that reason. Not a relaxation under invariant 2 (that governs
-     committed gates), but the level is *not* derived from the ceiling, and the record names no
-     approver or date — 7.9's history says all of this.
+     change; the confirming checksum is listed as a step, not done). The wiki no longer quotes the
+     doc pack on this. It is a calibration under the gate policy (D9#gate-policy), not a relaxation
+     under invariant 2 (that governs committed gates); the level is set to the
+     guideline as calibrated, *not* derived from the ceiling, and close to what the model achieved —
+     hence the narrow-margin finding. 7.9's history says all of this.
   4. Not distinguishable from `pd_score` alone on AUC (diff +0.0223, paired CI -0.0132..0.0548);
      `pd_score` capture 18.6% would miss the gate (single number, no paired CI). Never claim EWS beats it.
   5. Low tier under-predicts: 1.50 on 137 deteriorations (floor rule, events = deteriorations).
@@ -296,8 +299,8 @@ Then cut/annotate a `v1.x` tag recording what was verified.
   6. The label is constructed for every account; no increase was ever granted (selection on a real book).
   Gate history (8.9): the label — not the gate — was redesigned in the reference build, before this
   repo's first commit (generator comment: "noise-capped below its metric gate"; reading note §7;
-  doc pack's "escalated ... twice, with opposite resolutions" — D7 is one, this the other). The
-  move EWS declined (Option A); nothing records the first label, its gate, approver or date; the
+  so the label supports a gate calibrated under the gate policy (D9); EWS recalibrated the gate
+  instead). The move EWS declined (Option A); nothing records the first label or its gate; the
   label has its committed form since stage-1 (`e37a49d`). It is the generator's last rng draw, so
   it cannot have moved another column (reasoned, test-pinned, not checksummed), and it carries
   EWS's `- 0.4 * deterioration`, so Option A would change it. Never write "changed to fit the

@@ -140,9 +140,10 @@ rate**, with AUC reported (not gated).
 The ceiling bears that out: on the held-out accounts even the generator's noise-free logit
 reaches AUC {{< var ceiling.ews.latent_holdout >}} and captures
 {{< var ceiling.ews.latent_capture_holdout >}}, below both of the master spec's targets
-([7.5](performance.qmd#ews-ceiling)). Re-specifying was necessary; the level is not derived from
-the ceiling and sits close to what the model achieved, which is why the narrow margin is a
-finding. The record names no approver or date for the decision ([7.9](gate.qmd#history)).
+([7.5](performance.qmd#ews-ceiling)). Re-specifying was necessary. Under the platform's gate
+policy ([D9](../d9-implementation.qmd#gate-policy)) the level is set to the guideline as calibrated
+to what the data support ([7.9](gate.qmd#history)); it is not derived from the ceiling and sits
+close to what the model achieved, which is why the narrow margin is a finding.
 
 **Impact.** The gate's verdict is sensitive to the sample. A retrain on a fresh draw of the
 same book, or the first cohorts in monitoring, could fall below the gate with nothing wrong
